@@ -15,14 +15,19 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Install PyInstaller
-        run: python -m pip install --upgrade pip pyinstaller
+      # Lanceur PyInstaller recompilé sur place (au lieu du lanceur tout fait, souvent signalé à tort par les antivirus)
+      - name: Install PyInstaller (bootloader compiled from source)
+        env:
+          PYINSTALLER_COMPILE_BOOTLOADER: '1'
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --no-binary pyinstaller --no-cache-dir pyinstaller
 
       - name: Version
         id: ver
@@ -48,7 +53,7 @@ jobs:
 
       - name: Upload unsigned build
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: hangar-fs2024-unsigned
           path: src/dist/
@@ -73,7 +78,7 @@ jobs:
           $dir = if (Test-Path "signed") { "signed" } else { "src/dist" }
           Compress-Archive -Path "$dir/Hangar FS 2024" -DestinationPath "Hangar_FS2024_v${{ steps.ver.outputs.version }}.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Hangar_FS2024_v${{ steps.ver.outputs.version }}
           path: Hangar_FS2024_v*.zip
