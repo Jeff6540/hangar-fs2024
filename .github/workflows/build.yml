@@ -51,11 +51,12 @@ jobs:
           Copy-Item LICENSE "src/dist/Hangar FS 2024/"
           Copy-Item "docs/*.txt" "src/dist/Hangar FS 2024/"
 
-      - name: Upload unsigned build
+      # Copie à signer (utilisée par SignPath ; pas besoin de la télécharger)
+      - name: Upload build to sign
         id: upload
         uses: actions/upload-artifact@v5
         with:
-          name: hangar-fs2024-unsigned
+          name: a-signer-ne-pas-telecharger
           path: src/dist/
 
       # Signature : à activer après l'accord de SignPath Foundation
@@ -72,16 +73,25 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: 'signed'
 
-      - name: Zip
+      - name: Choose folder
+        id: out
         shell: pwsh
         run: |
           $dir = if (Test-Path "signed") { "signed" } else { "src/dist" }
-          Compress-Archive -Path "$dir/Hangar FS 2024" -DestinationPath "Hangar_FS2024_v${{ steps.ver.outputs.version }}.zip"
+          "dir=$dir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - uses: actions/upload-artifact@v5
+      # Un seul zip à télécharger : il contient directement le dossier « Hangar FS 2024 »
+      - name: Upload app
+        uses: actions/upload-artifact@v5
         with:
           name: Hangar_FS2024_v${{ steps.ver.outputs.version }}
-          path: Hangar_FS2024_v*.zip
+          path: ${{ steps.out.outputs.dir }}/
+
+      - name: Zip for release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "${{ steps.out.outputs.dir }}/Hangar FS 2024" -DestinationPath "Hangar_FS2024_v${{ steps.ver.outputs.version }}.zip"
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
