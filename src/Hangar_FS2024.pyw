@@ -629,6 +629,9 @@ EN_PAIRS = [
 ("Raccourci :", "Shortcut:"),
 ("🖥  Créer le raccourci sur le Bureau", "🖥  Create the Desktop shortcut"),
 ("Sauvegarde :", "Backup:"),
+("Hangar FS 2024 démarre depuis un nouvel emplacement :\n%s\n\nMettre à jour le démarrage avec Windows pour lancer ce programme ?\n\nNon : rien n'est modifié (tu pourras le faire plus tard dans Réglages, en décochant puis recochant « Démarrer avec Windows »).",
+ "Hangar FS 2024 is starting from a new location:\n%s\n\nUpdate the Windows startup to launch this program?\n\nNo: nothing is changed (you can do it later in Settings by unticking then ticking \"Start with Windows\")."),
+("Démarrage avec Windows laissé tel quel (nouvel emplacement non retenu).", "Windows startup left unchanged (new location not used)."),
 ("💾  Exporter mes réglages…", "💾  Export my settings…"),
 ("📂  Restaurer…", "📂  Restore…"),
 ("— réglages, profils et applis du Démarrage auto dans un seul fichier (changement de PC, réinstallation de Windows)",
@@ -20626,13 +20629,12 @@ class App(tk.Tk):
                 set_start_with_windows(True)
                 self.log("Mode administrateur mis à jour : tâche à la demande + raccourci de démarrage.")
             return
-        if has_task and self.cfg.get("startup_admin") and not os.path.isfile(startup_shortcut()):
+        if has_task and self.cfg.get("startup_admin") and not os.path.isfile(startup_shortcut()) \
+                and same_program(task_command(), exe):
             set_start_with_windows(True)
         if has_task and not same_program(task_command(), exe):
-            if is_admin():
-                if create_admin_task():
-                    self.log("Démarrage en administrateur mis à jour pour : %s" % exe)
-            elif self.cfg.get("task_fix_asked") != exe:
+            # jamais de mise à jour silencieuse de la tâche planifiée : on demande toujours (une fois par emplacement)
+            if self.cfg.get("task_fix_asked") != exe:
                 self.cfg["task_fix_asked"] = exe
                 self.save_cfg()
                 if messagebox.askyesno(APP, "Le démarrage en administrateur lance encore un ancien emplacement de "
@@ -20992,30 +20994,27 @@ class App(tk.Tk):
         exe, args, _wd = launch_command()
         cur = "%s|%s" % (exe, args.strip())
         prev = self.cfg.get("launch_target")
-        self.cfg["launch_target"] = cur
         if prev == cur:
             return
+        has_lnk = os.path.isfile(startup_shortcut())   # la tâche administrateur est gérée par _check_admin_startup
+        if prev and has_lnk and self.cfg.get("launch_target_declined") != cur:
+            # jamais de modification silencieuse du démarrage de Windows : on demande d'abord
+            if not messagebox.askyesno(APP, "Hangar FS 2024 démarre depuis un nouvel emplacement :\n%s\n\n"
+                                            "Mettre à jour le démarrage avec Windows pour lancer ce programme ?\n\n"
+                                            "Non : rien n'est modifié (tu pourras le faire plus tard dans Réglages, "
+                                            "en décochant puis recochant « Démarrer avec Windows »)." % exe):
+                self.cfg["launch_target_declined"] = cur
+                self.save_cfg()
+                self.log("Démarrage avec Windows laissé tel quel (nouvel emplacement non retenu).")
+                return
+        self.cfg["launch_target"] = cur
+        self.cfg.pop("launch_target_declined", None)
         self.save_cfg()
         if not prev:
             return
-        if os.path.isfile(startup_shortcut()):
+        if has_lnk:
             set_start_with_windows(True)
             self.log("Démarrage avec Windows mis à jour : %s" % os.path.basename(exe))
-        if task_exists():
-            if is_admin():
-                try:
-                    os.makedirs(BASE_DIR, exist_ok=True)
-                    xml = os.path.join(BASE_DIR, "tache_hangar_fs2024.xml")
-                    with open(xml, "w", encoding="utf-16") as f:
-                        f.write(task_xml())
-                    subprocess.run(["schtasks", "/Create", "/TN", TASK_NAME, "/XML", xml, "/F"], capture_output=True,
-                                   creationflags=NO_WINDOW, timeout=30)
-                    self.log("Démarrage en administrateur mis à jour : %s" % os.path.basename(exe))
-                except (OSError, subprocess.SubprocessError):
-                    pass
-            else:
-                self.log("Démarrage en administrateur : décoche puis recoche la case dans Réglages pour lancer "
-                         "le nouveau programme.")
 
     def _migrate_startup(self):
         """Ancien nom « Addons Links » : remplace son raccourci de démarrage et sa tâche planifiée par les nouveaux."""
