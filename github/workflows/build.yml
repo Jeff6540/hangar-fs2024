@@ -1,0 +1,86 @@
+# Fabrique Hangar FS 2024 pour Windows (PyInstaller), le signe avec SignPath une fois le projet accepté,
+# et publie le zip dans une Release quand on pousse une étiquette vX.Y (ex. v11.7).
+name: Build Windows release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Version
+        id: ver
+        shell: pwsh
+        working-directory: src
+        run: |
+          $v = python preparer_version.py
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build
+        working-directory: src
+        run: >
+          pyinstaller --noconfirm --clean --windowed --onedir
+          --name "Hangar FS 2024" --icon hangar.ico --version-file version_info.txt
+          --add-data "hangar.ico;."
+          Hangar_FS2024.pyw
+
+      - name: Add docs and license
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE "src/dist/Hangar FS 2024/"
+          Copy-Item "docs/*.txt" "src/dist/Hangar FS 2024/"
+
+      - name: Upload unsigned build
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: hangar-fs2024-unsigned
+          path: src/dist/
+
+      # Signature : à activer après l'accord de SignPath Foundation
+      # (secret SIGNPATH_API_TOKEN, variables SIGNPATH_ORGANIZATION_ID et SIGNPATH_ENABLED=true)
+      - name: Sign with SignPath
+        if: ${{ vars.SIGNPATH_ENABLED == 'true' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: 'hangar-fs2024'
+          signing-policy-slug: 'release-signing'
+          github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: 'signed'
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          $dir = if (Test-Path "signed") { "signed" } else { "src/dist" }
+          Compress-Archive -Path "$dir/Hangar FS 2024" -DestinationPath "Hangar_FS2024_v${{ steps.ver.outputs.version }}.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hangar_FS2024_v${{ steps.ver.outputs.version }}
+          path: Hangar_FS2024_v*.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Hangar_FS2024_v*.zip
+          generate_release_notes: true
