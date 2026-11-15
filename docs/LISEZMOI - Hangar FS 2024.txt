@@ -105,6 +105,9 @@ ouvert, l'appli se verrouille (bandeau rouge) pour eviter les erreurs.
 - Onglet Bibliotheque : coche des add-ons (ou Ctrl + clic sur des
   lignes), puis "Activer ... dans Community" ou "Retirer ... de
   Community". "Proteger" (etoile) garde un add-on actif pendant tous les vols.
+  La colonne "Version" montre la version installee de chaque add-on
+  (vide si son createur ne l'a pas indiquee) : compare-la avec la page
+  de l'add-on (flightsim.to...) pour savoir s'il y en a une plus recente.
 - Onglet Carte addons : la carte de tes scenes d'aeroport.
 - Reglages > Sauvegarde : "Exporter mes reglages" enregistre tes
   reglages, profils et applis du Demarrage auto dans un fichier .zip ;
@@ -122,7 +125,10 @@ ouvert, l'appli se verrouille (bandeau rouge) pour eviter les erreurs.
   trajectoire ; menu "Rayon" pour n'afficher que les vols proches
   ou le long de ta route), ta trajectoire en bleu, ton plan
   SimBrief affiche tout seul s'il a ete recupere dans l'onglet
-  Vol SimBrief (et date de moins de 12 h)
+  Vol SimBrief (et date de moins de 12 h), les performances de
+  decollage / atterrissage SimBrief (option Runway Analysis) avec la
+  METAR de l'arrivee en direct, et pour tous les avions le vent sur
+  chaque piste, la piste conseillee et l'altitude-densite
   et le bouton "Taxiways" (plan de l'aeroport en zoomant, d'apres
   OpenStreetMap ; garde sur le PC et mis a jour tous les 30 jours,
   l'ancien plan reste affiche si le serveur ne repond pas).

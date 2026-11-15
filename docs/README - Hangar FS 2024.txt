@@ -116,6 +116,9 @@ running, the app locks itself (red banner) to prevent mistakes.
 - Library tab: tick add-ons (or Ctrl + click rows), then
   "Activate ... in Community" or "Remove ... from Community".
   "Protect" (star) keeps an add-on active during every flight.
+  The "Version" column shows the installed version of each add-on
+  (empty if its creator didn't give one): compare it with the add-on's
+  page (flightsim.to...) to know whether a newer one exists.
 - Add-on map tab: the map of your airport sceneries.
 - Settings > Backup: "Export my settings" saves your settings,
   profiles and auto-launch apps in a .zip file; "Restore" puts them
@@ -132,7 +135,10 @@ running, the app locks itself (red banner) to prevent mistakes.
   filed route and track; "Range" menu to show only nearby flights or
   those along your route), your own track in blue, your SimBrief
   plan shown automatically if fetched in the SimBrief flight tab
-  (less than 12 h old), the "My FSHub VA" button (set your
+  (less than 12 h old), SimBrief takeoff / landing performance
+  (Runway Analysis option) with the live arrival METAR, and for all
+  aircraft the wind on each runway, advised runway and density
+  altitude, the "My FSHub VA" button (set your
   VA code, e.g. LFV, in Settings > "My FSHub VA") and the
   "Taxiways" button (airport layouts when you zoom in).
 
