@@ -1,6 +1,6 @@
 {
-  "version": "11.8",
+  "version": "12.1",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Nouvelle colonne « Version » : la version installée de chaque add-on d'un coup d'œil",
-  "notes_en": "New \"Version\" column: see each add-on's installed version at a glance"
+  "notes_fr": "Version C# (un simple .exe), pilotes VATSIM et IVAO sur la carte de suivi, suivi plus rapide et fluide",
+  "notes_en": "C# version (a single .exe), VATSIM and IVAO pilots on the tracking map, faster and smoother tracking"
 }
