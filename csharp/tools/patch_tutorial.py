@@ -17,7 +17,15 @@ R = {
   ("<p><b>Partager l'appli</b> : envoie le zip fabriqué par FABRIQUER.bat (dossier A PARTAGER). Rien à installer pour tes amis ;",
    "<p><b>Partager l'appli</b> : donne plutôt le lien de la page flightsim.to ou de GitHub, pour que chacun ait la version officielle. Rien à installer pour tes amis ;"),
   ("c'est un faux positif fréquent avec les applis Python non signées",
-   "c'est un faux positif possible avec les applis non signées (la version 12.0 est à 0 alerte sur VirusTotal)"), ],
+   "c'est un faux positif possible avec les applis non signées (la version 12.0 est à 0 alerte sur VirusTotal)"),  ("avec, au survol, le type d'avion, la phase de vol",
+   "avec, d'un clic sur l'avion, le type d'avion, la phase de vol"),
+  ("Le chiffre du bouton compte les pilotes affichés. Au survol : indicatif,",
+   "Le chiffre du bouton compte les pilotes affichés. Pour garder la carte lisible, ces avions n'ont pas d'étiquette : un clic sur un avion affiche son indicatif,"),
+  ("(pas de nom de pilote). Les avions au sol n'apparaissent que si",
+   "(pas de nom de pilote) ; un clic ailleurs sur la carte referme la bulle. Les avions au sol n'apparaissent que si"),
+  ("Affiche les avions IA de MSFS, colorés par catégorie ; au sol ils restent gris",
+   "Affiche les avions IA de MSFS, colorés par catégorie ; au sol ils restent gris. Un clic sur un avion affiche ses informations"),
+ ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
    "Windows 10 or 11: the app is a ready-to-use folder, nothing else to install. It is written in C# and uses components already built into Windows (.NET Framework 4.8 and Edge's WebView2 display engine). The <code>Hangar FS 2024.exe</code> program passes VirusTotal without any alert (0 detections, Microsoft Defender included)."),
@@ -32,7 +40,15 @@ R = {
   ("<p><b>Sharing the app</b>: send the zip made by FABRIQUER.bat (A PARTAGER folder). Nothing to install for your friends;",
    "<p><b>Sharing the app</b>: share the flightsim.to or GitHub page link instead, so everyone gets the official version. Nothing to install for your friends;"),
   ("it is a common false positive with unsigned Python apps",
-   "it is a possible false positive with unsigned apps (version 12.0 has 0 alerts on VirusTotal)"), ],
+   "it is a possible false positive with unsigned apps (version 12.0 has 0 alerts on VirusTotal)"),  ("showing, on hover, the aircraft type, flight phase",
+   "showing, when you click the aircraft, the aircraft type, flight phase"),
+  ("The number on the button counts the pilots shown. On hover: callsign,",
+   "The number on the button counts the pilots shown. To keep the map readable, these aircraft have no label: click an aircraft to see its callsign,"),
+  ("(no pilot name). Aircraft on the ground only",
+   "(no pilot name); click elsewhere on the map to close the bubble. Aircraft on the ground only"),
+  ("Shows MSFS AI aircraft, coloured by category; on the ground they stay grey",
+   "Shows MSFS AI aircraft, coloured by category; on the ground they stay grey. Click an aircraft to see its details"),
+ ],
 }
 
 if __name__ == "__main__":
@@ -41,7 +57,7 @@ if __name__ == "__main__":
         p = os.path.join(web, "tutorial_%s.html" % lang)
         s = open(p, encoding="utf-8").read()
         for a, b in pairs:
-            if b in s:
+            if b in s or a not in s:
                 continue  # déjà fait
             assert s.count(a) == 1, (lang, a[:60], s.count(a))
             s = s.replace(a, b)

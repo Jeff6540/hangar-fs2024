@@ -29,7 +29,6 @@ NET_JS = r"""<script>
   });
   window.alNetOn = function () { return st.vatsim.on || st.ivao.on; };
   function K() { return window.alNetKit; }
-  var LBZ = 9;   /* étiquettes des pilotes VATSIM / IVAO seulement de près : sinon la carte est illisible */
   function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
 
   /* position estimée entre deux mises à jour (cap + vitesse), au plus 60 s */
@@ -45,8 +44,7 @@ NET_JS = r"""<script>
   function icon(k, p) {
     var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
     var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft) : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
-    var html = (m && m.getZoom() >= LBZ) ? '<div class="alfs-pin alnet-pin" style="--c:' + color(k) + '">' + svg + '<span class="lb">' + k2.esc(p.callsign + (p.aircraft ? ' · ' + p.aircraft : '')) + '</span></div>' : svg;
-    return L.divIcon({ className: 'alfs-icon', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+    return L.divIcon({ className: 'alfs-icon', html: svg, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function tip(k, p) {
     var e = K().esc, l1 = [e(p.callsign)], l2 = [];
@@ -70,7 +68,7 @@ NET_JS = r"""<script>
     var s = st[k], k2 = K(), m = k2 && k2.map(); if (!m) return;
     if (!s.layer) s.layer = L.layerGroup().addTo(m);
     if (!s.on || !s.data) { s.layer.clearLayers(); s.mk = {}; setBtn(k, 0); return; }
-    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = m.getZoom() >= LBZ ? 'z' : '';
+    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = '';
     (s.data.pilots || []).forEach(function (p) {
       if (p.ground && !ground) return;
       var ll = pos(p, s.t);
@@ -80,7 +78,7 @@ NET_JS = r"""<script>
       var mk = s.mk[p.id], sig = p.hdg + '|' + p.ground + '|' + zoomSig + '|' + window.alColorblind;
       if (!mk) {
         mk = L.marker(ll, { icon: icon(k, p), keyboard: false, zIndexOffset: 400 }).addTo(s.layer);
-        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] });
+        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
         mk._sig = sig; s.mk[p.id] = mk;
       } else {
         mk.setLatLng(ll);
@@ -140,7 +138,6 @@ NET_JS = r"""<script>
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon,#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon{transition:none!important}' +
-    '.alnet-pin span.lb{border-color:var(--c)!important;color:#fff!important}' +
     'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
     'color:var(--c)!important;border:1px solid var(--c)!important}' +
     'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
@@ -198,3 +195,45 @@ if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang in ("fr", "en"):
         patch(os.path.join(web, "dispatch_%s.html" % lang), lang)
+
+
+# ---- Infobulles au clic (au lieu du survol) : trafic IA, autres VA FSHub, VATSIM et IVAO ----
+CLICK_JS = r"""<script>
+/* Hangar FS 2024 : l'infobulle d'un avion s'ouvre d'un clic (et se ferme d'un clic ailleurs) */
+window.alClickTip = function (mk) {
+  mk.off('mouseover', mk._openTooltip, mk); mk.off('mouseout', mk.closeTooltip, mk); mk.off('click', mk._openTooltip, mk);
+  mk.on('click', function () {
+    var cur = window.alTipOpen, m = mk._map;
+    if (cur && cur !== mk) { try { cur.closeTooltip(); } catch (e) {} }
+    if (cur === mk && mk.isTooltipOpen()) { mk.closeTooltip(); window.alTipOpen = null; }
+    else { mk.openTooltip(); window.alTipOpen = mk; }
+    if (m && !m._alTipHook) {
+      m._alTipHook = true;
+      m.on('click', function () { if (window.alTipOpen) { try { window.alTipOpen.closeTooltip(); } catch (e) {} window.alTipOpen = null; } });
+    }
+  });
+};
+</script>"""
+
+
+def patch_click(path):
+    s = open(path, encoding="utf-8").read()
+    if "window.alClickTip = function" in s:
+        print("déjà fait (clic) :", path); return
+    def rep(a, b):
+        nonlocal s
+        assert s.count(a) == 1, (path, a[:80], s.count(a))
+        s = s.replace(a, b)
+    rep("<head>", "<head>\n" + CLICK_JS)
+    rep("m.bindTooltip(trafficTooltip(a, isUser), { direction: 'top', offset: [0, -14] });",
+        "m.bindTooltip(trafficTooltip(a, isUser), { direction: 'top', offset: [0, -14] }); if (!isUser) window.alClickTip(m);")
+    rep("mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] });",
+        "mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);")
+    open(path, "w", encoding="utf-8").write(s)
+    print("ok (clic) :", path)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_click(os.path.join(_web, "dispatch_%s.html" % _l))

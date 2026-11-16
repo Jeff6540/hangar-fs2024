@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en" class="dark h-full">
-<head><style>.max-w-\[1600px\]{max-width:100%!important}</style><script>(function(){
+<head>
+<script>
+/* Hangar FS 2024 : l'infobulle d'un avion s'ouvre d'un clic (et se ferme d'un clic ailleurs) */
+window.alClickTip = function (mk) {
+  mk.off('mouseover', mk._openTooltip, mk); mk.off('mouseout', mk.closeTooltip, mk); mk.off('click', mk._openTooltip, mk);
+  mk.on('click', function () {
+    var cur = window.alTipOpen, m = mk._map;
+    if (cur && cur !== mk) { try { cur.closeTooltip(); } catch (e) {} }
+    if (cur === mk && mk.isTooltipOpen()) { mk.closeTooltip(); window.alTipOpen = null; }
+    else { mk.openTooltip(); window.alTipOpen = mk; }
+    if (m && !m._alTipHook) {
+      m._alTipHook = true;
+      m.on('click', function () { if (window.alTipOpen) { try { window.alTipOpen.closeTooltip(); } catch (e) {} window.alTipOpen = null; } });
+    }
+  });
+};
+</script><style>.max-w-\[1600px\]{max-width:100%!important}</style><script>(function(){
 function ext(u){try{var x=new URL(u,location.href);if(x.protocol!=='http:'&&x.protocol!=='https:')return null;
 if(x.host===location.host||x.hostname==='localhost'||x.hostname==='127.0.0.1')return null;return x.href}catch(e){return null}}
 function send(u){fetch('/open?url='+encodeURIComponent(u)).catch(function(){})}
@@ -1614,7 +1630,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       var mk = allMk[id], sig = p.hdg + '|' + p.ground;
       if (!mk) {
         mk = L.marker([p.lat, p.lon], { icon: allIcon(p), keyboard: false, zIndexOffset: 500 }).addTo(allLayer);
-        mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] });
+        mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
         mk._sig = sig; allMk[id] = mk; rtBind(mk);
       } else {
         mk.setLatLng([p.lat, p.lon]);
@@ -1970,7 +1986,6 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   });
   window.alNetOn = function () { return st.vatsim.on || st.ivao.on; };
   function K() { return window.alNetKit; }
-  var LBZ = 9;   /* étiquettes des pilotes VATSIM / IVAO seulement de près : sinon la carte est illisible */
   function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
 
   /* position estimée entre deux mises à jour (cap + vitesse), au plus 60 s */
@@ -1986,8 +2001,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   function icon(k, p) {
     var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
     var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft) : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
-    var html = (m && m.getZoom() >= LBZ) ? '<div class="alfs-pin alnet-pin" style="--c:' + color(k) + '">' + svg + '<span class="lb">' + k2.esc(p.callsign + (p.aircraft ? ' · ' + p.aircraft : '')) + '</span></div>' : svg;
-    return L.divIcon({ className: 'alfs-icon', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+    return L.divIcon({ className: 'alfs-icon', html: svg, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function tip(k, p) {
     var e = K().esc, l1 = [e(p.callsign)], l2 = [];
@@ -2011,7 +2025,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     var s = st[k], k2 = K(), m = k2 && k2.map(); if (!m) return;
     if (!s.layer) s.layer = L.layerGroup().addTo(m);
     if (!s.on || !s.data) { s.layer.clearLayers(); s.mk = {}; setBtn(k, 0); return; }
-    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = m.getZoom() >= LBZ ? 'z' : '';
+    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = '';
     (s.data.pilots || []).forEach(function (p) {
       if (p.ground && !ground) return;
       var ll = pos(p, s.t);
@@ -2021,7 +2035,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       var mk = s.mk[p.id], sig = p.hdg + '|' + p.ground + '|' + zoomSig + '|' + window.alColorblind;
       if (!mk) {
         mk = L.marker(ll, { icon: icon(k, p), keyboard: false, zIndexOffset: 400 }).addTo(s.layer);
-        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] });
+        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
         mk._sig = sig; s.mk[p.id] = mk;
       } else {
         mk.setLatLng(ll);
@@ -2081,7 +2095,6 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon,#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon{transition:none!important}' +
-    '.alnet-pin span.lb{border-color:var(--c)!important;color:#fff!important}' +
     'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
     'color:var(--c)!important;border:1px solid var(--c)!important}' +
     'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
@@ -3695,7 +3708,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
             if (m) m._rt = rt;
             if (!m) {
                 m = L.marker(latLng, { icon: trafficIcon(a.hdg, isUser, a.ground, acCategory(a), a), keyboard: false, zIndexOffset: isUser ? 900 : 500 }).addTo(trafficLayer);
-                m.bindTooltip(trafficTooltip(a, isUser), { direction: 'top', offset: [0, -14] });
+                m.bindTooltip(trafficTooltip(a, isUser), { direction: 'top', offset: [0, -14] }); if (!isUser) window.alClickTip(m);
                 m._rt = rt;
                 m._sig = `${a.hdg}|${a.ground}|${acCategory(a)}`;
                 if (isUser) trafficUserMarker = m; else trafficMarkers.set(a.id, m);
