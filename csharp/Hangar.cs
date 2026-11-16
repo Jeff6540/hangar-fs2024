@@ -1016,7 +1016,7 @@ namespace HangarFS2024
                 ["relay_auto"] = CfgB("relay_auto", true), ["flight_only"] = CfgB("flight_only", false),
                 ["streamed"] = CfgS("streamed") != "" ? CfgS("streamed") : DetectStreamed(CfgS("community")), ["msfs_launch"] = CfgS("msfs_launch"),
                 ["simconnect_dir"] = CfgS("simconnect_dir"), ["startup"] = SystemTools.StartWithWindows || CfgB("startup_admin", false),
-                ["startup_admin"] = CfgB("startup_admin", false), ["is_admin"] = Win.IsAdmin(), ["screen"] = CfgS("screen") == "" ? "auto" : CfgS("screen"),
+                ["startup_admin"] = CfgB("startup_admin", false) && SystemTools.TaskIsOurs(), ["is_admin"] = Win.IsAdmin(), ["screen"] = CfgS("screen") == "" ? "auto" : CfgS("screen"),
                 ["screen_main"] = CfgB("screen_main", true), ["screen_map"] = CfgB("screen_map", true), ["screen_dispatch"] = CfgB("screen_dispatch", true),
                 ["fshub_va"] = CfgS("fshub_va"), ["fshub_token"] = CfgS("fshub_token"), ["colorblind"] = CfgB("colorblind", false),
                 ["lang"] = Lang,
@@ -1111,7 +1111,7 @@ namespace HangarFS2024
                 }
             }
             catch (Exception) { err = L("Impossible de modifier le démarrage avec Windows.", "Unable to change Windows startup."); }
-            bool task = SystemTools.TaskExists();
+            bool task = SystemTools.TaskIsOurs();
             lock (Gate) { Cfg["startup_admin"] = task; SaveCfg(); }
             if (err != "") return err;
             string msg = task ? L("Hangar FS 2024 démarrera avec Windows en mode administrateur, sans confirmation.", "Hangar FS 2024 will start with Windows in administrator mode, without confirmation.")

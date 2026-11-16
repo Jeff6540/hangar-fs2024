@@ -18,7 +18,7 @@ namespace HangarFS2024
                 {
                     var cfg = JsonStore.Load(AppInfo.ConfigFile, new Newtonsoft.Json.Linq.JObject());
                     var t = cfg["startup_admin"];
-                    if (t != null && t.Type == Newtonsoft.Json.Linq.JTokenType.Boolean && (bool)t && SystemTools.TaskExists() && SystemTools.RunAdminTask()) return;
+                    if (t != null && t.Type == Newtonsoft.Json.Linq.JTokenType.Boolean && (bool)t && SystemTools.TaskIsOurs() && SystemTools.RunAdminTask()) return;
                 }
                 catch (Exception) { }
             }

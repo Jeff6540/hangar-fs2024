@@ -107,6 +107,27 @@ namespace HangarFS2024
             return false;
         }
 
+        // la tâche lance-t-elle bien CE programme ? (la 11.8 Python crée une tâche du même nom qui lance l'ancienne version)
+        public static bool TaskIsOurs()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("schtasks.exe", "/Query /TN \"" + TaskName + "\" /XML") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                using (var p = Process.Start(psi))
+                {
+                    string xml = p.StandardOutput.ReadToEnd();
+                    p.StandardError.ReadToEnd();
+                    p.WaitForExit(15000);
+                    if (p.ExitCode != 0) return false;
+                    var m = System.Text.RegularExpressions.Regex.Match(xml, "<Command>(.*?)</Command>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    if (!m.Success) return false;
+                    string cmd = System.Net.WebUtility.HtmlDecode(m.Groups[1].Value).Trim().Trim('"');
+                    return string.Equals(Path.GetFullPath(cmd), ExePath, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch (Exception) { return false; }
+        }
+
         public static bool RunAdminTask()
         {
             try { return Run("schtasks.exe", "/Run /TN \"" + TaskName + "\"") == 0; } catch (Exception) { return false; }
@@ -117,7 +138,7 @@ namespace HangarFS2024
         {
             try
             {
-                if (admin && !Win.IsAdmin() && TaskExists() && RunAdminTask()) return true;
+                if (admin && !Win.IsAdmin() && TaskIsOurs() && RunAdminTask()) return true;
                 var psi = new ProcessStartInfo(ExePath, "--wait-mutex" + (minimized ? " --minimized" : "")) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(ExePath) };
                 if (admin && !Win.IsAdmin()) psi.Verb = "runas";
                 Process.Start(psi);
