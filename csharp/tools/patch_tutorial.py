@@ -37,6 +37,8 @@ R = {
    "Elle fait passer l'appli en administrateur sans confirmation Windows chaque fois qu'elle s'ouvre (double-clic, raccourci, ou démarrage du PC si « Démarrer avec Windows » est coché). Les deux cases sont indépendantes : le mode administrateur ne fait pas démarrer l'appli avec Windows."),
   ("ou active le démarrage avec Windows en mode administrateur</td>",
    "ou coche « Toujours ouvrir en mode administrateur » dans Réglages</td>"),
+  ("Dans la Bibliothèque, la case d'un add-on présent dans Community devient orange (bleue = simplement cochée)",
+   "Dans la Bibliothèque, la case d'un add-on présent dans Community devient bleu ciel, sur une ligne bleu foncé (jaune = simplement cochée)"),
  ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
@@ -72,6 +74,8 @@ R = {
    "It makes the app run as administrator without Windows confirmation every time it opens (double-click, shortcut, or PC startup if \"Start with Windows\" is ticked). Both boxes are independent: administrator mode does not make the app start with Windows."),
   ("or enable Windows startup in administrator mode</td>",
    "or tick \"Always open in administrator mode\" in Settings</td>"),
+  ("In the Library, the box of an add-on in Community turns orange (blue = just ticked)",
+   "In the Library, the box of an add-on in Community turns sky blue, on a dark blue row (yellow = just ticked)"),
  ],
 }
 
