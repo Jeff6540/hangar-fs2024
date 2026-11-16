@@ -407,6 +407,7 @@ namespace HangarFS2024
                 case "/aeroway": RelayApi.Aeroway(query, r); break;
                 case "/fshub-all": RelayApi.FshubAll(r); break;
                 case "/fshub-flight": RelayApi.FshubFlight(query, r); break;
+                case "/net": Networks.Serve(query, r); break;
                 case "/plan-current": RelayApi.PlanCurrent(Plan, r); break;
                 case "/fshub": r.Json(200, Relay.Fshub != null ? Relay.Fshub.Snapshot() : new JObject { ["enabled"] = false, ["pilots"] = new JArray() }); break;
                 default:

@@ -458,17 +458,25 @@ namespace HangarFS2024
                         if (client.Add(DEFINE_FLIGHT, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { flightOk = false; break; }
                     SetConnected(true);
                     Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé à Avionics Dispatch.", "connected to MSFS: AI traffic is sent to Avionics Dispatch."));
-                    double nextPoll = 0;
+                    double nextAi = 0, nextUser = 0, nextRoute = 0;
                     while (!stop.IsCancellationRequested)
                     {
                         double now = Now();
-                        if (now >= nextPoll)
+                        if (now >= nextUser)   // ton avion : deux fois par seconde
                         {
-                            if (client.Request(REQ_AI, DEFINE_ID, RADIUS, 2) != 0) throw new Exception(Hangar.L("Demande refusée", "Request refused"));
                             client.Request(REQ_USER, DEFINE_ID, 0, 0);
                             if (flightOk) client.Request(REQ_FLIGHT, DEFINE_FLIGHT, 0, 0);
-                            if (routeOk) client.Request(REQ_ROUTE, DEFINE_ROUTE, RADIUS, 2);
-                            nextPoll = now + 2.0;
+                            nextUser = now + 0.5;
+                        }
+                        if (now >= nextAi)     // trafic IA : chaque seconde
+                        {
+                            if (client.Request(REQ_AI, DEFINE_ID, RADIUS, 2) != 0) throw new Exception(Hangar.L("Demande refusée", "Request refused"));
+                            nextAi = now + 1.0;
+                        }
+                        if (routeOk && now >= nextRoute)   // départ / arrivée de l'IA : ne change pas souvent
+                        {
+                            client.Request(REQ_ROUTE, DEFINE_ROUTE, RADIUS, 2);
+                            nextRoute = now + 5.0;
                         }
                         bool got = false;
                         while (true)
@@ -478,7 +486,7 @@ namespace HangarFS2024
                             got = true;
                             if (Handle(b) == "quit") throw new Exception(Hangar.L("MSFS a été fermé", "MSFS was closed"));
                         }
-                        if (!got) Thread.Sleep(50);
+                        if (!got) Thread.Sleep(30);
                     }
                 }
                 catch (Exception e)
@@ -989,6 +997,108 @@ namespace HangarFS2024
             bool noPath = !(res["path"] is JArray) || ((JArray)res["path"]).Count == 0;
             if (errors.Count > 0 && noPlan && noPath) { r.Json(502, new JObject { ["ok"] = false, ["error"] = errors[0] }); return; }
             r.Json(200, res);
+        }
+    }
+
+    // ------------------------------------------------------------------ réseaux en ligne VATSIM et IVAO (listes publiques, relues au plus toutes les 15 s)
+    static class Networks
+    {
+        class Cache { public double Time; public JObject Data; public readonly object Lock = new object(); }
+        static readonly Dictionary<string, Cache> caches = new Dictionary<string, Cache> { { "vatsim", new Cache() }, { "ivao", new Cache() } };
+        static readonly Dictionary<string, string> UA = new Dictionary<string, string> { { "User-Agent", "HangarFS2024/" + AppInfo.Version + " (MSFS add-on manager; traffic map)" }, { "Accept", "application/json" } };
+
+        static double D(JToken t)
+        {
+            double v;
+            return t != null && double.TryParse(JsonStore.Str(t), NumberStyles.Float, CultureInfo.InvariantCulture, out v) ? v : double.NaN;
+        }
+
+        static string Cut(string s, int n) { s = (s ?? "").Trim(); return s.Length > n ? s.Substring(0, n) : s; }
+
+        static JObject Rec(string id, string callsign, double lat, double lon, double alt, double gs, double hdg, string ac, string dep, string arr, bool ground)
+        {
+            return new JObject
+            {
+                ["id"] = id, ["callsign"] = Cut(callsign, 12), ["lat"] = Math.Round(lat, 5), ["lon"] = Math.Round(lon, 5),
+                ["alt"] = double.IsNaN(alt) ? 0 : (int)Math.Round(alt), ["gs"] = double.IsNaN(gs) ? 0 : (int)Math.Round(gs),
+                ["hdg"] = double.IsNaN(hdg) ? 0 : (((int)Math.Round(hdg) % 360) + 360) % 360,
+                ["aircraft"] = Regex.IsMatch(ac ?? "", "^[A-Za-z0-9-]{2,8}$") ? ac.ToUpperInvariant() : "",
+                ["dep"] = Cut(dep, 4).ToUpperInvariant(), ["arr"] = Cut(arr, 4).ToUpperInvariant(), ["ground"] = ground,
+            };
+        }
+
+        static JArray Vatsim()
+        {
+            var res = Web.Request("https://data.vatsim.net/v3/vatsim-data.json", UA, 15000);
+            if (res.Error != null) throw new Exception(Hangar.L("VATSIM injoignable (", "VATSIM unreachable (") + res.Error + ")");
+            if (res.Status != 200) throw new Exception("VATSIM : HTTP " + res.Status);
+            var d = Web.ParseOrNull(res.Body) as JObject;
+            var pilots = d != null ? d["pilots"] as JArray : null;
+            if (pilots == null) throw new Exception(Hangar.L("VATSIM : réponse inattendue", "VATSIM: unexpected answer"));
+            var outp = new JArray();
+            foreach (var p in pilots.OfType<JObject>())
+            {
+                double lat = D(p["latitude"]), lon = D(p["longitude"]);
+                if (double.IsNaN(lat) || double.IsNaN(lon) || (Math.Abs(lat) < 0.01 && Math.Abs(lon) < 0.01)) continue;
+                var fp = p["flight_plan"] as JObject ?? new JObject();
+                double gs = D(p["groundspeed"]);
+                outp.Add(Rec("v" + JsonStore.Str(p["cid"]), JsonStore.Str(p["callsign"]), lat, lon, D(p["altitude"]), gs, D(p["heading"]),
+                    JsonStore.Str(fp["aircraft_short"]), JsonStore.Str(fp["departure"]), JsonStore.Str(fp["arrival"]), !double.IsNaN(gs) && gs < 40));
+            }
+            return outp;
+        }
+
+        static JArray Ivao()
+        {
+            var res = Web.Request("https://api.ivao.aero/v2/tracker/whazzup", UA, 15000);
+            if (res.Error != null) throw new Exception(Hangar.L("IVAO injoignable (", "IVAO unreachable (") + res.Error + ")");
+            if (res.Status != 200) throw new Exception("IVAO : HTTP " + res.Status);
+            var d = Web.ParseOrNull(res.Body) as JObject;
+            var pilots = d != null ? d.SelectToken("clients.pilots") as JArray : null;
+            if (pilots == null) throw new Exception(Hangar.L("IVAO : réponse inattendue", "IVAO: unexpected answer"));
+            var outp = new JArray();
+            foreach (var p in pilots.OfType<JObject>())
+            {
+                var tr = p["lastTrack"] as JObject;
+                if (tr == null) continue;
+                double lat = D(tr["latitude"]), lon = D(tr["longitude"]);
+                if (double.IsNaN(lat) || double.IsNaN(lon) || (Math.Abs(lat) < 0.01 && Math.Abs(lon) < 0.01)) continue;
+                var fp = p["flightPlan"] as JObject ?? new JObject();
+                string ac = JsonStore.Str(fp["aircraftId"]);
+                if (fp["aircraft"] is JObject && JsonStore.Str(fp["aircraft"]["icaoCode"]) != "") ac = JsonStore.Str(fp["aircraft"]["icaoCode"]);
+                double gs = D(tr["groundSpeed"]);
+                bool ground = tr["onGround"] != null && tr["onGround"].Type == JTokenType.Boolean ? (bool)tr["onGround"] : (!double.IsNaN(gs) && gs < 40);
+                outp.Add(Rec("i" + JsonStore.Str(p["id"] ?? p["userId"]), JsonStore.Str(p["callsign"]), lat, lon, D(tr["altitude"]), gs, D(tr["heading"]),
+                    ac, JsonStore.Str(fp["departureId"]), JsonStore.Str(fp["arrivalId"]), ground));
+            }
+            return outp;
+        }
+
+        public static void Serve(string query, MiniHttp.Response r)
+        {
+            string src;
+            MiniHttp.ParseQuery(query).TryGetValue("src", out src);
+            Cache c;
+            if (src == null || !caches.TryGetValue(src, out c)) { r.Json(400, new JObject { ["enabled"] = false, ["error"] = "src ?" }); return; }
+            lock (c.Lock)
+            {
+                // les réseaux ne mettent leurs positions à jour que toutes les 15 s : inutile (et mal vu) de demander plus souvent
+                if (c.Data == null || RelayState.Now() - c.Time >= 15)
+                {
+                    try
+                    {
+                        var pilots = src == "vatsim" ? Vatsim() : Ivao();
+                        c.Data = new JObject { ["enabled"] = true, ["source"] = src, ["pilots"] = pilots, ["updated"] = Math.Round(RelayState.Now()) };
+                    }
+                    catch (Exception e)
+                    {
+                        // ancienne liste gardée si le réseau ne répond pas
+                        if (c.Data == null || RelayState.Now() - c.Time > 120) c.Data = new JObject { ["enabled"] = false, ["source"] = src, ["error"] = e.Message, ["pilots"] = new JArray() };
+                    }
+                    c.Time = RelayState.Now();
+                }
+                r.Json(200, c.Data);
+            }
         }
     }
 
