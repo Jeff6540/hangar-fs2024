@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte des scènes — Hangar FS 2024</title>
+<link rel="icon" type="image/png" href="icon_map.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#1b1f26;--panel:#232831;--field:#2c323c;--hover:#363d49;--fg:#e6e9ee;--muted:#9aa3ae;--border:#3a414d;--accent:#3b82f6}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px "Segoe UI",system-ui,sans-serif}
+#app{display:grid;grid-template-columns:1fr 310px;height:100%}
+#map{height:100%;background:#11151b}
+aside{background:var(--panel);border-left:1px solid var(--border);overflow:auto;padding:16px}
+h1{font-size:17px;margin:0 0 4px}
+.muted{color:var(--muted);font-size:12px}
+.sec{margin-top:16px}
+.sec h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px;font-weight:600}
+label.row{display:flex;align-items:center;gap:9px;padding:4px 0;cursor:pointer;user-select:none}
+.sw{width:13px;height:13px;border-radius:50%;border:2px solid;flex:none}
+.sw.st{width:16px;height:16px;box-sizing:border-box;display:grid;place-items:center;font-size:10px;font-weight:800;line-height:1}
+.pin-wrap{background:none;border:0}
+.pin{box-sizing:border-box;border-radius:50%;display:grid;place-items:center;font-weight:800;line-height:1;
+     box-shadow:0 1px 5px rgba(0,0,0,.7);cursor:pointer;user-select:none}
+.pin.on{border:2.5px solid #fff}
+.pin.off{background:#fff;border:3px solid}
+.pin{position:relative}.pin .tg{position:absolute;right:-7px;top:-7px;min-width:14px;height:14px;border-radius:50%;
+  background:#0b0e13;border:1.5px solid #fff;color:#fff;font-size:9px;line-height:11px;text-align:center;font-weight:800}
+.pin.dia{border-radius:4px;transform:rotate(45deg)}.pin.dia>span,.pin.dia .tg{transform:rotate(-45deg)}
+.sw.dia{border-radius:2px;transform:rotate(45deg)}.sw .tl{font-size:9px;font-weight:800;line-height:1}
+.cnt{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+input[type=search]{width:100%;box-sizing:border-box;background:var(--field);border:1px solid var(--border);color:var(--fg);padding:8px 10px;border-radius:6px;font:inherit}
+input[type=search]:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button{background:var(--field);color:var(--fg);border:1px solid var(--border);padding:7px 11px;border-radius:6px;cursor:pointer;font:inherit}
+button:hover{background:var(--hover)}
+#closeMap{color:#f87171;border-color:#b9383a}
+.hd{margin:-16px -16px 14px;height:104px;background:#16263f url(bg_map.svg) center/cover no-repeat;border-bottom:1px solid rgba(59,130,246,.55);display:flex;align-items:center;gap:11px;padding:0 14px;box-sizing:border-box}
+.hd img{width:46px;height:46px;flex:none}
+.hd h1{margin:0;font-size:18px}
+.hd .s{color:#9fb0c8;font-size:12px;margin-top:2px}
+#closeMap:hover{background:#d0484a;color:#fff;border-color:#d0484a}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--fg);box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.leaflet-popup-content{margin:12px 14px;min-width:230px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.leaflet-control-layers,.leaflet-bar a{background:var(--panel);color:var(--fg);border-color:var(--border)}
+.leaflet-control-attribution{background:rgba(27,31,38,.8)!important;color:var(--muted)}
+.leaflet-control-attribution a{color:var(--muted)}
+.pop h3{margin:0 0 6px;font-size:15px}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600}
+.on{background:#1d3a2c;color:#4ade80}.off{background:#4a2226;color:#ff9a9a}
+.pop dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:9px 0 0;font-size:12px}
+.pop dt{color:var(--muted)} .pop dd{margin:0}
+.lbl{background:rgba(17,21,27,.88);border:1px solid rgba(255,255,255,.25);border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.5);color:#fff;font-weight:700;font-size:11px;padding:1px 5px}
+label.rng{display:block;padding:6px 0 0;font-size:13px}
+label.rng output{float:right;color:var(--muted);font-size:12px}
+label.rng input{width:100%;accent-color:var(--accent)}
+.lbl::before{display:none}
+.dark-tiles{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.6)}
+#nopos{margin:0;padding-left:16px} #nopos li{font-size:12px;padding:2px 0;color:var(--muted)}
+#nopos b{color:var(--fg);font-weight:600}
+@media (max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:62% 38%} aside{border-left:0;border-top:1px solid var(--border)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map"></div>
+  <aside>
+    <div class="hd"><img src="logo.svg" alt=""><div><h1>Carte des scènes</h1><div class="s">Hangar FS 2024 · MSFS 2024</div></div></div>
+    <div class="muted" id="meta">Chargement…</div>
+    <div class="sec"><input type="search" id="q" placeholder="ICAO ou nom (Entrée pour zoomer)…"></div>
+    <div class="sec"><h2>Légende — type de scène</h2><div id="cats"></div></div>
+    <div class="sec"><h2>Légende — état</h2>
+      <label class="row"><input type="checkbox" id="showOn" checked><span class="sw st" style="background:#6b7280;border-color:#ffffff;color:#fff">✓</span>Activée (pleine avec ✓)<span class="cnt" id="cOn"></span></label>
+      <label class="row"><input type="checkbox" id="showOff" checked><span class="sw st" style="background:#ffffff;border-color:#6b7280;color:#6b7280">✕</span>Désactivée (blanche avec ✕)<span class="cnt" id="cOff"></span></label>
+    </div>
+    <div class="sec"><h2>Affichage</h2>
+      <label class="row"><input type="checkbox" id="showRoute" checked><span class="sw" style="background:#3b82f6;border-color:#3b82f6;border-radius:2px;height:4px;width:13px"></span>Plan de vol SimBrief</label>
+      <label class="row"><input type="checkbox" id="labels">Afficher les codes ICAO</label>
+      <label class="rng">Taille des pastilles <output id="sizeOut"></output>
+        <input type="range" id="size" min="0.8" max="2.6" step="0.1" value="1.3"></label>
+      <label class="rng">Fond de carte <output id="dimOut"></output>
+        <input type="range" id="dim" min="0.25" max="1" step="0.05" value="1"></label>
+    </div>
+    <div class="sec"><button id="refresh">⟳ Actualiser</button> <button id="fit">Tout voir</button>
+      <button id="closeMap" style="margin-top:8px;width:100%">✕ Fermer la carte</button></div>
+    <div class="sec"><h2>Add-ons sans position connue</h2><ul id="nopos"></ul></div>
+    <div class="sec muted">Fonds de carte © OpenStreetMap contributors, Esri · Positions et tailles : OurAirports. La carte suit l'appli en direct.</div>
+  </aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const CATS = [
+  {id:"default", label:"Scène par défaut MSFS 2024", color:"#a855f7", ink:"#ffffff", r:8},
+  {id:"large",   label:"Add-on — gros aéroport",       color:"#ef4444", ink:"#ffffff", r:11},
+  {id:"medium",  label:"Add-on — aéroport moyen",       color:"#f97316", ink:"#ffffff", r:9.5},
+  {id:"small",   label:"Add-on — petit aéroport",       color:"#facc15", ink:"#1b1f26", r:9},
+  {id:"vfr",     label:"Add-on — VFR / héliport / ULM", color:"#16c75e", ink:"#ffffff", r:9},
+];
+const CB = false;   /* couleurs adaptées aux daltoniens (réglage de l'appli) */
+if (CB) {   /* palette Okabe-Ito + une lettre par type, losange pour les scènes par défaut */
+  const P = {default:["#CC79A7","#ffffff","D"], large:["#0072B2","#ffffff","G"], medium:["#E69F00","#1b1f26","M"],
+             small:["#F0E442","#1b1f26","P"], vfr:["#009E73","#ffffff","V"]};
+  CATS.forEach(c => { c.color = P[c.id][0]; c.ink = P[c.id][1]; c.tag = P[c.id][2]; });
+}
+const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const map = L.map("map", {worldCopyJump:true, preferCanvas:true}).setView([45, 5], 5);
+const attr = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const bases = {
+  "Plan (OpenStreetMap)": L.tileLayer(OSM, {maxZoom:19, attribution: attr}),
+  "Plan sombre": L.tileLayer(OSM, {maxZoom:19, attribution: attr, className:"dark-tiles"}),
+  "Satellite (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, attribution:"Imagerie © Esri, Maxar, Earthstar Geographics"}),
+  "Relief (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {maxZoom:19, attribution: "Fond © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors"}),
+};
+let savedBase = null;
+try { savedBase = localStorage.getItem("fond"); } catch (e) {}
+(bases[savedBase] || bases["Plan (OpenStreetMap)"]).addTo(map);
+map.on("baselayerchange", e => { try { localStorage.setItem("fond", e.name); } catch (err) {} });
+L.control.layers(bases, null, {position:"topleft"}).addTo(map);
+L.control.scale({imperial:false}).addTo(map);
+
+const layer = L.layerGroup().addTo(map), routeLayer = L.layerGroup().addTo(map);
+const pref = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
+const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+$("size").value = pref("taille", "1.3");
+$("dim").value = pref("fond-opacite", "1");
+const zoomFactor = () => { const z = map.getZoom(); return z <= 4 ? 0.85 : z >= 10 ? 1.5 : 0.85 + (z - 4) * 0.11; };
+const radius = c => c.r * (+$("size").value) * zoomFactor();
+function makeIcon(c, active) {
+  const d = Math.round(radius(c) * 2), fs = Math.max(9, Math.round(d * 0.58));
+  const dia = CB && c.id === "default" ? " dia" : "", tg = CB && c.tag ? `<b class="tg">${c.tag}</b>` : "";
+  const html = active
+    ? `<div class="pin on${dia}" style="width:${d}px;height:${d}px;background:${c.color};color:${c.ink};font-size:${fs}px"><span>✓</span>${tg}</div>`
+    : `<div class="pin off${dia}" style="width:${d}px;height:${d}px;border-color:${c.color};color:${CB ? "#1b1f26" : c.color};font-size:${fs}px"><span>✕</span>${tg}</div>`;
+  return L.divIcon({html, className:"pin-wrap", iconSize:[d, d], iconAnchor:[d / 2, d / 2], popupAnchor:[0, -d / 2], tooltipAnchor:[0, 0]});
+}
+function applyDim() {
+  const pane = document.querySelector(".leaflet-tile-pane");
+  if (pane) pane.style.opacity = $("dim").value;
+  $("dimOut").textContent = Math.round($("dim").value * 100) + " %";
+}
+function applySize() {
+  $("sizeOut").textContent = "× " + (+$("size").value).toFixed(1);
+  markers.forEach(m => m.setIcon(makeIcon(CAT[m.p.cat], m.p.active)));
+}
+$("size").addEventListener("input", () => { keep("taille", $("size").value); draw(); });
+$("dim").addEventListener("input", () => { keep("fond-opacite", $("dim").value); applyDim(); });
+map.on("zoomend", applySize);
+applyDim();
+const show = Object.fromEntries(CATS.map(c => [c.id, true]));
+let DATA = null, markers = [], bounds = [], first = true;
+
+$("cats").innerHTML = CATS.map(c =>
+  `<label class="row"><input type="checkbox" data-cat="${c.id}" checked>
+   <span class="sw${CB && c.id === "default" ? " dia" : ""}" style="background:${c.color};border-color:#ffffff;${CB ? "width:16px;height:16px;display:grid;place-items:center;color:" + c.ink : ""}">${CB ? `<b class="tl" style="${c.id === "default" ? "transform:rotate(-45deg)" : ""}">${c.tag}</b>` : ""}</span>${esc(c.label)}
+   <span class="cnt" id="n-${c.id}"></span></label>`).join("");
+document.querySelectorAll("[data-cat]").forEach(cb => cb.addEventListener("change", () => { show[cb.dataset.cat] = cb.checked; draw(); }));
+["showOn","showOff","showRoute","labels"].forEach(id => $(id).addEventListener("change", draw));
+$("q").addEventListener("input", draw);
+$("q").addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !markers.length) return;
+  const q = $("q").value.trim().toUpperCase();
+  const m = markers.find(x => x.p.icao === q) || markers[0];
+  map.setView(m.getLatLng(), Math.max(map.getZoom(), 10));
+  m.openPopup();
+});
+$("refresh").addEventListener("click", load);
+$("closeMap").addEventListener("click", () => {
+  fetch("close?w=map").then(r => r.text()).then(t => { if (t !== "ok") window.close(); }).catch(() => window.close());
+});
+$("fit").addEventListener("click", () => bounds.length && map.fitBounds(bounds, {padding:[30,30]}));
+
+function popup(p) {
+  const c = CAT[p.cat];
+  let h = `<div class="pop"><h3>${esc(p.icao)} — ${esc(p.name)}</h3>
+    <span class="badge ${p.active ? "on" : "off"}">${p.active ? "✅ Activée" : "⛔ Désactivée"}</span>
+    <dl><dt>Type</dt><dd>${esc(c.label)}</dd>`;
+  if (p.kind === "addon") {
+    h += `<dt>Add-on</dt><dd>${esc(p.title || p.pkg)}</dd><dt>Dossier</dt><dd>${esc(p.folder || "racine")}</dd>`;
+    if (p.pinned) h += `<dt>Mode</dt><dd>★ Protégé</dd>`;
+  } else {
+    h += `<dt>Paquet</dt><dd>${esc(p.pkg)}</dd>`;
+  }
+  h += `<dt>Lieu</dt><dd>${esc(p.city ? p.city + " · " : "")}${esc(p.country)}</dd>`;
+  if (p.also) h += `<dt>Aussi ici</dt><dd>${esc(p.also)}</dd>`;
+  return h + "</dl></div>";
+}
+
+function draw() {
+  const openKey = (markers.find(m => m.isPopupOpen()) || {}).key;
+  layer.clearLayers(); routeLayer.clearLayers(); markers = []; bounds = [];
+  if (!DATA) return;
+  const q = $("q").value.trim().toLowerCase();
+  const showOn = $("showOn").checked, showOff = $("showOff").checked, labels = $("labels").checked;
+  const n = {}; let on = 0, off = 0;
+  const pts = DATA.points;
+  for (const p of pts) {
+    n[p.cat] = (n[p.cat] || 0) + 1;
+    p.active ? on++ : off++;
+    if (!show[p.cat] || (p.active ? !showOn : !showOff)) continue;
+    if (q && !`${p.icao} ${p.name} ${p.title || ""} ${p.pkg}`.toLowerCase().includes(q)) continue;
+    const c = CAT[p.cat];
+    const m = L.marker([p.lat, p.lon], {icon: makeIcon(c, p.active), riseOnHover: true,
+                                        zIndexOffset: p.kind === "default" ? 0 : (p.active ? 300 : 200)});
+    m.p = p;
+    m.key = p.kind + "|" + p.icao + "|" + p.pkg;
+    m.bindPopup(popup(p));
+    if (labels) m.bindTooltip(p.icao, {permanent:true, direction:"right", offset:[radius(c) + 3, 0], className:"lbl"});
+    else m.bindTooltip(`${p.icao} — ${p.name} · ${p.active ? "activée" : "désactivée"}`, {direction:"top", offset:[0, -radius(c) - 2]});
+    m.addTo(layer); markers.push(m); bounds.push([p.lat, p.lon]);
+  }
+  CATS.forEach(c => $("n-" + c.id).textContent = n[c.id] || 0);
+  $("sizeOut").textContent = "× " + (+$("size").value).toFixed(1);
+  $("cOn").textContent = on; $("cOff").textContent = off;
+
+  const r = DATA.route;
+  if (r && r.points.length && $("showRoute").checked) {
+    const main = r.points.filter(x => x.primary).map(x => [x.lat, x.lon]);
+    if (main.length > 1) L.polyline(main, {color:"#3b82f6", weight:3, opacity:.9}).addTo(routeLayer);
+    const dest = main[main.length - 1];
+    r.points.filter(x => !x.primary).forEach(x => {
+      if (dest) L.polyline([dest, [x.lat, x.lon]], {color:"#3b82f6", weight:2, dashArray:"6 6", opacity:.7}).addTo(routeLayer);
+    });
+    r.points.forEach(x => L.circleMarker([x.lat, x.lon], {radius:4, color:"#fff", weight:2, fillColor:"#3b82f6", fillOpacity:1})
+      .bindTooltip(`${x.role} : ${x.icao}`, {direction:"bottom", offset:[0,6]}).addTo(routeLayer));
+  }
+
+  $("meta").textContent = DATA.dbReady
+    ? `${DATA.points.length} scènes placées${r ? " · vol " + r.name : ""} · à jour ${new Date().toLocaleTimeString("fr-FR")}`
+    : "Base des aéroports indisponible : positions inconnues.";
+  $("nopos").innerHTML = DATA.nopos.length
+    ? DATA.nopos.map(x => `<li><b>${esc(x.icao || "?")}</b> — ${esc(x.title || x.pkg)}</li>`).join("")
+    : "<li>Aucun</li>";
+  if (first && bounds.length) { map.fitBounds(bounds, {padding:[30,30]}); first = false; }
+  const reopen = openKey && markers.find(m => m.key === openKey);
+  if (reopen) reopen.openPopup();
+}
+
+async function load() {
+  try {
+    const r = await fetch("data.json?t=" + Date.now(), {cache:"no-store"});
+    DATA = await r.json();
+    draw();
+  } catch (e) {
+    $("meta").textContent = "Hangar FS 2024 est fermé ou injoignable.";
+  }
+}
+let ver = null;
+async function watch() {
+  try {
+    const r = await fetch("version?t=" + Date.now(), {cache:"no-store"});
+    const v = await r.text();
+    if (v !== ver) { ver = v; await load(); }
+  } catch (e) {
+    $("meta").textContent = "Hangar FS 2024 est fermé : la carte va se fermer.";
+    if (++lost >= 3) window.close();
+    return;
+  }
+  lost = 0;
+}
+let lost = 0;
+watch();
+setInterval(watch, 1200);
+</script>
+</body>
+</html>

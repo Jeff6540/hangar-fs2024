@@ -23,6 +23,7 @@ namespace HangarFS2024
         readonly Timer monitor = new Timer();
         bool ticking;
         bool ready;
+        readonly Dictionary<string, WebWindow> webWins = new Dictionary<string, WebWindow>();
 
         public MainForm()
         {
@@ -50,11 +51,60 @@ namespace HangarFS2024
                 {
                     await Task.Run(() => hangar.Tick());
                     Push("sim", new JValue(hangar.SimOn));
+                    PushRelay();
                 }
                 catch (Exception) { }
                 finally { ticking = false; }
             };
+            hangar.CloseWebWindow = w =>
+            {
+                bool ok = false;
+                try { Invoke((Action)(() => { WebWindow f; if (webWins.TryGetValue(w, out f) && !f.IsDisposed) { f.Close(); ok = true; } })); } catch (Exception) { }
+                return ok;
+            };
+            hangar.OnLauncher += () => PushRelay();
+            hangar.OpenUrl = WebWindow.OpenExternal;
+            PlaceMain();
             Load += async (s, e) => await InitWeb();
+            Shown += (s, e) =>
+            {
+                Task.Run(() => hangar.InitRelay());
+                if (File.Exists(Airports.FilePath)) Task.Run(() => { System.Threading.Thread.Sleep(800); hangar.LoadAirports(false); });
+            };
+        }
+
+        Screen ScreenFor(string which)
+        {
+            if (!hangar.CfgB("screen_" + which, true)) return null;
+            string choice = hangar.CfgS("screen");
+            return Win.Resolve(choice == "" ? "auto" : choice);
+        }
+
+        void PlaceMain()
+        {
+            var mon = ScreenFor("main");
+            if (mon == null) return;
+            var wa = mon.WorkingArea;
+            int w = Math.Min(1320, wa.Width - 20), h = Math.Min(860, wa.Height - 40);
+            StartPosition = FormStartPosition.Manual;
+            Bounds = new Rectangle(wa.X + (wa.Width - w) / 2, wa.Y + Math.Max(0, (wa.Height - h) / 2 - 15), w, h);
+        }
+
+        void PushRelay()
+        {
+            Push("relay", new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus });
+        }
+
+        void OpenWeb(string which, string path, string title, Size size, bool maximize)
+        {
+            WebWindow f;
+            if (webWins.TryGetValue(which, out f) && !f.IsDisposed) { f.BringUp(); return; }
+            int port = hangar.PagePort();
+            f = new WebWindow(title, "http://127.0.0.1:" + port + path, size);
+            f.PlaceOn(ScreenFor(which == "tuto" ? "map" : which), maximize);
+            f.FormClosed += (o, e) => webWins.Remove(which);
+            webWins[which] = f;
+            f.Show();
         }
 
         async Task InitWeb()
@@ -258,6 +308,30 @@ namespace HangarFS2024
                             return new JObject { ["path"] = path, ["args"] = args, ["cwd"] = cwd };
                         }
                     }
+                case "openMap":
+                    {
+                        if (hangar.AirportsDb == null) await Task.Run(() => hangar.LoadAirports(true));
+                        if (hangar.DupStreamed == null) { var _s = Task.Run(() => hangar.ScanStreamedNow()); }
+                        hangar.PushMap();
+                        OpenWeb("map", "/", JsonStore.Str(Hangar.Titles()["map_window"]), new Size(1400, 900), false);
+                        return null;
+                    }
+                case "openDispatch":
+                    if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
+                    OpenWeb("dispatch", "/dispatch", JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
+                    return null;
+                case "openTutorial":
+                    OpenWeb("tuto", "/tutorial", JsonStore.Str(Hangar.Titles()["tuto_" + Hangar.Lang]), new Size(1100, 900), false);
+                    return null;
+                case "relayToggle":
+                    await Task.Run(() => hangar.RelayToggle());
+                    PushRelay();
+                    return null;
+                case "relayInfo":
+                    return new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus };
+                case "launchMsfs":
+                    hangar.LaunchMsfs();
+                    return null;
                 case "removeCommunity":
                     await Task.Run(() => hangar.RemoveCommunityLinks(StrList(a["links"])));
                     return null;

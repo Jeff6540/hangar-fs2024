@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace HangarFS2024
 {
-    class Hangar
+    partial class Hangar
     {
         public static string Lang = "fr";
         public static string L(string fr, string en) { return Lang == "en" ? en : fr; }
@@ -181,7 +181,7 @@ namespace HangarFS2024
             string text = (p.Name + " " + p.Title).ToLowerInvariant();
             if (p.Icao.Count > 6 && !Scanner.AirportWords.Any(w => text.Contains(w))) return new List<string>();
             if (Scanner.IsDecorPack(text)) return new List<string>();
-            return new List<string>(p.Icao);
+            return ResolveWithDb(p);
         }
 
         public List<Pkg> PackagesFor(IEnumerable<string> icaos)
@@ -898,6 +898,7 @@ namespace HangarFS2024
             {
                 if (!simWasRunning)
                 {
+                    if (!RelayRunning && !RelayManualOff && !RelayPortBusy) RelayStart(false, false);   // MSFS démarre : le relais repart tout seul
                     Launcher.ParkingFired = false;
                     if (CfgB("launcher_auto", true)) Launcher.Schedule("sim", "");   // MSFS démarre : applications du lanceur
                     LauncherChanged();
@@ -907,6 +908,7 @@ namespace HangarFS2024
             else if (simWasRunning)
             {
                 simWasRunning = false;
+                if (CfgB("relay_auto", true) && RelayRunning) RelayStopNow(L(" : MSFS 2024 fermé", ": MSFS 2024 closed"));
                 Launcher.CloseWithSim();
                 LauncherChanged();
                 if (skipNextExit)
@@ -926,6 +928,7 @@ namespace HangarFS2024
                     Changed();
                 }
             }
+            try { CheckParking(running); } catch (Exception) { }
             if (!scanning)
             {
                 string sig = Scanner.LibSignature(CfgS("library"));
@@ -936,6 +939,7 @@ namespace HangarFS2024
                     return;
                 }
             }
+            PushMap();
             if (changed) Changed();
         }
 
