@@ -11,9 +11,9 @@
     <ApplicationIcon>hangar.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>12.0.0</Version>
-    <FileVersion>12.0.0.0</FileVersion>
-    <AssemblyVersion>12.0.0.0</AssemblyVersion>
+    <Version>12.1.0</Version>
+    <FileVersion>12.1.0.0</FileVersion>
+    <AssemblyVersion>12.1.0.0</AssemblyVersion>
     <Company>Jeff40</Company>
     <Product>Hangar FS 2024</Product>
     <AssemblyTitle>Hangar FS 2024 - Addon Manager pour MSFS 2024</AssemblyTitle>

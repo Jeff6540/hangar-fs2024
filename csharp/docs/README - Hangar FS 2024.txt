@@ -52,7 +52,7 @@ it needs. Do not move anything inside the folder.
 Windows 10 or 11 is enough (the Microsoft Edge WebView2 component,
 already present on these Windows versions, displays the app).
 
-Using version 11.x? Close it ("Quit" button), then start 12.0: it
+Using version 11.x? Close it ("Quit" button), then start 12.x: it
 keeps all your settings, profiles and auto-launch apps. You can then
 delete the old folder.
 

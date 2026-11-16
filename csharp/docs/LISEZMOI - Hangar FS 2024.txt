@@ -45,7 +45,7 @@ Windows 10 ou 11 suffit (le composant Microsoft Edge WebView2, deja
 present sur ces versions de Windows, sert a afficher l'appli).
 
 Tu avais la version 11.x ? Ferme-la (bouton "Quitter"), puis lance
-la 12.0 : elle reprend tous tes reglages, profils et applis du
+la 12.x : elle reprend tous tes reglages, profils et applis du
 Demarrage auto. Tu pourras ensuite supprimer l'ancien dossier.
 
 Si Windows affiche "Windows a protege votre ordinateur" : clique sur

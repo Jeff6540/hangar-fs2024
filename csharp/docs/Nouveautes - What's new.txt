@@ -1,5 +1,30 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.0
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.1
 Nouveautés / What's new
+==================================================================
+
+FRANÇAIS
+--------
+
+Version 12.1 — carte de suivi plus lisible
+- Avions IVAO : gris foncé bordés de rouge, pour ne plus les confondre avec les gros porteurs (rouges) du trafic IA.
+- VATSIM et IVAO : plus d'étiquettes sur la carte ; un clic sur un avion affiche ses infos (indicatif, type, départ → arrivée, altitude, vitesse, cap).
+- Trafic IA et autres VA FSHub : les infos d'un avion s'affichent aussi d'un clic (et non plus au survol) ; un clic ailleurs sur la carte referme la bulle.
+- Boutons VATSIM et IVAO bien colorés quand ils sont allumés.
+- Tutoriel mis à jour (français et anglais).
+
+ENGLISH
+-------
+
+Version 12.1 — more readable tracking map
+- IVAO aircraft: dark grey with a red outline, so they are no longer mixed up with AI heavies (red).
+- VATSIM and IVAO: no more labels on the map; click an aircraft to see its details (callsign, type, departure → arrival, altitude, speed, heading).
+- AI traffic and other FSHub VAs: aircraft details now also open with a click (no longer on hover); click elsewhere on the map to close the bubble.
+- VATSIM and IVAO buttons are clearly coloured when switched on.
+- Tutorial updated (French and English).
+
+
+==================================================================
+RAPPEL — VERSION 12.0 / REMINDER — VERSION 12.0
 ==================================================================
 
 FRANÇAIS

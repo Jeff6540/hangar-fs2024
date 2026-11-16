@@ -72,6 +72,6 @@ jobs:
           tag_name: ${{ env.REL }}
           target_commitish: ${{ github.sha }}
           name: Hangar FS 2024 v${{ env.REL }}
-          body_path: "csharp/docs/Nouveautes 12.0 - What's new.txt"
+          body_path: "csharp/docs/Nouveautes - What's new.txt"
           files: Hangar_FS2024_v*.zip
           make_latest: true
