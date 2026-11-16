@@ -1,6 +1,6 @@
 {
-  "version": "12.1",
+  "version": "12.2",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Version C# (un simple .exe), pilotes VATSIM et IVAO sur la carte de suivi, suivi plus rapide et fluide",
-  "notes_en": "C# version (a single .exe), VATSIM and IVAO pilots on the tracking map, faster and smoother tracking"
+  "notes_fr": "Mode daltonien actif partout tout de suite ; démarrage avec Windows et mode administrateur indépendants",
+  "notes_en": "Colour-blind mode active everywhere right away; Windows startup and administrator mode now independent"
 }

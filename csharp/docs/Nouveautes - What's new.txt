@@ -1,29 +1,33 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.1
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.2
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
 
+Version 12.2 — corrections
+- Mode daltonien actif partout : dès que tu coches « Couleurs adaptées aux daltoniens » (Réglages > Accessibilité), la carte des scènes et la carte de suivi déjà ouvertes passent tout de suite à la palette adaptée (trafic IA, VATSIM, IVAO, scènes).
+- Réglages : « Démarrer avec Windows » et « Toujours ouvrir en mode administrateur » sont maintenant deux cases indépendantes : le mode administrateur ne fait plus démarrer l'appli avec Windows.
+
 Version 12.1 — carte de suivi plus lisible
 - Avions IVAO : gris foncé bordés de rouge, pour ne plus les confondre avec les gros porteurs (rouges) du trafic IA.
 - VATSIM et IVAO : plus d'étiquettes sur la carte ; un clic sur un avion affiche ses infos (indicatif, type, départ → arrivée, altitude, vitesse, cap).
 - Trafic IA et autres VA FSHub : les infos d'un avion s'affichent aussi d'un clic (et non plus au survol) ; un clic ailleurs sur la carte referme la bulle.
 - Boutons VATSIM et IVAO bien colorés quand ils sont allumés.
-- Réglages : « Démarrer avec Windows » et « Toujours ouvrir en mode administrateur » sont maintenant deux cases indépendantes (le mode administrateur ne fait plus démarrer l'appli avec Windows).
-- Mode daltonien : les cartes déjà ouvertes changent de couleurs tout de suite.
 - Tutoriel mis à jour (français et anglais).
 
 ENGLISH
 -------
+
+Version 12.2 — fixes
+- Colour-blind mode active everywhere: as soon as you tick "Colour-blind friendly colours" (Settings > Accessibility), the scenery map and the tracking map, even if already open, switch to the adapted palette right away (AI traffic, VATSIM, IVAO, sceneries).
+- Settings: "Start with Windows" and "Always open in administrator mode" are now two independent boxes: administrator mode no longer makes the app start with Windows.
 
 Version 12.1 — more readable tracking map
 - IVAO aircraft: dark grey with a red outline, so they are no longer mixed up with AI heavies (red).
 - VATSIM and IVAO: no more labels on the map; click an aircraft to see its details (callsign, type, departure → arrival, altitude, speed, heading).
 - AI traffic and other FSHub VAs: aircraft details now also open with a click (no longer on hover); click elsewhere on the map to close the bubble.
 - VATSIM and IVAO buttons are clearly coloured when switched on.
-- Settings: "Start with Windows" and "Always open in administrator mode" are now two independent boxes (administrator mode no longer makes the app start with Windows).
-- Colour-blind mode: maps that are already open switch colours right away.
 - Tutorial updated (French and English).
 
 
