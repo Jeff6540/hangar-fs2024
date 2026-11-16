@@ -39,6 +39,8 @@ R = {
    "ou coche « Toujours ouvrir en mode administrateur » dans Réglages</td>"),
   ("Dans la Bibliothèque, la case d'un add-on présent dans Community devient orange (bleue = simplement cochée)",
    "Dans la Bibliothèque, la case d'un add-on présent dans Community devient bleu ciel, sur une ligne bleu foncé (jaune = simplement cochée)"),
+  ("dans la colonne Community = l'add-on est dans Community.</li>",
+   "dans la colonne Community = l'add-on est dans Community.</li><li>Quand tu sélectionnes un add-on déjà dans Community (pour le retirer), sa coche disparaît : la case devient <b>vide, bordée de bleu</b>. Elle montre ce qui restera après « Retirer de Community ».</li>"),
  ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
@@ -76,6 +78,8 @@ R = {
    "or tick \"Always open in administrator mode\" in Settings</td>"),
   ("In the Library, the box of an add-on in Community turns orange (blue = just ticked)",
    "In the Library, the box of an add-on in Community turns sky blue, on a dark blue row (yellow = just ticked)"),
+  ("in the Community column = the add-on is in Community.</li>",
+   "in the Community column = the add-on is in Community.</li><li>When you select an add-on that is already in Community (to remove it), its tick disappears: the box becomes <b>empty, with a blue outline</b>. It shows what will be left after \"Remove from Community\".</li>"),
  ],
 }
 

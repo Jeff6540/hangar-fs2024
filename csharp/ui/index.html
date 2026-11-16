@@ -82,8 +82,8 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 .box.act::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .box.actpart{background:#16a34a;border-color:#16a34a}
 .box.actpart::after{content:"";position:absolute;left:2px;top:5px;width:8px;height:2px;background:#fff}
-.box.acton{background:var(--accent);border:2px solid #4ade80}
-.box.acton::after{content:"";position:absolute;left:3px;top:0;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+/* add-on dans Community et sélectionné (pour le retirer) : case vide, bordée de bleu */
+.box.acton{background:transparent;border:2px solid var(--accent)}
 #commList table{table-layout:fixed}#commList td{max-width:none}
 .st-flight{color:var(--ok)}.st-linked{color:var(--ok)}.st-ext{color:#7cc4ff}.st-real{color:var(--warn)}
 .star{color:#f5c542}
@@ -100,7 +100,7 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 .form input[type=text]{width:100%}
 #scrDraw{position:relative;width:300px;height:92px;flex:none}.scr{position:absolute;border:2px solid var(--border);background:var(--panel);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.scr b{font-size:16px}.scr.on{border-color:var(--accent);background:#1b2a44;color:#fff}
 input[type=password]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;color:var(--fg)}
-/* daltoniens : présent dans Community = bleu ciel ; simplement coché = jaune (palette Okabe-Ito) */body.cb .box.act,body.cb .box.actpart{background:#56B4E9;border-color:#56B4E9}body.cb tr.item.act td{background:#163d55}body.cb tr.item.act:hover td{background:#1d4a66}body.cb .box.on,body.cb .box.part{background:#F0E442;border-color:#F0E442}body.cb .box.on::after{border-color:#1b1f26}body.cb .box.part::after{background:#1b1f26}body.cb .box.acton{background:#F0E442;border:2px solid #56B4E9}body.cb .box.acton::after{border-color:#1b1f26}body.cb tr.item.chk td{background:#3a4150}
+/* daltoniens : présent dans Community = bleu ciel ; simplement coché = jaune (palette Okabe-Ito) */body.cb .box.act,body.cb .box.actpart{background:#56B4E9;border-color:#56B4E9}body.cb tr.item.act td{background:#163d55}body.cb tr.item.act:hover td{background:#1d4a66}body.cb .box.on,body.cb .box.part{background:#F0E442;border-color:#F0E442}body.cb .box.on::after{border-color:#1b1f26}body.cb .box.part::after{background:#1b1f26}body.cb .box.acton{background:transparent;border:2px solid #F0E442}body.cb tr.item.chk td{background:#3a4150}
 #issueBanner{display:none;flex:none;background:var(--warn-btn);color:#fff;font-weight:700;padding:5px 12px;align-items:center}
 .ctx{position:fixed;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 0;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .ctxitem{padding:6px 14px;cursor:pointer}.ctxitem:hover{background:var(--sel)}.ctxitem.off{color:var(--off);cursor:default}.ctxitem.off:hover{background:none}.ctxsep{height:1px;background:var(--border);margin:4px 0}
@@ -641,7 +641,8 @@ function renderLib(){
   const walk = (node, depth) => {
     [...node.kids.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: "base"})).forEach(k => {
       const all = leaves(k), nChk = all.filter(p => checked.has(p.path)).length, nAct = all.filter(isOn).length;
-      const st = nChk ? (nChk === all.length ? 2 : 1) : (nAct && nAct === all.length ? "act" : nAct ? "actpart" : 0);
+      const nChkAct = all.filter(p => checked.has(p.path) && isOn(p)).length;
+      const st = nChk ? (nChk === all.length ? (nChkAct === nChk ? "acton" : 2) : 1) : (nAct && nAct === all.length ? "act" : nAct ? "actpart" : 0);
       const open = searching || opened.has(k.path);
       h += '<tr class="grp" data-g="' + esc(k.path) + '"><td colspan="7" style="padding-left:' + (10 + depth * 20) + 'px"><span class="tw">' + (open ? "▾" : "▸") +
            '</span><span data-gbox="1">' + boxHtml(st) + "</span> " + esc(k.name) + " (" + nAct + " / " + all.length + ")</td></tr>";

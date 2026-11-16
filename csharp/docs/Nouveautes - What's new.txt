@@ -6,6 +6,7 @@ FRANÇAIS
 --------
 
 Version 12.2 — corrections
+- Bibliothèque : quand tu sélectionnes un add-on déjà dans Community pour le retirer, sa coche disparaît (case vide bordée de bleu) : on voit tout de suite ce qui sera retiré.
 - Mode daltonien actif partout : dès que tu coches « Couleurs adaptées aux daltoniens » (Réglages > Accessibilité), la carte des scènes et la carte de suivi déjà ouvertes passent tout de suite à la palette adaptée (trafic IA, VATSIM, IVAO, scènes).
 - Réglages : « Démarrer avec Windows » et « Toujours ouvrir en mode administrateur » sont maintenant deux cases indépendantes : le mode administrateur ne fait plus démarrer l'appli avec Windows.
 - Mode daltonien, Bibliothèque : un add-on présent dans Community est maintenant en bleu ciel (au lieu du marron, peu lisible pour certaines formes de daltonisme) ; une case simplement cochée est en jaune.
@@ -21,6 +22,7 @@ ENGLISH
 -------
 
 Version 12.2 — fixes
+- Library: when you select an add-on already in Community to remove it, its tick disappears (empty box with a blue outline): you see right away what will be removed.
 - Colour-blind mode active everywhere: as soon as you tick "Colour-blind friendly colours" (Settings > Accessibility), the scenery map and the tracking map, even if already open, switch to the adapted palette right away (AI traffic, VATSIM, IVAO, sceneries).
 - Settings: "Start with Windows" and "Always open in administrator mode" are now two independent boxes: administrator mode no longer makes the app start with Windows.
 - Colour-blind mode, Library: an add-on in Community is now shown in sky blue (instead of brown, hard to read for some types of colour blindness); a box that is just ticked is yellow.
