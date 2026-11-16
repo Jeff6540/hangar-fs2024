@@ -175,8 +175,8 @@ The relay status is shown at the bottom of the app (on/off button).
 - Hangar FS 2024 NEVER deletes a real add-on folder:
   it only creates and removes links.
 - Your settings stay on your PC, in: %APPDATA%\HangarFS2024
-  (nothing is sent anywhere; only SimBrief and weather services
-  are queried online).
+  (nothing is sent anywhere; only SimBrief, weather services, FSHub,
+  VATSIM, IVAO and OpenStreetMap are queried online).
 
 ===============================================================
   IMPORTANT - MSFS 2024 CONTENT.XML FILE (ICAO duplicates)

@@ -15,7 +15,8 @@ Nouvelle version entièrement réécrite (C#)
 Plan & suivi de vol : pilotes VATSIM et IVAO
 - Deux nouveaux boutons, VATSIM (vert) et IVAO (rouge), à côté de « Toutes les VA FSHub ».
 - Chaque réseau s'active ou se désactive d'un clic ; ils sont désactivés par défaut et ton choix est gardé.
-- Au survol : indicatif, type d'avion, départ → arrivée, altitude, vitesse et cap (aucun nom de pilote).
+- Pas d'étiquette sur la carte pour la garder lisible : un clic sur un avion affiche son indicatif, son type, départ → arrivée, altitude, vitesse et cap (aucun nom de pilote).
+- Trafic IA et autres VA FSHub : les infos d'un avion s'affichent aussi d'un clic (et non plus au survol).
 - Le menu Rayon (partout, 150, 300 ou 500 NM, le long de ma route) s'applique aussi à VATSIM et IVAO.
 - Ton propre avion n'apparaît pas en double si tu voles connecté à un réseau.
 - Données publiques et gratuites, sans compte ni clé, relues au rythme des réseaux (toutes les 15 secondes).
@@ -44,7 +45,8 @@ New, fully rewritten version (C#)
 Flight plan & tracking: VATSIM and IVAO pilots
 - Two new buttons, VATSIM (green) and IVAO (red), next to "All FSHub VAs".
 - Each network turns on or off with a click; they are off by default and your choice is kept.
-- On hover: callsign, aircraft type, departure → arrival, altitude, speed and heading (no pilot name).
+- No labels on the map to keep it readable: click an aircraft to see its callsign, type, departure → arrival, altitude, speed and heading (no pilot name).
+- AI traffic and other FSHub VAs: aircraft details now also open with a click (no longer on hover).
 - The Range menu (everywhere, 150, 300 or 500 NM, along my route) also applies to VATSIM and IVAO.
 - Your own aircraft is not shown twice if you fly connected to a network.
 - Public, free data, no account or key needed, refreshed at the networks' own pace (every 15 seconds).
