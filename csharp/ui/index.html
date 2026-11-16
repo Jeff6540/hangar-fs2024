@@ -101,6 +101,12 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 #scrDraw{position:relative;width:300px;height:92px;flex:none}.scr{position:absolute;border:2px solid var(--border);background:var(--panel);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.scr b{font-size:16px}.scr.on{border-color:var(--accent);background:#1b2a44;color:#fff}
 input[type=password]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;color:var(--fg)}
 body.cb .box.act,body.cb .box.actpart{background:#E69F00;border-color:#E69F00}body.cb .box.acton{border-color:#ffc04d}body.cb tr.item.act td{background:#4a3412}
+#issueBanner{display:none;flex:none;background:var(--warn-btn);color:#fff;font-weight:700;padding:5px 12px;align-items:center}
+.ctx{position:fixed;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 0;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.ctxitem{padding:6px 14px;cursor:pointer}.ctxitem:hover{background:var(--sel)}.ctxitem.off{color:var(--off);cursor:default}.ctxitem.off:hover{background:none}.ctxsep{height:1px;background:var(--border);margin:4px 0}
+.dlist table td{max-width:420px}tr.ditem{cursor:pointer}tr.ditem:hover td{background:var(--hover)}tr.ditem.sel td{background:var(--sel)}
+tr.dgrp td{font-weight:700;background:#20252e}tr.dgrp.conf td{color:var(--warn)}tr.don td{background:var(--cat-ours)}tr.doff td{color:var(--off)}
+tr.h-missing td{color:#ff9a9a}tr.h-moved td{color:var(--ok)}table.props td{padding:4px 12px 4px 0;white-space:normal;max-width:620px}
 .note{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--muted);white-space:pre-wrap;max-width:1100px;line-height:1.45}
 .soonbox{margin:auto;text-align:center;color:var(--muted);max-width:560px;line-height:1.6}
 .soonbox .big{font-size:42px}
@@ -128,6 +134,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 <body>
 <div id="top"><img id="banner" alt=""></div>
 <div id="lock" data-t="lockBanner"></div>
+<div id="issueBanner"><span id="issueText"></span><span class="grow"></span><button class="btn" id="bIssues" data-t="seeRepair"></button></div>
 <nav id="tabs">
   <button data-tab="lib" data-t="tabLib"></button>
   <button data-open="openMap" data-t="tabMap"></button>
@@ -160,12 +167,12 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
         <div class="row">
           <button class="btn lk" id="bPin" data-t="pin"></button>
           <button class="btn lk" id="bUnpin" data-t="unpin"></button>
-          <button class="btn soonbtn" data-t="profiles"></button>
+          <button class="btn" id="bProfiles" data-t="profiles"></button>
           <button class="btn" id="bIcao" data-t="icaoBtn"></button>
-          <button class="btn soonbtn" data-t="dups"></button>
+          <button class="btn" id="bDups" data-t="dups"></button>
           <span class="grow"></span>
-          <button class="btn warnb soonbtn" data-t="quar"></button>
-          <button class="btn soonbtn" data-t="viewQuar"></button>
+          <button class="btn warnb lk" id="bQuar" data-t="quar"></button>
+          <button class="btn" id="bViewQuar" data-t="viewQuar"></button>
         </div>
       </div>
       <div class="pane">
@@ -374,6 +381,63 @@ const TXT = {
            "🧪  C# test version (12.0). It uses the same settings as the Python version: don't open both at the same time. The greyed-out tabs are coming in the next steps."],
  soonText:["Cet onglet sera ajouté dans une prochaine étape de la version C#. En attendant, il reste disponible dans la version Python 11.8.","This tab will be added in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
  quit:["✕  Quitter","✕  Quit"],
+ close:["Fermer","Close"], seeRepair:["Voir et réparer","View and repair"], issuesN:["⚠  %s problème(s) : add-on supprimé ou déplacé hors de l'appli, ou lien cassé.","⚠  %s problem(s): add-on deleted or moved outside the app, or broken link."],
+ allGood:["Tout est en ordre : aucun add-on manquant ni lien cassé.","Everything is fine: no missing add-on and no broken link."], issuesTitle:["%s problème(s) détecté(s)","%s problem(s) found"],
+ healthHelp:["Un dossier a été supprimé ou déplacé en dehors de l'appli. « Réparer » refait les liens vers les add-ons retrouvés ailleurs dans ta bibliothèque et retire les liens cassés. Aucun fichier n'est effacé.","A folder was deleted or moved outside the app. \"Repair\" redoes the links to add-ons found elsewhere in your library and removes broken links. No file is deleted."],
+ colAddon:["Add-on","Add-on"], colProblem:["Problème","Problem"], colFix:["Réparation proposée","Proposed repair"], repairAll:["🛠  Réparer tout","🛠  Repair all"],
+ undoProf:["↶  Annuler (profil « %s »)","↶  Undo (profile \"%s\")"],
+ profTitle:["Profils : un ensemble d'add-ons à activer en un clic","Profiles: a set of add-ons to activate in one click"],
+ profHelp:["Coche tes add-ons dans la Bibliothèque, puis « Enregistrer la sélection comme profil ». Un dossier entièrement coché est gardé comme dossier : ce que tu y ajouteras plus tard en fera partie.","Check your add-ons in the Library, then \"Save the selection as a profile\". A fully checked folder is kept as a folder: what you add to it later will be part of it."],
+ profCol:["Profil","Profile"], profContent:["Contenu","Content"], profScope:["Remplace","Replaces"], profPins:["★ Protégés","★ Protected"], profN:["%s add-on(s)","%s add-on(s)"], profMiss:[" · %s introuvable(s)"," · %s not found"],
+ scopeAll:["Tout","Everything"], scopeScenes:["Scènes d'aéroport","Airport sceneries"], pinsIgnored:["non pris en compte","not taken into account"], pinsKept:["gardés","kept"],
+ noProf:["Aucun profil sélectionné.","No profile selected."], profReplaces:["Ce que remplace ce profil :","What this profile replaces:"],
+ scopeScenesLong:["Seulement les scènes d'aéroport (avions, outils, librairies… gardés)","Only airport sceneries (aircraft, tools, libraries… kept)"], scopeAllLong:["Tout (seuls les add-ons du profil)","Everything (only the profile's add-ons)"],
+ ignorePinsLong:["Ne pas tenir compte des add-ons ★ protégés (retirés s'ils ne sont pas dans le profil ; leur étoile est gardée)","Ignore ★ protected add-ons (removed if they are not in the profile; their star is kept)"],
+ profFolders:["Dossiers : %s","Folders: %s"], profAddons:["Add-ons : %s","Add-ons: %s"], profMissing:["Introuvables dans la bibliothèque : %s","Not found in the library: %s"], profSusp:["★ %s add-on(s) protégé(s) mis de côté par un profil.","★ %s protected add-on(s) set aside by a profile."],
+ profActivate:["▶  Activer le profil","▶  Activate the profile"], profSaveSel:["💾  Enregistrer la sélection comme profil…","💾  Save the selection as a profile…"], profReplaceSel:["Remplacer par la sélection","Replace with the selection"],
+ profRename:["✎  Renommer…","✎  Rename…"], profDelete:["🗑  Supprimer","🗑  Delete"], profRestorePins:["★  Remettre les protégés","★  Put protected back"],
+ profAsk:["Activer le profil « %s » ?","Activate the profile \"%s\"?"], profToLink:["À activer (%s) :","To activate (%s):"], profToUnlink:["À retirer de Community (%s) :","To remove from Community (%s):"],
+ profIgnored:["Introuvables dans la bibliothèque (ignorés) : %s","Not found in the library (ignored): %s"], profUndo:["Seuls des liens sont ajoutés ou retirés ; « ↶ Annuler » remet tout comme avant.","Only links are added or removed; \"↶ Undo\" puts everything back."],
+ profBig:["⚠  Le profil retire %s add-ons de Community. Continuer ?","⚠  The profile removes %s add-ons from Community. Continue?"], profNeedSel:["Coche d'abord des add-ons dans la Bibliothèque, puis reviens ici.","Check some add-ons in the Library first, then come back here."],
+ profName:["Nom du profil (%s add-on(s) sélectionné(s)) :","Profile name (%s add-on(s) selected):"], profExists:["Le profil « %s » existe déjà. Le remplacer ?","The profile \"%s\" already exists. Replace it?"],
+ profChoose:["Choisis un profil et coche des add-ons dans la Bibliothèque.","Choose a profile and check add-ons in the Library."], profReplaceAsk:["Remplacer le contenu du profil « %s » par les %s add-on(s) sélectionné(s) ?","Replace the content of the profile \"%s\" with the %s selected add-on(s)?"],
+ profNewName:["Nouveau nom du profil :","New profile name:"], profDelAsk:["Supprimer le profil « %s » ?\n\nAucun add-on n'est retiré ni supprimé.","Delete the profile \"%s\"?\n\nNo add-on is removed or deleted."],
+ cxTitle:["Avant de continuer — fichier Content.xml de MSFS 2024","Before continuing — MSFS 2024 Content.xml file"], cxWhat:["Ce que fait Hangar FS 2024","What Hangar FS 2024 does"],
+ cxWhatText:["Pour que la scène soit aussi désactivée dans My Library de MSFS, l'appli modifie le fichier Content.xml de MSFS 2024. Elle change uniquement la ligne de la scène choisie, de « activée » à « désactivée » : exactement comme décocher la case dans My Library.","So that the scenery is also disabled in MSFS My Library, the app edits the MSFS 2024 Content.xml file. It only changes the chosen scenery's line, from \"enabled\" to \"disabled\": exactly like unticking the box in My Library."],
+ cxNot:["Ce qu'elle ne fait pas","What it doesn't do"], cxNotText:["Elle ne supprime aucun fichier, ne touche à aucun autre contenu et n'envoie rien sur internet. Elle ne fait rien pendant que MSFS tourne.","It deletes no file, touches no other content and sends nothing over the internet. It does nothing while MSFS is running."],
+ cxWhere:["Où se trouve le fichier","Where the file is"], cxBackup:["Sauvegarde initiale (conseillée, faite une seule fois)","Initial backup (recommended, made only once)"],
+ cxNever:["Elle n'est jamais écrasée. En cas de souci, le bouton « Restaurer Content.xml… » de la fenêtre Doublons ICAO la remet en place.","It is never overwritten. If anything goes wrong, the \"Restore Content.xml…\" button of the ICAO duplicates window puts it back."],
+ cxHide:["Ne plus proposer de sauvegarde","Don't offer a backup again"], cxChange:["📁  Changer l'emplacement…","📁  Change the location…"], cxWhereAsk:["Où ranger la sauvegarde de Content.xml ?","Where to store the Content.xml backup?"],
+ cxNoBackup:["Continuer sans sauvegarde","Continue without backup"], cxSave:["💾  Sauvegarder et continuer","💾  Back up and continue"], cxCancelled:["Désactivation annulée : rien n'a été modifié.","Disabling cancelled: nothing was changed."],
+ cxNoBackups:["Aucune sauvegarde de Content.xml n'a été trouvée.","No Content.xml backup was found."], cxFile:["Fichier de MSFS : %s","MSFS file: %s"], colDate:["Date","Date"], colBackup:["Sauvegarde","Backup"], colFile:["Fichier","File"],
+ cxKeep:["Le fichier actuel est d'abord copié dans %s : tu peux revenir en arrière.","The current file is first copied to %s: you can go back."], cxRestoreTitle:["Restaurer Content.xml — choisis la sauvegarde à remettre en place","Restore Content.xml — choose the backup to put back"],
+ cxOpenFolder:["📂  Ouvrir le dossier des sauvegardes","📂  Open the backups folder"], cxRestore:["Restaurer","Restore"], cxRestoreAsk:["Remettre cette sauvegarde à la place du fichier de MSFS ?\n\n%s","Put this backup in place of the MSFS file?\n\n%s"],
+ cxRestored:["Content.xml a été remis en place. Les changements seront pris en compte au prochain démarrage de MSFS.","Content.xml was put back. The changes will apply at the next MSFS start."], cxRestoreBtn:["🗂  Restaurer Content.xml…","🗂  Restore Content.xml…"],
+ defDisableAsk:["Désactiver %s scène(s) par défaut de MSFS 2024 ?\n\n%s\n\nUn dossier vide portant le nom du paquet est créé dans Community : le simulateur considère alors la scène par défaut comme remplacée. C'est réversible à tout moment avec « Réactiver la scène par défaut ».","Disable %s MSFS 2024 default scenery(ies)?\n\n%s\n\nAn empty folder with the package name is created in Community: the simulator then considers the default scenery as replaced. It can be undone at any time with \"Re-enable the default scenery\"."],
+ dupTitle:["Doublons ICAO — add-ons et scènes par défaut MSFS 2024","ICAO duplicates — add-ons and MSFS 2024 default sceneries"], dupScan:["🔍  Scanner les doublons","🔍  Scan for duplicates"], dupSearch:["Rechercher un code OACI ou une scène…","Search an ICAO code or a scenery…"],
+ dupCol:["ICAO / paquet","ICAO / package"], colSource:["Source","Source"], dupHeadOrphan:["%s — scène par défaut désactivée, plus aucun add-on","%s — default scenery disabled, no add-on left"],
+ dupHeadConf:["%s — doublon : %s scènes actives","%s — duplicate: %s active sceneries"], dupHeadOff:["%s — scène par défaut désactivée","%s — default scenery disabled"],
+ srcComm:["Add-on (Community)","Add-on (Community)"], srcLib:["Add-on (bibliothèque)","Add-on (library)"], srcDef:["Par défaut MSFS","MSFS default"], stOn:["Actif","Active"], stOff:["Inactif","Inactive"], stOnF:["Active","Active"], stOffF:["Désactivée","Disabled"],
+ dupNone:["✓ Aucun doublon : aucun add-on actif dans Community ne recouvre une scène par défaut.","✓ No duplicate: no active add-on in Community overlaps a default scenery."], dupNotScanned:["Clique sur « Scanner les doublons » pour comparer tes add-ons actifs aux scènes par défaut.","Click \"Scan for duplicates\" to compare your active add-ons with the default sceneries."],
+ dupLast:["Dernier scan : %s · %s add-on(s) d'aéroport actif(s) · %s scènes par défaut · %s doublon(s)","Last scan: %s · %s active airport add-on(s) · %s default sceneries · %s duplicate(s)"], dupNoScan:["Scan pas encore lancé : seuls les doublons entre tes add-ons actifs sont affichés.","Scan not run yet: only duplicates between your active add-ons are shown."],
+ dupScanning:["Analyse des scènes par défaut…","Scanning default sceneries…"], dupNoStreamed:["Dossier StreamedPackages de MSFS 2024 introuvable automatiquement.\n\nVeux-tu l'indiquer maintenant ? Il se trouve en général à côté de ton dossier Community.\n\n(Non = afficher seulement les doublons entre tes add-ons.)","MSFS 2024 StreamedPackages folder not found automatically.\n\nDo you want to set it now? It is usually next to your Community folder.\n\n(No = only show duplicates between your add-ons.)"],
+ dupNoPkg:["Aucun paquet d'aéroport trouvé dans le dossier StreamedPackages.\n\nMSFS 2024 garde la plupart des scènes diffusées dans son cache interne : seules celles stockées en dossiers peuvent être comparées.","No airport package found in the StreamedPackages folder.\n\nMSFS 2024 keeps most streamed sceneries in its internal cache: only those stored as folders can be compared."],
+ dupPickDef:["Sélectionne une scène « Par défaut MSFS » (ou la ligne de l'aéroport).","Select an \"MSFS default\" scenery (or the airport line)."], dupPickAddon:["Sélectionne un add-on (ou la ligne de l'aéroport).","Select an add-on (or the airport line)."],
+ dupDisDef:["⛔  Désactiver la scène par défaut","⛔  Disable the default scenery"], dupEnDef:["↩  Réactiver la scène par défaut","↩  Re-enable the default scenery"], dupDisAdd:["✖  Désactiver l'add-on","✖  Disable the add-on"], dupEnAdd:["▶  Activer l'add-on","▶  Activate the add-on"],
+ dupHelp:["Orange = au moins deux scènes actives pour le même aéroport. Une scène add-on bien faite masque déjà l'aéroport par défaut : ne désactive le défaut qu'en cas de bâtiments en double ou d'artefacts.","Orange = at least two active sceneries for the same airport. A well-made add-on scenery already hides the default airport: only disable the default in case of duplicate buildings or artefacts."],
+ quarNeed:["Coche d'abord les add-ons à mettre en quarantaine.","Check the add-ons to quarantine first."], quarAsk:["Mettre %s add-on(s) en quarantaine ?\n\n%s\n\nIls seront retirés de Community et déplacés dans le dossier « _Quarantaine » de ta bibliothèque. Rien n'est effacé : tu pourras les restaurer à tout moment.","Quarantine %s add-on(s)?\n\n%s\n\nThey will be removed from Community and moved to the \"_Quarantaine\" folder of your library. Nothing is deleted: you can restore them at any time."],
+ quarErr:["%s add-on(s) en quarantaine, %s erreur(s) — voir le journal (onglet Vol).","%s add-on(s) quarantined, %s error(s) — see the log (Flight tab)."], quarTitle:["Add-ons en quarantaine","Quarantined add-ons"],
+ quarHelp:["Ils n'apparaissent plus dans la bibliothèque et ne sont plus chargés par le simulateur. Restaure-les quand le souci est réglé, ou supprime-les toi-même depuis le dossier.","They no longer appear in the library and are no longer loaded by the simulator. Restore them when the issue is solved, or delete them yourself from the folder."],
+ quarOrigin:["Dossier d'origine","Original folder"], quarDate:["Mis de côté le","Set aside on"], quarRestore:["↩  Restaurer la sélection","↩  Restore the selection"], quarRestErr:["%s add-on(s) n'ont pas pu être restaurés — voir le journal.","%s add-on(s) could not be restored — see the log."],
+ propTitle:["Propriétés du dossier","Folder properties"], propMin:["Version minimale de MSFS","Minimum MSFS version"], propSize:["Taille","Size"], propFiles:["%s fichiers","%s files"], propFolder:["Dossier","Folder"], propLink:["Lien dans Community","Link in Community"],
+ layoutAsk:["Régénérer le fichier layout.json de « %s » ?\n\nÀ faire après avoir modifié un add-on (livrée, fichiers ajoutés ou supprimés). Une copie de sauvegarde layout.json.bak et manifest.json.bak est créée.","Regenerate the layout.json file of \"%s\"?\n\nTo do after changing an add-on (livery, files added or removed). A backup copy layout.json.bak and manifest.json.bak is created."],
+ layoutBusy:["Régénération de layout.json…","Regenerating layout.json…"], moveTitle:["Dossier de destination dans ta bibliothèque","Destination folder in your library"],
+ moveAsk:["Déplacer « %s » vers :\n%s\n\nIl restera actif dans Community grâce à un lien.","Move \"%s\" to:\n%s\n\nIt will stay active in Community thanks to a link."], moveReal:["\n\nC'est une vraie copie : le déplacement peut prendre du temps si la bibliothèque est sur un autre disque.","\n\nIt is a real copy: moving can take time if the library is on another drive."],
+ noBroken:["Aucun lien invalide dans Community.","No invalid link in Community."], brokenAsk:["Supprimer %s lien(s) invalide(s) ?\n\nCes liens pointent vers des dossiers qui n'existent plus.","Delete %s invalid link(s)?\n\nThese links point to folders that no longer exist."],
+ mOpen:["📂  Ouvrir le dossier","📂  Open the folder"], mProps:["ℹ  Propriétés du dossier","ℹ  Folder properties"], mRemove:["✖  Retirer de Community","✖  Remove from Community"], mIcao:["✎  Codes ICAO…","✎  ICAO codes…"],
+ mLayout:["🗎  Régénérer le fichier layout.json","🗎  Regenerate the layout.json file"], mCheckFolder:["☑  Cocher tout le dossier","☑  Check the whole folder"], mUncheckFolder:["☐  Décocher tout le dossier","☐  Uncheck the whole folder"],
+ mDisable1:["✖  Désactiver l'add-on sélectionné","✖  Disable the selected add-on"], mDisableN:["✖  Désactiver les %s add-ons sélectionnés","✖  Disable the %s selected add-ons"], mDelBroken1:["—  Supprimer le lien invalide sélectionné","—  Delete the selected invalid link"],
+ mDelBrokenAll:["✖  Supprimer tous les liens invalides","✖  Delete all invalid links"], mMove:["◀  Déplacer vers un dossier de la bibliothèque…","◀  Move to a library folder…"],
  opening_map:["Ouverture de la carte des scènes…","Opening the scenery map…"], opening_disp:["Ouverture de Plan & suivi de vol…","Opening Flight plan & tracking…"],
  launchMsfs:["▶  Lancer MSFS 2024","▶  Launch MSFS 2024"], optRelay:["Arrêter le relais à la fermeture du simulateur (il redémarre avec lui)","Stop the relay when the simulator closes (it restarts with it)"],
  optOnly:["Ne charger que les scènes du vol","Load only the flight's sceneries"],
@@ -617,7 +681,7 @@ function updateButtons(){
   $("bRemove").textContent = inComm ? tf("removeN", inComm) : absent ? t("noneIn") : t("remove");
   $("checkedLbl").textContent = tf("checkedN", n);
   const u = undoInfo;
-  $("bUndo").textContent = u ? tf(u.kind === "activate" ? "undoAct" : "undoRem", u.n) : t("undo");
+  $("bUndo").textContent = u ? (u.kind === "profile" ? tf("undoProf", u.name) : tf(u.kind === "activate" ? "undoAct" : "undoRem", u.n)) : t("undo");
   $("bUndo").disabled = !u;
 }
 function fillFilter(){
@@ -670,7 +734,8 @@ $("bIcao").onclick = async () => {
   await run("setIcao", {path: p.path, codes: v.split(/[\s,;]+/).filter(Boolean)});
   loadLibrary();
 };
-document.querySelectorAll(".soonbtn").forEach(b => b.onclick = () => alertBox(t("soonBtn")));
+$("bProfiles").onclick = showProfiles; $("bDups").onclick = showDuplicates; $("bViewQuar").onclick = showQuarantine;
+$("bQuar").onclick = () => quarantinePkgs(checkedPkgs());
 
 // ---------------------------------------------------------------- Community
 const CATS = ["ours", "real", "ext", "off", "broken", "defoff"];
@@ -731,6 +796,7 @@ async function loadLibrary(){
   try {
     const d = await call("library");
     PKGS = d.packages; COMM = d.community; undoInfo = d.undo; freeSpace = d.free || "";
+    brokenCount = d.broken || 0; defaultOffNames = d.defaultOff || []; updateIssues(d.issues || 0);
     SETTINGS.library = d.library; SETTINGS.community = d.communityPath;
     const known = new Set(PKGS.map(p => p.path)); [...checked].forEach(p => { if (!known.has(p)) checked.delete(p); });
     const knownC = new Set(COMM.map(c => c.path)); [...commSel].forEach(p => { if (!knownC.has(p)) commSel.delete(p); });
@@ -739,6 +805,349 @@ async function loadLibrary(){
   loading = false;
   if (reloadAgain) { reloadAgain = false; loadLibrary(); }
 }
+
+// ---------------------------------------------------------------- outils de la bibliothèque (profils, doublons, quarantaine, vérification, menus)
+function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
+function selTable(cols, rows, opts){
+  // rows : [{id, cells:[], cls}] ; sélection par clic (Ctrl = plusieurs)
+  opts = opts || {};
+  const wrap = el("div", "list dlist"); wrap.style.maxHeight = opts.h || "46vh";
+  const sel = new Set(opts.sel || []);
+  const draw = () => {
+    wrap.innerHTML = "<table><thead><tr>" + cols.map(c => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" +
+      rows.map(r => '<tr class="ditem ' + (r.cls || "") + (sel.has(r.id) ? " sel" : "") + '" data-id="' + esc(r.id) + '">' + r.cells.map(c => "<td title='" + esc(c) + "'>" + esc(c) + "</td>").join("") + "</tr>").join("") +
+      "</tbody></table>";
+  };
+  wrap.onclick = e => { const tr = e.target.closest("tr.ditem"); if (!tr) return; const id = tr.dataset.id;
+    if (!(e.ctrlKey || e.shiftKey) || opts.single) { const had = sel.has(id) && sel.size === 1; sel.clear(); if (!had || opts.single) sel.add(id); } else sel.has(id) ? sel.delete(id) : sel.add(id);
+    draw(); if (opts.onSel) opts.onSel([...sel]); };
+  draw();
+  return {node: wrap, sel: () => [...sel], set: (r) => { rows = r; [...sel].forEach(i => { if (!rows.some(x => x.id === i)) sel.delete(i); }); draw(); }};
+}
+function names8(list){ return list.slice(0, 8).map(n => "• " + n).join("\n") + (list.length > 8 ? "\n• …" : ""); }
+
+// ---- vérification (bandeau orange + fenêtre)
+function updateIssues(n){
+  const b = $("issueBanner");
+  if (n) { b.style.display = "flex"; $("issueText").textContent = tf("issuesN", n); } else b.style.display = "none";
+}
+async function showHealth(manual){
+  let issues; try { issues = await call("health"); } catch (e) { return; }
+  updateIssues(issues.length);
+  if (!issues.length) { if (manual) alertBox(t("allGood")); return; }
+  const body = el("div");
+  body.appendChild(el("div", "muted", esc(t("healthHelp")))).style.marginBottom = "8px";
+  const tb = selTable([t("colAddon"), t("colProblem"), t("colFix")], issues.map((it, i) => ({id: String(i), cells: [it.name, it.msg, it.fix], cls: "h-" + it.kind})));
+  body.appendChild(tb.node);
+  const r = await modal(tf("issuesTitle", issues.length), [{label: t("close"), value: false}, {label: t("repairAll"), value: true, cls: "accent lk"}], body);
+  if (r) { await run("repair"); loadLibrary(); }
+}
+$("bRescan").onclick = async () => { await run("rescan"); await loadLibrary(); showHealth(true); };
+
+// ---- profils
+async function showProfiles(){
+  let d; try { d = await call("profiles"); } catch (e) { return; }
+  let cur = d.profiles.length ? 0 : -1;
+  const body = el("div");
+  body.appendChild(el("div", "muted", esc(t("profHelp")))).style.marginBottom = "8px";
+  const row = el("div", "row"); row.style.alignItems = "flex-start"; row.style.flexWrap = "nowrap";
+  const tb = selTable([t("profCol"), t("profContent"), t("profScope"), t("profPins")], [], {single: true, h: "40vh", onSel: s => { cur = s.length ? Number(s[0]) : -1; side(); }});
+  tb.node.style.flex = "1"; tb.node.style.minWidth = "520px";
+  const sideBox = el("div"); sideBox.style.width = "300px"; sideBox.style.paddingLeft = "12px";
+  row.appendChild(tb.node); row.appendChild(sideBox); body.appendChild(row);
+  const fill = () => {
+    tb.set(d.profiles.map(p => ({id: String(p.index), cells: [(p.active ? "● " : "") + p.name, tf("profN", p.count) + (p.missing.length ? tf("profMiss", p.missing.length) : ""),
+      t(p.scope === "all" ? "scopeAll" : "scopeScenes"), t(p.ignore_pinned ? "pinsIgnored" : "pinsKept")]})));
+    if (cur >= 0) { const tr = tb.node.querySelector('tr[data-id="' + cur + '"]'); if (tr) tr.classList.add("sel"); }
+    side();
+  };
+  const side = () => {
+    const p = d.profiles.find(x => x.index === cur);
+    if (!p) { sideBox.innerHTML = '<div class="muted">' + esc(t("noProf")) + "</div>"; return; }
+    sideBox.innerHTML = "<div>" + esc(t("profReplaces")) + '</div><label class="chk" style="margin-top:4px"><input type="radio" name="psc" value="scenes"> ' + esc(t("scopeScenesLong")) +
+      '</label><br><label class="chk" style="margin-top:4px"><input type="radio" name="psc" value="all"> ' + esc(t("scopeAllLong")) +
+      '</label><br><label class="chk" style="margin-top:10px"><input type="checkbox" id="ppin"> ' + esc(t("ignorePinsLong")) + '</label><div class="muted" style="margin-top:12px;white-space:pre-wrap">' +
+      esc(tf("profFolders", (p.folders || []).join(", ") || "—") + "\n" + tf("profAddons", p.count) + "\n" + p.addons.map(n => "• " + n).join("\n") + (p.count > 12 ? "\n• …" : "") +
+        (p.missing.length ? "\n" + tf("profMissing", p.missing.slice(0, 5).join(", ")) : "") + (d.suspended ? "\n" + tf("profSusp", d.suspended) : "")) + "</div>";
+    sideBox.querySelector('input[value="' + p.scope + '"]').checked = true; sideBox.querySelector("#ppin").checked = p.ignore_pinned;
+    sideBox.querySelectorAll("input[name=psc]").forEach(r => r.onchange = async () => { await run("profileEdit", {index: p.index, change: {scope: r.value}}); reload(); });
+    sideBox.querySelector("#ppin").onchange = async e => { await run("profileEdit", {index: p.index, change: {ignore_pinned: e.target.checked}}); reload(); };
+  };
+  const reload = async () => { try { d = await call("profiles"); } catch (e) { return; } if (!d.profiles.some(p => p.index === cur)) cur = d.profiles.length ? 0 : -1; fill(); };
+  const btns = el("div", "row"); btns.style.marginTop = "10px";
+  const B = (label, fn, cls) => { const b = mkBtn(label, fn); if (cls) b.className += " " + cls; btns.appendChild(b); return b; };
+  B(t("profActivate"), async () => {
+    if (cur < 0) return;
+    let r = await run("profileActivate", {index: cur}); if (!r) return;
+    if (r.nothing) { reload(); return; }
+    let msg = tf("profAsk", r.name);
+    if (r.link.length) msg += "\n\n" + tf("profToLink", r.link.length) + "\n" + names8(r.link);
+    if (r.unlink.length) msg += "\n\n" + tf("profToUnlink", r.unlink.length) + "\n" + names8(r.unlink);
+    if (r.missing.length) msg += "\n\n" + tf("profIgnored", r.missing.slice(0, 5).join(", "));
+    msg += "\n\n" + t("profUndo");
+    if (!await confirmBox(msg)) return;
+    if (r.unlink.length > 20 && !await confirmBox(tf("profBig", r.unlink.length), true)) return;
+    await run("profileActivate", {index: cur, confirm: true}); checked.clear(); loadLibrary(); reload();
+  }, "accent lk");
+  B(t("profSaveSel"), async () => {
+    const paths = [...checked]; if (!paths.length) return alertBox(t("profNeedSel"));
+    const name = ((await promptBox(tf("profName", paths.length), "")) || "").trim(); if (!name) return;
+    if (await call("profileExists", {name}) && !await confirmBox(tf("profExists", name))) return;
+    await run("profileSave", {name, paths}); reload();
+  });
+  B(t("profReplaceSel"), async () => {
+    const p = d.profiles.find(x => x.index === cur), paths = [...checked];
+    if (!p || !paths.length) return alertBox(t("profChoose"));
+    if (!await confirmBox(tf("profReplaceAsk", p.name, paths.length))) return;
+    await run("profileSave", {name: p.name, paths, index: p.index}); reload();
+  });
+  B(t("profRename"), async () => { const p = d.profiles.find(x => x.index === cur); if (!p) return; const n = ((await promptBox(t("profNewName"), p.name)) || "").trim(); if (!n) return; await run("profileEdit", {index: p.index, change: {name: n}}); reload(); });
+  B(t("profDelete"), async () => { const p = d.profiles.find(x => x.index === cur); if (!p) return; if (!await confirmBox(tf("profDelAsk", p.name), true)) return; await run("profileEdit", {index: p.index, change: {delete: true}}); cur = -1; reload(); });
+  btns.appendChild(el("span", "grow"));
+  B(t("profRestorePins"), async () => { await run("restorePins"); reload(); loadLibrary(); });
+  body.appendChild(btns);
+  fill();
+  await modal(t("profTitle"), [{label: t("close"), value: true}], body);
+}
+
+// ---- scènes par défaut : sauvegarde de Content.xml avant la première modification
+async function contentConfirm(){
+  let c; try { c = await call("contentCheck"); } catch (e) { return true; }
+  if (!c.need) return true;
+  let folder = c.folder;
+  const body = el("div");
+  const P = (title, text) => { body.appendChild(el("div", "", "<b>" + esc(title) + "</b>")).style.marginTop = "10px"; const d = el("div", "", esc(text)); body.appendChild(d); return d; };
+  P(t("cxWhat"), t("cxWhatText")); P(t("cxNot"), t("cxNotText")); P(t("cxWhere"), c.path); const dest = P(t("cxBackup"), c.backup);
+  body.appendChild(el("div", "muted", esc(t("cxNever")))).style.marginTop = "4px";
+  const hide = el("label", "chk", '<input type="checkbox"> ' + esc(t("cxHide"))); hide.style.marginTop = "10px"; body.appendChild(hide);
+  const change = mkBtn(t("cxChange"), async () => { const v = await run("browse", {title: t("cxWhereAsk"), current: folder}); if (v) { folder = v; dest.textContent = v + "\\Content.xml"; } });
+  change.style.marginTop = "10px"; body.appendChild(el("div")).appendChild(change);
+  const r = await modal(t("cxTitle"), [{label: t("cancel"), value: "cancel"}, {label: t("cxNoBackup"), value: "no"}, {label: t("cxSave"), value: "yes", cls: "accent"}], body);
+  if (r === "cancel") { $("status").textContent = t("cxCancelled"); return false; }
+  try { await call("contentAnswer", {backup: r === "yes", folder, hide: hide.firstChild.checked}); } catch (e) { await alertBox(e.message); return false; }
+  return true;
+}
+async function disableDefaults(names){
+  if (!names.length) return alertBox(t("dupPickDef"));
+  if (!await confirmBox(tf("defDisableAsk", names.length, names8(names)))) return;
+  if (!await contentConfirm()) return;
+  await run("disableDefaults", {names});
+}
+async function contentRestore(){
+  let d; try { d = await call("contentBackups"); } catch (e) { return alertBox(e.message); }
+  if (!d.backups.length) return alertBox(t("cxNoBackups"));
+  const body = el("div");
+  body.appendChild(el("div", "muted", esc(tf("cxFile", d.path)))).style.marginBottom = "8px";
+  const tb = selTable([t("colDate"), t("colBackup"), t("colFile")], d.backups.map((b, i) => ({id: String(i), cells: [b.date, b.kind, b.file]})), {single: true, sel: ["0"]});
+  body.appendChild(tb.node);
+  body.appendChild(el("div", "muted", esc(tf("cxKeep", d.folder)))).style.marginTop = "8px";
+  const r = await modal(t("cxRestoreTitle"), [{label: t("cancel"), value: false}, {label: t("cxOpenFolder"), value: "open"}, {label: t("cxRestore"), value: true, cls: "accent lk"}], body);
+  if (r === "open") return run("openFolder", {path: d.folder});
+  if (!r) return;
+  const b = d.backups[Number(tb.sel()[0] || 0)];
+  if (!await confirmBox(tf("cxRestoreAsk", b.file))) return;
+  if (await run("contentRestore", {file: b.file}) !== undefined) alertBox(t("cxRestored"));
+}
+
+// ---- doublons ICAO
+async function showDuplicates(){
+  let d;
+  const body = el("div");
+  const top = el("div", "row"); const bScan = mkBtn(t("dupScan"), () => scan()); bScan.className += " accent"; top.appendChild(bScan);
+  const lbl = el("span", "muted"); top.appendChild(lbl); body.appendChild(top);
+  const q = mkInput(""); q.placeholder = t("dupSearch"); q.style.width = "100%"; q.style.margin = "8px 0"; body.appendChild(q);
+  const list = el("div", "list dlist"); list.style.height = "48vh"; body.appendChild(list);
+  let sel = new Set();
+  const draw = () => {
+    const f = q.value.trim().toLowerCase();
+    let h = "<table><thead><tr><th>" + esc(t("dupCol")) + "</th><th>" + esc(t("colSource")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
+    let n = 0;
+    d.groups.forEach(g => {
+      if (f && !g.icao.toLowerCase().includes(f) && !g.items.some(o => (o.name + " " + o.title).toLowerCase().includes(f))) return;
+      n++;
+      const head = g.items.length === 1 ? tf("dupHeadOrphan", g.icao) : g.active >= 2 ? tf("dupHeadConf", g.icao, g.active) : tf("dupHeadOff", g.icao);
+      const gid = "icao|" + g.icao;
+      h += '<tr class="ditem dgrp' + (g.active >= 2 || g.items.length === 1 ? " conf" : "") + (sel.has(gid) ? " sel" : "") + '" data-id="' + esc(gid) + '"><td colspan="4">' + esc(head) + "</td></tr>";
+      g.items.forEach(o => {
+        const id = o.kind + "|" + g.icao + "|" + o.key;
+        const src = o.kind === "addon" ? t(o.on ? "srcComm" : "srcLib") : t("srcDef");
+        const st = o.kind === "addon" ? t(o.on ? "stOn" : "stOff") : t(o.on ? "stOnF" : "stOffF");
+        h += '<tr class="ditem' + (o.on ? " don" : " doff") + (sel.has(id) ? " sel" : "") + '" data-id="' + esc(id) + '"><td style="padding-left:26px">' + esc(o.name) + "</td><td>" + esc(src) + "</td><td>" + esc(o.title) + "</td><td>" + esc(st) + "</td></tr>";
+      });
+    });
+    if (!n) h += '<tr><td colspan="4" class="muted">' + esc(t(d.scanned ? "dupNone" : "dupNotScanned")) + "</td></tr>";
+    list.innerHTML = h + "</tbody></table>";
+    lbl.textContent = d.scanned ? tf("dupLast", d.time, d.addons, d.defaults, d.conflicts) : t("dupNoScan");
+  };
+  list.onclick = e => { const tr = e.target.closest("tr.ditem"); if (!tr) return; const id = tr.dataset.id; if (!(e.ctrlKey || e.shiftKey)) sel.clear(); sel.has(id) ? sel.delete(id) : sel.add(id); draw(); };
+  q.oninput = draw;
+  const selected = kind => {
+    const out = new Set();
+    sel.forEach(id => {
+      if (id.startsWith("icao|")) { const g = d.groups.find(x => "icao|" + x.icao === id); if (g) g.items.filter(o => o.kind === kind).forEach(o => out.add(o.key)); }
+      else if (id.startsWith(kind + "|")) out.add(id.split("|").slice(2).join("|"));
+    });
+    return [...out];
+  };
+  const reload = async () => { try { d = await call("duplicates"); } catch (e) { return; } draw(); };
+  const scan = async () => {
+    let folder = "";
+    const cur = await call("duplicates").catch(() => null);
+    if (cur && !cur.streamed) {
+      if (await confirmBox(t("dupNoStreamed"))) folder = (await run("browse", {title: t("setStreamed"), current: ""})) || "";
+      if (!folder) { d = cur; draw(); return; }
+    }
+    bScan.disabled = true; lbl.textContent = t("dupScanning");
+    const n = await run("scanStreamed", {folder}); bScan.disabled = false;
+    await reload();
+    if (n === 0) alertBox(t("dupNoPkg"));
+  };
+  const actDefault = async enable => {
+    const names = selected("default"); if (!names.length) return alertBox(t("dupPickDef"));
+    if (enable) await run("enableDefaults", {names}); else await disableDefaults(names);
+    reload(); loadLibrary();
+  };
+  const actAddon = async enable => {
+    const paths = selected("addon"); if (!paths.length) return alertBox(t("dupPickAddon"));
+    const pk = PKGS.filter(p => paths.includes(p.path));
+    if (enable) await run("activate", {paths: pk.filter(p => !isOn(p)).map(p => p.path)});
+    else { const pr = pk.filter(isOn); if (pr.length && await confirmBox(tf("confirmRemove", pr.length, names8(pr.map(p => p.name))), true)) await run("remove", {paths: pr.map(p => p.path)}); }
+    await loadLibrary(); reload();
+  };
+  const row = el("div", "row"); row.style.marginTop = "10px";
+  const B = (label, fn, cls) => { const b = mkBtn(label, fn); if (cls) b.className += " " + cls; row.appendChild(b); };
+  B(t("dupDisDef"), () => actDefault(false), "warnb lk"); B(t("dupEnDef"), () => actDefault(true), "lk");
+  B(t("dupDisAdd"), () => actAddon(false), "danger lk"); B(t("dupEnAdd"), () => actAddon(true), "accent lk");
+  row.appendChild(el("span", "grow")); B(t("cxRestoreBtn"), contentRestore);
+  body.appendChild(row);
+  body.appendChild(el("div", "muted", esc(t("dupHelp")))).style.marginTop = "6px";
+  d = await call("duplicates").catch(() => ({groups: [], scanned: false}));
+  draw();
+  if (!d.scanned) scan();
+  await modal(t("dupTitle"), [{label: t("close"), value: true}], body);
+}
+
+// ---- quarantaine
+async function quarantinePkgs(pk){
+  if (!pk.length) return alertBox(t("quarNeed"));
+  if (!await confirmBox(tf("quarAsk", pk.length, names8(pk.map(p => p.name))), true)) return;
+  const r = await run("quarantine", {paths: pk.map(p => p.path)});
+  checked.clear(); await loadLibrary();
+  if (r && r.errors) alertBox(tf("quarErr", r.moved, r.errors));
+}
+async function showQuarantine(){
+  let d; try { d = await call("quarantineList"); } catch (e) { return alertBox(e.message); }
+  if (!d.folder) return alertBox(t("noLib"));
+  const body = el("div");
+  body.appendChild(el("div", "muted", esc(t("quarHelp")))).style.marginBottom = "8px";
+  const rows = () => d.items.map(i => ({id: i.path, cells: [i.name, i.where, i.date]}));
+  const tb = selTable([t("colName"), t("quarOrigin"), t("quarDate")], rows());
+  body.appendChild(tb.node);
+  const row = el("div", "row"); row.style.marginTop = "10px";
+  const b1 = mkBtn(t("quarRestore"), async () => { const s = tb.sel(); if (!s.length) return; const err = await run("quarantineRestore", {paths: s});
+    d = await call("quarantineList"); tb.set(rows()); loadLibrary(); if (err) alertBox(tf("quarRestErr", err)); });
+  b1.className += " accent lk"; row.appendChild(b1);
+  row.appendChild(mkBtn(t("openFolder"), () => run("openFolder", {path: d.folder})));
+  body.appendChild(row);
+  await modal(t("quarTitle"), [{label: t("close"), value: true}], body);
+}
+
+// ---- propriétés, layout.json, déplacer vers la bibliothèque, liens invalides
+async function showProps(path){
+  let p; try { p = await call("properties", {path}); } catch (e) { return alertBox(e.message); }
+  const rows = [[t("colName"), p.name], [t("colTitle"), p.title], [t("colCreator"), p.creator], [t("colType"), p.type], [t("colVer"), p.version], [t("propMin"), p.minimum],
+    [t("propSize"), p.size + " · " + tf("propFiles", p.files)], ["ICAO", p.icao], [t("propFolder"), p.path]];
+  if (p.link) rows.push([t("propLink"), p.link]);
+  const body = el("div", "", "<table class='props'>" + rows.map(r => "<tr><td class='muted'>" + esc(r[0]) + "</td><td>" + esc(r[1] || "—") + "</td></tr>").join("") + "</table>");
+  const r = await modal(t("propTitle"), [{label: t("openFolder"), value: "open"}, {label: t("close"), value: true, cls: "accent"}], body);
+  if (r === "open") run("openFolder", {path: p.path});
+}
+async function regenLayout(path, name){
+  if (!await confirmBox(tf("layoutAsk", name))) return;
+  $("status").textContent = t("layoutBusy");
+  await run("regenLayout", {path});
+}
+async function moveToLibrary(c){
+  const dest = await run("browse", {title: t("moveTitle"), current: SETTINGS.library}); if (!dest) return;
+  if (!await confirmBox(tf("moveAsk", c.name, dest) + (c.link ? "" : t("moveReal")))) return;
+  await run("moveToLibrary", {path: c.path, dest}); loadLibrary();
+}
+async function deleteBroken(paths){
+  const n = paths ? paths.length : brokenCount;
+  if (!n) return alertBox(t("noBroken"));
+  if (!await confirmBox(tf("brokenAsk", n), true)) return;
+  await run("deleteBroken", paths ? {paths} : {}); loadLibrary();
+}
+let brokenCount = 0, defaultOffNames = [];
+
+// ---- menus du clic droit
+function contextMenu(x, y, items){
+  document.querySelectorAll(".ctx").forEach(m => m.remove());
+  const m = el("div", "ctx");
+  items.forEach(it => {
+    if (it === "-") { m.appendChild(el("div", "ctxsep")); return; }
+    const b = el("div", "ctxitem" + (it.off ? " off" : ""), esc(it.label));
+    if (!it.off) b.onclick = () => { m.remove(); it.fn(); };
+    m.appendChild(b);
+  });
+  document.body.appendChild(m);
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.min(x, innerWidth - r.width - 6) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
+}
+document.addEventListener("click", () => document.querySelectorAll(".ctx").forEach(m => m.remove()));
+const simOn = () => document.body.classList.contains("sim");
+$("libList").addEventListener("contextmenu", e => {
+  e.preventDefault();
+  const tr = e.target.closest("tr"); if (!tr) return;
+  const free = !simOn();
+  if (tr.classList.contains("grp")) {
+    const node = findNode(TREE, tr.dataset.g); if (!node) return;
+    const all = leaves(node);
+    contextMenu(e.clientX, e.clientY, [
+      {label: t("mOpen"), fn: () => run("openFolder", {path: SETTINGS.library + "\\" + tr.dataset.g})}, "-",
+      {label: t("mCheckFolder"), fn: () => { all.forEach(p => checked.add(p.path)); renderLib(); }},
+      {label: t("mUncheckFolder"), fn: () => { all.forEach(p => checked.delete(p.path)); renderLib(); }}, "-",
+      {label: t("expandAll"), fn: () => $("bExpand").click()}, {label: t("collapseAll"), fn: () => $("bCollapse").click()}]);
+    return;
+  }
+  const path = tr.dataset.p; if (!path) return;
+  if (!checked.has(path)) { checked.clear(); checked.add(path); renderLib(); }
+  const pk = checkedPkgs(), one = pk.length === 1 ? pk[0] : null;
+  const present = pk.filter(isOn), absent = pk.filter(p => !isOn(p));
+  contextMenu(e.clientX, e.clientY, [
+    {label: t("mOpen"), off: !one, fn: () => run("openFolder", {path: one.path})},
+    {label: t("mProps"), off: !one, fn: () => showProps(one.path)}, "-",
+    {label: t("activate"), off: !(absent.length && free), fn: () => $("bActivate").click()},
+    {label: t("mRemove"), off: !(present.length && free), fn: () => $("bRemove").click()},
+    {label: t("pin"), off: !free, fn: () => $("bPin").click()}, {label: t("unpin"), off: !free, fn: () => $("bUnpin").click()},
+    {label: t("mIcao"), off: !one, fn: () => $("bIcao").click()}, "-",
+    {label: t("mLayout"), off: !(one && free), fn: () => regenLayout(one.path, one.name)}, "-",
+    {label: t("quar"), off: !free, fn: () => quarantinePkgs(pk)}]);
+});
+$("libList").addEventListener("dblclick", e => {
+  const tr = e.target.closest("tr.item"); if (!tr) return;
+  checked.clear(); checked.add(tr.dataset.p); renderLib(); $("bIcao").click();
+});
+$("commList").addEventListener("contextmenu", e => {
+  e.preventDefault();
+  const tr = e.target.closest("tr.citem"); if (!tr) return;
+  if (!commSel.has(tr.dataset.c)) { commSel.clear(); commSel.add(tr.dataset.c); renderComm(); }
+  const sel = COMM.filter(c => commSel.has(c.path)), one = sel.length === 1 ? sel[0] : null, free = !simOn();
+  const okOne = one && one.cat !== "broken";
+  const links = sel.filter(c => c.link && c.cat !== "broken"), broken = sel.filter(c => c.cat === "broken");
+  const defoff = sel.filter(c => defaultOffNames.includes(c.name)).map(c => c.name);
+  const items = [
+    {label: t("mOpen"), off: !okOne, fn: () => run("openFolder", {path: one.target || one.path})},
+    {label: t("mProps"), off: !okOne, fn: () => showProps(one.path)}, "-",
+    {label: links.length > 1 ? tf("mDisableN", links.length) : t("mDisable1"), off: !(links.length && free), fn: () => $("bCommRemove").click()}, "-",
+    {label: t("mDelBroken1"), off: !(broken.length && free), fn: () => deleteBroken(broken.map(c => c.path))},
+    {label: t("mDelBrokenAll"), off: !(brokenCount && free), fn: () => deleteBroken(null)}, "-"];
+  if (defoff.length) items.push({label: t("dupEnDef"), off: !free, fn: async () => { await run("enableDefaults", {names: defoff}); loadLibrary(); }}, "-");
+  items.push({label: t("mMove"), off: !(okOne && free && !defoff.length), fn: () => moveToLibrary(one)}, "-",
+             {label: t("mLayout"), off: !(okOne && free && !defoff.length), fn: () => regenLayout(one.path, one.name)});
+  contextMenu(e.clientX, e.clientY, items);
+});
+$("commList").addEventListener("dblclick", e => { const tr = e.target.closest("tr.citem"); if (tr) { const c = COMM.find(x => x.path === tr.dataset.c); if (c && c.cat !== "broken") showProps(c.path); } });
 
 // ---------------------------------------------------------------- démarrage auto
 let LAPPS = [], lSel = new Set(), lScreens = [], lPending = false, lTimer = null;
@@ -1025,6 +1434,7 @@ document.querySelectorAll("#flags button[data-lang]").forEach(b => b.onclick = a
 });
 $("bQuit").onclick = () => run("quit");
 $("bRelay").onclick = () => run("relayToggle");
+$("bIssues").onclick = () => showHealth(true);
 function setRelay(d){ if (!d) return; $("relaylbl").textContent = d.text; $("bRelay").textContent = d.button; if (d.airports) airportsLbl = d.airports; }
 let airportsLbl = "";
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });

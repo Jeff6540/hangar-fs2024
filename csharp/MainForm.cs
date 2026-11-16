@@ -65,6 +65,12 @@ namespace HangarFS2024
             hangar.OnLauncher += () => PushRelay();
             hangar.OpenUrl = WebWindow.OpenExternal;
             PlaceMain();
+            FormClosing += (s, e) =>
+            {
+                monitor.Stop();
+                foreach (var w in new List<WebWindow>(webWins.Values)) { try { w.Close(); } catch (Exception) { } }
+                try { hangar.RelayStopNow(""); } catch (Exception) { }
+            };
             Load += async (s, e) => await InitWeb();
             Shown += (s, e) =>
             {
