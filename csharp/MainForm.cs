@@ -111,7 +111,7 @@ namespace HangarFS2024
 
         void PushRelay()
         {
-            Push("relay", new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus });
+            Push("relay", new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus, ["on"] = hangar.RelayRunning, ["connected"] = hangar.RelayRunning && hangar.Relay.Connected });
         }
 
         void OpenWeb(string which, string path, string title, Size size, bool maximize)
@@ -347,7 +347,7 @@ namespace HangarFS2024
                     PushRelay();
                     return null;
                 case "relayInfo":
-                    return new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus };
+                    return new JObject { ["text"] = hangar.RelayText(), ["button"] = hangar.RelayButton(), ["airports"] = hangar.AirportsStatus, ["on"] = hangar.RelayRunning, ["connected"] = hangar.RelayRunning && hangar.Relay.Connected };
                 case "launchMsfs":
                     hangar.LaunchMsfs();
                     return null;

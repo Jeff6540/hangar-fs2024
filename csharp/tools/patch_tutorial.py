@@ -41,6 +41,13 @@ R = {
    "Dans la Bibliothèque, la case d'un add-on présent dans Community devient bleu ciel, sur une ligne bleu foncé (jaune = simplement cochée)"),
   ("dans la colonne Community = l'add-on est dans Community.</li>",
    "dans la colonne Community = l'add-on est dans Community.</li><li>Quand tu sélectionnes un add-on déjà dans Community (pour le retirer), sa coche disparaît : la case devient <b>vide, bordée de bleu</b>. Elle montre ce qui restera après « Retirer de Community ».</li>"),
+  ("<li>Le bandeau en haut, puis les six onglets : Bibliothèque, Carte addons, Démarrage auto, Vol SimBrief, Plan &amp; suivi de vol, Réglages.</li><li>La barre du bas : messages, état du relais (bouton ⏻ pour l'arrêter ou le relancer), état du simulateur et bouton rouge <b>✕ Quitter</b>.</li>",
+   "<li>Le <b>menu à gauche</b> : Bibliothèque, Carte addons, Démarrage auto, Vol SimBrief, Plan &amp; suivi de vol, Réglages (la petite flèche ↗ signale une page qui s'ouvre dans sa propre fenêtre).</li><li>En bas du menu : l'état du relais (point vert = MSFS connecté, orange = en attente, gris = arrêté) avec le bouton ⏻ pour l'arrêter ou le relancer, l'état du simulateur et le bouton rouge <b>✕ Quitter</b>.</li><li>Le bouton <b>« Réduire le menu</b> replie le menu en une fine colonne d'icônes, pour laisser plus de place aux listes ; <b>»</b> le redéplie. Ton choix est gardé.</li><li>En haut à droite : les drapeaux de langue et le bouton Tutoriel. En bas de la fenêtre : la ligne des messages.</li>"),
+  ("<p><b>Lire la liste de gauche</b></p>",
+   "<p><b>Les chiffres en haut</b> : add-ons dans Community, scènes d'aéroport reconnues, dossiers réels (add-ons copiés directement dans Community) et liens cassés (en rouge s'il y en a).</p><p><b>Lire la liste de gauche</b></p>"),
+  ("<li>Les <b>drapeaux</b> 🇫🇷 et 🇬🇧, à droite des onglets,", "<li>Les <b>drapeaux</b> 🇫🇷 et 🇬🇧, en haut à droite,"),
+  ("avec les drapeaux à droite des onglets (voir", "avec les drapeaux en haut à droite (voir"),
+  ("<figcaption>À droite des onglets : les drapeaux", "<figcaption>En haut à droite : les drapeaux"),
  ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
@@ -80,6 +87,13 @@ R = {
    "In the Library, the box of an add-on in Community turns sky blue, on a dark blue row (yellow = just ticked)"),
   ("in the Community column = the add-on is in Community.</li>",
    "in the Community column = the add-on is in Community.</li><li>When you select an add-on that is already in Community (to remove it), its tick disappears: the box becomes <b>empty, with a blue outline</b>. It shows what will be left after \"Remove from Community\".</li>"),
+  ("<li>The banner at the top, then the six tabs: Library, Add-on map, Auto launch, SimBrief flight, Flight plan &amp; tracking, Settings.</li><li>The bottom bar: messages, relay status (⏻ button to stop or restart it), simulator status and the red <b>✕ Quit</b> button.</li>",
+   "<li>The <b>menu on the left</b>: Library, Add-on map, Auto launch, SimBrief flight, Flight plan &amp; tracking, Settings (the small ↗ arrow marks a page that opens in its own window).</li><li>At the bottom of the menu: the relay status (green dot = MSFS connected, orange = waiting, grey = stopped) with the ⏻ button to stop or restart it, the simulator status and the red <b>✕ Quit</b> button.</li><li>The <b>« Collapse menu</b> button folds the menu into a thin column of icons, leaving more room for the lists; <b>»</b> unfolds it. Your choice is kept.</li><li>Top right: the language flags and the Tutorial button. At the bottom of the window: the message line.</li>"),
+  ("<p><b>Reading the left list</b></p>",
+   "<p><b>The numbers at the top</b>: add-ons in Community, recognised airport sceneries, real folders (add-ons copied straight into Community) and broken links (in red if there are any).</p><p><b>Reading the left list</b></p>"),
+  ("The 🇫🇷 and 🇬🇧 <b>flags</b>, right of the tabs,", "The 🇫🇷 and 🇬🇧 <b>flags</b>, at the top right,"),
+  ("with the flags right of the tabs (see", "with the flags at the top right (see"),
+  ("<figcaption>Right of the tabs: the flags", "<figcaption>Top right: the flags"),
  ],
 }
 
