@@ -1,0 +1,32 @@
+# Fabrique la version C# de Hangar FS 2024 (dossier csharp) et la propose au téléchargement
+# dans l'onglet « Actions » de GitHub (pas de Release automatique pour l'instant).
+name: Build C# version
+
+on:
+  push:
+    paths: ['csharp/**', '.github/workflows/build-csharp.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        run: dotnet build csharp/HangarFS2024.csproj -c Release -o "out/Hangar FS 2024"
+
+      - name: Add license
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE "out/Hangar FS 2024/" -ErrorAction SilentlyContinue
+          Get-ChildItem -Recurse "out/Hangar FS 2024" | Select-Object FullName, Length
+
+      - name: Upload app
+        uses: actions/upload-artifact@v5
+        with:
+          name: Hangar_FS2024_CSharp_test
+          path: out/

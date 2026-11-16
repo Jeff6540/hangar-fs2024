@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <RootNamespace>HangarFS2024</RootNamespace>
+    <AssemblyName>Hangar FS 2024</AssemblyName>
+    <ApplicationIcon>hangar.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>12.0.0</Version>
+    <FileVersion>12.0.0.0</FileVersion>
+    <AssemblyVersion>12.0.0.0</AssemblyVersion>
+    <Company>Jeff40</Company>
+    <Product>Hangar FS 2024</Product>
+    <AssemblyTitle>Hangar FS 2024 - Addon Manager pour MSFS 2024</AssemblyTitle>
+    <Description>Hangar FS 2024 - Addon Manager pour MSFS 2024</Description>
+    <Copyright>(c) 2026 Jeff40 - MIT License</Copyright>
+    <NeutralLanguage>fr-FR</NeutralLanguage>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en;fr</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ui\index.html" LogicalName="ui.index.html" />
+    <EmbeddedResource Include="ui\banner_fr.png" LogicalName="ui.banner_fr.png" />
+    <EmbeddedResource Include="ui\banner_en.png" LogicalName="ui.banner_en.png" />
+  </ItemGroup>
+
+</Project>

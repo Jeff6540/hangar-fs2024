@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Hangar FS 2024</title>
+<style>
+:root{--bg:#15181e;--panel:#1c2028;--field:#252a34;--hover:#2e3440;--border:#2b313c;--fg:#e8eaef;--muted:#8a93a3;
+--accent:#3b82f6;--accent-hi:#5b98fa;--sel:#284a80;--danger:#b9383a;--danger-hi:#d0484a;--warn:#f0a050;--off:#6b7280;
+--ok:#4ade80;--warn-btn:#b06a14;--active-row:#1d3a2c;--cat-ours:#1d3a2c;--cat-real:#3a3020;--cat-ext:#1c3140;
+--cat-off:#2e2840;--cat-broken:#4a2226;--cat-defoff:#3a3a1c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px "Segoe UI Variable Text","Segoe UI",sans-serif;overflow:hidden;user-select:none}
+body{display:flex;flex-direction:column}
+input,select,button{font:inherit;color:var(--fg)}
+#top{position:relative;flex:none;height:72px;overflow:hidden;background:var(--bg)}
+#top img{height:72px;display:block}
+#flags{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:6px}
+#flags button{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
+#flags button.on{background:var(--accent);border-color:var(--accent)}
+#lock{display:none;flex:none;background:var(--danger);color:#fff;font-weight:700;text-align:center;padding:8px}
+body.sim #lock{display:block}
+nav{flex:none;display:flex;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--border)}
+nav button{background:transparent;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:8px 16px;cursor:pointer;color:var(--muted)}
+nav button:hover{color:var(--fg);background:var(--panel)}
+nav button.on{background:var(--panel);color:var(--fg);border-color:var(--border)}
+nav button.soon{opacity:.55}
+main{flex:1;min-height:0;background:var(--panel);margin:0 8px;border:1px solid var(--border);border-top:none}
+.tab{display:none;height:100%;padding:14px;flex-direction:column;gap:10px;min-height:0}
+.tab.on{display:flex}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+.btn{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn.accent:hover{background:var(--accent-hi)}
+.btn.danger{background:var(--danger);border-color:var(--danger)}
+.btn.danger:hover{background:var(--danger-hi)}
+.btn:disabled{opacity:.45;cursor:default}
+body.sim .lk{opacity:.45;pointer-events:none}
+input[type=text]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none}
+input[type=text]:focus{border-color:var(--accent)}
+label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.muted{color:var(--muted)}
+.title{font-size:16px;font-weight:600}
+.split{flex:1;min-height:0;display:flex;gap:12px}
+.pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;min-height:0}
+.pane.lib{flex:1.45}
+.list{flex:1;min-height:0;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:var(--field);text-align:left;font-weight:600;padding:6px 8px;z-index:1;white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid #1f242c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+tr.item{cursor:pointer}
+tr.item:hover td{background:var(--hover)}
+tr.item.act td{background:var(--active-row)}
+tr.item.act:hover td{background:#25483a}
+tr.item.chk td{background:var(--sel)}
+tr.grp td{background:#20252e;font-weight:600;cursor:pointer;color:#cdd3de}
+tr.grp td .n{color:var(--muted);font-weight:400}
+.box{display:inline-block;width:15px;height:15px;border:1.5px solid var(--muted);border-radius:3px;vertical-align:middle;position:relative}
+.box.on{background:var(--accent);border-color:var(--accent)}
+.box.on::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.box.part{background:var(--accent);border-color:var(--accent)}
+.box.part::after{content:"";position:absolute;left:2px;top:5px;width:8px;height:2px;background:#fff}
+.st-flight{color:var(--ok)}.st-linked{color:var(--ok)}.st-ext{color:#7cc4ff}.st-real{color:var(--warn)}
+.star{color:#f5c542}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{border:1px solid var(--border);border-radius:12px;padding:2px 10px;cursor:pointer;font-size:12px;background:var(--field)}
+.chip.on{outline:2px solid var(--accent)}
+.c-ours td:first-child{border-left:4px solid #2f8f5b}.c-real td:first-child{border-left:4px solid #b88a3a}
+.c-ext td:first-child{border-left:4px solid #3a86b8}.c-off td:first-child{border-left:4px solid #7a68b8}
+.c-broken td{background:var(--cat-broken)}.c-defoff td:first-child{border-left:4px solid #b8b83a}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#log{flex:1;min-height:120px;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:12.5px Consolas,monospace;white-space:pre-wrap;user-select:text}
+.apt-off td{color:var(--off)}.apt-none td{color:var(--warn)}
+.form{display:grid;grid-template-columns:max-content 1fr auto auto;gap:8px 10px;align-items:center;max-width:1100px}
+.form input[type=text]{width:100%}
+.note{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--muted);white-space:pre-wrap;max-width:1100px;line-height:1.45}
+.soonbox{margin:auto;text-align:center;color:var(--muted);max-width:560px;line-height:1.6}
+.soonbox .big{font-size:42px}
+footer{flex:none;display:flex;align-items:center;gap:18px;padding:6px 14px}
+#status{flex:1;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#simlbl{color:var(--muted)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:10}
+#modal.on{display:flex}
+#mbox{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;min-width:420px;max-width:680px;max-height:85vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#mtext{white-space:pre-wrap;line-height:1.45;margin-bottom:14px}
+#mbody{margin-bottom:14px}
+#mbtns{display:flex;justify-content:flex-end;gap:8px}
+fieldset{border:1px solid var(--border);border-radius:8px;margin:8px 0;padding:6px 12px}
+legend{color:var(--muted);padding:0 6px}
+fieldset label{display:block;padding:3px 0;cursor:pointer}
+::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-thumb{background:#3a414e;border-radius:6px;border:3px solid var(--bg)}
+::-webkit-scrollbar-track{background:var(--bg)}
+</style>
+</head>
+<body>
+<div id="top"><img id="banner" alt=""><div id="flags"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div></div>
+<div id="lock" data-t="lockBanner"></div>
+<nav id="tabs">
+  <button data-tab="lib" data-t="tabLib"></button>
+  <button data-tab="soon-map" class="soon" data-t="tabMap"></button>
+  <button data-tab="soon-launch" class="soon" data-t="tabLaunch"></button>
+  <button data-tab="vol" data-t="tabVol"></button>
+  <button data-tab="soon-dispatch" class="soon" data-t="tabDispatch"></button>
+  <button data-tab="set" data-t="tabSet"></button>
+</nav>
+<main>
+  <!-- Bibliothèque -->
+  <section class="tab" id="tab-lib">
+    <div class="row">
+      <input type="text" id="search" style="width:260px">
+      <button class="btn" id="bCheckAll" data-t="checkAll"></button>
+      <button class="btn" id="bUncheckAll" data-t="uncheckAll"></button>
+      <button class="btn" id="bExpand" data-t="expandAll"></button>
+      <button class="btn" id="bCollapse" data-t="collapseAll"></button>
+      <span class="grow"></span>
+      <button class="btn" id="bRescan" data-t="rescan"></button>
+    </div>
+    <div class="split">
+      <div class="pane lib">
+        <div class="row"><span class="title" data-t="library"></span><span class="muted" id="libCount"></span></div>
+        <div class="list" id="libList"></div>
+      </div>
+      <div class="pane">
+        <div class="row"><span class="title">Community</span><span class="muted" id="commCount"></span></div>
+        <div class="chips" id="chips"></div>
+        <div class="list" id="commList"></div>
+        <div class="row"><button class="btn lk" id="bCommRemove" data-t="commRemove"></button></div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn accent lk" id="bActivate"></button>
+      <button class="btn danger lk" id="bRemove"></button>
+      <button class="btn lk" id="bPin" data-t="pin"></button>
+      <button class="btn lk" id="bUnpin" data-t="unpin"></button>
+      <button class="btn" id="bIcao" data-t="icaoBtn"></button>
+      <span class="muted" id="checkedLbl"></span>
+    </div>
+  </section>
+
+  <!-- Vol SimBrief -->
+  <section class="tab" id="tab-vol">
+    <div class="row">
+      <span data-t="simbriefId"></span>
+      <input type="text" id="sbUser" style="width:200px">
+      <button class="btn" id="bFetch" data-t="fetch"></button>
+      <span class="grow"></span>
+      <button class="btn" data-url="https://dispatch.simbrief.com/" data-t="openSimbrief"></button>
+      <button class="btn" data-url="https://lfv-planner.netlify.app/">🌐  LFV Planner</button>
+    </div>
+    <div class="title" id="planLbl"></div>
+    <div class="list" style="flex:none;max-height:220px"><table id="aptTable"></table></div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="optAlt"><span data-t="optAlt"></span></label>
+      <label class="chk" style="margin-left:16px"><input type="checkbox" id="optAuto"><span data-t="optAuto"></span></label>
+    </div>
+    <div class="row">
+      <button class="btn accent lk" id="bPrepare" data-t="prepare"></button>
+      <button class="btn lk" id="bEnd" data-t="endFlight"></button>
+      <span id="flightLbl"></span>
+    </div>
+    <div data-t="journal"></div>
+    <div id="log"></div>
+  </section>
+
+  <!-- Réglages -->
+  <section class="tab" id="tab-set" style="overflow:auto">
+    <div class="form">
+      <span data-t="setLib"></span><input type="text" id="sLib"><button class="btn" data-browse="sLib" data-t="browse"></button><span></span>
+      <span data-t="setComm"></span><input type="text" id="sComm"><button class="btn" data-browse="sComm" data-t="browse"></button><button class="btn" id="bDetect" data-t="detect"></button>
+      <span data-t="simbriefId"></span><input type="text" id="sUser"><span></span><span></span>
+      <span data-t="setExe"></span><input type="text" id="sExe"><span></span><span></span>
+    </div>
+    <div class="row"><button class="btn accent" id="bSave" data-t="save"></button></div>
+    <div class="note" data-t="setHelp"></div>
+    <div class="note" data-t="testNote"></div>
+    <div class="row">
+      <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
+      <span class="muted">Hangar FS 2024 {{VERSION}} — © 2026 Jeff40 — MIT License</span>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-soon">
+    <div class="soonbox"><div class="big">🛠</div><div class="title" id="soonTitle"></div><p data-t="soonText"></p></div>
+  </section>
+</main>
+<footer>
+  <span id="status"></span>
+  <span id="simlbl"></span>
+  <button class="btn" id="bQuit" data-t="quit"></button>
+</footer>
+<div id="modal"><div id="mbox"><div id="mtext"></div><div id="mbody"></div><div id="mbtns"></div></div></div>
+
+<script>
+"use strict";
+const BANNERS = {fr: "{{BANNER_FR}}", en: "{{BANNER_EN}}"};
+const TXT = {
+ lockBanner:["🔒  Flight Simulator est ouvert : l'appli est verrouillée. Ferme le simulateur pour gérer tes add-ons.","🔒  Flight Simulator is running: the app is locked. Close the simulator to manage your add-ons."],
+ tabLib:["Bibliothèque","Library"], tabMap:["🗺  Carte addons","🗺  Add-on map"], tabLaunch:["🚀  Démarrage auto","🚀  Auto launch"],
+ tabVol:["Vol SimBrief","SimBrief flight"], tabDispatch:["✈  Plan & suivi de vol","✈  Flight plan & tracking"], tabSet:["Réglages","Settings"],
+ checkAll:["Tout cocher","Check all"], uncheckAll:["Tout décocher","Uncheck all"], expandAll:["Tout déplier","Expand all"], collapseAll:["Tout replier","Collapse all"],
+ rescan:["↻  Actualiser","↻  Refresh"], library:["Bibliothèque","Library"], search:["Rechercher…","Search…"],
+ commRemove:["🗑  Retirer les liens cochés","🗑  Remove checked links"],
+ pin:["★  Protéger","★  Protect"], unpin:["Retirer la protection","Remove protection"], icaoBtn:["Codes OACI…","ICAO codes…"],
+ activateN:["▶  Activer %s dans Community","▶  Activate %s in Community"], activate:["▶  Activer dans Community","▶  Activate in Community"],
+ removeN:["🗑  Retirer %s de Community","🗑  Remove %s from Community"], remove:["🗑  Retirer de Community","🗑  Remove from Community"],
+ checkedN:["%s add-on(s) coché(s)","%s add-on(s) checked"],
+ colName:["Nom","Name"], colTitle:["Titre","Title"], colType:["Type","Type"], colVer:["Version","Version"], colState:["État","Status"], colIcao:["OACI","ICAO"],
+ stnone:["—","—"], stflight:["Lié (vol)","Linked (flight)"], stlinked:["Lié","Linked"], stext:["Lien externe","External link"], streal:["Copie réelle","Real copy"], "st?":["?","?"],
+ noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
+ catours:["Appli","App"], catreal:["Dossiers","Folders"], catext:["Externes","External"], catoff:["Hors biblio","Outside library"], catbroken:["Cassés","Broken"], catdefoff:["Défaut off","Default off"],
+ simbriefId:["Identifiant SimBrief :","SimBrief ID:"], fetch:["Récupérer le dernier plan de vol","Fetch the latest flight plan"],
+ openSimbrief:["🌐  Ouvrir SimBrief","🌐  Open SimBrief"], noPlan:["Aucun plan de vol chargé.","No flight plan loaded."],
+ colRole:["Rôle","Role"], colApt:["Aéroport","Airport"], colScenes:["Scène(s) dans ta bibliothèque","Scenery in your library"],
+ noScene:["aucune — scène par défaut du simulateur","none — simulator default scenery"],
+ optAlt:["Inclure les aéroports de dégagement","Include alternate airports"], optAuto:["Retirer les scènes automatiquement à la fermeture du simulateur","Remove sceneries automatically when the simulator closes"],
+ prepare:["✈  Préparer le vol (lier les scènes)","✈  Prepare the flight (link sceneries)"], endFlight:["Terminer le vol (retirer les scènes)","End the flight (remove sceneries)"],
+ noFlight:["Aucun vol actif.","No active flight."], flightOn:["Vol actif : %s — %s scène(s) du vol chargée(s)","Active flight: %s — %s flight scenery(ies) loaded"],
+ parkedN:[" · %s scène(s) d'aéroport mise(s) de côté"," · %s airport scenery(ies) set aside"], journal:["Journal","Log"],
+ setLib:["Bibliothèque d'add-ons :","Add-on library:"], setComm:["Dossier Community :","Community folder:"], setExe:["Programme du simulateur :","Simulator program:"],
+ browse:["Parcourir…","Browse…"], detect:["Détecter","Detect"], save:["Enregistrer les réglages","Save settings"],
+ setHelp:["• Bibliothèque : le dossier où tu ranges tes add-ons, en dehors de Community (ex. D:\\MSFS Addons). Les sous-dossiers par catégorie sont acceptés.\n• Pour commencer, simulateur fermé, déplace vers la bibliothèque UNIQUEMENT les add-ons que tu as installés toi-même (dézippés), marqués « Dossier réel » dans la liste Community. Laisse dans Community ce qu'un installateur gère (PMDG, GSX, Navigraph, Orbx, iniBuilds, FlyByWire…). Puis protège (★ Protéger) ceux qui doivent toujours être chargés.\n• Les scènes d'aéroport sont reconnues par leur code OACI (nom du dossier, titre, fichiers BGL). Si une scène n'est pas reconnue, sélectionne-la puis « Codes OACI… » pour saisir ses codes.\n• Les liens doivent être faits avant de lancer le simulateur : il ne lit Community qu'au démarrage.",
+          "• Library: the folder where you keep your add-ons, outside Community (e.g. D:\\MSFS Addons). Sub-folders by category are fine.\n• To start, with the simulator closed, move to the library ONLY the add-ons you installed yourself (unzipped), shown as \"Real folder\" in the Community list. Leave in Community what an installer manages (PMDG, GSX, Navigraph, Orbx, iniBuilds, FlyByWire…). Then protect (★ Protect) the ones that must always be loaded.\n• Airport sceneries are recognised by their ICAO code (folder name, title, BGL files). If a scenery isn't recognised, select it then \"ICAO codes…\" to enter its codes.\n• Links must be made before starting the simulator: it only reads Community at startup."],
+ testNote:["🧪  Version C# de test (12.0). Elle utilise les mêmes réglages que la version Python : n'ouvre pas les deux en même temps. Les onglets marqués en gris arrivent dans les prochaines étapes.",
+           "🧪  C# test version (12.0). It uses the same settings as the Python version: don't open both at the same time. The greyed-out tabs are coming in the next steps."],
+ soonText:["Cet onglet sera ajouté dans une prochaine étape de la version C#. En attendant, il reste disponible dans la version Python 11.8.","This tab will be added in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
+ quit:["✕  Quitter","✕  Quit"], simOn:["Simulateur : lancé","Simulator: running"], simOff:["Simulateur : fermé","Simulator: closed"],
+ yes:["Oui","Yes"], no:["Non","No"], ok:["OK","OK"], cancel:["Annuler","Cancel"],
+ nothingChecked:["Coche d'abord des add-ons dans la bibliothèque.","Check some add-ons in the library first."],
+ confirmRemove:["Retirer %s add-on(s) du dossier Community ?\n\n%s\n\nSeuls les liens sont retirés : tes fichiers restent intacts dans la bibliothèque.","Remove %s add-on(s) from the Community folder?\n\n%s\n\nOnly the links are removed: your files stay untouched in the library."],
+ confirmRemoveBig:["⚠  ATTENTION : tu vas retirer %s add-ons de Community.\n\nEst-ce vraiment ce que tu veux ?\n\n(Tes fichiers restent dans la bibliothèque.)","⚠  WARNING: you are about to remove %s add-ons from Community.\n\nIs that really what you want?\n\n(Your files stay in the library.)"],
+ noneInComm:["Aucun des add-ons cochés n'est dans Community.","None of the checked add-ons is in Community."],
+ confirmCommRemove:["Retirer %s lien(s) du dossier Community ?\n\nLes fichiers d'origine ne sont pas touchés. Les vrais dossiers ne sont jamais supprimés.","Remove %s link(s) from the Community folder?\n\nThe original files are not touched. Real folders are never deleted."],
+ noCommChecked:["Coche d'abord des liens dans la liste Community.","Check some links in the Community list first."],
+ icaoOne:["Sélectionne (coche) une seule scène pour saisir ses codes OACI.","Check a single scenery to enter its ICAO codes."],
+ icaoPrompt:["Codes OACI de « %s » (séparés par des espaces).\nLaisse vide pour revenir à la détection automatique.","ICAO codes for \"%s\" (separated by spaces).\nLeave empty to go back to automatic detection."],
+ chooseTitle:["Plusieurs scènes pour le même aéroport\n\nChoisis la scène à activer pour ce vol. Les autres restent dans ta bibliothèque ; si l'une d'elles est active, elle est mise de côté pendant le vol puis remise à la fin.","Several sceneries for the same airport\n\nChoose the scenery to activate for this flight. The others stay in your library; if one of them is active, it is set aside during the flight and put back at the end."],
+ chooseOk:["Activer ces scènes","Activate these sceneries"], alreadyIn:["déjà dans Community","already in Community"],
+ fetchFirst:["Récupère d'abord ton plan de vol SimBrief.","Fetch your SimBrief flight plan first."],
+ pickLib:["Choisis le dossier de ta bibliothèque d'add-ons","Choose your add-on library folder"], pickComm:["Choisis ton dossier Community","Choose your Community folder"],
+ commNotFound:["Dossier Community introuvable automatiquement.\nIndique-le avec « Parcourir ».","Community folder not found automatically.\nSet it with \"Browse\"."],
+ soonMap:["Carte addons","Add-on map"], soonLaunch:["Démarrage auto","Auto launch"], soonDispatch:["Plan & suivi de vol","Flight plan & tracking"],
+};
+const ROLE_EN = {"Départ":"Departure","Arrivée":"Arrival","Dégagement":"Alternate","Dégagement décollage":"Takeoff alternate","Dégagement en route":"En-route alternate"};
+let LANG = "fr";
+function t(k){ const v = TXT[k]; return v ? v[LANG === "en" ? 1 : 0] : k; }
+function tf(k){ let s = t(k); for (let i = 1; i < arguments.length; i++) s = s.replace("%s", arguments[i]); return s; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+const $ = id => document.getElementById(id);
+
+// ---------------------------------------------------------------- échanges avec le C#
+const pending = {}; let seq = 0;
+function call(cmd, args){
+  return new Promise((resolve, reject) => {
+    const id = ++seq; pending[id] = {resolve, reject};
+    window.chrome.webview.postMessage({id, cmd, args: args || {}});
+  });
+}
+window.chrome.webview.addEventListener("message", ev => {
+  const m = ev.data;
+  if (m && m.id !== undefined && pending[m.id]) {
+    const p = pending[m.id]; delete pending[m.id];
+    if (m.ok) p.resolve(m.data); else p.reject(new Error(m.error));
+  } else if (m && m.event) onEvent(m.event, m.data);
+});
+async function run(cmd, args){
+  try { return await call(cmd, args); }
+  catch (e) { await alertBox(e.message); return undefined; }
+}
+
+// ---------------------------------------------------------------- fenêtres de dialogue
+function modal(text, buttons, bodyNode){
+  return new Promise(resolve => {
+    $("mtext").textContent = text;
+    const body = $("mbody"); body.innerHTML = ""; if (bodyNode) body.appendChild(bodyNode);
+    body.style.display = bodyNode ? "" : "none";
+    const bt = $("mbtns"); bt.innerHTML = "";
+    buttons.forEach(b => {
+      const el = document.createElement("button"); el.className = "btn" + (b.cls ? " " + b.cls : ""); el.textContent = b.label;
+      el.onclick = () => { $("modal").classList.remove("on"); resolve(b.value); };
+      bt.appendChild(el);
+    });
+    $("modal").classList.add("on");
+    const inp = body.querySelector("input[type=text]"); if (inp) setTimeout(() => inp.focus(), 30);
+  });
+}
+const alertBox = text => modal(text, [{label: t("ok"), value: true, cls: "accent"}]);
+const confirmBox = (text, danger) => modal(text, [{label: t("no"), value: false}, {label: t("yes"), value: true, cls: danger ? "danger" : "accent"}]);
+async function promptBox(text, value){
+  const inp = document.createElement("input"); inp.type = "text"; inp.value = value || ""; inp.style.width = "100%";
+  const r = await modal(text, [{label: t("cancel"), value: null}, {label: t("ok"), value: "ok", cls: "accent"}], inp);
+  return r === "ok" ? inp.value : null;
+}
+document.addEventListener("keydown", e => {
+  if (!$("modal").classList.contains("on")) return;
+  if (e.key === "Escape") { const b = $("mbtns").firstChild; if (b) b.click(); }
+  if (e.key === "Enter") { const b = $("mbtns").lastChild; if (b) b.click(); }
+});
+
+// ---------------------------------------------------------------- état
+let PKGS = [], COMM = [], checked = new Set(), commChecked = new Set(), collapsed = new Set(), commFilter = null, SETTINGS = {};
+let currentTab = "lib";
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  $("banner").src = BANNERS[LANG];
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll("#flags button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+  $("search").placeholder = t("search");
+  setSim(document.body.classList.contains("sim"));
+  renderLib(); renderComm(); refreshFlight();
+}
+
+function showTab(name){
+  currentTab = name;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll(".tab").forEach(s => s.classList.remove("on"));
+  if (name.startsWith("soon-")) {
+    $("tab-soon").classList.add("on");
+    $("soonTitle").textContent = t({"soon-map": "soonMap", "soon-launch": "soonLaunch", "soon-dispatch": "soonDispatch"}[name]);
+  } else $("tab-" + name).classList.add("on");
+  if (name === "vol") refreshFlight();
+}
+
+function setSim(on){
+  document.body.classList.toggle("sim", !!on);
+  $("simlbl").textContent = t(on ? "simOn" : "simOff");
+}
+
+// ---------------------------------------------------------------- bibliothèque
+function matches(p, q){
+  if (!q) return true;
+  return (p.name + " " + p.title + " " + p.creator + " " + p.icao.join(" ") + " " + p.group).toLowerCase().includes(q);
+}
+function groups(){
+  const q = $("search").value.trim().toLowerCase();
+  const map = new Map();
+  PKGS.filter(p => matches(p, q)).forEach(p => {
+    const g = p.group || ""; if (!map.has(g)) map.set(g, []); map.get(g).push(p);
+  });
+  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, {sensitivity: "base"}));
+}
+function boxHtml(state){ return '<span class="box' + (state === 2 ? " on" : state === 1 ? " part" : "") + '"></span>'; }
+
+function renderLib(){
+  const list = $("libList");
+  if (!SETTINGS.library) { list.innerHTML = '<div class="muted" style="padding:14px">' + esc(t("noLib")) + "</div>"; $("libCount").textContent = ""; updateButtons(); return; }
+  const scroll = list.scrollTop;
+  let h = "<table><thead><tr><th style='width:28px'></th><th>" + esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" +
+          esc(t("colType")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colIcao")) + "</th><th>★</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
+  groups().forEach(([g, items]) => {
+    const nChk = items.filter(p => checked.has(p.path)).length;
+    const st = nChk === 0 ? 0 : nChk === items.length ? 2 : 1;
+    const open = !collapsed.has(g);
+    h += '<tr class="grp" data-g="' + esc(g) + '"><td data-gbox="1">' + boxHtml(st) + '</td><td colspan="7">' + (open ? "▾ " : "▸ ") +
+         esc(g || t("noGroup")) + ' <span class="n">(' + items.length + ")</span></td></tr>";
+    if (!open) return;
+    items.forEach(p => {
+      const on = p.status === "flight" || p.status === "linked";
+      h += '<tr class="item' + (checked.has(p.path) ? " chk" : on ? " act" : "") + '" data-p="' + esc(p.path) + '"><td>' + boxHtml(checked.has(p.path) ? 2 : 0) +
+           "</td><td title='" + esc(p.path) + "'>" + esc(p.name) + "</td><td>" + esc(p.title) + "</td><td>" + esc(p.type) + "</td><td>" + esc(p.version) +
+           "</td><td>" + esc(p.icao.join(" ")) + (p.icaoManual ? " ✎" : "") + "</td><td class='star'>" + (p.pinned ? "★" : "") +
+           "</td><td class='st-" + esc(p.status) + "'>" + esc(t("st" + p.status)) + "</td></tr>";
+    });
+  });
+  list.innerHTML = h + "</tbody></table>";
+  list.scrollTop = scroll;
+  const nAct = PKGS.filter(p => p.status === "flight" || p.status === "linked").length;
+  $("libCount").textContent = "— " + PKGS.length + " add-ons · " + nAct + " " + (LANG === "en" ? "in Community" : "dans Community");
+  updateButtons();
+}
+
+$("libList").addEventListener("click", e => {
+  const tr = e.target.closest("tr"); if (!tr) return;
+  if (tr.classList.contains("grp")) {
+    const g = tr.dataset.g;
+    if (e.target.closest("[data-gbox]")) {
+      const items = (groups().find(x => x[0] === g) || [g, []])[1];
+      const all = items.every(p => checked.has(p.path));
+      items.forEach(p => all ? checked.delete(p.path) : checked.add(p.path));
+    } else { collapsed.has(g) ? collapsed.delete(g) : collapsed.add(g); }
+    renderLib(); return;
+  }
+  const p = tr.dataset.p; if (!p) return;
+  checked.has(p) ? checked.delete(p) : checked.add(p);
+  renderLib();
+});
+
+function checkedPkgs(){ return PKGS.filter(p => checked.has(p.path)); }
+function updateButtons(){
+  const sel = checkedPkgs();
+  const n = sel.length;
+  const inComm = sel.filter(p => p.status !== "none" && p.status !== "?").length;
+  $("bActivate").textContent = n ? tf("activateN", n) : t("activate");
+  $("bRemove").textContent = inComm ? tf("removeN", inComm) : t("remove");
+  $("checkedLbl").textContent = tf("checkedN", n);
+}
+
+$("search").addEventListener("input", renderLib);
+$("bCheckAll").onclick = () => { groups().forEach(([g, items]) => items.forEach(p => checked.add(p.path))); renderLib(); };
+$("bUncheckAll").onclick = () => { checked.clear(); renderLib(); };
+$("bExpand").onclick = () => { collapsed.clear(); renderLib(); };
+$("bCollapse").onclick = () => { PKGS.forEach(p => collapsed.add(p.group || "")); renderLib(); };
+$("bRescan").onclick = () => run("rescan");
+
+$("bActivate").onclick = async () => {
+  const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
+  const r = await run("activate", {paths: sel.map(p => p.path)});
+  if (r) checked.clear();
+  loadLibrary();
+};
+$("bRemove").onclick = async () => {
+  const sel = checkedPkgs().filter(p => p.status !== "none" && p.status !== "?");
+  if (!checkedPkgs().length) return alertBox(t("nothingChecked"));
+  if (!sel.length) return alertBox(t("noneInComm"));
+  const names = sel.slice(0, 12).map(p => "• " + p.name).join("\n") + (sel.length > 12 ? "\n• …" : "");
+  if (!await confirmBox(tf("confirmRemove", sel.length, names), true)) return;
+  if (sel.length > 20 && !await confirmBox(tf("confirmRemoveBig", sel.length), true)) return;
+  const r = await run("remove", {paths: sel.map(p => p.path)});
+  if (r) checked.clear();
+  loadLibrary();
+};
+$("bPin").onclick = async () => {
+  const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
+  await run("pin", {paths: sel.map(p => p.path), on: true}); checked.clear(); loadLibrary();
+};
+$("bUnpin").onclick = async () => {
+  const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
+  await run("pin", {paths: sel.map(p => p.path), on: false}); checked.clear(); loadLibrary();
+};
+$("bIcao").onclick = async () => {
+  const sel = checkedPkgs(); if (sel.length !== 1) return alertBox(t("icaoOne"));
+  const p = sel[0];
+  const v = await promptBox(tf("icaoPrompt", p.title || p.name), p.icao.join(" "));
+  if (v === null) return;
+  await run("setIcao", {path: p.path, codes: v.split(/[\s,;]+/).filter(Boolean)});
+  loadLibrary();
+};
+
+// ---------------------------------------------------------------- Community
+const CATS = ["ours", "real", "ext", "off", "broken", "defoff"];
+const CAT_COL = {ours: "#2f8f5b", real: "#b88a3a", ext: "#3a86b8", off: "#7a68b8", broken: "#d0484a", defoff: "#b8b83a"};
+function renderComm(){
+  const counts = {}; COMM.forEach(c => counts[c.cat] = (counts[c.cat] || 0) + 1);
+  $("chips").innerHTML = CATS.filter(c => counts[c]).map(c => '<span class="chip' + (commFilter === c ? " on" : "") + '" data-cat="' + c + '"><span class="dot" style="background:' +
+    CAT_COL[c] + '"></span>' + esc(t("cat" + c)) + " " + counts[c] + "</span>").join("");
+  const rows = COMM.filter(c => !commFilter || c.cat === commFilter);
+  const scroll = $("commList").scrollTop;
+  let h = "<table><thead><tr><th style='width:28px'></th><th>" + esc(t("colName")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
+  rows.forEach(c => {
+    h += '<tr class="item c-' + c.cat + (commChecked.has(c.path) ? " chk" : "") + '" data-c="' + esc(c.path) + '" title="' + esc(c.target || c.path) + '"><td>' +
+         (c.link ? boxHtml(commChecked.has(c.path) ? 2 : 0) : "") + "</td><td>" + esc(c.name) + "</td><td>" + esc(c.version) + "</td><td>" + esc(c.label) + "</td></tr>";
+  });
+  $("commList").innerHTML = h + "</tbody></table>";
+  $("commList").scrollTop = scroll;
+  $("commCount").textContent = "— " + COMM.length;
+}
+$("chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  commFilter = commFilter === c.dataset.cat ? null : c.dataset.cat; renderComm();
+});
+$("commList").addEventListener("click", e => {
+  const tr = e.target.closest("tr.item"); if (!tr) return;
+  const c = COMM.find(x => x.path === tr.dataset.c); if (!c || !c.link) return;
+  commChecked.has(c.path) ? commChecked.delete(c.path) : commChecked.add(c.path);
+  renderComm();
+});
+$("bCommRemove").onclick = async () => {
+  const sel = COMM.filter(c => c.link && commChecked.has(c.path));
+  if (!sel.length) return alertBox(t("noCommChecked"));
+  if (!await confirmBox(tf("confirmCommRemove", sel.length), true)) return;
+  await run("removeCommunity", {links: sel.map(c => c.path)});
+  commChecked.clear(); loadLibrary();
+};
+
+let loading = false, reloadAgain = false;
+async function loadLibrary(){
+  if (loading) { reloadAgain = true; return; }
+  loading = true;
+  try {
+    const d = await call("library");
+    PKGS = d.packages; COMM = d.community;
+    const known = new Set(PKGS.map(p => p.path)); [...checked].forEach(p => { if (!known.has(p)) checked.delete(p); });
+    const knownC = new Set(COMM.map(c => c.path)); [...commChecked].forEach(p => { if (!knownC.has(p)) commChecked.delete(p); });
+    renderLib(); renderComm();
+  } catch (e) { /* rien */ }
+  loading = false;
+  if (reloadAgain) { reloadAgain = false; loadLibrary(); }
+}
+
+// ---------------------------------------------------------------- vol SimBrief
+async function refreshFlight(){
+  let d; try { d = await call("flight"); } catch (e) { return; }
+  const tb = $("aptTable");
+  if (!d.plan) { $("planLbl").textContent = t("noPlan"); tb.innerHTML = ""; }
+  else {
+    const p = d.plan;
+    let txt = (p.flight ? p.flight + "    " : "") + p.route + (p.aircraft ? "    (" + p.aircraft + ")" : "");
+    $("planLbl").textContent = txt;
+    let h = "<thead><tr><th>" + esc(t("colRole")) + "</th><th>ICAO</th><th>" + esc(t("colApt")) + "</th><th>" + esc(t("colScenes")) + "</th></tr></thead><tbody>";
+    p.airports.forEach(a => {
+      const cls = !a.used ? "apt-off" : (a.scenes.length ? "" : "apt-none");
+      h += '<tr class="' + cls + '"><td>' + esc(LANG === "en" ? (ROLE_EN[a.role] || a.role) : a.role) + "</td><td>" + esc(a.icao) + "</td><td>" + esc(a.name) +
+           "</td><td>" + esc(a.scenes.join(", ") || t("noScene")) + "</td></tr>";
+    });
+    tb.innerHTML = h + "</tbody>";
+  }
+  let ft = d.flight ? tf("flightOn", d.flight.route, d.flight.scenes) : t("noFlight");
+  if (d.parked) ft += tf("parkedN", d.parked);
+  $("flightLbl").textContent = ft;
+}
+$("bFetch").onclick = async () => {
+  $("bFetch").disabled = true;
+  await run("fetchPlan", {user: $("sbUser").value});
+  $("bFetch").disabled = false;
+  refreshFlight();
+};
+$("optAlt").onchange = () => run("setOption", {key: "include_alternates", value: $("optAlt").checked}).then(refreshFlight);
+$("optAuto").onchange = () => run("setOption", {key: "auto_unlink", value: $("optAuto").checked});
+$("bPrepare").onclick = async () => {
+  let r = await run("prepareFlight", {});
+  if (r && r.needChoice) {
+    const wrap = document.createElement("div");
+    r.needChoice.forEach(c => {
+      const fs = document.createElement("fieldset");
+      fs.innerHTML = "<legend>" + esc(c.icao + " — " + c.name) + "</legend>" + c.options.map(o => {
+        const extra = [o.pinned ? (LANG === "en" ? "★ Protected" : "★ Protégé") : "", o.active ? t("alreadyIn") : ""].filter(Boolean).join(" · ");
+        return '<label><input type="radio" name="ch-' + esc(c.icao) + '" value="' + esc(o.path) + '"' + (o.path === c.default ? " checked" : "") + "> " +
+               esc(o.title) + ' <span class="muted">(' + esc(o.name) + ")" + (extra ? "   · " + esc(extra) : "") + "</span></label>";
+      }).join("");
+      wrap.appendChild(fs);
+    });
+    const ok = await modal(t("chooseTitle"), [{label: t("cancel"), value: false}, {label: t("chooseOk"), value: true, cls: "accent"}], wrap);
+    if (!ok) return;
+    const choices = {};
+    r.needChoice.forEach(c => { const el = wrap.querySelector('input[name="ch-' + c.icao + '"]:checked'); if (el) choices[c.icao] = el.value; });
+    r = await run("prepareFlight", {choices});
+  }
+  refreshFlight(); loadLibrary();
+};
+$("bEnd").onclick = async () => { await run("endFlight"); refreshFlight(); loadLibrary(); };
+
+// ---------------------------------------------------------------- réglages
+function fillSettings(s){
+  SETTINGS = s;
+  $("sLib").value = s.library || ""; $("sComm").value = s.community || ""; $("sUser").value = s.simbrief_user || "";
+  $("sExe").value = s.sim_exe || ""; $("sbUser").value = s.simbrief_user || "";
+  $("optAlt").checked = !!s.include_alternates; $("optAuto").checked = !!s.auto_unlink;
+}
+document.querySelectorAll("[data-browse]").forEach(b => b.onclick = async () => {
+  const inp = $(b.dataset.browse);
+  const v = await run("browse", {title: t(b.dataset.browse === "sLib" ? "pickLib" : "pickComm"), current: inp.value});
+  if (v) inp.value = v;
+});
+$("bDetect").onclick = async () => {
+  const v = await run("detectCommunity");
+  if (v) $("sComm").value = v; else alertBox(t("commNotFound"));
+};
+$("bSave").onclick = async () => {
+  const s = {library: $("sLib").value, community: $("sComm").value, simbrief_user: $("sUser").value, sim_exe: $("sExe").value,
+             include_alternates: $("optAlt").checked, auto_unlink: $("optAuto").checked};
+  const r = await call("saveSettings", s).then(() => true, e => { alertBox(e.message); return false; });
+  if (r) { Object.assign(SETTINGS, s); fillSettings(SETTINGS); }
+};
+
+// ---------------------------------------------------------------- divers
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+document.querySelectorAll("[data-url]").forEach(b => b.onclick = () => run("openUrl", {url: b.dataset.url}));
+document.querySelectorAll("#flags button").forEach(b => b.onclick = async () => {
+  if (b.dataset.lang === LANG) return;
+  LANG = b.dataset.lang; await run("setLang", {lang: LANG}); applyLang();
+});
+$("bQuit").onclick = () => run("quit");
+document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });
+
+function onEvent(ev, data){
+  if (ev === "log") {
+    const l = $("log"); const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 4;
+    l.textContent += (l.textContent ? "\n" : "") + data;
+    if (atEnd) l.scrollTop = l.scrollHeight;
+  } else if (ev === "status") $("status").textContent = data;
+  else if (ev === "sim") setSim(data);
+  else if (ev === "changed") { loadLibrary(); if (currentTab === "vol") refreshFlight(); }
+}
+
+(async function init(){
+  const d = await call("init");
+  LANG = d.lang === "en" ? "en" : "fr";
+  fillSettings(d.settings);
+  setSim(d.sim);
+  applyLang();
+  showTab(d.settings.library ? "lib" : "set");
+  loadLibrary();
+})();
+</script>
+</body>
+</html>
