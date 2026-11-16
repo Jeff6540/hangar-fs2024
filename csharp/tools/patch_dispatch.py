@@ -29,6 +29,7 @@ NET_JS = r"""<script>
   });
   window.alNetOn = function () { return st.vatsim.on || st.ivao.on; };
   function K() { return window.alNetKit; }
+  var LBZ = 9;   /* étiquettes des pilotes VATSIM / IVAO seulement de près : sinon la carte est illisible */
   function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
 
   /* position estimée entre deux mises à jour (cap + vitesse), au plus 60 s */
@@ -44,7 +45,7 @@ NET_JS = r"""<script>
   function icon(k, p) {
     var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
     var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft) : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
-    var html = (m && m.getZoom() >= 7) ? '<div class="alfs-pin">' + svg + '<span class="lb">' + k2.esc(SRC[k].label + ' · ' + p.callsign + (p.aircraft ? ' · ' + p.aircraft : '')) + '</span></div>' : svg;
+    var html = (m && m.getZoom() >= LBZ) ? '<div class="alfs-pin alnet-pin" style="--c:' + color(k) + '">' + svg + '<span class="lb">' + k2.esc(p.callsign + (p.aircraft ? ' · ' + p.aircraft : '')) + '</span></div>' : svg;
     return L.divIcon({ className: 'alfs-icon', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function tip(k, p) {
@@ -69,7 +70,7 @@ NET_JS = r"""<script>
     var s = st[k], k2 = K(), m = k2 && k2.map(); if (!m) return;
     if (!s.layer) s.layer = L.layerGroup().addTo(m);
     if (!s.on || !s.data) { s.layer.clearLayers(); s.mk = {}; setBtn(k, 0); return; }
-    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = m.getZoom() >= 7 ? 'z' : '';
+    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = m.getZoom() >= LBZ ? 'z' : '';
     (s.data.pilots || []).forEach(function (p) {
       if (p.ground && !ground) return;
       var ll = pos(p, s.t);
@@ -139,9 +140,10 @@ NET_JS = r"""<script>
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon,#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon{transition:none!important}' +
-    '.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
+    '.alnet-pin span.lb{border-color:var(--c)!important;color:#fff!important}' +
+    'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
     'color:var(--c)!important;border:1px solid var(--c)!important}' +
-    '.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
+    'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
   document.head.appendChild(css);
   var hooked = false;
   function smooth() {
