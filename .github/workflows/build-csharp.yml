@@ -1,14 +1,18 @@
-# Fabrique la version C# de Hangar FS 2024 (dossier csharp) et la propose au téléchargement
-# dans l'onglet « Actions » de GitHub (pas de Release automatique pour l'instant).
+# Fabrique la version C# de Hangar FS 2024 (dossier csharp).
+# - à chaque modification : zip de test dans l'onglet « Actions » ;
+# - quand on pousse une étiquette de la forme 12.0 (chiffres, sans « v ») : Release publique
+#   avec le zip (qui contient directement le dossier « Hangar FS 2024 »).
+#   (Les étiquettes « v… » restent réservées à l'ancienne version Python.)
 name: Build C# version
 
 on:
   push:
     paths: ['csharp/**', '.github/workflows/build-csharp.yml']
+    tags: ['[0-9]*']
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -19,10 +23,24 @@ jobs:
       - name: Build
         run: dotnet build csharp/HangarFS2024.csproj -c Release -o "out/Hangar FS 2024"
 
-      - name: Add license
+      # SimConnect.dll (fichier redistribuable du SDK de MSFS) : nécessaire pour le trafic IA
+      # et le suivi de l'avion. On le prend dans le paquet Python « SimConnect » (PyPI).
+      - name: Add SimConnect.dll
         shell: pwsh
         run: |
-          Copy-Item LICENSE "out/Hangar FS 2024/" -ErrorAction SilentlyContinue
+          python -m pip download SimConnect==0.4.26 --no-deps -d sc
+          $whl = Get-ChildItem sc -Filter *.whl | Select-Object -First 1
+          Copy-Item $whl.FullName sc/simconnect.zip
+          Expand-Archive sc/simconnect.zip -DestinationPath sc/x
+          $dll = Get-ChildItem sc/x -Recurse -Filter SimConnect.dll | Select-Object -First 1
+          if (-not $dll) { throw "SimConnect.dll introuvable" }
+          Copy-Item $dll.FullName "out/Hangar FS 2024/SimConnect.dll"
+
+      - name: Add docs and license
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE "out/Hangar FS 2024/"
+          Copy-Item "csharp/docs/*.txt" "out/Hangar FS 2024/"
           Get-ChildItem -Recurse "out/Hangar FS 2024" | Select-Object FullName, Length
 
       - name: Upload app
@@ -30,3 +48,18 @@ jobs:
         with:
           name: Hangar_FS2024_CSharp_test
           path: out/
+
+      - name: Zip for release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "out/Hangar FS 2024" -DestinationPath "Hangar_FS2024_v${{ github.ref_name }}.zip"
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Hangar FS 2024 v${{ github.ref_name }}
+          body_path: "csharp/docs/Nouveautes 12.0 - What's new.txt"
+          files: Hangar_FS2024_v*.zip
+          make_latest: true

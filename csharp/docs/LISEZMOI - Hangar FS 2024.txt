@@ -1,0 +1,272 @@
+===============================================================
+  HANGAR FS 2024 - Addon Manager pour Microsoft Flight Simulator 2024
+===============================================================
+
+Hangar FS 2024 range tes add-ons MSFS 2024 sans jamais les copier :
+il cree de simples liens entre ton dossier d'add-ons et le dossier
+Community, que tu actives ou retires en un clic.
+
+Il propose aussi :
+  - une carte du monde de tes scenes d'aeroport (actives / inactives) ;
+  - le lancement automatique de tes applis de vol (GSX, SayIntentions,
+    AutoFPS...) au demarrage de MSFS ou quand l'avion est au parking ;
+  - le chargement des seules scenes de ton vol SimBrief ;
+  - des profils : un ensemble d'add-ons (scenes, avions...) enregistre
+    sous un nom et active en un clic (bouton "Profils...") ;
+  - un mode adapte aux daltoniens (Reglages > Accessibilite) ;
+  - une page "Plan & suivi de vol" avec ton avion, le trafic IA, les
+    pilotes de ta VA FSHub (radar FSHub), les pilotes VATSIM et IVAO
+    en direct (cases a cocher), et les pistes,
+    taxiways et parkings des aeroports quand tu zoomes (OpenStreetMap).
+
+Un tutoriel illustre complet est dans l'appli : bouton "? Tutoriel"
+en haut a droite.
+
+Fait par un pilote des FOUS VOLANTS, compagnie virtuelle francophone
+sur FSHub. Envie de voler avec nous ?
+  -> https://fshub.io/airline/LFV/overview
+
+
+---------------------------------------------------------------
+1. INSTALLATION
+---------------------------------------------------------------
+
+1. Decompresse le zip dans un dossier qui ne bouge pas,
+   par exemple : Documents\Hangar FS 2024
+   (evite le Bureau ou Telechargements si tu fais souvent le menage).
+2. Double-clique sur "Hangar FS 2024.exe".
+3. Au premier lancement, l'appli propose de creer un raccourci
+   "Hangar FS 2024" sur le Bureau : utilise-le ensuite.
+   Supprime par erreur ? Reglages > "Creer le raccourci sur le Bureau".
+
+Rien d'autre a installer : le dossier contient l'appli et tout ce
+dont elle a besoin. Ne deplace rien a l'interieur du dossier.
+Windows 10 ou 11 suffit (le composant Microsoft Edge WebView2, deja
+present sur ces versions de Windows, sert a afficher l'appli).
+
+Tu avais la version 11.x ? Ferme-la (bouton "Quitter"), puis lance
+la 12.0 : elle reprend tous tes reglages, profils et applis du
+Demarrage auto. Tu pourras ensuite supprimer l'ancien dossier.
+
+Si Windows affiche "Windows a protege votre ordinateur" : clique sur
+"Informations complementaires", puis sur "Executer quand meme".
+
+Si Microsoft Defender ou ton antivirus signale l'appli : c'est un faux
+positif possible avec les applis non signees (la version 12.0 est
+passee a 0 alerte sur VirusTotal). L'appli ne contient rien de
+dangereux et ne se connecte qu'a SimBrief, FSHub, VATSIM, IVAO, la
+meteo, OurAirports et OpenStreetMap (plans d'aeroport). Si Defender a mis le fichier en quarantaine :
+Securite Windows > Protection contre les virus et menaces > Historique
+de protection > l'alerte > Actions > Autoriser / Restaurer.
+Conseil : ne coche "En mode administrateur" (Reglages) que si tu
+lances des applis qui l'exigent (SayIntentions, REX Atmos...).
+
+
+---------------------------------------------------------------
+2. PREMIERS REGLAGES (une seule fois, onglet "Reglages")
+---------------------------------------------------------------
+
+1. Bibliotheque d'add-ons : choisis (Parcourir...) le dossier ou tu
+   ranges tes add-ons, EN DEHORS de Community.
+   Exemple : D:\MSFS Addons  (des sous-dossiers par categorie sont
+   acceptes : AEROPORTS, AVIONS, VFR...).
+2. Dossier Community : clique sur "Detecter".
+3. Scenes par defaut (StreamedPackages) : clique sur "Detecter".
+4. Lancement de MSFS 2024 : clique sur "Detecter".
+5. Clique sur "Enregistrer".
+
+Puis, SIMULATEUR FERME, deplace vers ta bibliotheque UNIQUEMENT les
+add-ons que tu as installes toi-meme (telecharges puis dezippes dans
+Community). Hangar FS 2024 les remettra dans Community (sous forme de
+liens) quand tu les actives. NE VIDE PAS TOUT COMMUNITY :
+
+  A DEPLACER : les dossiers marques "Dossier reel" dans la liste
+    Community de l'appli : scenes d'aeroport, packs VFR, decors, avions
+    et livrees gratuits, sons, petits outils (flightsim.to...).
+  A LAISSER DANS COMMUNITY : tout ce qu'un installateur ou un
+    gestionnaire installe et met a jour lui-meme (il ne le retrouverait
+    plus) : PMDG (Operations Center), GSX (FSDT), Navigraph (navdata),
+    Orbx Central, iniBuilds Manager, Aerosoft One, FlyByWire Installer...
+  A NE JAMAIS TOUCHER : les dossiers Official et StreamedPackages
+    (contenu de MSFS et du Marketplace).
+  En cas de doute, laisse le dossier dans Community.
+
+Facultatif :
+  - Demarrer avec Windows : l'appli s'ouvre reduite au demarrage du PC
+    (necessaire pour que le demarrage auto des applis fonctionne).
+  - En mode administrateur : utile si tu lances des applis qui
+    l'exigent (SayIntentions, weathercreator...).
+  - Ecrans : avec 2 ecrans, l'appli et ses cartes peuvent s'ouvrir
+    sur le 2e ecran, MSFS restant sur le principal.
+
+
+---------------------------------------------------------------
+3. UTILISATION RAPIDE
+---------------------------------------------------------------
+
+REGLE D'OR : MSFS ne lit Community qu'a son demarrage.
+Prepare tes add-ons AVANT de lancer le simulateur. Quand MSFS est
+ouvert, l'appli se verrouille (bandeau rouge) pour eviter les erreurs.
+
+- Onglet Bibliotheque : coche des add-ons (ou Ctrl + clic sur des
+  lignes), puis "Activer ... dans Community" ou "Retirer ... de
+  Community". "Proteger" (etoile) garde un add-on actif pendant tous les vols.
+  La colonne "Version" montre la version installee de chaque add-on
+  (vide si son createur ne l'a pas indiquee) : compare-la avec la page
+  de l'add-on (flightsim.to...) pour savoir s'il y en a une plus recente.
+- Onglet Carte addons : la carte de tes scenes d'aeroport.
+- Reglages > Sauvegarde : "Exporter mes reglages" enregistre tes
+  reglages, profils et applis du Demarrage auto dans un fichier .zip ;
+  "Restaurer" les remet en place (nouveau PC, reinstallation de
+  Windows). Ce fichier est personnel : ne le partage pas.
+- Onglet Demarrage auto : ajoute tes applis de vol (bouton Ajouter...).
+- Onglet Vol SimBrief : entre ton identifiant SimBrief, clique sur
+  "Recuperer le dernier plan de vol", puis "Preparer le vol" :
+  seules les scenes de ton vol sont activees, et retirees a la
+  fermeture de MSFS.
+- Onglet Plan & suivi de vol : plan de vol, meteo, carte avec ton
+  avion, le trafic IA, le bouton "Ma VA FSHub" (pilotes en direct),
+  les boutons "VATSIM" et "IVAO" (pilotes en ligne sur ces reseaux,
+  desactives par defaut ; ils suivent aussi le menu "Rayon"),
+  le bouton "Toutes les VA FSHub" (radar global FSHub, desactive
+  par defaut ; clic sur un avion FSHub : sa route deposee et sa
+  trajectoire ; menu "Rayon" pour n'afficher que les vols proches
+  ou le long de ta route), ta trajectoire en bleu, ton plan
+  SimBrief affiche tout seul s'il a ete recupere dans l'onglet
+  Vol SimBrief (et date de moins de 12 h), les performances de
+  decollage / atterrissage SimBrief (option Runway Analysis) avec la
+  METAR de l'arrivee en direct, et pour tous les avions le vent sur
+  chaque piste, la piste conseillee et l'altitude-densite
+  et le bouton "Taxiways" (plan de l'aeroport en zoomant, d'apres
+  OpenStreetMap ; garde sur le PC et mis a jour tous les 30 jours,
+  l'ancien plan reste affiche si le serveur ne repond pas).
+
+
+---------------------------------------------------------------
+4. TA VA FSHUB (pilotes de ta compagnie sur la carte)
+---------------------------------------------------------------
+
+Dans Reglages > "Ma VA FSHub", tape le code de ta compagnie,
+celui de son adresse sur fshub.io (exemple : LFV pour
+fshub.io/airline/LFV). Dans Plan & suivi de vol > "Ouvrir le
+suivi", le bouton "Ma VA FSHub" affiche alors en direct les vols
+de ta compagnie, comme le radar FSHub. Aucune cle n'est necessaire
+pour ca. Sans code de VA ni cle, le bouton reste grise.
+
+La cle FSHub (Reglages) est facultative : elle sert seulement a te
+reconnaitre pour ne pas afficher ton avion en double.
+Si tu en mets une : c'est TA cle personnelle, ne la partage jamais
+et masque-la avant une capture d'ecran.
+
+
+---------------------------------------------------------------
+5. TRAFIC IA ET SUIVI DE TON AVION
+---------------------------------------------------------------
+
+Ces fonctions lisent MSFS grace au fichier SimConnect.dll, fourni
+dans le dossier de l'appli (a cote de "Hangar FS 2024.exe") : ne le
+supprime pas. Ton avion est mis a jour deux fois par seconde, le
+trafic IA chaque seconde, avec un deplacement fluide sur la carte.
+Si le trafic IA ou le suivi du vol ne s'affichent pas alors que MSFS
+tourne, verifie que SimConnect.dll est bien la, ou indique son
+dossier dans Reglages ("Dossier de SimConnect.dll"), puis relance
+l'appli.
+
+L'etat du relais est affiche en bas de l'appli (bouton marche/arret).
+
+
+---------------------------------------------------------------
+6. LANGUE
+---------------------------------------------------------------
+
+Les drapeaux en haut a droite passent l'appli en francais ou en
+anglais (l'appli redemarre).
+
+
+---------------------------------------------------------------
+7. SECURITE ET DONNEES
+---------------------------------------------------------------
+
+- Hangar FS 2024 ne supprime JAMAIS un vrai dossier d'add-on :
+  il cree et retire seulement des liens.
+- Tes reglages restent sur ton PC, dans : %APPDATA%\HangarFS2024
+  (rien n'est envoye ailleurs ; seuls SimBrief, la meteo, FSHub,
+  VATSIM, IVAO et OpenStreetMap sont consultes sur internet).
+
+===============================================================
+  IMPORTANT - FICHIER CONTENT.XML DE MSFS 2024 (Doublons ICAO)
+===============================================================
+
+Ce que fait l'appli :
+  Le bouton "Desactiver la scene par defaut" (fenetre Doublons ICAO)
+  desactive aussi la scene dans My Library de MSFS. Pour cela, l'appli
+  modifie le fichier Content.xml de MSFS 2024 : elle change UNIQUEMENT
+  la ligne de la scene choisie, de "Activated" a "UserDisabled",
+  exactement comme decocher la case dans My Library.
+
+Ce qu'elle ne fait pas :
+  Elle ne supprime aucun fichier, ne touche a aucun autre contenu,
+  n'envoie rien sur internet et ne fait rien quand MSFS est ouvert.
+
+Ou se trouve le fichier :
+  - Version Microsoft Store : Windows + R, colle
+      %LOCALAPPDATA%\Packages\Microsoft.Limitless_8wekyb3d8bbwe\LocalCache
+    puis ouvre le sous-dossier au nom de ton compte Xbox : fichier "Content".
+  - Version Steam : Windows + R, colle
+      %APPDATA%\Microsoft Flight Simulator 2024
+  - Sinon : dans ce dossier, tape content.xml dans la case Rechercher.
+
+Sauvegarde (CONSEILLEE AVANT LA PREMIERE UTILISATION) :
+  - Sauvegarde initiale : a la premiere utilisation, une fenetre explique
+    tout et propose "Sauvegarder et continuer". La copie va sur ton
+    Bureau, dans le dossier "fs_2024_xml_backup", sous le meme nom que
+    l'original : Content.xml. Le bouton "Changer l'emplacement..." permet
+    de choisir un autre dossier.
+  - Elle n'est faite qu'UNE FOIS et n'est jamais ecrasee : tant qu'elle
+    existe, l'appli ne redemande rien (ni pour desactiver, ni pour
+    reactiver une scene).
+  - Filet de securite : l'appli garde aussi les 2 dernieres copies
+    automatiques a cote du fichier (Content.xml.hangar_AAAAMMJJ.bak) ;
+    les plus anciennes sont supprimees toutes seules.
+  - Aucune copie n'est jamais remise en place automatiquement.
+
+En cas de souci :
+  - Fenetre Doublons ICAO > bouton "Restaurer Content.xml..." : choisis
+    une sauvegarde (la sauvegarde initiale est proposee en premier) et
+    confirme. MSFS doit etre ferme. Le fichier actuel est d'abord copie
+    dans le dossier de sauvegarde : tu peux revenir en arriere.
+  - Ou a la main : MSFS et l'appli fermes, copie
+    Bureau\fs_2024_xml_backup\Content.xml a la place du fichier "Content".
+
+Desinstaller : quitte l'appli (bouton "Quitter"), decoche
+"Demarrer avec Windows" si tu l'avais coche, puis supprime
+le dossier de l'appli, le raccourci du Bureau et le dossier
+%APPDATA%\HangarFS2024.
+
+
+---------------------------------------------------------------
+8. EN CAS DE SOUCI
+---------------------------------------------------------------
+
+- Boutons de la Bibliotheque grises : MSFS est ouvert, ferme-le.
+- Bandeau orange "Voir et reparer" : un add-on a ete deplace,
+  clique dessus.
+- Une scene n'est pas reconnue : bouton "Codes ICAO..." dans
+  la Bibliotheque.
+- Verifie toujours le numero de version dans le titre de la fenetre
+  quand tu signales un probleme, et joins une capture d'ecran.
+
+---------------------------------------------------------------
+9. LICENCE ET TELECHARGEMENT OFFICIEL
+---------------------------------------------------------------
+
+Hangar FS 2024 (c) 2026 Jeff40 - logiciel libre sous licence MIT
+(fichier LICENSE). Tu peux l'utiliser, le modifier et le redistribuer,
+en gardant la mention de l'auteur et de la licence.
+
+Code source et versions officielles : github.com/jeff6540/hangar-fs2024
+et la page Hangar FS 2024 sur flightsim.to (ou le zip envoye
+directement par l'auteur). Une copie trouvee sur un autre site a pu etre
+modifiee.
+
+Bons vols !

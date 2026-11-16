@@ -1,0 +1,60 @@
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.0
+Nouveautés / What's new
+==================================================================
+
+FRANÇAIS
+--------
+
+Nouvelle version entièrement réécrite (C#)
+- Hangar FS 2024 est maintenant un vrai programme Windows : un simple « Hangar FS 2024.exe », sans Python ni fichier .bat.
+- Aucune alerte antivirus : 0 détection sur 70 sur VirusTotal, Microsoft Defender compris.
+- Il utilise des éléments déjà présents dans Windows 10 et 11 (.NET Framework 4.8 et le moteur d'affichage WebView2 d'Edge) : rien d'autre à installer.
+- Démarrage plus rapide, interface identique à la 11.8.
+- Tes réglages, ta bibliothèque, tes profils et ta liste du Démarrage auto d'une version 11.x sont repris automatiquement.
+
+Plan & suivi de vol : pilotes VATSIM et IVAO
+- Deux nouveaux boutons, VATSIM (vert) et IVAO (rouge), à côté de « Toutes les VA FSHub ».
+- Chaque réseau s'active ou se désactive d'un clic ; ils sont désactivés par défaut et ton choix est gardé.
+- Au survol : indicatif, type d'avion, départ → arrivée, altitude, vitesse et cap (aucun nom de pilote).
+- Le menu Rayon (partout, 150, 300 ou 500 NM, le long de ma route) s'applique aussi à VATSIM et IVAO.
+- Ton propre avion n'apparaît pas en double si tu voles connecté à un réseau.
+- Données publiques et gratuites, sans compte ni clé, relues au rythme des réseaux (toutes les 15 secondes).
+
+Suivi plus rapide et plus fluide
+- Ta position est relue deux fois par seconde (au lieu de toutes les 2 secondes) et le trafic IA de MSFS chaque seconde.
+- Les avions glissent en douceur sur la carte au lieu de sauter d'une position à l'autre.
+- Les avions VATSIM et IVAO avancent selon leur cap et leur vitesse entre deux mises à jour.
+
+Divers
+- SimConnect.dll (le fichier qui permet de lire MSFS) est maintenant fourni dans le dossier de l'appli : trafic IA et suivi de ton avion fonctionnent dès le premier lancement.
+- Réglages : nouvelle ligne « Dossier de SimConnect.dll » pour indiquer un autre emplacement si besoin.
+- Tutoriel mis à jour (français et anglais).
+
+
+ENGLISH
+-------
+
+New, fully rewritten version (C#)
+- Hangar FS 2024 is now a real Windows program: a single "Hangar FS 2024.exe", no Python and no .bat file.
+- No antivirus alert: 0 detections out of 70 on VirusTotal, Microsoft Defender included.
+- It uses components already built into Windows 10 and 11 (.NET Framework 4.8 and Edge's WebView2 display engine): nothing else to install.
+- Faster startup, same interface as 11.8.
+- Your settings, library, profiles and Auto launch list from a 11.x version are carried over automatically.
+
+Flight plan & tracking: VATSIM and IVAO pilots
+- Two new buttons, VATSIM (green) and IVAO (red), next to "All FSHub VAs".
+- Each network turns on or off with a click; they are off by default and your choice is kept.
+- On hover: callsign, aircraft type, departure → arrival, altitude, speed and heading (no pilot name).
+- The Range menu (everywhere, 150, 300 or 500 NM, along my route) also applies to VATSIM and IVAO.
+- Your own aircraft is not shown twice if you fly connected to a network.
+- Public, free data, no account or key needed, refreshed at the networks' own pace (every 15 seconds).
+
+Faster, smoother tracking
+- Your position is read twice per second (instead of every 2 seconds) and MSFS AI traffic every second.
+- Aircraft glide smoothly on the map instead of jumping from one position to the next.
+- VATSIM and IVAO aircraft move along their heading and speed between two updates.
+
+Other
+- SimConnect.dll (the file used to read MSFS) is now supplied in the app folder: AI traffic and aircraft tracking work from the very first launch.
+- Settings: new "SimConnect.dll folder" line to set another location if needed.
+- Tutorial updated (French and English).
