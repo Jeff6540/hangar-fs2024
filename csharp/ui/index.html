@@ -104,12 +104,17 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 footer{flex:none;display:flex;align-items:center;gap:18px;padding:6px 14px}
 #status{flex:1;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #simlbl{color:var(--muted)}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:10}
-#modal.on{display:flex}
-#mbox{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;min-width:420px;max-width:680px;max-height:85vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.5)}
-#mtext{white-space:pre-wrap;line-height:1.45;margin-bottom:14px}
-#mbody{margin-bottom:14px}
-#mbtns{display:flex;justify-content:flex-end;gap:8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:10}
+.mbox{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;min-width:420px;max-width:min(940px,94vw);max-height:85vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.mtext{white-space:pre-wrap;line-height:1.45;margin-bottom:14px;font-weight:600}
+.mbody{margin-bottom:14px}
+.mbtns{display:flex;justify-content:flex-end;gap:8px}
+.dform{display:grid;grid-template-columns:max-content minmax(380px,1fr) auto;gap:8px 10px;align-items:center}.dform input[type=text]{width:100%}.dform .span2{grid-column:2 / span 2}
+input[type=number]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--fg)}
+.plist{max-height:50vh;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;min-width:380px}.pitem{padding:4px 10px;cursor:pointer}.pitem:hover{background:var(--hover)}.pitem.sel{background:var(--sel)}
+th.c,td.c{text-align:center}
+tr.litem{cursor:pointer}tr.litem:hover td{background:var(--hover)}tr.litem.sel td{background:var(--sel)}
+.lt-run td{color:var(--ok)}.lt-wait td{color:var(--accent-hi)}.lt-err td{color:#ff9a9a}.lt-off td{color:var(--off)}
 fieldset{border:1px solid var(--border);border-radius:8px;margin:8px 0;padding:6px 12px}
 legend{color:var(--muted);padding:0 6px}
 fieldset label{display:block;padding:3px 0;cursor:pointer}
@@ -123,7 +128,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 <nav id="tabs">
   <button data-tab="lib" data-t="tabLib"></button>
   <button data-tab="soon-map" class="soon" data-t="tabMap"></button>
-  <button data-tab="soon-launch" class="soon" data-t="tabLaunch"></button>
+  <button data-tab="launch" data-t="tabLaunch"></button>
   <button data-tab="vol" data-t="tabVol"></button>
   <button data-tab="soon-dispatch" class="soon" data-t="tabDispatch"></button>
   <button data-tab="set" data-t="tabSet"></button>
@@ -169,6 +174,26 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
         <div class="chips" id="chips"></div>
         <div class="row"><button class="btn danger lk" id="bCommRemove" data-t="commRemove"></button><span class="muted" data-t="onlyLinks"></span></div>
       </div>
+    </div>
+  </section>
+
+  <!-- Démarrage auto -->
+  <section class="tab" id="tab-launch">
+    <div class="row"><span class="head" data-t="lHead"></span><span class="grow"></span>
+      <label class="chk" id="lParkLbl"><input type="checkbox" id="lPark"><span data-t="lParkOpt"></span></label>
+      <label class="chk" style="margin-left:18px"><input type="checkbox" id="lAuto"><span data-t="lAutoOpt"></span></label></div>
+    <div class="muted" data-t="lHelp" style="line-height:1.45"></div>
+    <div class="list" id="lList"></div>
+    <div class="row">
+      <button class="btn accent" id="lAdd" data-t="lAdd"></button>
+      <button class="btn" id="lEdit" data-t="lEdit"></button>
+      <button class="btn" id="lDel" data-t="lDel"></button>
+      <button class="btn" id="lUp" style="margin-left:10px">▲</button>
+      <button class="btn" id="lDown">▼</button>
+      <span class="grow"></span>
+      <button class="btn" id="lStart" data-t="lStart"></button>
+      <button class="btn danger" id="lStop" data-t="lStop"></button>
+      <button class="btn danger" id="lStopAll" data-t="lStopAll"></button>
     </div>
   </section>
 
@@ -223,7 +248,6 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
   <span id="simlbl"></span>
   <button class="btn" id="bQuit" data-t="quit"></button>
 </footer>
-<div id="modal"><div id="mbox"><div id="mtext"></div><div id="mbody"></div><div id="mbtns"></div></div></div>
 
 <script>
 "use strict";
@@ -269,7 +293,35 @@ const TXT = {
  testNote:["🧪  Version C# de test (12.0). Elle utilise les mêmes réglages que la version Python : n'ouvre pas les deux en même temps. Les onglets marqués en gris arrivent dans les prochaines étapes.",
            "🧪  C# test version (12.0). It uses the same settings as the Python version: don't open both at the same time. The greyed-out tabs are coming in the next steps."],
  soonText:["Cet onglet sera ajouté dans une prochaine étape de la version C#. En attendant, il reste disponible dans la version Python 11.8.","This tab will be added in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
- quit:["✕  Quitter","✕  Quit"], simOn:["Simulateur : lancé","Simulator: running"], simOff:["Simulateur : fermé","Simulator: closed"],
+ quit:["✕  Quitter","✕  Quit"],
+ lHead:["Applications lancées avec MSFS 2024","Applications launched with MSFS 2024"], lAutoOpt:["Lancer automatiquement au démarrage de MSFS 2024","Launch automatically when MSFS 2024 starts"],
+ lParkOpt:["🅿 Vérifier que l'avion est sur un aéroport connu","🅿 Check that the aircraft is at a known airport"],
+ lHelp:["Chaque application démarre au lancement de MSFS 2024 ou quand ton avion est au parking (🅿 : vol chargé, avion immobile au sol), après son délai. Celles marquées « Fermer avec MSFS » sont fermées quand le simulateur s'arrête. Une application déjà ouverte n'est jamais lancée deux fois. 🛡 = lancée en administrateur : Windows demande une confirmation (UAC) au lancement et à la fermeture.",
+        "Each application starts when MSFS 2024 launches or when your aircraft is at parking (🅿: flight loaded, aircraft stationary on the ground), after its delay. Those marked \"Close with MSFS\" are closed when the simulator stops. An application that is already open is never launched twice. 🛡 = launched as administrator: Windows asks for a confirmation (UAC) at launch and when closing."],
+ parkTip:["🅿 = lancer l'application quand ton vol est chargé et que l'avion est immobile au sol, puis après son délai.\n\nLa case « Vérifier que l'avion est sur un aéroport connu » ajoute une condition : l'avion doit aussi être sur un aéroport. Sans elle, l'appli pourrait se lancer trop tôt, au menu ou dans le hangar. Elle ne change rien aux applications réglées sur « MSFS + délai ».\n\n(Version C# : la détection du parking arrivera avec l'onglet Plan & suivi de vol.)",
+          "🅿 = launch the application when your flight is loaded and the aircraft is stationary on the ground, then after its delay.\n\nThe \"Check that the aircraft is at a known airport\" box adds a condition: the aircraft must also be at an airport. Without it, the app could start too early, in the menu or the hangar. It changes nothing for applications set to \"MSFS + delay\".\n\n(C# version: parking detection will come with the Flight plan & tracking tab.)"],
+ lColOn:["Active","Active"], lColApp:["Application","Application"], lColStart:["Démarrage","Start"], lColClose:["Fermer avec MSFS","Close with MSFS"], lColProg:["Programme","Program"],
+ lSimDelay:["MSFS + %s s","MSFS + %s s"], lParkDelay:["🅿 Parking + %s s","🅿 Parking + %s s"],
+ lAdd:["＋  Ajouter…","＋  Add…"], lEdit:["✎  Modifier…","✎  Edit…"], lDel:["Supprimer","Delete"], lStart:["▶  Lancer maintenant","▶  Launch now"], lStop:["■  Arrêter","■  Stop"], lStopAll:["■  Tout arrêter","■  Stop all"],
+ lPickTitle:["Application à lancer avec MSFS 2024","Application to launch with MSFS 2024"], lSelOne:["Sélectionne une application dans la liste.","Select an application in the list."],
+ lSelSome:["Sélectionne une ou plusieurs applications.","Select one or more applications."], lSelStop:["Sélectionne l'application à arrêter.","Select the application to stop."],
+ lDelAsk:["Retirer %s de la liste du démarrage auto ?\n\n(L'application elle-même n'est pas désinstallée.)","Remove %s from the auto launch list?\n\n(The application itself is not uninstalled.)"],
+ lStopAsk:["Arrêter tout de suite %s ?\n\nUtile si une application est bloquée : elle est fermée de force, ses données non enregistrées peuvent être perdues.","Stop %s right now?\n\nUseful if an application is stuck: it is force-closed, its unsaved data may be lost."],
+ lStopAllAsk:["Arrêter toutes les applications du démarrage auto (%s) et annuler les lancements programmés ?","Stop all auto launch applications (%s) and cancel scheduled launches?"],
+ lNoneRunning:["Aucune application du démarrage auto n'est en cours.","No auto launch application is running."],
+ lfNew:["Nouvelle application","New application"], lfEditTitle:["Modifier l'application","Edit application"], lfName:["Nom","Name"], lfProg:["Programme","Program"],
+ lfArgs:["Arguments (facultatif)","Arguments (optional)"], lfCwd:["Dossier de travail (facultatif)","Working folder (optional)"], lfProc:["Programme à fermer","Program to close"], lfChoose:["Choisir…","Choose…"],
+ lfProcHint:["« Programme à fermer » : le ou les programmes qui tournent vraiment (séparés par « ; »). Ils servent à savoir si l'application est ouverte et à la fermer. Quand le programme lancé n'est qu'un lanceur ou un « Updater », lance l'appli une fois puis clique sur « Choisir… ».",
+             "\"Program to close\": the program(s) that actually run (separated by \";\"). They are used to know whether the application is open and to close it. When the launched program is only a launcher or an \"Updater\", launch the app once then click \"Choose…\"."],
+ lfStart:["Démarrage","Start"], lfTrigSim:["Au démarrage de MSFS 2024","When MSFS 2024 starts"], lfTrigPark:["🅿  Quand l'avion est au parking (vol chargé, avion immobile au sol)","🅿  When the aircraft is at parking (flight loaded, aircraft stationary on the ground)"],
+ lfDelay:["Délai","Delay"], lfAfterSim:["secondes après le démarrage de MSFS","seconds after MSFS starts"], lfAfterPark:["secondes après la détection de l'avion au parking","seconds after the aircraft is detected at parking"],
+ lfClose:["Fermer l'application à la fermeture de MSFS 2024","Close the application when MSFS 2024 closes"], lfOn:["Active (lancée automatiquement)","Active (launched automatically)"],
+ lfAdmin:["🛡  Lancer en mode administrateur (ex. SayIntentions.AI)","🛡  Launch as administrator (e.g. SayIntentions.AI)"], lfScreen:["Écran d'affichage","Display screen"],
+ lfScrNone:["Ne pas déplacer (là où l'application s'ouvre)","Don't move (where the application opens)"], lfScrAuto:["Automatique — 2e écran s'il est branché","Automatic — 2nd screen if connected"],
+ lfScrGone:["Écran choisi (débranché) — principal en attendant","Chosen screen (disconnected) — primary meanwhile"], lfIdentify:["🔢  Identifier","🔢  Identify"], lfSave:["Enregistrer","Save"],
+ lfNeedProg:["Indique le programme à lancer.","Enter the program to launch."], lfBadDelay:["Le délai doit être un nombre de secondes.","The delay must be a number of seconds."],
+ lfProcsTitle:["Programmes ouverts\n\nChoisis le ou les programmes de l'application (clic pour en choisir plusieurs).\n★ = noms qui ressemblent à l'application.","Open programs\n\nChoose the application's program(s) (click to pick several).\n★ = names that look like the application."],
+ lfValidate:["Valider","OK"], lfNoProcs:["Impossible de lire la liste des programmes ouverts.","Unable to read the list of open programs."], simOn:["Simulateur : lancé","Simulator: running"], simOff:["Simulateur : fermé","Simulator: closed"],
  yes:["Oui","Yes"], no:["Non","No"], ok:["OK","OK"], cancel:["Annuler","Cancel"],
  nothingChecked:["Coche d'abord des add-ons dans la bibliothèque.","Check some add-ons in the library first."],
  confirmRemove:["Retirer %s add-on(s) du dossier Community ?\n\n%s\n\nSeuls les liens sont retirés : tes fichiers restent intacts dans la bibliothèque.","Remove %s add-on(s) from the Community folder?\n\n%s\n\nOnly the links are removed: your files stay untouched in the library."],
@@ -316,17 +368,18 @@ async function run(cmd, args){
 // ---------------------------------------------------------------- fenêtres de dialogue
 function modal(text, buttons, bodyNode){
   return new Promise(resolve => {
-    $("mtext").textContent = text;
-    const body = $("mbody"); body.innerHTML = ""; if (bodyNode) body.appendChild(bodyNode);
-    body.style.display = bodyNode ? "" : "none";
-    const bt = $("mbtns"); bt.innerHTML = "";
+    const ov = document.createElement("div"); ov.className = "modal";
+    const box = document.createElement("div"); box.className = "mbox"; ov.appendChild(box);
+    const tx = document.createElement("div"); tx.className = "mtext"; tx.textContent = text || ""; if (!text) tx.style.display = "none"; box.appendChild(tx);
+    if (bodyNode) { const b = document.createElement("div"); b.className = "mbody"; b.appendChild(bodyNode); box.appendChild(b); }
+    const bt = document.createElement("div"); bt.className = "mbtns"; box.appendChild(bt);
     buttons.forEach(b => {
       const el = document.createElement("button"); el.className = "btn" + (b.cls ? " " + b.cls : ""); el.textContent = b.label;
-      el.onclick = () => { $("modal").classList.remove("on"); resolve(b.value); };
+      el.onclick = async () => { if (b.check && !(await b.check())) return; ov.remove(); resolve(b.value); };
       bt.appendChild(el);
     });
-    $("modal").classList.add("on");
-    const inp = body.querySelector("input[type=text]"); if (inp) setTimeout(() => inp.focus(), 30);
+    document.body.appendChild(ov);
+    const inp = box.querySelector("input[type=text]"); if (inp) setTimeout(() => inp.focus(), 30);
   });
 }
 const alertBox = text => modal(text, [{label: t("ok"), value: true, cls: "accent"}]);
@@ -337,9 +390,10 @@ async function promptBox(text, value){
   return r === "ok" ? inp.value : null;
 }
 document.addEventListener("keydown", e => {
-  if (!$("modal").classList.contains("on")) return;
-  if (e.key === "Escape") { const b = $("mbtns").firstChild; if (b) b.click(); }
-  if (e.key === "Enter") { const b = $("mbtns").lastChild; if (b) b.click(); }
+  const all = document.querySelectorAll(".modal"); if (!all.length) return;
+  const bt = all[all.length - 1].querySelector(".mbtns");
+  if (e.key === "Escape") { const b = bt.firstChild; if (b) b.click(); }
+  if (e.key === "Enter" && !(e.target.tagName === "INPUT" && e.target.type !== "text")) { const b = bt.lastChild; if (b) b.click(); }
 });
 
 // ---------------------------------------------------------------- état
@@ -353,7 +407,8 @@ function applyLang(){
   document.querySelectorAll("#flags button[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
   $("search").placeholder = t("search"); $("csearch").placeholder = t("search"); fillFilter();
   setSim(document.body.classList.contains("sim"));
-  renderLib(); renderComm(); refreshFlight();
+  renderLib(); renderComm(); refreshFlight(); if (LAPPS.length) renderLauncher();
+  $("lParkLbl").title = t("parkTip");
 }
 
 function showTab(name){
@@ -365,6 +420,7 @@ function showTab(name){
     $("soonTitle").textContent = t({"soon-map": "soonMap", "soon-launch": "soonLaunch", "soon-dispatch": "soonDispatch"}[name]);
   } else $("tab-" + name).classList.add("on");
   if (name === "vol") refreshFlight();
+  if (name === "launch") loadLauncher();
 }
 
 function setSim(on){
@@ -418,7 +474,7 @@ function renderLib(){
   if (!SETTINGS.library) { list.innerHTML = '<div class="muted" style="padding:14px">' + esc(t("noLib")) + "</div>"; updateButtons(); return; }
   const scroll = list.scrollTop, searching = !!$("search").value.trim();
   TREE = buildTree(visible());
-  let h = "<table class='fixed'><colgroup><col><col style='width:24%'><col style='width:70px'><col style='width:72px'><col style='width:78px'><col style='width:82px'><col style='width:92px'></colgroup>" +
+  let h = "<table class='fixed'><colgroup><col><col style='width:24%'><col style='width:70px'><col style='width:72px'><col style='width:74px'><col style='width:100px'><col style='width:92px'></colgroup>" +
           "<thead><tr><th>" + esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" + esc(t("colType")) + "</th><th>" + esc(t("colVer")) +
           "</th><th>ICAO</th><th>" + esc(t("colPin")) + "</th><th>Community</th></tr></thead><tbody>";
   const rowItem = (p, depth) => {
@@ -535,7 +591,7 @@ function renderComm(){
   const q = $("csearch").value.trim().toLowerCase();
   const rows = COMM.filter(c => (!commFilter || c.cat === commFilter) && (!q || (c.name + " " + c.title + " " + c.creator).toLowerCase().includes(q)));
   const scroll = $("commList").scrollTop;
-  let h = "<table class='fixed'><colgroup><col><col style='width:24%'><col style='width:15%'><col style='width:66px'><col style='width:92px'></colgroup><thead><tr><th>" +
+  let h = "<table class='fixed'><colgroup><col><col style='width:22%'><col style='width:13%'><col style='width:62px'><col style='width:92px'></colgroup><thead><tr><th>" +
           esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" + esc(t("colCreator")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
   rows.forEach(c => {
     h += '<tr class="citem cc-' + c.cat + (commSel.has(c.path) ? " sel" : "") + '" data-c="' + esc(c.path) + '" title="' + esc(c.target || c.path) + '"><td>' + esc(c.name) +
@@ -592,6 +648,135 @@ async function loadLibrary(){
   } catch (e) { /* rien */ }
   loading = false;
   if (reloadAgain) { reloadAgain = false; loadLibrary(); }
+}
+
+// ---------------------------------------------------------------- démarrage auto
+let LAPPS = [], lSel = new Set(), lScreens = [], lPending = false, lTimer = null;
+async function loadLauncher(){
+  let d; try { d = await call("launcher"); } catch (e) { return; }
+  LAPPS = d.apps; lScreens = d.screens; lPending = d.pending;
+  $("lAuto").checked = d.auto; $("lPark").checked = d.parkApt;
+  const known = new Set(LAPPS.map(a => a.id)); [...lSel].forEach(i => { if (!known.has(i)) lSel.delete(i); });
+  renderLauncher();
+}
+function renderLauncher(){
+  let h = "<table class='fixed'><colgroup><col style='width:70px'><col style='width:20%'><col style='width:64px'><col style='width:150px'><col style='width:130px'><col style='width:210px'><col></colgroup><thead><tr><th class='c'>" +
+    esc(t("lColOn")) + "</th><th>" + esc(t("lColApp")) + "</th><th class='c'>Admin</th><th class='c'>" + esc(t("lColStart")) + "</th><th class='c'>" + esc(t("lColClose")) +
+    "</th><th>" + esc(t("colState")) + "</th><th>" + esc(t("lColProg")) + "</th></tr></thead><tbody>";
+  LAPPS.forEach(a => {
+    const tag = !a.enabled && a.tag !== "run" ? "off" : a.tag;
+    h += '<tr class="litem lt-' + (tag || "none") + (lSel.has(a.id) ? " sel" : "") + '" data-id="' + esc(a.id) + '"><td class="c">' + (a.enabled ? "✓" : "—") + "</td><td>" + esc(a.name) +
+      "</td><td class='c'>" + (a.admin ? "🛡" : "") + "</td><td class='c'" + (a.trigger === "parking" ? " title='" + esc(t("parkTip")) + "'" : "") + ">" +
+      esc(tf(a.trigger === "parking" ? "lParkDelay" : "lSimDelay", a.delay)) + "</td><td class='c'>" + esc(t(a.close_with_sim ? "yes" : "no")) +
+      "</td><td>" + esc(a.state) + "</td><td title='" + esc(a.path) + "'>" + esc(a.path) + "</td></tr>";
+  });
+  $("lList").innerHTML = h + "</tbody></table>";
+}
+function launcherTick(){
+  clearTimeout(lTimer);
+  if (currentTab === "launch" || lPending) loadLauncher();
+  lTimer = setTimeout(launcherTick, lPending ? 1000 : 3000);
+}
+$("lList").addEventListener("click", e => {
+  const tr = e.target.closest("tr.litem"); if (!tr) return;
+  const id = tr.dataset.id;
+  if (!e.ctrlKey && !e.shiftKey) { lSel.clear(); lSel.add(id); }
+  else lSel.has(id) ? lSel.delete(id) : lSel.add(id);
+  document.querySelectorAll("#lList tr.litem").forEach(r => r.classList.toggle("sel", lSel.has(r.dataset.id)));
+});
+$("lList").addEventListener("dblclick", e => {
+  const tr = e.target.closest("tr.litem"); if (!tr) return;
+  lSel.clear(); lSel.add(tr.dataset.id); editApp(LAPPS.find(a => a.id === tr.dataset.id), false);
+});
+const lOpts = () => run("launcherOptions", {auto: $("lAuto").checked, parkApt: $("lPark").checked});
+$("lAuto").onchange = lOpts; $("lPark").onchange = lOpts;
+const selApps = () => LAPPS.filter(a => lSel.has(a.id));
+$("lAdd").onclick = async () => {
+  const r = await run("pickProgram", {title: t("lPickTitle")}); if (!r) return;
+  const base = r.path.split("\\").pop();
+  const app = {id: "", name: base.replace(/\.[^.]+$/, ""), path: r.path, args: r.args, cwd: r.cwd, delay: 10, trigger: "sim",
+               close_with_sim: true, enabled: true, admin: false, screen: "", proc: /\.exe$/i.test(r.path) ? base : ""};
+  editApp(app, true);
+};
+$("lEdit").onclick = () => { const s = selApps(); if (s.length !== 1) return alertBox(t("lSelOne")); editApp(s[0], false); };
+$("lDel").onclick = async () => {
+  const s = selApps(); if (!s.length) return;
+  if (!await confirmBox(tf("lDelAsk", s.map(a => "« " + a.name + " »").join(", ")))) return;
+  await run("launcherDelete", {ids: s.map(a => a.id)}); lSel.clear(); loadLauncher();
+};
+const lMove = async step => { const s = selApps(); if (s.length !== 1) return; await run("launcherMove", {id: s[0].id, step}); loadLauncher(); };
+$("lUp").onclick = () => lMove(-1); $("lDown").onclick = () => lMove(1);
+$("lStart").onclick = async () => { const s = selApps(); if (!s.length) return alertBox(t("lSelSome")); await run("launcherStart", {ids: s.map(a => a.id)}); setTimeout(loadLauncher, 600); };
+$("lStop").onclick = async () => {
+  const s = selApps(); if (!s.length) return alertBox(t("lSelStop"));
+  if (!await confirmBox(tf("lStopAsk", s.map(a => "« " + a.name + " »").join(", ")), true)) return;
+  await run("launcherStop", {ids: s.map(a => a.id)}); setTimeout(loadLauncher, 800);
+};
+$("lStopAll").onclick = async () => {
+  const n = LAPPS.filter(a => a.tag === "run" || a.state.startsWith("⏳")).length;
+  if (!n) { $("status").textContent = t("lNoneRunning"); return; }
+  if (!await confirmBox(tf("lStopAllAsk", n), true)) return;
+  await run("launcherStopAll"); setTimeout(loadLauncher, 800);
+};
+
+function field(label, input, extra){
+  const l = document.createElement("span"); l.textContent = label;
+  const cell = document.createElement("span"); cell.appendChild(extra || document.createElement("span"));
+  return [l, input, cell];
+}
+function mkInput(v){ const i = document.createElement("input"); i.type = "text"; i.value = v == null ? "" : v; return i; }
+function mkBtn(label, fn){ const b = document.createElement("button"); b.className = "btn"; b.textContent = label; b.onclick = fn; return b; }
+async function editApp(app, isNew){
+  const f = document.createElement("div"); f.className = "dform";
+  const iName = mkInput(app.name), iPath = mkInput(app.path), iArgs = mkInput(app.args), iCwd = mkInput(app.cwd), iProc = mkInput(app.proc);
+  const add = arr => arr.forEach(x => f.appendChild(x));
+  add(field(t("lfName"), iName));
+  add(field(t("lfProg"), iPath, mkBtn(t("browse"), async () => {
+    const r = await run("pickProgram", {title: t("lfProg"), resolve: "no"});
+    if (r) { iPath.value = r.path; if (/\.exe$/i.test(r.path)) iProc.value = r.path.split("\\").pop(); }
+  })));
+  add(field(t("lfArgs"), iArgs));
+  add(field(t("lfCwd"), iCwd, mkBtn(t("browse"), async () => { const v = await run("browse", {title: t("lfCwd"), current: iCwd.value}); if (v) iCwd.value = v; })));
+  add(field(t("lfProc"), iProc, mkBtn(t("lfChoose"), () => pickProcesses(iProc, iName.value + " " + iPath.value))));
+  const hint = document.createElement("div"); hint.className = "muted span2"; hint.textContent = t("lfProcHint"); f.appendChild(document.createElement("span")); f.appendChild(hint);
+  const trig = document.createElement("div"); trig.className = "span2";
+  trig.innerHTML = '<label class="chk"><input type="radio" name="trig" value="sim"> ' + esc(t("lfTrigSim")) + '</label><br><label class="chk" title="' + esc(t("parkTip")) +
+    '" style="margin-top:4px"><input type="radio" name="trig" value="parking"> ' + esc(t("lfTrigPark")) + '</label><div class="row" style="margin-top:8px"><span>' + esc(t("lfDelay")) +
+    '</span><input type="number" min="0" max="3600" step="5" style="width:80px" class="num"><span class="after muted"></span></div>';
+  const lbl = document.createElement("span"); lbl.textContent = t("lfStart"); lbl.style.alignSelf = "start"; f.appendChild(lbl); f.appendChild(trig);
+  trig.querySelector('input[value="' + (app.trigger === "parking" ? "parking" : "sim") + '"]').checked = true;
+  const num = trig.querySelector(".num"); num.value = app.delay || 0;
+  const upd = () => { trig.querySelector(".after").textContent = t(trig.querySelector('input[name=trig]:checked').value === "sim" ? "lfAfterSim" : "lfAfterPark"); };
+  trig.querySelectorAll("input[name=trig]").forEach(r => r.onchange = upd); upd();
+  const chk = (key, label) => { const d = document.createElement("label"); d.className = "chk span2"; d.innerHTML = '<input type="checkbox"> ' + esc(label);
+    d.firstChild.checked = !!app[key]; f.appendChild(document.createElement("span")); f.appendChild(d); return d.firstChild; };
+  const cClose = chk("close_with_sim", t("lfClose")), cOn = chk("enabled", t("lfOn")), cAdmin = chk("admin", t("lfAdmin"));
+  const sel = document.createElement("select");
+  const opts = [["", t("lfScrNone")], ["auto", t("lfScrAuto")]].concat(lScreens.map(s => [s.dev, s.label]));
+  if (app.screen && !opts.some(o => o[0] === app.screen)) opts.push([app.screen, t("lfScrGone")]);
+  sel.innerHTML = opts.map(o => '<option value="' + esc(o[0]) + '">' + esc(o[1]) + "</option>").join(""); sel.value = app.screen || "";
+  const scr = document.createElement("div"); scr.className = "row span2"; scr.appendChild(sel); scr.appendChild(mkBtn(t("lfIdentify"), () => run("identifyScreens")));
+  const sl = document.createElement("span"); sl.textContent = t("lfScreen"); f.appendChild(sl); f.appendChild(scr);
+  const ok = await modal(t(isNew ? "lfNew" : "lfEditTitle"), [{label: t("cancel"), value: false}, {label: t("lfSave"), value: true, cls: "accent", check: async () => {
+    if (!iPath.value.trim()) { await alertBox(t("lfNeedProg")); return false; }
+    const dl = Number(num.value || 0); if (!isFinite(dl)) { await alertBox(t("lfBadDelay")); return false; }
+    const data = {id: app.id || "", name: iName.value, path: iPath.value, args: iArgs.value, cwd: iCwd.value, proc: iProc.value, delay: Math.round(dl),
+      trigger: trig.querySelector('input[name=trig]:checked').value, close_with_sim: cClose.checked, enabled: cOn.checked, admin: cAdmin.checked, screen: sel.value};
+    try { await call("launcherSave", data); return true; } catch (e) { await alertBox(e.message); return false; }
+  }}], f);
+  if (ok) loadLauncher();
+}
+async function pickProcesses(input, hint){
+  let r; try { r = await call("runningList", {hint}); } catch (e) { return; }
+  const names = r.sugg.concat(r.others); if (!names.length) return alertBox(t("lfNoProcs"));
+  const cur = new Set(input.value.split(/[;,]/).map(x => x.trim().toLowerCase()).filter(Boolean));
+  const box = document.createElement("div"); box.className = "plist";
+  box.innerHTML = names.map(n => '<div class="pitem' + (cur.has(n) ? " sel" : "") + '" data-n="' + esc(n) + '">' + (r.sugg.includes(n) ? "★  " : "&nbsp;&nbsp;&nbsp;&nbsp;") + esc(n) + "</div>").join("");
+  box.onclick = e => { const it = e.target.closest(".pitem"); if (it) it.classList.toggle("sel"); };
+  const ok = await modal(t("lfProcsTitle"), [{label: t("cancel"), value: false}, {label: t("lfValidate"), value: true, cls: "accent"}], box);
+  if (!ok) return;
+  const chosen = [...box.querySelectorAll(".pitem.sel")].map(x => x.dataset.n);
+  if (chosen.length) input.value = chosen.join("; ");
 }
 
 // ---------------------------------------------------------------- vol SimBrief
@@ -686,6 +871,7 @@ function onEvent(ev, data){
     if (atEnd) l.scrollTop = l.scrollHeight;
   } else if (ev === "status") $("status").textContent = data;
   else if (ev === "sim") setSim(data);
+  else if (ev === "launcher") loadLauncher();
   else if (ev === "changed") { loadLibrary(); if (currentTab === "vol") refreshFlight(); }
 }
 
@@ -697,6 +883,7 @@ function onEvent(ev, data){
   applyLang();
   showTab(d.settings.library ? "lib" : "set");
   loadLibrary();
+  launcherTick();
 })();
 </script>
 </body>

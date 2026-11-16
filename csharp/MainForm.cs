@@ -39,6 +39,7 @@ namespace HangarFS2024
             hangar.OnLog += m => Push("log", new JValue(DateTime.Now.ToString("HH:mm:ss") + "  " + m));
             hangar.OnStatus += m => Push("status", new JValue(m));
             hangar.OnChanged += () => Push("changed", JValue.CreateNull());
+            hangar.OnLauncher += () => Push("launcher", JValue.CreateNull());
 
             monitor.Interval = 4000;
             monitor.Tick += async (s, e) =>
@@ -209,6 +210,53 @@ namespace HangarFS2024
                         var tops = StrList(a["paths"]);
                         long n = await Task.Run(() => Hangar.FolderSize(tops));
                         return new JValue(Hangar.FmtSize(n));
+                    }
+                case "launcher":
+                    return await Task.Run(() => (JToken)hangar.Launcher.View());
+                case "launcherOptions":
+                    hangar.Launcher.SetOptions((bool)a["auto"], (bool)a["parkApt"]);
+                    return null;
+                case "launcherSave":
+                    hangar.Launcher.Save(a);
+                    return null;
+                case "launcherDelete":
+                    hangar.Launcher.Delete(StrList(a["ids"]));
+                    return null;
+                case "launcherMove":
+                    hangar.Launcher.Move(JsonStore.Str(a["id"]), (int)a["step"]);
+                    return null;
+                case "launcherStart":
+                    hangar.Launcher.StartNow(StrList(a["ids"]));
+                    return null;
+                case "launcherStop":
+                    hangar.Launcher.Stop(hangar.Launcher.ByIds(StrList(a["ids"])), true);
+                    return null;
+                case "launcherStopAll":
+                    return new JValue(await Task.Run(() => hangar.Launcher.StopAll()));
+                case "runningList":
+                    {
+                        string hint = JsonStore.Str(a["hint"]);
+                        return await Task.Run(() => (JToken)Launcher.RunningList(hint));
+                    }
+                case "identifyScreens":
+                    Launcher.IdentifyScreens();
+                    return null;
+                case "pickProgram":
+                    {
+                        using (var dlg = new OpenFileDialog())
+                        {
+                            dlg.Title = JsonStore.Str(a["title"]);
+                            dlg.Filter = Hangar.L("Programmes et raccourcis", "Programs and shortcuts") + "|*.exe;*.lnk;*.bat;*.cmd|" +
+                                         Hangar.L("Tous les fichiers", "All files") + "|*.*";
+                            if (dlg.ShowDialog(this) != DialogResult.OK) return JValue.CreateNull();
+                            string path = Path.GetFullPath(dlg.FileName), args = "", cwd = "";
+                            if (path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) && JsonStore.Str(a["resolve"]) != "no")
+                            {
+                                var r = Win.ResolveShortcut(path);
+                                if (r[0] != "") { path = r[0]; args = r[1]; cwd = r[2]; }
+                            }
+                            return new JObject { ["path"] = path, ["args"] = args, ["cwd"] = cwd };
+                        }
                     }
                 case "removeCommunity":
                     await Task.Run(() => hangar.RemoveCommunityLinks(StrList(a["links"])));

@@ -25,6 +25,9 @@ namespace HangarFS2024
         public event Action<string> OnLog;
         public event Action<string> OnStatus;
         public event Action OnChanged;
+        public event Action OnLauncher;
+        public Launcher Launcher;
+        public void LauncherChanged() { var h = OnLauncher; if (h != null) h(); }
 
         public bool SimOn;
         bool simWasRunning;
@@ -60,6 +63,7 @@ namespace HangarFS2024
             if (!(Cfg["overrides"] is JObject)) Cfg["overrides"] = new JObject();
             if (CfgS("community") == "") Cfg["community"] = Scanner.DetectCommunity();
             Lang = CfgS("lang") == "en" ? "en" : "fr";
+            Launcher = new Launcher(this);
         }
 
         // ---------------------------------------------------------------- petits outils
@@ -892,11 +896,19 @@ namespace HangarFS2024
             SimOn = running;
             if (running)
             {
+                if (!simWasRunning)
+                {
+                    Launcher.ParkingFired = false;
+                    if (CfgB("launcher_auto", true)) Launcher.Schedule("sim", "");   // MSFS démarre : applications du lanceur
+                    LauncherChanged();
+                }
                 simWasRunning = true;
             }
             else if (simWasRunning)
             {
                 simWasRunning = false;
+                Launcher.CloseWithSim();
+                LauncherChanged();
                 if (skipNextExit)
                 {
                     skipNextExit = false;
