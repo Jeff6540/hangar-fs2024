@@ -7,6 +7,7 @@ name: Build C# version
 
 on:
   push:
+    branches: ['**']
     paths: ['csharp/**', '.github/workflows/build-csharp.yml']
     tags: ['[0-9]*']
   workflow_dispatch:
