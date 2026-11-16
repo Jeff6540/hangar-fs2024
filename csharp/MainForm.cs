@@ -26,7 +26,7 @@ namespace HangarFS2024
 
         public MainForm()
         {
-            Text = AppInfo.Name + " — " + AppInfo.Sub + " " + AppInfo.Version;
+            Text = AppInfo.Name + " — " + AppInfo.Sub + " " + AppInfo.Version + (IsAdmin() ? "  —  🛡 " + Hangar.L("Administrateur", "Administrator") : "");
             BackColor = ColorTranslator.FromHtml("#15181e");
             Size = new Size(1320, 860);
             MinimumSize = new Size(1050, 640);
@@ -83,6 +83,16 @@ namespace HangarFS2024
             web.NavigateToString(BuildPage());
         }
 
+        static bool IsAdmin()
+        {
+            try
+            {
+                var id = System.Security.Principal.WindowsIdentity.GetCurrent();
+                return new System.Security.Principal.WindowsPrincipal(id).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+            }
+            catch (Exception) { return false; }
+        }
+
         static string Resource(string name)
         {
             using (var st = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
@@ -105,6 +115,8 @@ namespace HangarFS2024
             return Resource("ui.index.html")
                 .Replace("{{BANNER_FR}}", ResourceDataUri("ui.banner_fr.png", "image/png"))
                 .Replace("{{BANNER_EN}}", ResourceDataUri("ui.banner_en.png", "image/png"))
+                .Replace("{{FLAG_FR}}", ResourceDataUri("ui.flag_fr.png", "image/png"))
+                .Replace("{{FLAG_EN}}", ResourceDataUri("ui.flag_en.png", "image/png"))
                 .Replace("{{VERSION}}", AppInfo.Version);
         }
 
@@ -189,6 +201,15 @@ namespace HangarFS2024
                 case "setIcao":
                     hangar.SetIcao(JsonStore.Str(a["path"]), StrList(a["codes"]));
                     return null;
+                case "undo":
+                    await Task.Run(() => hangar.Undo());
+                    return null;
+                case "communitySize":
+                    {
+                        var tops = StrList(a["paths"]);
+                        long n = await Task.Run(() => Hangar.FolderSize(tops));
+                        return new JValue(Hangar.FmtSize(n));
+                    }
                 case "removeCommunity":
                     await Task.Run(() => hangar.RemoveCommunityLinks(StrList(a["links"])));
                     return null;

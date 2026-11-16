@@ -31,6 +31,7 @@ namespace HangarFS2024
         bool skipNextExit;
         string libSig;
         bool scanning;
+        JObject undo;   // dernière action Activer / Retirer, pour le bouton « ↶ Annuler »
 
         static JObject DefaultConfig()
         {
@@ -288,6 +289,7 @@ namespace HangarFS2024
             CheckUnlocked();
             string comm = Community;
             int ok = 0, errors = 0;
+            var done = new JArray();
             lock (Gate)
             {
                 foreach (var path in paths)
@@ -298,6 +300,7 @@ namespace HangarFS2024
                     {
                         string r = DoLink(p, "manual");
                         ok++;
+                        if (r == L("lié", "linked")) done.Add(new JObject { ["path"] = p.FullPath });
                         Log(p.Name + " — " + r);
                     }
                     catch (Exception e)
@@ -307,6 +310,7 @@ namespace HangarFS2024
                     }
                 }
                 SaveSt();
+                if (done.Count > 0) undo = new JObject { ["kind"] = "activate", ["items"] = done };
             }
             string msg = string.Format(L("{0} add-on(s) activé(s) dans Community.", "{0} add-on(s) activated in Community."), ok);
             if (errors > 0) msg += string.Format(L(" {0} erreur(s) — voir le journal.", " {0} error(s) — see the log."), errors);
@@ -320,6 +324,7 @@ namespace HangarFS2024
             CheckUnlocked();
             string comm = Community;
             int removed = 0, skipped = 0, errors = 0;
+            var gone = new JArray();
             lock (Gate)
             {
                 foreach (var path in paths)
@@ -337,6 +342,7 @@ namespace HangarFS2024
                             continue;
                         }
                         Unlink(link);
+                        gone.Add(new JObject { ["path"] = p.FullPath, ["pinned"] = p.Pinned });
                         if (p.Pinned)
                         {
                             p.Pinned = false;
@@ -353,6 +359,7 @@ namespace HangarFS2024
                 }
                 SaveCfg();
                 SaveSt();
+                if (gone.Count > 0) undo = new JObject { ["kind"] = "remove", ["items"] = gone };
             }
             string msg = string.Format(L("{0} add-on(s) retiré(s) de Community.", "{0} add-on(s) removed from Community."), removed);
             if (skipped > 0) msg += string.Format(L(" {0} vraie(s) copie(s) ignorée(s), à déplacer à la main.", " {0} real copy(ies) skipped, to move by hand."), skipped);
@@ -407,6 +414,110 @@ namespace HangarFS2024
             Changed();
         }
 
+        public JObject UndoInfo()
+        {
+            if (undo == null) return null;
+            return new JObject { ["kind"] = undo["kind"], ["n"] = ((JArray)undo["items"]).Count };
+        }
+
+        public void Undo()
+        {
+            CheckUnlocked();
+            var u = undo;
+            if (u == null) { Status(L("Rien à annuler.", "Nothing to undo.")); return; }
+            bool act = JsonStore.Str(u["kind"]) == "activate";
+            int ok = 0, errors = 0;
+            lock (Gate)
+            {
+                foreach (var it in (JArray)u["items"])
+                {
+                    var p = ByPath(JsonStore.Str(it["path"]));
+                    if (p == null) { errors++; continue; }
+                    try
+                    {
+                        if (act)
+                        {
+                            string link = LinkPath(p);
+                            if (LinksObj[link] != null && Links.IsLink(link)) { Unlink(link); ok++; }
+                        }
+                        else
+                        {
+                            bool pin = it["pinned"] != null && (bool)it["pinned"];
+                            if (pin) { p.Pinned = true; OverrideFor(p.FullPath)["pinned"] = true; }
+                            DoLink(p, pin ? "pinned" : "manual");
+                            ok++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        errors++;
+                        Log(string.Format(L("Annulation impossible pour {0} : {1}", "Undo failed for {0}: {1}"), p.Name, e.Message));
+                    }
+                }
+                undo = null;
+                SaveCfg();
+                SaveSt();
+            }
+            string msg = act ? string.Format(L("Activation annulée : {0} add-on(s) retiré(s).", "Activation undone: {0} add-on(s) removed."), ok)
+                             : string.Format(L("Retrait annulé : {0} add-on(s) remis dans Community.", "Removal undone: {0} add-on(s) put back in Community."), ok);
+            if (errors > 0) msg += string.Format(L(" {0} erreur(s) — voir le journal.", " {0} error(s) — see the log."), errors);
+            Log(msg);
+            Status(msg);
+            Changed();
+        }
+
+        // taille totale de Community (liens suivis), calculée en arrière-plan
+        public static long FolderSize(IEnumerable<string> tops)
+        {
+            long total = 0;
+            foreach (var top in tops)
+            {
+                try
+                {
+                    if (!Directory.Exists(top)) continue;
+                    var stack = new Stack<string>();
+                    stack.Push(top);
+                    while (stack.Count > 0)
+                    {
+                        string d = stack.Pop();
+                        try
+                        {
+                            foreach (var f in new DirectoryInfo(d).EnumerateFiles())
+                                try { total += f.Length; } catch (Exception) { }
+                            foreach (var sub in Directory.EnumerateDirectories(d)) stack.Push(sub);
+                        }
+                        catch (Exception) { }
+                    }
+                }
+                catch (Exception) { }
+            }
+            return total;
+        }
+
+        public static string FmtSize(double n)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string to = L("To", "TB"), go = L("Go", "GB"), mo = L("Mo", "MB"), ko = L("Ko", "KB");
+            string r;
+            if (n >= 1e12) r = (n / 1e12).ToString("0.00", inv) + " " + to;
+            else if (n >= 1e9) r = (n / 1e9).ToString("0.00", inv) + " " + go;
+            else if (n >= 1e6) r = (n / 1e6).ToString("0.00", inv) + " " + mo;
+            else r = (n / 1e3).ToString("0", inv) + " " + ko;
+            return Lang == "en" ? r : r.Replace(".", ",");
+        }
+
+        public string FreeSpace()
+        {
+            try
+            {
+                string lib = CfgS("library");
+                if (lib == "" || !Directory.Exists(lib)) return "";
+                var d = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(lib)));
+                return ((double)d.AvailableFreeSpace / 1e9).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " " + L("Go", "GB");
+            }
+            catch (Exception) { return ""; }
+        }
+
         // ---------------------------------------------------------------- volet Community
         public JArray CommunityList()
         {
@@ -436,7 +547,7 @@ namespace HangarFS2024
                 }
                 else if (lib != "" && target != "" && Scanner.Inside(target, lib)) { cat = "ext"; label = L("Lien externe", "External link"); }
                 else { cat = "off"; label = L("Hors bibliothèque", "Outside library"); }
-                string title = "", version = "";
+                string title = "", version = "", creator = "";
                 if (cat != "broken")
                 {
                     try
@@ -444,11 +555,12 @@ namespace HangarFS2024
                         var m = JObject.Parse(File.ReadAllText(Path.Combine(path, "manifest.json"), System.Text.Encoding.UTF8));
                         title = JsonStore.Str(m["title"]);
                         version = JsonStore.Str(m["package_version"]).Trim();
+                        creator = JsonStore.Str(m["creator"]);
                     }
                     catch (Exception) { }
                 }
                 arr.Add(new JObject { ["name"] = Path.GetFileName(path), ["path"] = path, ["cat"] = cat,
-                    ["label"] = label, ["target"] = target, ["link"] = link, ["title"] = title, ["version"] = version });
+                    ["label"] = label, ["target"] = target, ["link"] = link, ["title"] = title, ["version"] = version, ["creator"] = creator });
             }
             return arr;
         }
@@ -643,6 +755,7 @@ namespace HangarFS2024
                     }
                 }
                 St["flight"] = new JObject { ["route"] = plan["route"], ["icaos"] = new JArray(icaos) };
+                undo = null;
                 foreach (var p in wanted)
                 {
                     try
@@ -760,6 +873,7 @@ namespace HangarFS2024
                     }
                 }
                 errors += RestoreParked();
+                undo = null;
                 St["flight"] = null;
                 if (Plan != null) Log(L("Plan de vol effacé : ", "Flight plan cleared: ") + JsonStore.Str(Plan["route"]));
                 St["plan"] = null;
@@ -830,7 +944,8 @@ namespace HangarFS2024
                     });
                 }
             }
-            return new JObject { ["packages"] = arr, ["community"] = CommunityList() };
+            return new JObject { ["packages"] = arr, ["community"] = CommunityList(), ["free"] = FreeSpace(),
+                ["undo"] = UndoInfo(), ["communityPath"] = CfgS("community"), ["library"] = CfgS("library") };
         }
 
         public JObject SettingsView()

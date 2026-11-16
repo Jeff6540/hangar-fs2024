@@ -34,6 +34,8 @@
     <EmbeddedResource Include="ui\index.html" LogicalName="ui.index.html" />
     <EmbeddedResource Include="ui\banner_fr.png" LogicalName="ui.banner_fr.png" />
     <EmbeddedResource Include="ui\banner_en.png" LogicalName="ui.banner_en.png" />
+    <EmbeddedResource Include="ui\flag_fr.png" LogicalName="ui.flag_fr.png" />
+    <EmbeddedResource Include="ui\flag_en.png" LogicalName="ui.flag_en.png" />
   </ItemGroup>
 
 </Project>

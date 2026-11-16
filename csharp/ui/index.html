@@ -14,16 +14,20 @@ body{display:flex;flex-direction:column}
 input,select,button{font:inherit;color:var(--fg)}
 #top{position:relative;flex:none;height:72px;overflow:hidden;background:var(--bg)}
 #top img{height:72px;display:block}
-#flags{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:6px}
-#flags button{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
-#flags button.on{background:var(--accent);border-color:var(--accent)}
+#flags{display:flex;gap:4px;align-items:center;padding-bottom:6px}
+#flags button{background:transparent;border:2px solid transparent;border-radius:3px;padding:1px;cursor:pointer;line-height:0}
+#flags button:hover{border-color:var(--hover)}
+#flags button.on{border-color:var(--accent)}
+#flags img{width:34px;height:23px;display:block}
+#flags .tuto{margin-left:10px;background:var(--accent);color:#fff;font-weight:700;font-size:12.5px;line-height:normal;padding:5px 12px;border:none;border-radius:4px}
+#flags .tuto:hover{background:var(--accent-hi)}
 #lock{display:none;flex:none;background:var(--danger);color:#fff;font-weight:700;text-align:center;padding:8px}
 body.sim #lock{display:block}
 nav{flex:none;display:flex;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--border)}
-nav button{background:transparent;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:8px 16px;cursor:pointer;color:var(--muted)}
-nav button:hover{color:var(--fg);background:var(--panel)}
-nav button.on{background:var(--panel);color:var(--fg);border-color:var(--border)}
-nav button.soon{opacity:.55}
+nav > button{background:transparent;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:8px 16px;cursor:pointer;color:var(--muted)}
+nav > button:hover{color:var(--fg);background:var(--panel)}
+nav > button.on{background:var(--panel);color:var(--fg);border-color:var(--border)}
+nav > button.soon{opacity:.55}
 main{flex:1;min-height:0;background:var(--panel);margin:0 8px;border:1px solid var(--border);border-top:none}
 .tab{display:none;height:100%;padding:14px;flex-direction:column;gap:10px;min-height:0}
 .tab.on{display:flex}
@@ -44,7 +48,20 @@ label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
 .title{font-size:16px;font-weight:600}
 .split{flex:1;min-height:0;display:flex;gap:12px}
 .pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;min-height:0}
-.pane.lib{flex:1.45}
+.pane.lib{flex:1.5}
+.head{font-size:15.5px;font-weight:700}
+select{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;min-width:200px;outline:none}
+table.fixed{table-layout:fixed}table.fixed td{max-width:none}
+.tw{display:inline-block;width:16px;color:var(--muted)}
+tr.grp td{font-weight:700}
+.soonbtn{opacity:.5}
+.btn.warnb{background:var(--warn-btn);border-color:var(--warn-btn)}
+.cc-ours{--cc:var(--cat-ours)}.cc-real{--cc:var(--cat-real)}.cc-ext{--cc:var(--cat-ext)}.cc-off{--cc:var(--cat-off)}.cc-broken{--cc:var(--cat-broken)}.cc-defoff{--cc:var(--cat-defoff)}
+tr.citem td{background:var(--cc);cursor:pointer}
+tr.citem.cc-broken td{color:#ff9a9a}
+tr.citem:hover td{filter:brightness(1.25)}
+tr.citem.sel td{background:var(--sel)}
+.chip.cc-ours,.chip.cc-real,.chip.cc-ext,.chip.cc-off,.chip.cc-broken,.chip.cc-defoff{background:var(--cc);border-radius:3px;padding:3px 7px;font-size:12px}
 .list{flex:1;min-height:0;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px}
 table{border-collapse:collapse;width:100%}
 th{position:sticky;top:0;background:var(--field);text-align:left;font-weight:600;padding:6px 8px;z-index:1;white-space:nowrap}
@@ -101,7 +118,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 </style>
 </head>
 <body>
-<div id="top"><img id="banner" alt=""><div id="flags"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div></div>
+<div id="top"><img id="banner" alt=""></div>
 <div id="lock" data-t="lockBanner"></div>
 <nav id="tabs">
   <button data-tab="lib" data-t="tabLib"></button>
@@ -110,38 +127,48 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
   <button data-tab="vol" data-t="tabVol"></button>
   <button data-tab="soon-dispatch" class="soon" data-t="tabDispatch"></button>
   <button data-tab="set" data-t="tabSet"></button>
+  <span class="grow"></span>
+  <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto soonbtn" data-t="tuto"></button></div>
 </nav>
 <main>
   <!-- Bibliothèque -->
   <section class="tab" id="tab-lib">
-    <div class="row">
-      <input type="text" id="search" style="width:260px">
-      <button class="btn" id="bCheckAll" data-t="checkAll"></button>
-      <button class="btn" id="bUncheckAll" data-t="uncheckAll"></button>
-      <button class="btn" id="bExpand" data-t="expandAll"></button>
-      <button class="btn" id="bCollapse" data-t="collapseAll"></button>
-      <span class="grow"></span>
-      <button class="btn" id="bRescan" data-t="rescan"></button>
-    </div>
     <div class="split">
       <div class="pane lib">
-        <div class="row"><span class="title" data-t="library"></span><span class="muted" id="libCount"></span></div>
+        <div class="row"><span class="head" id="libHead"></span><span class="grow"></span>
+          <button class="btn" id="bExpand" data-t="expandAll"></button>
+          <button class="btn" id="bCollapse" data-t="collapseAll"></button>
+          <button class="btn" id="bRescan" data-t="refreshCheck"></button></div>
+        <div class="row"><input type="text" id="search" class="grow"><select id="filter"></select></div>
         <div class="list" id="libList"></div>
+        <div class="row">
+          <button class="btn" id="bCheckAll" data-t="checkAll"></button>
+          <button class="btn" id="bUncheckAll" data-t="uncheckAll"></button>
+          <button class="btn accent lk" id="bActivate" style="margin-left:12px"></button>
+          <button class="btn danger lk" id="bRemove"></button>
+          <button class="btn lk" id="bUndo"></button>
+          <span class="muted" id="checkedLbl"></span>
+        </div>
+        <div class="row">
+          <button class="btn lk" id="bPin" data-t="pin"></button>
+          <button class="btn lk" id="bUnpin" data-t="unpin"></button>
+          <button class="btn soonbtn" data-t="profiles"></button>
+          <button class="btn" id="bIcao" data-t="icaoBtn"></button>
+          <button class="btn soonbtn" data-t="dups"></button>
+          <span class="grow"></span>
+          <button class="btn warnb soonbtn" data-t="quar"></button>
+          <button class="btn soonbtn" data-t="viewQuar"></button>
+        </div>
       </div>
       <div class="pane">
-        <div class="row"><span class="title">Community</span><span class="muted" id="commCount"></span></div>
-        <div class="chips" id="chips"></div>
+        <div class="row"><span class="head" id="commHead">Community</span><span class="grow"></span>
+          <button class="btn" id="bOpenComm" data-t="openFolder"></button>
+          <button class="btn" id="bCommRefresh">⟳</button></div>
+        <div class="row"><input type="text" id="csearch" class="grow"></div>
         <div class="list" id="commList"></div>
-        <div class="row"><button class="btn lk" id="bCommRemove" data-t="commRemove"></button></div>
+        <div class="chips" id="chips"></div>
+        <div class="row"><button class="btn danger lk" id="bCommRemove" data-t="commRemove"></button><span class="muted" data-t="onlyLinks"></span></div>
       </div>
-    </div>
-    <div class="row">
-      <button class="btn accent lk" id="bActivate"></button>
-      <button class="btn danger lk" id="bRemove"></button>
-      <button class="btn lk" id="bPin" data-t="pin"></button>
-      <button class="btn lk" id="bUnpin" data-t="unpin"></button>
-      <button class="btn" id="bIcao" data-t="icaoBtn"></button>
-      <span class="muted" id="checkedLbl"></span>
     </div>
   </section>
 
@@ -205,10 +232,20 @@ const TXT = {
  lockBanner:["🔒  Flight Simulator est ouvert : l'appli est verrouillée. Ferme le simulateur pour gérer tes add-ons.","🔒  Flight Simulator is running: the app is locked. Close the simulator to manage your add-ons."],
  tabLib:["Bibliothèque","Library"], tabMap:["🗺  Carte addons","🗺  Add-on map"], tabLaunch:["🚀  Démarrage auto","🚀  Auto launch"],
  tabVol:["Vol SimBrief","SimBrief flight"], tabDispatch:["✈  Plan & suivi de vol","✈  Flight plan & tracking"], tabSet:["Réglages","Settings"],
- checkAll:["Tout cocher","Check all"], uncheckAll:["Tout décocher","Uncheck all"], expandAll:["Tout déplier","Expand all"], collapseAll:["Tout replier","Collapse all"],
- rescan:["↻  Actualiser","↻  Refresh"], library:["Bibliothèque","Library"], search:["Rechercher…","Search…"],
- commRemove:["🗑  Retirer les liens cochés","🗑  Remove checked links"],
- pin:["★  Protéger","★  Protect"], unpin:["Retirer la protection","Remove protection"], icaoBtn:["Codes OACI…","ICAO codes…"],
+ checkAll:["☑  Tout cocher","☑  Check all"], uncheckAll:["☐  Tout décocher","☐  Uncheck all"], expandAll:["Tout déplier","Expand all"], collapseAll:["Tout replier","Collapse all"],
+ rescan:["↻  Actualiser","↻  Refresh"], refreshCheck:["🔄  Actualiser et vérifier","🔄  Refresh and check"],
+ libHead:["Bibliothèque — %s add-ons, %s dans Community","Library — %s add-ons, %s in Community"], freeSp:[" · %s libres"," · %s free"],
+ fltall:["Tous","All"], fltapt:["Scènes d'aéroport","Airport sceneries"], fltpin:["Protégés ★","Protected ★"], fltin:["Présents dans Community","In Community"], fltout:["Absents de Community","Not in Community"],
+ undo:["↶  Annuler","↶  Undo"], undoAct:["↶  Annuler (activation de %s add-on(s))","↶  Undo (activation of %s add-on(s))"], undoRem:["↶  Annuler (retrait de %s add-on(s))","↶  Undo (removal of %s add-on(s))"],
+ profiles:["📋  Profils…","📋  Profiles…"], dups:["🔍  Doublons ICAO","🔍  ICAO duplicates"], quar:["⚠  Mettre en quarantaine","⚠  Quarantine"], viewQuar:["Voir la quarantaine…","View quarantine…"],
+ openFolder:["Ouvrir le dossier","Open folder"], onlyLinks:["Seuls les liens sont retirés, jamais les vraies copies.","Only links are removed, never real copies."],
+ commHead:["Community — %s · %s add-ons","Community — %s · %s add-ons"], computingSize:["calcul de la taille…","computing size…"], commNotFoundHead:["Community — introuvable","Community — not found"],
+ colPin:["★ Protégé","★ Protected"], colCreator:["Créateur","Creator"], tuto:["❓ Tutoriel","❓ Tutorial"],
+ soonBtn:["Cette fonction arrive dans une prochaine étape de la version C#. En attendant, elle reste disponible dans la version Python 11.8.","This feature is coming in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
+ pinLost:["\n\n%s d'entre eux ne seront plus protégés (★).","\n\n%s of them will no longer be protected (★)."],
+ onlyRealSel:["La sélection ne contient que de vrais dossiers : ils ne sont jamais supprimés par l'appli.","The selection only contains real folders: the app never deletes them."], library:["Bibliothèque","Library"], search:["Rechercher…","Search…"],
+ commRemove:["🗑  Retirer la sélection","🗑  Remove selection"],
+ pin:["★ Protéger","★ Protect"], unpin:["☆ Ne plus protéger","☆ Unprotect"], icaoBtn:["Codes ICAO…","ICAO codes…"],
  activateN:["▶  Activer %s add-on(s) dans Community","▶  Activate %s add-on(s) in Community"], allActive:["✓  Tous déjà actifs","✓  All already active"],
  oneActive:["✓  Déjà actif","✓  Already active"], noneIn:["🗑  Aucun dans Community","🗑  None in Community"], activate:["▶  Activer dans Community","▶  Activate in Community"],
  removeN:["🗑  Retirer %s add-on(s) de Community","🗑  Remove %s add-on(s) from Community"], remove:["🗑  Retirer de Community","🗑  Remove from Community"],
@@ -236,10 +273,10 @@ const TXT = {
  yes:["Oui","Yes"], no:["Non","No"], ok:["OK","OK"], cancel:["Annuler","Cancel"],
  nothingChecked:["Coche d'abord des add-ons dans la bibliothèque.","Check some add-ons in the library first."],
  confirmRemove:["Retirer %s add-on(s) du dossier Community ?\n\n%s\n\nSeuls les liens sont retirés : tes fichiers restent intacts dans la bibliothèque.","Remove %s add-on(s) from the Community folder?\n\n%s\n\nOnly the links are removed: your files stay untouched in the library."],
- confirmRemoveBig:["⚠  ATTENTION : tu vas retirer %s add-ons de Community.\n\nEst-ce vraiment ce que tu veux ?\n\n(Tes fichiers restent dans la bibliothèque.)","⚠  WARNING: you are about to remove %s add-ons from Community.\n\nIs that really what you want?\n\n(Your files stay in the library.)"],
+ confirmRemoveBig:["⚠  ATTENTION : tu vas retirer %s add-ons de Community, sur %s présents.\n\nEst-ce vraiment ce que tu veux ?\n\n(Tes fichiers restent dans la bibliothèque, et « ↶ Annuler » peut tout remettre.)","⚠  WARNING: you are about to remove %s add-ons from Community, out of %s present.\n\nIs that really what you want?\n\n(Your files stay in the library, and \"↶ Undo\" can put everything back.)"],
  noneInComm:["Aucun des add-ons cochés n'est dans Community.","None of the checked add-ons is in Community."],
  confirmCommRemove:["Retirer %s lien(s) du dossier Community ?\n\nLes fichiers d'origine ne sont pas touchés. Les vrais dossiers ne sont jamais supprimés.","Remove %s link(s) from the Community folder?\n\nThe original files are not touched. Real folders are never deleted."],
- noCommChecked:["Coche d'abord des liens dans la liste Community.","Check some links in the Community list first."],
+ noCommChecked:["Sélectionne d'abord des add-ons dans la liste Community (Ctrl + clic pour en choisir plusieurs).","Select some add-ons in the Community list first (Ctrl + click to pick several)."],
  icaoOne:["Sélectionne (coche) une seule scène pour saisir ses codes OACI.","Check a single scenery to enter its ICAO codes."],
  icaoPrompt:["Codes OACI de « %s » (séparés par des espaces).\nLaisse vide pour revenir à la détection automatique.","ICAO codes for \"%s\" (separated by spaces).\nLeave empty to go back to automatic detection."],
  chooseTitle:["Plusieurs scènes pour le même aéroport\n\nChoisis la scène à activer pour ce vol. Les autres restent dans ta bibliothèque ; si l'une d'elles est active, elle est mise de côté pendant le vol puis remise à la fin.","Several sceneries for the same airport\n\nChoose the scenery to activate for this flight. The others stay in your library; if one of them is active, it is set aside during the flight and put back at the end."],
@@ -306,15 +343,15 @@ document.addEventListener("keydown", e => {
 });
 
 // ---------------------------------------------------------------- état
-let PKGS = [], COMM = [], checked = new Set(), commChecked = new Set(), collapsed = new Set(), commFilter = null, SETTINGS = {};
+let PKGS = [], COMM = [], checked = new Set(), commFilter = null, SETTINGS = {};
 let currentTab = "lib";
 
 function applyLang(){
   document.documentElement.lang = LANG;
   $("banner").src = BANNERS[LANG];
   document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
-  document.querySelectorAll("#flags button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
-  $("search").placeholder = t("search");
+  document.querySelectorAll("#flags button[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+  $("search").placeholder = t("search"); $("csearch").placeholder = t("search"); fillFilter();
   setSim(document.body.classList.contains("sim"));
   renderLib(); renderComm(); refreshFlight();
 }
@@ -335,84 +372,120 @@ function setSim(on){
   $("simlbl").textContent = t(on ? "simOn" : "simOff");
 }
 
-// ---------------------------------------------------------------- bibliothèque
-function matches(p, q){
-  if (!q) return true;
-  return (p.name + " " + p.title + " " + p.creator + " " + p.icao.join(" ") + " " + p.group).toLowerCase().includes(q);
-}
-function groups(){
-  const q = $("search").value.trim().toLowerCase();
-  const map = new Map();
-  PKGS.filter(p => matches(p, q)).forEach(p => {
-    const g = p.group || ""; if (!map.has(g)) map.set(g, []); map.get(g).push(p);
-  });
-  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, {sensitivity: "base"}));
-}
-function boxHtml(state){ const c = {2: "on", 1: "part", act: "act", actpart: "actpart", acton: "acton"}[state]; return '<span class="box' + (c ? " " + c : "") + '"></span>'; }
+// ---------------------------------------------------------------- bibliothèque (arbre par dossiers, comme la 11.8)
 const isOn = p => p.status !== "none" && p.status !== "?";
-
+const FILTERS = ["all", "apt", "pin", "in", "out"];
+let opened = new Set(), undoInfo = null, freeSpace = "";
+function boxHtml(state){ const c = {2: "on", 1: "part", act: "act", actpart: "actpart", acton: "acton"}[state]; return '<span class="box' + (c ? " " + c : "") + '"></span>'; }
+function visible(){
+  const q = $("search").value.trim().toLowerCase(), f = $("filter").value || "all";
+  return PKGS.filter(p => {
+    if (q && !(p.name + " " + p.title + " " + p.icao.join(" ")).toLowerCase().includes(q)) return false;
+    if (f === "apt" && !p.icao.length) return false;
+    if (f === "pin" && !p.pinned) return false;
+    if (f === "in" && !isOn(p)) return false;
+    if (f === "out" && isOn(p)) return false;
+    return true;
+  });
+}
+function buildTree(list){
+  const root = {name: "", path: "", kids: new Map(), items: []};
+  list.forEach(p => {
+    let node = root;
+    if (p.group) {
+      let acc = "";
+      p.group.split(/[\\\/]/).forEach(part => {
+        acc = acc ? acc + "\\" + part : part;
+        if (!node.kids.has(part.toLowerCase())) node.kids.set(part.toLowerCase(), {name: part, path: acc, kids: new Map(), items: []});
+        node = node.kids.get(part.toLowerCase());
+      });
+    }
+    node.items.push(p);
+  });
+  return root;
+}
+function leaves(node){ let r = node.items.slice(); node.kids.forEach(k => { r = r.concat(leaves(k)); }); return r; }
+let TREE = null;
+function findNode(node, path){
+  if (node.path === path) return node;
+  for (const k of node.kids.values()) { const r = findNode(k, path); if (r) return r; }
+  return null;
+}
+const TYPE_TITLE = s => s ? s.charAt(0) + s.slice(1).toLowerCase() : "";
 function renderLib(){
   const list = $("libList");
-  if (!SETTINGS.library) { list.innerHTML = '<div class="muted" style="padding:14px">' + esc(t("noLib")) + "</div>"; $("libCount").textContent = ""; updateButtons(); return; }
-  const scroll = list.scrollTop;
-  let h = "<table><thead><tr><th style='width:28px'></th><th>" + esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" +
-          esc(t("colType")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colIcao")) + "</th><th>★</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
-  groups().forEach(([g, items]) => {
-    const nChk = items.filter(p => checked.has(p.path)).length;
-    const nAct = items.filter(isOn).length;
-    const st = nChk ? (nChk === items.length ? 2 : 1) : (nAct && nAct === items.length ? "act" : nAct ? "actpart" : 0);
-    const open = !collapsed.has(g);
-    h += '<tr class="grp" data-g="' + esc(g) + '"><td data-gbox="1">' + boxHtml(st) + '</td><td colspan="7">' + (open ? "▾ " : "▸ ") +
-         esc(g || t("noGroup")) + ' <span class="n">(' + nAct + " / " + items.length + ")</span></td></tr>";
-    if (!open) return;
-    items.forEach(p => {
-      const on = isOn(p), ck = checked.has(p.path);
-      h += '<tr class="item' + (ck ? " chk" : on ? " act" : "") + '" data-p="' + esc(p.path) + '"><td>' + boxHtml(ck ? (on ? "acton" : 2) : (on ? "act" : 0)) +
-           "</td><td title='" + esc(p.path) + "'>" + esc(p.name) + "</td><td>" + esc(p.title) + "</td><td>" + esc(p.type) + "</td><td>" + esc(p.version) +
-           "</td><td>" + esc(p.icao.join(" ")) + (p.icaoManual ? " ✎" : "") + "</td><td class='star'>" + (p.pinned ? "★" : "") +
-           "</td><td class='st-" + esc(p.status) + "'>" + esc(t("st" + p.status)) + "</td></tr>";
+  updateLibHead();
+  if (!SETTINGS.library) { list.innerHTML = '<div class="muted" style="padding:14px">' + esc(t("noLib")) + "</div>"; updateButtons(); return; }
+  const scroll = list.scrollTop, searching = !!$("search").value.trim();
+  TREE = buildTree(visible());
+  let h = "<table class='fixed'><colgroup><col><col style='width:24%'><col style='width:70px'><col style='width:72px'><col style='width:78px'><col style='width:82px'><col style='width:92px'></colgroup>" +
+          "<thead><tr><th>" + esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" + esc(t("colType")) + "</th><th>" + esc(t("colVer")) +
+          "</th><th>ICAO</th><th>" + esc(t("colPin")) + "</th><th>Community</th></tr></thead><tbody>";
+  const rowItem = (p, depth) => {
+    const on = isOn(p), ck = checked.has(p.path);
+    return '<tr class="item' + (ck ? " chk" : on ? " act" : "") + '" data-p="' + esc(p.path) + '"><td style="padding-left:' + (10 + depth * 20) + 'px" title="' + esc(p.path) + '">' +
+      '<span class="tw"></span>' + boxHtml(ck ? (on ? "acton" : 2) : (on ? "act" : 0)) + " " + esc(p.name) + "</td><td>" + esc(p.title) + "</td><td>" + esc(TYPE_TITLE(p.type)) +
+      "</td><td>" + esc(p.version) + "</td><td>" + esc(p.icao.join(", ")) + (p.icaoManual ? " ✎" : "") + "</td><td class='star'>" + (p.pinned ? "★" : "") +
+      "</td><td class='st-" + esc(p.status) + "'>" + esc(t("st" + p.status)) + "</td></tr>";
+  };
+  const walk = (node, depth) => {
+    [...node.kids.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: "base"})).forEach(k => {
+      const all = leaves(k), nChk = all.filter(p => checked.has(p.path)).length, nAct = all.filter(isOn).length;
+      const st = nChk ? (nChk === all.length ? 2 : 1) : (nAct && nAct === all.length ? "act" : nAct ? "actpart" : 0);
+      const open = searching || opened.has(k.path);
+      h += '<tr class="grp" data-g="' + esc(k.path) + '"><td colspan="7" style="padding-left:' + (10 + depth * 20) + 'px"><span class="tw">' + (open ? "▾" : "▸") +
+           '</span><span data-gbox="1">' + boxHtml(st) + "</span> " + esc(k.name) + " (" + nAct + " / " + all.length + ")</td></tr>";
+      if (open) walk(k, depth + 1);
     });
-  });
+    node.items.forEach(p => { h += rowItem(p, depth); });
+  };
+  walk(TREE, 0);
   list.innerHTML = h + "</tbody></table>";
   list.scrollTop = scroll;
-  const nAct = PKGS.filter(isOn).length;
-  $("libCount").textContent = "— " + PKGS.length + " add-ons · " + nAct + " " + (LANG === "en" ? "in Community" : "dans Community");
   updateButtons();
 }
-
+function updateLibHead(){
+  const nAct = PKGS.filter(isOn).length;
+  $("libHead").textContent = SETTINGS.library ? tf("libHead", PKGS.length, nAct) + (freeSpace ? tf("freeSp", freeSpace) : "") : t("library");
+}
 $("libList").addEventListener("click", e => {
   const tr = e.target.closest("tr"); if (!tr) return;
   if (tr.classList.contains("grp")) {
     const g = tr.dataset.g;
     if (e.target.closest("[data-gbox]")) {
-      const items = (groups().find(x => x[0] === g) || [g, []])[1];
-      const all = items.every(p => checked.has(p.path));
-      items.forEach(p => all ? checked.delete(p.path) : checked.add(p.path));
-    } else { collapsed.has(g) ? collapsed.delete(g) : collapsed.add(g); }
+      const node = findNode(TREE, g); if (!node) return;
+      const all = leaves(node), every = all.every(p => checked.has(p.path));
+      all.forEach(p => every ? checked.delete(p.path) : checked.add(p.path));
+    } else { opened.has(g) ? opened.delete(g) : opened.add(g); }
     renderLib(); return;
   }
   const p = tr.dataset.p; if (!p) return;
   checked.has(p) ? checked.delete(p) : checked.add(p);
   renderLib();
 });
-
 function checkedPkgs(){ return PKGS.filter(p => checked.has(p.path)); }
 function updateButtons(){
-  const sel = checkedPkgs();
-  const n = sel.length;
+  const sel = checkedPkgs(), n = sel.length;
   const inComm = sel.filter(isOn).length, absent = n - inComm;
   $("bActivate").textContent = absent ? tf("activateN", absent) : inComm ? t(inComm > 1 ? "allActive" : "oneActive") : t("activate");
   $("bRemove").textContent = inComm ? tf("removeN", inComm) : absent ? t("noneIn") : t("remove");
   $("checkedLbl").textContent = tf("checkedN", n);
+  const u = undoInfo;
+  $("bUndo").textContent = u ? tf(u.kind === "activate" ? "undoAct" : "undoRem", u.n) : t("undo");
+  $("bUndo").disabled = !u;
 }
-
+function fillFilter(){
+  const f = $("filter"), cur = f.value || "all";
+  f.innerHTML = FILTERS.map(k => '<option value="' + k + '">' + esc(t("flt" + k)) + "</option>").join("");
+  f.value = cur;
+}
 $("search").addEventListener("input", renderLib);
-$("bCheckAll").onclick = () => { groups().forEach(([g, items]) => items.forEach(p => checked.add(p.path))); renderLib(); };
+$("filter").addEventListener("change", renderLib);
+$("bCheckAll").onclick = () => { visible().forEach(p => checked.add(p.path)); renderLib(); };
 $("bUncheckAll").onclick = () => { checked.clear(); renderLib(); };
-$("bExpand").onclick = () => { collapsed.clear(); renderLib(); };
-$("bCollapse").onclick = () => { PKGS.forEach(p => collapsed.add(p.group || "")); renderLib(); };
+$("bExpand").onclick = () => { const add = n => n.kids.forEach(k => { opened.add(k.path); add(k); }); add(buildTree(PKGS)); renderLib(); };
+$("bCollapse").onclick = () => { opened.clear(); renderLib(); };
 $("bRescan").onclick = () => run("rescan");
-
 $("bActivate").onclick = async () => {
   const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
   const todo = sel.filter(p => !isOn(p)); if (!todo.length) { checked.clear(); renderLib(); return; }
@@ -421,16 +494,20 @@ $("bActivate").onclick = async () => {
   loadLibrary();
 };
 $("bRemove").onclick = async () => {
-  const sel = checkedPkgs().filter(p => p.status !== "none" && p.status !== "?");
+  const sel = checkedPkgs().filter(isOn);
   if (!checkedPkgs().length) return alertBox(t("nothingChecked"));
   if (!sel.length) return alertBox(t("noneInComm"));
   const names = sel.slice(0, 12).map(p => "• " + p.name).join("\n") + (sel.length > 12 ? "\n• …" : "");
-  if (!await confirmBox(tf("confirmRemove", sel.length, names), true)) return;
-  if (sel.length > 20 && !await confirmBox(tf("confirmRemoveBig", sel.length), true)) return;
+  let msg = tf("confirmRemove", sel.length, names);
+  const nPin = sel.filter(p => p.pinned).length;
+  if (nPin) msg += tf("pinLost", nPin);
+  if (!await confirmBox(msg, true)) return;
+  if (sel.length > 20 && !await confirmBox(tf("confirmRemoveBig", sel.length, PKGS.filter(isOn).length), true)) return;
   const r = await run("remove", {paths: sel.map(p => p.path)});
   if (r) checked.clear();
   loadLibrary();
 };
+$("bUndo").onclick = async () => { await run("undo"); checked.clear(); loadLibrary(); };
 $("bPin").onclick = async () => {
   const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
   await run("pin", {paths: sel.map(p => p.path), on: true}); checked.clear(); loadLibrary();
@@ -447,41 +524,58 @@ $("bIcao").onclick = async () => {
   await run("setIcao", {path: p.path, codes: v.split(/[\s,;]+/).filter(Boolean)});
   loadLibrary();
 };
+document.querySelectorAll(".soonbtn").forEach(b => b.onclick = () => alertBox(t("soonBtn")));
 
 // ---------------------------------------------------------------- Community
 const CATS = ["ours", "real", "ext", "off", "broken", "defoff"];
-const CAT_COL = {ours: "#2f8f5b", real: "#b88a3a", ext: "#3a86b8", off: "#7a68b8", broken: "#d0484a", defoff: "#b8b83a"};
+let commSel = new Set(), commSize = null, commSizeKey = "";
 function renderComm(){
-  const counts = {}; COMM.forEach(c => counts[c.cat] = (counts[c.cat] || 0) + 1);
-  $("chips").innerHTML = CATS.filter(c => counts[c]).map(c => '<span class="chip' + (commFilter === c ? " on" : "") + '" data-cat="' + c + '"><span class="dot" style="background:' +
-    CAT_COL[c] + '"></span>' + esc(t("cat" + c)) + " " + counts[c] + "</span>").join("");
-  const rows = COMM.filter(c => !commFilter || c.cat === commFilter);
+  const counts = {}; CATS.forEach(c => counts[c] = 0); COMM.forEach(c => counts[c.cat]++);
+  $("chips").innerHTML = CATS.map(c => '<span class="chip cc-' + c + (commFilter === c ? " on" : "") + '" data-cat="' + c + '">' + esc(t("cat" + c)) + " : " + counts[c] + "</span>").join("");
+  const q = $("csearch").value.trim().toLowerCase();
+  const rows = COMM.filter(c => (!commFilter || c.cat === commFilter) && (!q || (c.name + " " + c.title + " " + c.creator).toLowerCase().includes(q)));
   const scroll = $("commList").scrollTop;
-  let h = "<table><thead><tr><th style='width:34px'></th><th>" + esc(t("colName")) + "</th><th style='width:110px'>" + esc(t("colVer")) + "</th><th style='width:140px'>" + esc(t("colState")) + "</th></tr></thead><tbody>";
+  let h = "<table class='fixed'><colgroup><col><col style='width:24%'><col style='width:15%'><col style='width:66px'><col style='width:92px'></colgroup><thead><tr><th>" +
+          esc(t("colName")) + "</th><th>" + esc(t("colTitle")) + "</th><th>" + esc(t("colCreator")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
   rows.forEach(c => {
-    h += '<tr class="item c-' + c.cat + (commChecked.has(c.path) ? " chk" : "") + '" data-c="' + esc(c.path) + '" title="' + esc(c.target || c.path) + '"><td>' +
-         (c.link ? boxHtml(commChecked.has(c.path) ? 2 : 0) : "") + "</td><td title='" + esc(c.name) + "'>" + esc(c.name) + "</td><td>" + esc(c.version) + "</td><td>" + esc(c.label) + "</td></tr>";
+    h += '<tr class="citem cc-' + c.cat + (commSel.has(c.path) ? " sel" : "") + '" data-c="' + esc(c.path) + '" title="' + esc(c.target || c.path) + '"><td>' + esc(c.name) +
+         "</td><td>" + esc(c.title) + "</td><td>" + esc(c.creator) + "</td><td>" + esc(c.version) + "</td><td>" + esc(c.label) + "</td></tr>";
   });
   $("commList").innerHTML = h + "</tbody></table>";
   $("commList").scrollTop = scroll;
-  $("commCount").textContent = "— " + COMM.length;
+  updateCommHead();
+  const key = COMM.map(c => c.path).join("|");
+  if (key !== commSizeKey) {
+    commSizeKey = key; commSize = null; updateCommHead();
+    call("communitySize", {paths: COMM.filter(c => c.cat !== "broken").map(c => c.path)}).then(s => { if (key === commSizeKey) { commSize = s; updateCommHead(); } }, () => {});
+  }
+}
+function updateCommHead(){
+  if (!SETTINGS.community) { $("commHead").textContent = t("commNotFoundHead"); return; }
+  $("commHead").textContent = tf("commHead", commSize === null ? t("computingSize") : commSize, COMM.length);
 }
 $("chips").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if (!c) return;
   commFilter = commFilter === c.dataset.cat ? null : c.dataset.cat; renderComm();
 });
+$("csearch").addEventListener("input", renderComm);
 $("commList").addEventListener("click", e => {
-  const tr = e.target.closest("tr.item"); if (!tr) return;
-  const c = COMM.find(x => x.path === tr.dataset.c); if (!c || !c.link) return;
-  commChecked.has(c.path) ? commChecked.delete(c.path) : commChecked.add(c.path);
+  const tr = e.target.closest("tr.citem"); if (!tr) return;
+  const p = tr.dataset.c;
+  if (!e.ctrlKey && !e.shiftKey && !commSel.has(p)) commSel.clear();
+  commSel.has(p) ? commSel.delete(p) : commSel.add(p);
   renderComm();
 });
+$("bOpenComm").onclick = () => run("openFolder", {path: SETTINGS.community});
+$("bCommRefresh").onclick = () => { commSizeKey = ""; loadLibrary(); };
 $("bCommRemove").onclick = async () => {
-  const sel = COMM.filter(c => c.link && commChecked.has(c.path));
+  const sel = COMM.filter(c => commSel.has(c.path));
   if (!sel.length) return alertBox(t("noCommChecked"));
-  if (!await confirmBox(tf("confirmCommRemove", sel.length), true)) return;
-  await run("removeCommunity", {links: sel.map(c => c.path)});
-  commChecked.clear(); loadLibrary();
+  const links = sel.filter(c => c.link);
+  if (!links.length) return alertBox(t("onlyRealSel"));
+  if (!await confirmBox(tf("confirmCommRemove", links.length), true)) return;
+  await run("removeCommunity", {links: links.map(c => c.path)});
+  commSel.clear(); loadLibrary();
 };
 
 let loading = false, reloadAgain = false;
@@ -490,9 +584,10 @@ async function loadLibrary(){
   loading = true;
   try {
     const d = await call("library");
-    PKGS = d.packages; COMM = d.community;
+    PKGS = d.packages; COMM = d.community; undoInfo = d.undo; freeSpace = d.free || "";
+    SETTINGS.library = d.library; SETTINGS.community = d.communityPath;
     const known = new Set(PKGS.map(p => p.path)); [...checked].forEach(p => { if (!known.has(p)) checked.delete(p); });
-    const knownC = new Set(COMM.map(c => c.path)); [...commChecked].forEach(p => { if (!knownC.has(p)) commChecked.delete(p); });
+    const knownC = new Set(COMM.map(c => c.path)); [...commSel].forEach(p => { if (!knownC.has(p)) commSel.delete(p); });
     renderLib(); renderComm();
   } catch (e) { /* rien */ }
   loading = false;
@@ -577,9 +672,9 @@ $("bSave").onclick = async () => {
 // ---------------------------------------------------------------- divers
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 document.querySelectorAll("[data-url]").forEach(b => b.onclick = () => run("openUrl", {url: b.dataset.url}));
-document.querySelectorAll("#flags button").forEach(b => b.onclick = async () => {
+document.querySelectorAll("#flags button[data-lang]").forEach(b => b.onclick = async () => {
   if (b.dataset.lang === LANG) return;
-  LANG = b.dataset.lang; await run("setLang", {lang: LANG}); applyLang();
+  LANG = b.dataset.lang; await run("setLang", {lang: LANG}); commSizeKey = ""; applyLang(); loadLibrary();
 });
 $("bQuit").onclick = () => run("quit");
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });
