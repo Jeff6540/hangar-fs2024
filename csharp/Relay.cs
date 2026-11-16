@@ -1170,7 +1170,7 @@ namespace HangarFS2024
             try
             {
                 if (JsonStore.Str(airline["abbr"]) == "") throw new Exception(Hangar.L("code de la VA inconnu", "unknown VA code"));
-                var res = RadarFlights(JsonStore.Str(airline["abbr"]));
+                var res = RelayApi.RadarFlights(JsonStore.Str(airline["abbr"]));
                 string meId = me != null ? JsonStore.Str(me["id"]) : "";
                 foreach (var p in res.Item1.OfType<JObject>()) p["me"] = meId != "" && JsonStore.Str(p["id"]) == meId;
                 int nAir = res.Item1.Count(p => (bool)p["flying"]);
