@@ -141,7 +141,7 @@ namespace HangarFS2024
             var args = msg["args"] as JObject ?? new JObject();
             try
             {
-                JToken data = await Handle(cmd, args);
+                JToken data = await HandleCommand(cmd, args);
                 Reply(id, true, data, null);
             }
             catch (Exception ex)
@@ -156,7 +156,7 @@ namespace HangarFS2024
             return a == null ? new List<string>() : a.Select(x => JsonStore.Str(x)).ToList();
         }
 
-        async Task<JToken> Handle(string cmd, JObject a)
+        async Task<JToken> HandleCommand(string cmd, JObject a)
         {
             switch (cmd)
             {
