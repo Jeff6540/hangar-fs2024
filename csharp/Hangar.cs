@@ -421,7 +421,7 @@ namespace HangarFS2024
         public JObject UndoInfo()
         {
             if (undo == null) return null;
-            return new JObject { ["kind"] = undo["kind"], ["n"] = ((JArray)undo["items"]).Count };
+            return new JObject { ["kind"] = undo["kind"], ["n"] = ((JArray)undo["items"]).Count, ["name"] = undo["name"] ?? "" };
         }
 
         public void Undo()
@@ -429,6 +429,7 @@ namespace HangarFS2024
             CheckUnlocked();
             var u = undo;
             if (u == null) { Status(L("Rien à annuler.", "Nothing to undo.")); return; }
+            if (JsonStore.Str(u["kind"]) == "profile") { lock (Gate) UndoProfile(u); Changed(); return; }
             bool act = JsonStore.Str(u["kind"]) == "activate";
             int ok = 0, errors = 0;
             lock (Gate)
@@ -1001,7 +1002,8 @@ namespace HangarFS2024
                 }
             }
             return new JObject { ["packages"] = arr, ["community"] = CommunityList(), ["free"] = FreeSpace(),
-                ["undo"] = UndoInfo(), ["communityPath"] = CfgS("community"), ["library"] = CfgS("library") };
+                ["undo"] = UndoInfo(), ["communityPath"] = CfgS("community"), ["library"] = CfgS("library"), ["issues"] = Health().Count, ["broken"] = CountBroken(),
+                ["defaultOff"] = new JArray(DefaultOff.Properties().Select(p => p.Name)) };
         }
 
         public JObject SettingsView()

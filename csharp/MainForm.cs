@@ -70,6 +70,7 @@ namespace HangarFS2024
             {
                 Task.Run(() => hangar.InitRelay());
                 if (File.Exists(Airports.FilePath)) Task.Run(() => { System.Threading.Thread.Sleep(800); hangar.LoadAirports(false); });
+                Task.Run(() => { System.Threading.Thread.Sleep(4000); try { hangar.SyncLibraryState(); } catch (Exception) { } });
             };
         }
 
@@ -401,6 +402,78 @@ namespace HangarFS2024
                         hangar.Cfg = cfg;
                         if (SystemTools.Relaunch(false, false)) Close();
                         return null;
+                    }
+                case "profiles":
+                    return hangar.ProfilesView();
+                case "profileExists":
+                    return new JValue(hangar.ProfileExists(JsonStore.Str(a["name"])));
+                case "profileSave":
+                    hangar.ProfileSave(JsonStore.Str(a["name"]).Trim(), StrList(a["paths"]), a["index"] != null ? (int)a["index"] : -1);
+                    return null;
+                case "profileEdit":
+                    hangar.ProfileEdit((int)a["index"], a["change"] as JObject ?? new JObject());
+                    return null;
+                case "profileActivate":
+                    {
+                        int idx = (int)a["index"]; bool conf = a["confirm"] != null && (bool)a["confirm"];
+                        return await Task.Run(() => (JToken)hangar.ProfileActivate(idx, conf));
+                    }
+                case "restorePins":
+                    await Task.Run(() => hangar.RestorePins());
+                    return null;
+                case "duplicates":
+                    return await Task.Run(() => (JToken)hangar.Duplicates());
+                case "scanStreamed":
+                    {
+                        string folder = JsonStore.Str(a["folder"]);
+                        if (folder != "") { lock (hangar.Gate) { hangar.Cfg["streamed"] = folder; hangar.SaveCfg(); } }
+                        await Task.Run(() => hangar.ScanStreamedNow());
+                        return new JValue(hangar.DupStreamed != null ? hangar.DupStreamed.Count : -1);
+                    }
+                case "contentCheck":
+                    return hangar.ContentCheck();
+                case "contentAnswer":
+                    hangar.ContentAnswer((bool)a["backup"], JsonStore.Str(a["folder"]), a["hide"] != null && (bool)a["hide"]);
+                    return null;
+                case "disableDefaults":
+                    await Task.Run(() => hangar.DisableDefaults(StrList(a["names"])));
+                    return null;
+                case "enableDefaults":
+                    await Task.Run(() => hangar.EnableDefaults(StrList(a["names"])));
+                    return null;
+                case "contentBackups":
+                    return hangar.ContentBackups();
+                case "contentRestore":
+                    hangar.ContentRestore(JsonStore.Str(a["file"]));
+                    return null;
+                case "health":
+                    return await Task.Run(() => (JToken)hangar.Health());
+                case "repair":
+                    await Task.Run(() => hangar.Repair());
+                    return null;
+                case "quarantine":
+                    return await Task.Run(() => (JToken)hangar.Quarantine(StrList(a["paths"])));
+                case "quarantineList":
+                    return hangar.QuarantineList();
+                case "quarantineRestore":
+                    return new JValue(await Task.Run(() => hangar.QuarantineRestore(StrList(a["paths"]))));
+                case "deleteBroken":
+                    return new JValue(await Task.Run(() => hangar.DeleteBroken(a["paths"] != null ? StrList(a["paths"]) : null)));
+                case "moveToLibrary":
+                    {
+                        string path = JsonStore.Str(a["path"]), dest = JsonStore.Str(a["dest"]);
+                        await Task.Run(() => hangar.MoveToLibrary(path, dest));
+                        return null;
+                    }
+                case "regenLayout":
+                    {
+                        string pkg = hangar.RealTarget(JsonStore.Str(a["path"]));
+                        return new JValue(await Task.Run(() => hangar.RegenLayout(pkg)));
+                    }
+                case "properties":
+                    {
+                        string path = JsonStore.Str(a["path"]);
+                        return await Task.Run(() => (JToken)hangar.Properties(path));
                     }
                 case "removeCommunity":
                     await Task.Run(() => hangar.RemoveCommunityLinks(StrList(a["links"])));
