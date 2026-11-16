@@ -61,6 +61,13 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 .box.on::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .box.part{background:var(--accent);border-color:var(--accent)}
 .box.part::after{content:"";position:absolute;left:2px;top:5px;width:8px;height:2px;background:#fff}
+.box.act{background:#16a34a;border-color:#16a34a}
+.box.act::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.box.actpart{background:#16a34a;border-color:#16a34a}
+.box.actpart::after{content:"";position:absolute;left:2px;top:5px;width:8px;height:2px;background:#fff}
+.box.acton{background:var(--accent);border:2px solid #4ade80}
+.box.acton::after{content:"";position:absolute;left:3px;top:0;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#commList table{table-layout:fixed}#commList td{max-width:none}
 .st-flight{color:var(--ok)}.st-linked{color:var(--ok)}.st-ext{color:#7cc4ff}.st-real{color:var(--warn)}
 .star{color:#f5c542}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
@@ -202,9 +209,10 @@ const TXT = {
  rescan:["↻  Actualiser","↻  Refresh"], library:["Bibliothèque","Library"], search:["Rechercher…","Search…"],
  commRemove:["🗑  Retirer les liens cochés","🗑  Remove checked links"],
  pin:["★  Protéger","★  Protect"], unpin:["Retirer la protection","Remove protection"], icaoBtn:["Codes OACI…","ICAO codes…"],
- activateN:["▶  Activer %s dans Community","▶  Activate %s in Community"], activate:["▶  Activer dans Community","▶  Activate in Community"],
- removeN:["🗑  Retirer %s de Community","🗑  Remove %s from Community"], remove:["🗑  Retirer de Community","🗑  Remove from Community"],
- checkedN:["%s add-on(s) coché(s)","%s add-on(s) checked"],
+ activateN:["▶  Activer %s add-on(s) dans Community","▶  Activate %s add-on(s) in Community"], allActive:["✓  Tous déjà actifs","✓  All already active"],
+ oneActive:["✓  Déjà actif","✓  Already active"], noneIn:["🗑  Aucun dans Community","🗑  None in Community"], activate:["▶  Activer dans Community","▶  Activate in Community"],
+ removeN:["🗑  Retirer %s add-on(s) de Community","🗑  Remove %s add-on(s) from Community"], remove:["🗑  Retirer de Community","🗑  Remove from Community"],
+ checkedN:["%s coché(s) · ✓ vert = dans Community","%s checked · green ✓ = in Community"],
  colName:["Nom","Name"], colTitle:["Titre","Title"], colType:["Type","Type"], colVer:["Version","Version"], colState:["État","Status"], colIcao:["OACI","ICAO"],
  stnone:["—","—"], stflight:["Lié (vol)","Linked (flight)"], stlinked:["Lié","Linked"], stext:["Lien externe","External link"], streal:["Copie réelle","Real copy"], "st?":["?","?"],
  noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
@@ -340,7 +348,8 @@ function groups(){
   });
   return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, {sensitivity: "base"}));
 }
-function boxHtml(state){ return '<span class="box' + (state === 2 ? " on" : state === 1 ? " part" : "") + '"></span>'; }
+function boxHtml(state){ const c = {2: "on", 1: "part", act: "act", actpart: "actpart", acton: "acton"}[state]; return '<span class="box' + (c ? " " + c : "") + '"></span>'; }
+const isOn = p => p.status !== "none" && p.status !== "?";
 
 function renderLib(){
   const list = $("libList");
@@ -350,14 +359,15 @@ function renderLib(){
           esc(t("colType")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colIcao")) + "</th><th>★</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
   groups().forEach(([g, items]) => {
     const nChk = items.filter(p => checked.has(p.path)).length;
-    const st = nChk === 0 ? 0 : nChk === items.length ? 2 : 1;
+    const nAct = items.filter(isOn).length;
+    const st = nChk ? (nChk === items.length ? 2 : 1) : (nAct && nAct === items.length ? "act" : nAct ? "actpart" : 0);
     const open = !collapsed.has(g);
     h += '<tr class="grp" data-g="' + esc(g) + '"><td data-gbox="1">' + boxHtml(st) + '</td><td colspan="7">' + (open ? "▾ " : "▸ ") +
-         esc(g || t("noGroup")) + ' <span class="n">(' + items.length + ")</span></td></tr>";
+         esc(g || t("noGroup")) + ' <span class="n">(' + nAct + " / " + items.length + ")</span></td></tr>";
     if (!open) return;
     items.forEach(p => {
-      const on = p.status === "flight" || p.status === "linked";
-      h += '<tr class="item' + (checked.has(p.path) ? " chk" : on ? " act" : "") + '" data-p="' + esc(p.path) + '"><td>' + boxHtml(checked.has(p.path) ? 2 : 0) +
+      const on = isOn(p), ck = checked.has(p.path);
+      h += '<tr class="item' + (ck ? " chk" : on ? " act" : "") + '" data-p="' + esc(p.path) + '"><td>' + boxHtml(ck ? (on ? "acton" : 2) : (on ? "act" : 0)) +
            "</td><td title='" + esc(p.path) + "'>" + esc(p.name) + "</td><td>" + esc(p.title) + "</td><td>" + esc(p.type) + "</td><td>" + esc(p.version) +
            "</td><td>" + esc(p.icao.join(" ")) + (p.icaoManual ? " ✎" : "") + "</td><td class='star'>" + (p.pinned ? "★" : "") +
            "</td><td class='st-" + esc(p.status) + "'>" + esc(t("st" + p.status)) + "</td></tr>";
@@ -365,7 +375,7 @@ function renderLib(){
   });
   list.innerHTML = h + "</tbody></table>";
   list.scrollTop = scroll;
-  const nAct = PKGS.filter(p => p.status === "flight" || p.status === "linked").length;
+  const nAct = PKGS.filter(isOn).length;
   $("libCount").textContent = "— " + PKGS.length + " add-ons · " + nAct + " " + (LANG === "en" ? "in Community" : "dans Community");
   updateButtons();
 }
@@ -390,9 +400,9 @@ function checkedPkgs(){ return PKGS.filter(p => checked.has(p.path)); }
 function updateButtons(){
   const sel = checkedPkgs();
   const n = sel.length;
-  const inComm = sel.filter(p => p.status !== "none" && p.status !== "?").length;
-  $("bActivate").textContent = n ? tf("activateN", n) : t("activate");
-  $("bRemove").textContent = inComm ? tf("removeN", inComm) : t("remove");
+  const inComm = sel.filter(isOn).length, absent = n - inComm;
+  $("bActivate").textContent = absent ? tf("activateN", absent) : inComm ? t(inComm > 1 ? "allActive" : "oneActive") : t("activate");
+  $("bRemove").textContent = inComm ? tf("removeN", inComm) : absent ? t("noneIn") : t("remove");
   $("checkedLbl").textContent = tf("checkedN", n);
 }
 
@@ -405,7 +415,8 @@ $("bRescan").onclick = () => run("rescan");
 
 $("bActivate").onclick = async () => {
   const sel = checkedPkgs(); if (!sel.length) return alertBox(t("nothingChecked"));
-  const r = await run("activate", {paths: sel.map(p => p.path)});
+  const todo = sel.filter(p => !isOn(p)); if (!todo.length) { checked.clear(); renderLib(); return; }
+  const r = await run("activate", {paths: todo.map(p => p.path)});
   if (r) checked.clear();
   loadLibrary();
 };
@@ -446,10 +457,10 @@ function renderComm(){
     CAT_COL[c] + '"></span>' + esc(t("cat" + c)) + " " + counts[c] + "</span>").join("");
   const rows = COMM.filter(c => !commFilter || c.cat === commFilter);
   const scroll = $("commList").scrollTop;
-  let h = "<table><thead><tr><th style='width:28px'></th><th>" + esc(t("colName")) + "</th><th>" + esc(t("colVer")) + "</th><th>" + esc(t("colState")) + "</th></tr></thead><tbody>";
+  let h = "<table><thead><tr><th style='width:34px'></th><th>" + esc(t("colName")) + "</th><th style='width:110px'>" + esc(t("colVer")) + "</th><th style='width:140px'>" + esc(t("colState")) + "</th></tr></thead><tbody>";
   rows.forEach(c => {
     h += '<tr class="item c-' + c.cat + (commChecked.has(c.path) ? " chk" : "") + '" data-c="' + esc(c.path) + '" title="' + esc(c.target || c.path) + '"><td>' +
-         (c.link ? boxHtml(commChecked.has(c.path) ? 2 : 0) : "") + "</td><td>" + esc(c.name) + "</td><td>" + esc(c.version) + "</td><td>" + esc(c.label) + "</td></tr>";
+         (c.link ? boxHtml(commChecked.has(c.path) ? 2 : 0) : "") + "</td><td title='" + esc(c.name) + "'>" + esc(c.name) + "</td><td>" + esc(c.version) + "</td><td>" + esc(c.label) + "</td></tr>";
   });
   $("commList").innerHTML = h + "</tbody></table>";
   $("commList").scrollTop = scroll;
