@@ -1015,7 +1015,7 @@ namespace HangarFS2024
                 ["include_alternates"] = CfgB("include_alternates", true), ["auto_unlink"] = CfgB("auto_unlink", true),
                 ["relay_auto"] = CfgB("relay_auto", true), ["flight_only"] = CfgB("flight_only", false),
                 ["streamed"] = CfgS("streamed") != "" ? CfgS("streamed") : DetectStreamed(CfgS("community")), ["msfs_launch"] = CfgS("msfs_launch"),
-                ["simconnect_dir"] = CfgS("simconnect_dir"), ["startup"] = SystemTools.StartWithWindows || CfgB("startup_admin", false),
+                ["simconnect_dir"] = CfgS("simconnect_dir"), ["startup"] = SystemTools.StartWithWindows,
                 ["startup_admin"] = CfgB("startup_admin", false) && SystemTools.TaskIsOurs(), ["is_admin"] = Win.IsAdmin(), ["screen"] = CfgS("screen") == "" ? "auto" : CfgS("screen"),
                 ["screen_main"] = CfgB("screen_main", true), ["screen_map"] = CfgB("screen_map", true), ["screen_dispatch"] = CfgB("screen_dispatch", true),
                 ["fshub_va"] = CfgS("fshub_va"), ["fshub_token"] = CfgS("fshub_token"), ["colorblind"] = CfgB("colorblind", false),
@@ -1095,28 +1095,27 @@ namespace HangarFS2024
 
         public string SetStartup(bool on, bool admin)
         {
-            if (admin) on = true;
+            // deux réglages indépendants : démarrer avec Windows, et toujours ouvrir l'appli en administrateur
             string err = "";
             try
             {
-                if (on && admin)
+                bool hadTask = SystemTools.TaskIsOurs();
+                if (admin && !hadTask)
                 {
                     if (!SystemTools.CreateAdminTask()) err = L("La tâche administrateur n'a pas pu être créée (confirmation Windows refusée ?).", "The administrator task could not be created (Windows confirmation refused?).");
-                    else SystemTools.SetStartWithWindows(true);
                 }
-                else
+                else if (!admin && SystemTools.TaskExists() && hadTask)
                 {
-                    if (SystemTools.TaskExists() && !SystemTools.DeleteAdminTask()) err = L("La tâche administrateur n'a pas pu être supprimée (confirmation Windows refusée ?).", "The administrator task could not be deleted (Windows confirmation refused?).");
-                    else SystemTools.SetStartWithWindows(on);
+                    if (!SystemTools.DeleteAdminTask()) err = L("La tâche administrateur n'a pas pu être supprimée (confirmation Windows refusée ?).", "The administrator task could not be deleted (Windows confirmation refused?).");
                 }
+                if (SystemTools.StartWithWindows != on) SystemTools.SetStartWithWindows(on);
             }
             catch (Exception) { err = L("Impossible de modifier le démarrage avec Windows.", "Unable to change Windows startup."); }
             bool task = SystemTools.TaskIsOurs();
             lock (Gate) { Cfg["startup_admin"] = task; SaveCfg(); }
             if (err != "") return err;
-            string msg = task ? L("Hangar FS 2024 démarrera avec Windows en mode administrateur, sans confirmation.", "Hangar FS 2024 will start with Windows in administrator mode, without confirmation.")
-                       : SystemTools.StartWithWindows ? L("Hangar FS 2024 démarrera avec Windows (mode normal).", "Hangar FS 2024 will start with Windows (normal mode).")
-                       : L("Hangar FS 2024 ne démarrera plus avec Windows.", "Hangar FS 2024 will no longer start with Windows.");
+            string msg = (SystemTools.StartWithWindows ? L("Démarrage avec Windows : oui", "Start with Windows: yes") : L("Démarrage avec Windows : non", "Start with Windows: no"))
+                       + " · " + (task ? L("mode administrateur : oui (sans confirmation)", "administrator mode: yes (no confirmation)") : L("mode administrateur : non", "administrator mode: no"));
             Status(msg);
             Log(msg);
             return "";

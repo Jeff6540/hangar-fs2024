@@ -253,7 +253,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <span data-t="setStart" style="align-self:start;padding-top:4px"></span>
       <div style="grid-column:2 / span 3">
         <label class="chk"><input type="checkbox" id="sStartup"><span data-t="setStartupOpt"></span></label>
-        <div style="margin:8px 0 0 26px">
+        <div style="margin:8px 0 0 0">
           <label class="chk"><input type="checkbox" id="sStartupAdmin"><span data-t="setAdminOpt"></span></label>
           <div class="muted" data-t="setAdminHelp" style="margin:3px 0 0 26px"></div>
           <div class="row" style="margin:6px 0 0 0"><span class="muted" id="adminMode"></span><button class="btn" id="bRestartAdmin" data-t="restartAdmin"></button></div>
@@ -354,8 +354,8 @@ const TXT = {
  unsaved:["Modifications non enregistrées","Unsaved changes"], askSave:["Tu as modifié des dossiers ou des chemins dans Réglages sans les enregistrer.\n\nLes enregistrer maintenant ?","You changed folders or paths in Settings without saving them.\n\nSave them now?"],
  setReverted:["Modifications de Réglages annulées.","Settings changes cancelled."], setStart:["Démarrage :","Startup:"],
  setStartupOpt:["Démarrer Hangar FS 2024 avec Windows (réduit dans la barre des tâches)","Start Hangar FS 2024 with Windows (minimised to the taskbar)"],
- setAdminOpt:["🛡  En mode administrateur, sans confirmation Windows (une seule confirmation, à l'activation)","🛡  In administrator mode, without Windows confirmation (a single confirmation, when enabling)"],
- setAdminHelp:["Utile pour les applis qui demandent les droits administrateur (SayIntentions, REX Atmos…). Certains antivirus peuvent le signaler : ne l'active que si tu en as besoin.","Useful for apps that need administrator rights (SayIntentions, REX Atmos…). Some antivirus may flag it: only enable it if you need it."],
+ setAdminOpt:["🛡  Toujours ouvrir Hangar FS 2024 en mode administrateur, sans confirmation Windows (une seule confirmation, à l'activation)","🛡  Always open Hangar FS 2024 in administrator mode, without Windows confirmation (a single confirmation, when enabling)"],
+ setAdminHelp:["Indépendant du démarrage avec Windows. Utile pour les applis qui demandent les droits administrateur (SayIntentions, REX Atmos…). Certains antivirus peuvent le signaler : ne l'active que si tu en as besoin.","Independent from Windows startup. Useful for apps that need administrator rights (SayIntentions, REX Atmos…). Some antivirus may flag it: only enable it if you need it."],
  modeAdmin:["Mode actuel : 🛡 administrateur","Current mode: 🛡 administrator"], modeNormal:["Mode actuel : normal","Current mode: normal"], restartAdmin:["Relancer maintenant en administrateur","Restart now as administrator"],
  startupUpd:["Mise à jour du démarrage avec Windows…","Updating Windows startup…"], setScreens:["Écrans :","Screens:"], scrWin:["Écran des fenêtres","Window screen"],
  identifyAll:["🔢  Identifier les écrans","🔢  Identify screens"], scrPlace:["Fenêtres à placer sur cet écran :","Windows to place on this screen:"], scrMap:["Carte des scènes","Scenery map"],
@@ -1374,7 +1374,6 @@ async function saveSettings(){
 $("bSave").onclick = saveSettings;
 async function startupChanged(){
   let on = $("sStartup").checked, admin = $("sStartupAdmin").checked;
-  if (admin && !on) { $("sStartup").checked = on = true; }
   $("status").textContent = t("startupUpd");
   try { const s = await call("setStartup", {on, admin}); $("sStartup").checked = s.startup; $("sStartupAdmin").checked = s.startup_admin; }
   catch (e) { alertBox(e.message); const s = await call("init").catch(() => null); if (s) { $("sStartup").checked = s.settings.startup; $("sStartupAdmin").checked = s.settings.startup_admin; } }

@@ -70,7 +70,7 @@ connects to SimBrief, FSHub, VATSIM, IVAO, weather services,
 OurAirports and OpenStreetMap (airport layouts). If Defender quarantined the file:
 Windows Security > Virus & threat protection > Protection history >
 the alert > Actions > Allow / Restore.
-Tip: only tick "As administrator" (Settings) if you launch apps that
+Tip: only tick "Always open in administrator mode" (Settings) if you launch apps that
 require it (SayIntentions, REX Atmos...).
 
 
@@ -106,8 +106,9 @@ activate them. DO NOT EMPTY THE WHOLE COMMUNITY FOLDER:
 Optional:
   - Start with Windows: the app opens minimised when the PC starts
     (needed for auto launch to work).
-  - As administrator: useful if you launch apps that require it
-    (SayIntentions, weathercreator...).
+  - Always open in administrator mode: useful if you launch apps that
+    require it (SayIntentions, weathercreator...). Independent from
+    "Start with Windows".
   - Screens: with 2 screens, the app and its map can open on the
     2nd screen while MSFS stays on the primary one.
 

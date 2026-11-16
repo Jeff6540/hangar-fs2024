@@ -58,7 +58,7 @@ dangereux et ne se connecte qu'a SimBrief, FSHub, VATSIM, IVAO, la
 meteo, OurAirports et OpenStreetMap (plans d'aeroport). Si Defender a mis le fichier en quarantaine :
 Securite Windows > Protection contre les virus et menaces > Historique
 de protection > l'alerte > Actions > Autoriser / Restaurer.
-Conseil : ne coche "En mode administrateur" (Reglages) que si tu
+Conseil : ne coche "Toujours ouvrir en mode administrateur" (Reglages) que si tu
 lances des applis qui l'exigent (SayIntentions, REX Atmos...).
 
 
@@ -94,8 +94,9 @@ liens) quand tu les actives. NE VIDE PAS TOUT COMMUNITY :
 Facultatif :
   - Demarrer avec Windows : l'appli s'ouvre reduite au demarrage du PC
     (necessaire pour que le demarrage auto des applis fonctionne).
-  - En mode administrateur : utile si tu lances des applis qui
-    l'exigent (SayIntentions, weathercreator...).
+  - Toujours ouvrir en mode administrateur : utile si tu lances des
+    applis qui l'exigent (SayIntentions, weathercreator...).
+    Independant de "Demarrer avec Windows".
   - Ecrans : avec 2 ecrans, l'appli et ses cartes peuvent s'ouvrir
     sur le 2e ecran, MSFS restant sur le principal.
 
