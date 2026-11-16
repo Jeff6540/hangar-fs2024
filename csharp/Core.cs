@@ -66,6 +66,10 @@ namespace HangarFS2024
         {
             if (t == null || t.Type == JTokenType.Null || t.Type == JTokenType.Object || t.Type == JTokenType.Array)
                 return "";
+            // nombres toujours au format international (44.5), quel que soit le réglage de Windows (44,5 en français)
+            var v = t as JValue;
+            if (v != null && v.Value is IFormattable && !(v.Value is DateTime) && !(v.Value is DateTimeOffset))
+                return ((IFormattable)v.Value).ToString(null, CultureInfo.InvariantCulture);
             return t.ToString();
         }
     }
