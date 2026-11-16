@@ -98,6 +98,9 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 .apt-off td{color:var(--off)}.apt-none td{color:var(--warn)}
 .form{display:grid;grid-template-columns:max-content 1fr auto auto;gap:8px 10px;align-items:center;max-width:1100px}
 .form input[type=text]{width:100%}
+#scrDraw{position:relative;width:300px;height:92px;flex:none}.scr{position:absolute;border:2px solid var(--border);background:var(--panel);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.scr b{font-size:16px}.scr.on{border-color:var(--accent);background:#1b2a44;color:#fff}
+input[type=password]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;color:var(--fg)}
+body.cb .box.act,body.cb .box.actpart{background:#E69F00;border-color:#E69F00}body.cb .box.acton{border-color:#ffc04d}body.cb tr.item.act td{background:#4a3412}
 .note{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--muted);white-space:pre-wrap;max-width:1100px;line-height:1.45}
 .soonbox{margin:auto;text-align:center;color:var(--muted);max-width:560px;line-height:1.6}
 .soonbox .big{font-size:42px}
@@ -127,13 +130,13 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 <div id="lock" data-t="lockBanner"></div>
 <nav id="tabs">
   <button data-tab="lib" data-t="tabLib"></button>
-  <button data-tab="soon-map" class="soon" data-t="tabMap"></button>
+  <button data-open="openMap" data-t="tabMap"></button>
   <button data-tab="launch" data-t="tabLaunch"></button>
   <button data-tab="vol" data-t="tabVol"></button>
-  <button data-tab="soon-dispatch" class="soon" data-t="tabDispatch"></button>
+  <button data-open="openDispatch" data-t="tabDispatch"></button>
   <button data-tab="set" data-t="tabSet"></button>
   <span class="grow"></span>
-  <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto soonbtn" data-t="tuto"></button></div>
+  <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto" data-t="tuto"></button></div>
 </nav>
 <main>
   <!-- Bibliothèque -->
@@ -203,6 +206,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <span data-t="simbriefId"></span>
       <input type="text" id="sbUser" style="width:200px">
       <button class="btn" id="bFetch" data-t="fetch"></button>
+      <button class="btn accent" id="bLaunch" data-t="launchMsfs" style="margin-left:12px"></button>
       <span class="grow"></span>
       <button class="btn" data-url="https://dispatch.simbrief.com/" data-t="openSimbrief"></button>
       <button class="btn" data-url="https://lfv-planner.netlify.app/">🌐  LFV Planner</button>
@@ -212,6 +216,11 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     <div class="row">
       <label class="chk"><input type="checkbox" id="optAlt"><span data-t="optAlt"></span></label>
       <label class="chk" style="margin-left:16px"><input type="checkbox" id="optAuto"><span data-t="optAuto"></span></label>
+      <label class="chk" style="margin-left:16px"><input type="checkbox" id="optRelay"><span data-t="optRelay"></span></label>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="optOnly"><span data-t="optOnly"></span></label>
+      <span class="muted" data-t="optOnlyHelp"></span>
     </div>
     <div class="row">
       <button class="btn accent lk" id="bPrepare" data-t="prepare"></button>
@@ -227,15 +236,57 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     <div class="form">
       <span data-t="setLib"></span><input type="text" id="sLib"><button class="btn" data-browse="sLib" data-t="browse"></button><span></span>
       <span data-t="setComm"></span><input type="text" id="sComm"><button class="btn" data-browse="sComm" data-t="browse"></button><button class="btn" id="bDetect" data-t="detect"></button>
-      <span data-t="simbriefId"></span><input type="text" id="sUser"><span></span><span></span>
-      <span data-t="setExe"></span><input type="text" id="sExe"><span></span><span></span>
+      <span data-t="setStreamed"></span><input type="text" id="sStreamed"><button class="btn" data-browse="sStreamed" data-t="browse"></button><button class="btn" id="bDetectStreamed" data-t="detect"></button>
+      <span data-t="setExe"></span><input type="text" id="sExe" list="exeList"><datalist id="exeList"><option value="FlightSimulator2024.exe"><option value="FlightSimulator.exe"></datalist><span></span><span></span>
+      <span data-t="setMsfs"></span><input type="text" id="sMsfs"><button class="btn" id="bDetectMsfs" data-t="detect"></button><span></span>
+      <span data-t="setSimc"></span><input type="text" id="sSimc"><button class="btn" data-browse="sSimc" data-t="browse"></button><span></span>
+      <span></span><span class="muted" data-t="setSimcHelp" style="grid-column:2 / span 3"></span>
+      <span></span><div class="row" style="grid-column:2 / span 3"><button class="btn accent lk" id="bSave" data-t="save"></button><span class="muted" id="saveLbl"></span></div>
+
+      <span data-t="setStart" style="align-self:start;padding-top:4px"></span>
+      <div style="grid-column:2 / span 3">
+        <label class="chk"><input type="checkbox" id="sStartup"><span data-t="setStartupOpt"></span></label>
+        <div style="margin:8px 0 0 26px">
+          <label class="chk"><input type="checkbox" id="sStartupAdmin"><span data-t="setAdminOpt"></span></label>
+          <div class="muted" data-t="setAdminHelp" style="margin:3px 0 0 26px"></div>
+          <div class="row" style="margin:6px 0 0 0"><span class="muted" id="adminMode"></span><button class="btn" id="bRestartAdmin" data-t="restartAdmin"></button></div>
+        </div>
+      </div>
+
+      <span data-t="setScreens" style="align-self:start;padding-top:4px"></span>
+      <div style="grid-column:2 / span 3;flex-wrap:nowrap;align-items:flex-start" class="row">
+        <div id="scrDraw"></div>
+        <div>
+          <div class="row"><span data-t="scrWin"></span><select id="sScreen"></select><button class="btn" id="bIdentify" data-t="identifyAll"></button></div>
+          <div class="row" style="margin-top:8px"><span data-t="scrPlace"></span>
+            <label class="chk"><input type="checkbox" data-scr="screen_main"><span>Hangar FS 2024</span></label>
+            <label class="chk"><input type="checkbox" data-scr="screen_map"><span data-t="scrMap"></span></label>
+            <label class="chk"><input type="checkbox" data-scr="screen_dispatch"><span data-t="scrDisp"></span></label></div>
+          <div class="muted" data-t="scrHelp" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <span data-t="setFshub" style="align-self:start;padding-top:6px"></span>
+      <div style="grid-column:2 / span 3">
+        <div class="row"><span data-t="vaCode"></span><input type="text" id="sVa" style="width:90px"><span class="muted" data-t="vaHelp"></span></div>
+        <div class="row" style="margin-top:6px"><span data-t="fsKey"></span><input type="password" id="sKey" style="width:380px">
+          <button class="btn" id="bShowKey" data-t="show"></button><button class="btn accent" id="bTestKey" data-t="testKey"></button><span class="muted" id="keyLbl"></span></div>
+      </div>
+
+      <span data-t="setAccess"></span>
+      <div style="grid-column:2 / span 3" class="row"><label class="chk"><input type="checkbox" id="sCb"><span data-t="cbOpt"></span></label><span class="muted" data-t="cbHelp"></span></div>
+
+      <span data-t="setShortcut"></span>
+      <div style="grid-column:2 / span 3" class="row"><button class="btn" id="bDesk" data-t="deskBtn"></button><span class="muted" data-t="deskHelp"></span></div>
+
+      <span data-t="setBackup"></span>
+      <div style="grid-column:2 / span 3" class="row"><button class="btn" id="bExport" data-t="exportBtn"></button><button class="btn" id="bImport" data-t="importBtn"></button><span class="muted" data-t="backupHelp"></span></div>
     </div>
-    <div class="row"><button class="btn accent" id="bSave" data-t="save"></button></div>
     <div class="note" data-t="setHelp"></div>
-    <div class="note" data-t="testNote"></div>
+    <div class="note" data-t="license"></div>
     <div class="row">
       <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
-      <span class="muted">Hangar FS 2024 {{VERSION}} — © 2026 Jeff40 — MIT License</span>
+      <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
     </div>
   </section>
 
@@ -245,6 +296,8 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 </main>
 <footer>
   <span id="status"></span>
+  <span id="relaylbl" class="muted"></span>
+  <button class="btn" id="bRelay" style="padding:3px 10px"></button>
   <span id="simlbl"></span>
   <button class="btn" id="bQuit" data-t="quit"></button>
 </footer>
@@ -286,14 +339,45 @@ const TXT = {
  prepare:["✈  Préparer le vol (lier les scènes)","✈  Prepare the flight (link sceneries)"], endFlight:["Terminer le vol (retirer les scènes)","End the flight (remove sceneries)"],
  noFlight:["Aucun vol actif.","No active flight."], flightOn:["Vol actif : %s — %s scène(s) du vol chargée(s)","Active flight: %s — %s flight scenery(ies) loaded"],
  parkedN:[" · %s scène(s) d'aéroport mise(s) de côté"," · %s airport scenery(ies) set aside"], journal:["Journal","Log"],
- setLib:["Bibliothèque d'add-ons :","Add-on library:"], setComm:["Dossier Community :","Community folder:"], setExe:["Programme du simulateur :","Simulator program:"],
- browse:["Parcourir…","Browse…"], detect:["Détecter","Detect"], save:["Enregistrer les réglages","Save settings"],
+ setLib:["Bibliothèque d'add-ons :","Add-on library:"], setComm:["Dossier Community :","Community folder:"], setExe:["Exécutable du simulateur :","Simulator executable:"],
+ setStreamed:["Scènes par défaut (StreamedPackages) :","Default sceneries (StreamedPackages):"], setMsfs:["Lancement de MSFS 2024 :","MSFS 2024 launch:"],
+ setSimc:["Dossier de SimConnect.dll :","SimConnect.dll folder:"], setSimcHelp:["Facultatif : le trafic IA a besoin de SimConnect.dll (fichier de MSFS). L'appli le cherche toute seule (ancienne version, relais, SDK) ; indique son dossier seulement s'il n'est pas trouvé.","Optional: AI traffic needs SimConnect.dll (an MSFS file). The app looks for it by itself (old version, relay, SDK); set its folder only if it is not found."],
+ pickOther:["Choisis le dossier","Choose the folder"], streamedNotFound:["Dossier StreamedPackages introuvable automatiquement.\n\nIl se trouve en général à côté de ton dossier Community. Indique-le avec « Parcourir ».","StreamedPackages folder not found automatically.\n\nIt is usually next to your Community folder. Set it with \"Browse\"."],
+ msfsNotFound:["MSFS 2024 introuvable automatiquement. Indique son raccourci ou son programme dans le champ « Lancement de MSFS 2024 ».","MSFS 2024 not found automatically. Enter its shortcut or program in the \"MSFS 2024 launch\" field."],
+ unsaved:["Modifications non enregistrées","Unsaved changes"], askSave:["Tu as modifié des dossiers ou des chemins dans Réglages sans les enregistrer.\n\nLes enregistrer maintenant ?","You changed folders or paths in Settings without saving them.\n\nSave them now?"],
+ setReverted:["Modifications de Réglages annulées.","Settings changes cancelled."], setStart:["Démarrage :","Startup:"],
+ setStartupOpt:["Démarrer Hangar FS 2024 avec Windows (réduit dans la barre des tâches)","Start Hangar FS 2024 with Windows (minimised to the taskbar)"],
+ setAdminOpt:["🛡  En mode administrateur, sans confirmation Windows (une seule confirmation, à l'activation)","🛡  In administrator mode, without Windows confirmation (a single confirmation, when enabling)"],
+ setAdminHelp:["Utile pour les applis qui demandent les droits administrateur (SayIntentions, REX Atmos…). Certains antivirus peuvent le signaler : ne l'active que si tu en as besoin.","Useful for apps that need administrator rights (SayIntentions, REX Atmos…). Some antivirus may flag it: only enable it if you need it."],
+ modeAdmin:["Mode actuel : 🛡 administrateur","Current mode: 🛡 administrator"], modeNormal:["Mode actuel : normal","Current mode: normal"], restartAdmin:["Relancer maintenant en administrateur","Restart now as administrator"],
+ startupUpd:["Mise à jour du démarrage avec Windows…","Updating Windows startup…"], setScreens:["Écrans :","Screens:"], scrWin:["Écran des fenêtres","Window screen"],
+ identifyAll:["🔢  Identifier les écrans","🔢  Identify screens"], scrPlace:["Fenêtres à placer sur cet écran :","Windows to place on this screen:"], scrMap:["Carte des scènes","Scenery map"],
+ scrDisp:["Plan & suivi de vol (en plein écran)","Flight plan & tracking (full screen)"], scrNone:["Écrans : lecture impossible","Screens: unable to read"],
+ scrHelp:["Avec un seul écran, ou si l'écran choisi est débranché, tout s'ouvre sur l'écran principal. MSFS reste sur ton écran principal.","With a single screen, or if the chosen screen is disconnected, everything opens on the primary screen. MSFS stays on your primary screen."],
+ setFshub:["Ma VA FSHub :","My FSHub VA:"], vaCode:["Code de ta VA","Your VA code"], vaHelp:["— ex. LFV : le code de ta compagnie dans son adresse fshub.io/airline/LFV. Ses pilotes en vol s'affichent sur la carte de suivi (bouton « ★ MA VA FSHUB »).","— e.g. LFV: your airline's code in its address fshub.io/airline/LFV. Its flying pilots are shown on the tracking map (\"★ MY FSHUB VA\" button)."],
+ fsKey:["Clé FSHub (facultative)","FSHub key (optional)"], show:["👁 Afficher","👁 Show"], hide:["🙈 Masquer","🙈 Hide"], testKey:["Tester la clé","Test the key"], testing:["Test en cours…","Testing…"],
+ keyHelp:["Facultative : reconnaît ton avion pour ne pas l'afficher en double. fshub.io → ton nom → Settings → Integrations. Elle reste sur ce PC.","Optional: recognises your aircraft so it isn't shown twice. fshub.io → your name → Settings → Integrations. It stays on this PC."],
+ setAccess:["Accessibilité :","Accessibility:"], cbOpt:["Couleurs adaptées aux daltoniens","Colour-blind friendly colours"],
+ cbHelp:["— cartes et bibliothèque : palette lisible par les daltoniens, une lettre par type de scène (G, M, P, V), losange pour les scènes par défaut","— maps and library: colour-blind friendly palette, one letter per scenery type (G, M, P, V), diamond for default sceneries"],
+ setShortcut:["Raccourci :","Shortcut:"], deskBtn:["🖥  Créer le raccourci sur le Bureau","🖥  Create the Desktop shortcut"],
+ deskHelp:["— raccourci « Hangar FS 2024 » avec l'icône de l'appli (s'il a été supprimé, ou pour le remettre à jour)","— \"Hangar FS 2024\" shortcut with the app icon (if it was deleted, or to update it)"],
+ deskDone:["Le raccourci « Hangar FS 2024 » est sur le Bureau.","The \"Hangar FS 2024\" shortcut is on the Desktop."], setBackup:["Sauvegarde :","Backup:"],
+ exportBtn:["💾  Exporter mes réglages…","💾  Export my settings…"], importBtn:["📂  Restaurer…","📂  Restore…"],
+ backupHelp:["— réglages, profils et applis du Démarrage auto dans un seul fichier (changement de PC, réinstallation de Windows)","— settings, profiles and Auto launch apps in a single file (new PC, Windows reinstall)"],
+ exportDone:["Réglages exportés dans :\n%s\n\nCe fichier est personnel : il contient ton identifiant SimBrief et ta clé FSHub. Ne le partage pas.","Settings exported to:\n%s\n\nThis file is personal: it contains your SimBrief ID and your FSHub key. Don't share it."],
+ importAsk:["Remplacer tes réglages actuels par ceux de la sauvegarde du %s (version %s) ?\n\nTes réglages actuels sont d'abord gardés à côté. L'appli redémarre ensuite ; vérifie alors les dossiers dans Réglages s'il s'agit d'un autre PC.","Replace your current settings with those of the backup from %s (version %s)?\n\nYour current settings are kept aside first. The app then restarts; check the folders in Settings if it is another PC."],
+ license:["Hangar FS 2024 © 2026 Jeff40 — logiciel libre sous licence MIT : utilisation, modification et redistribution autorisées en gardant la mention de l'auteur et de la licence. Code source et versions officielles : github.com/jeff6540/hangar-fs2024 et la page flightsim.to","Hangar FS 2024 © 2026 Jeff40 — free software under the MIT licence: use, modification and redistribution allowed as long as the author and licence notice are kept. Source code and official versions: github.com/jeff6540/hangar-fs2024 and the flightsim.to page"],
+ browse:["Parcourir…","Browse…"], detect:["Détecter","Detect"], save:["Enregistrer","Save"],
  setHelp:["• Bibliothèque : le dossier où tu ranges tes add-ons, en dehors de Community (ex. D:\\MSFS Addons). Les sous-dossiers par catégorie sont acceptés.\n• Pour commencer, simulateur fermé, déplace vers la bibliothèque UNIQUEMENT les add-ons que tu as installés toi-même (dézippés), marqués « Dossier réel » dans la liste Community. Laisse dans Community ce qu'un installateur gère (PMDG, GSX, Navigraph, Orbx, iniBuilds, FlyByWire…). Puis protège (★ Protéger) ceux qui doivent toujours être chargés.\n• Les scènes d'aéroport sont reconnues par leur code OACI (nom du dossier, titre, fichiers BGL). Si une scène n'est pas reconnue, sélectionne-la puis « Codes OACI… » pour saisir ses codes.\n• Les liens doivent être faits avant de lancer le simulateur : il ne lit Community qu'au démarrage.",
           "• Library: the folder where you keep your add-ons, outside Community (e.g. D:\\MSFS Addons). Sub-folders by category are fine.\n• To start, with the simulator closed, move to the library ONLY the add-ons you installed yourself (unzipped), shown as \"Real folder\" in the Community list. Leave in Community what an installer manages (PMDG, GSX, Navigraph, Orbx, iniBuilds, FlyByWire…). Then protect (★ Protect) the ones that must always be loaded.\n• Airport sceneries are recognised by their ICAO code (folder name, title, BGL files). If a scenery isn't recognised, select it then \"ICAO codes…\" to enter its codes.\n• Links must be made before starting the simulator: it only reads Community at startup."],
  testNote:["🧪  Version C# de test (12.0). Elle utilise les mêmes réglages que la version Python : n'ouvre pas les deux en même temps. Les onglets marqués en gris arrivent dans les prochaines étapes.",
            "🧪  C# test version (12.0). It uses the same settings as the Python version: don't open both at the same time. The greyed-out tabs are coming in the next steps."],
  soonText:["Cet onglet sera ajouté dans une prochaine étape de la version C#. En attendant, il reste disponible dans la version Python 11.8.","This tab will be added in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
  quit:["✕  Quitter","✕  Quit"],
+ opening_map:["Ouverture de la carte des scènes…","Opening the scenery map…"], opening_disp:["Ouverture de Plan & suivi de vol…","Opening Flight plan & tracking…"],
+ launchMsfs:["▶  Lancer MSFS 2024","▶  Launch MSFS 2024"], optRelay:["Arrêter le relais à la fermeture du simulateur (il redémarre avec lui)","Stop the relay when the simulator closes (it restarts with it)"],
+ optOnly:["Ne charger que les scènes du vol","Load only the flight's sceneries"],
+ optOnlyHelp:["— les autres aéroports sont mis de côté, puis remis à la fin du vol (scènes ★ protégées et non-aéroports jamais touchés)","— other airports are set aside, then put back at the end of the flight (★ protected sceneries and non-airports never touched)"],
  lHead:["Applications lancées avec MSFS 2024","Applications launched with MSFS 2024"], lAutoOpt:["Lancer automatiquement au démarrage de MSFS 2024","Launch automatically when MSFS 2024 starts"],
  lParkOpt:["🅿 Vérifier que l'avion est sur un aéroport connu","🅿 Check that the aircraft is at a known airport"],
  lHelp:["Chaque application démarre au lancement de MSFS 2024 ou quand ton avion est au parking (🅿 : vol chargé, avion immobile au sol), après son délai. Celles marquées « Fermer avec MSFS » sont fermées quand le simulateur s'arrête. Une application déjà ouverte n'est jamais lancée deux fois. 🛡 = lancée en administrateur : Windows demande une confirmation (UAC) au lancement et à la fermeture.",
@@ -411,9 +495,15 @@ function applyLang(){
   $("lParkLbl").title = t("parkTip");
 }
 
-function showTab(name){
+async function showTab(name){
+  if (currentTab === "set" && name !== "set" && dirty()) {
+    const r = await modal(t("askSave"), [{label: t("cancel"), value: "cancel"}, {label: t("no"), value: "no"}, {label: t("yes"), value: "yes", cls: "accent"}]);
+    if (r === "cancel") return;
+    if (r === "yes") { if (!await saveSettings()) return; }
+    else { SAVED_FIELDS.forEach(id => $(id).value = savedVals[id]); dirty(); $("status").textContent = t("setReverted"); }
+  }
   currentTab = name;
-  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
   document.querySelectorAll(".tab").forEach(s => s.classList.remove("on"));
   if (name.startsWith("soon-")) {
     $("tab-soon").classList.add("on");
@@ -808,6 +898,9 @@ $("bFetch").onclick = async () => {
 };
 $("optAlt").onchange = () => run("setOption", {key: "include_alternates", value: $("optAlt").checked}).then(refreshFlight);
 $("optAuto").onchange = () => run("setOption", {key: "auto_unlink", value: $("optAuto").checked});
+$("optRelay").onchange = () => run("setOption", {key: "relay_auto", value: $("optRelay").checked});
+$("optOnly").onchange = () => run("setOption", {key: "flight_only", value: $("optOnly").checked});
+$("bLaunch").onclick = () => run("launchMsfs");
 $("bPrepare").onclick = async () => {
   let r = await run("prepareFlight", {});
   if (r && r.needChoice) {
@@ -832,36 +925,108 @@ $("bPrepare").onclick = async () => {
 $("bEnd").onclick = async () => { await run("endFlight"); refreshFlight(); loadLibrary(); };
 
 // ---------------------------------------------------------------- réglages
+const SAVED_FIELDS = ["sLib", "sComm", "sStreamed", "sExe", "sMsfs", "sSimc"];
+let savedVals = {};
 function fillSettings(s){
   SETTINGS = s;
-  $("sLib").value = s.library || ""; $("sComm").value = s.community || ""; $("sUser").value = s.simbrief_user || "";
-  $("sExe").value = s.sim_exe || ""; $("sbUser").value = s.simbrief_user || "";
+  $("sLib").value = s.library || ""; $("sComm").value = s.community || ""; $("sUser") && ($("sUser").value = s.simbrief_user || "");
+  $("sExe").value = s.sim_exe || ""; $("sbUser").value = s.simbrief_user || ""; $("sStreamed").value = s.streamed || "";
+  $("sMsfs").value = s.msfs_launch || ""; $("sSimc").value = s.simconnect_dir || "";
   $("optAlt").checked = !!s.include_alternates; $("optAuto").checked = !!s.auto_unlink;
+  if (s.relay_auto !== undefined) $("optRelay").checked = !!s.relay_auto;
+  if (s.flight_only !== undefined) $("optOnly").checked = !!s.flight_only;
+  $("sStartup").checked = !!s.startup; $("sStartupAdmin").checked = !!s.startup_admin;
+  $("adminMode").textContent = t(s.is_admin ? "modeAdmin" : "modeNormal"); $("bRestartAdmin").style.display = s.is_admin ? "none" : "";
+  $("sVa").value = s.fshub_va || ""; $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind;
+  document.body.classList.toggle("cb", !!s.colorblind);
+  document.querySelectorAll("[data-scr]").forEach(c => c.checked = s[c.dataset.scr] !== false);
+  if (!s.fshub_token) $("keyLbl").textContent = t("keyHelp");
+  SAVED_FIELDS.forEach(id => savedVals[id] = $(id).value);
+  dirty();
+  loadScreens();
 }
+function dirty(){ const d = SAVED_FIELDS.some(id => $(id).value !== savedVals[id]); $("saveLbl").textContent = d ? t("unsaved") : ""; return d; }
+SAVED_FIELDS.forEach(id => $(id).addEventListener("input", dirty));
 document.querySelectorAll("[data-browse]").forEach(b => b.onclick = async () => {
   const inp = $(b.dataset.browse);
-  const v = await run("browse", {title: t(b.dataset.browse === "sLib" ? "pickLib" : "pickComm"), current: inp.value});
-  if (v) inp.value = v;
+  const v = await run("browse", {title: t(b.dataset.browse === "sLib" ? "pickLib" : b.dataset.browse === "sComm" ? "pickComm" : "pickOther"), current: inp.value});
+  if (v) { inp.value = v; dirty(); }
 });
-$("bDetect").onclick = async () => {
-  const v = await run("detectCommunity");
-  if (v) $("sComm").value = v; else alertBox(t("commNotFound"));
+$("bDetect").onclick = async () => { const v = await run("detectCommunity"); if (v) { $("sComm").value = v; dirty(); } else alertBox(t("commNotFound")); };
+$("bDetectStreamed").onclick = async () => { const v = await run("detectStreamed", {community: $("sComm").value}); if (v) { $("sStreamed").value = v; dirty(); } else alertBox(t("streamedNotFound")); };
+$("bDetectMsfs").onclick = async () => { const v = await run("detectMsfs"); if (v) { $("sMsfs").value = v; dirty(); } else alertBox(t("msfsNotFound")); };
+async function saveSettings(){
+  const s = {library: $("sLib").value, community: $("sComm").value, simbrief_user: $("sbUser").value, sim_exe: $("sExe").value, streamed: $("sStreamed").value,
+             msfs_launch: $("sMsfs").value, simconnect_dir: $("sSimc").value, include_alternates: $("optAlt").checked, auto_unlink: $("optAuto").checked};
+  const ok = await call("saveSettings", s).then(() => true, e => { alertBox(e.message); return false; });
+  if (ok) { Object.assign(SETTINGS, s); SAVED_FIELDS.forEach(id => savedVals[id] = $(id).value); dirty(); }
+  return ok;
+}
+$("bSave").onclick = saveSettings;
+async function startupChanged(){
+  let on = $("sStartup").checked, admin = $("sStartupAdmin").checked;
+  if (admin && !on) { $("sStartup").checked = on = true; }
+  $("status").textContent = t("startupUpd");
+  try { const s = await call("setStartup", {on, admin}); $("sStartup").checked = s.startup; $("sStartupAdmin").checked = s.startup_admin; }
+  catch (e) { alertBox(e.message); const s = await call("init").catch(() => null); if (s) { $("sStartup").checked = s.settings.startup; $("sStartupAdmin").checked = s.settings.startup_admin; } }
+}
+$("sStartup").onchange = startupChanged; $("sStartupAdmin").onchange = startupChanged;
+$("bRestartAdmin").onclick = () => run("restartAdmin");
+let SCREENS = [];
+async function loadScreens(){
+  try { SCREENS = await call("screens"); } catch (e) { SCREENS = []; }
+  const cur = SETTINGS.screen || "auto";
+  const opts = [["auto", t("lfScrAuto")]].concat(SCREENS.map(m => [m.dev, m.label]));
+  if (!opts.some(o => o[0] === cur)) opts.push([cur, t("lfScrGone")]);
+  $("sScreen").innerHTML = opts.map(o => '<option value="' + esc(o[0]) + '">' + esc(o[1]) + "</option>").join(""); $("sScreen").value = cur;
+  drawScreens();
+}
+function drawScreens(){
+  const box = $("scrDraw");
+  if (!SCREENS.length) { box.innerHTML = '<span class="muted">' + esc(t("scrNone")) + "</span>"; return; }
+  const x0 = Math.min(...SCREENS.map(m => m.x)), y0 = Math.min(...SCREENS.map(m => m.y));
+  const x1 = Math.max(...SCREENS.map(m => m.x + m.w)), y1 = Math.max(...SCREENS.map(m => m.y + m.h));
+  const k = Math.min(290 / Math.max(1, x1 - x0), 86 / Math.max(1, y1 - y0));
+  const cur = SETTINGS.screen || "auto";
+  const target = cur === "auto" ? (SCREENS.find(m => !m.primary) || SCREENS[0]) : (SCREENS.find(m => m.dev === cur) || SCREENS[0]);
+  box.innerHTML = SCREENS.map(m => { const on = target && m.dev === target.dev;
+    return '<div class="scr' + (on ? " on" : "") + '" style="left:' + (4 + (m.x - x0) * k) + "px;top:" + (3 + (m.y - y0) * k) + "px;width:" + (m.w * k - 4) + "px;height:" + (m.h * k - 4) +
+      'px"><b>' + m.num + "</b><small>" + (m.primary ? "MSFS" : on ? "Hangar FS 2024" : "") + "</small></div>"; }).join("");
+}
+$("sScreen").onchange = async () => { SETTINGS.screen = $("sScreen").value; await run("setValue", {key: "screen", value: SETTINGS.screen}); drawScreens(); };
+$("bIdentify").onclick = () => run("identifyScreens");
+document.querySelectorAll("[data-scr]").forEach(c => c.onchange = () => run("setValue", {key: c.dataset.scr, value: c.checked}));
+const storeVa = () => { const v = $("sVa").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); $("sVa").value = v; return run("setValue", {key: "fshub_va", value: v}); };
+$("sVa").addEventListener("change", storeVa);
+$("sKey").addEventListener("change", () => run("setValue", {key: "fshub_token", value: $("sKey").value.trim()}));
+$("bShowKey").onclick = () => { const on = $("sKey").type === "password"; $("sKey").type = on ? "text" : "password"; $("bShowKey").textContent = t(on ? "hide" : "show"); };
+$("bTestKey").onclick = async () => {
+  await storeVa(); await run("setValue", {key: "fshub_token", value: $("sKey").value.trim()});
+  $("keyLbl").textContent = t("testing");
+  try { $("keyLbl").textContent = await call("testFshub"); } catch (e) { $("keyLbl").textContent = "✖ " + e.message; }
 };
-$("bSave").onclick = async () => {
-  const s = {library: $("sLib").value, community: $("sComm").value, simbrief_user: $("sUser").value, sim_exe: $("sExe").value,
-             include_alternates: $("optAlt").checked, auto_unlink: $("optAuto").checked};
-  const r = await call("saveSettings", s).then(() => true, e => { alertBox(e.message); return false; });
-  if (r) { Object.assign(SETTINGS, s); fillSettings(SETTINGS); }
+$("sCb").onchange = async () => { await run("setValue", {key: "colorblind", value: $("sCb").checked}); SETTINGS.colorblind = $("sCb").checked; document.body.classList.toggle("cb", SETTINGS.colorblind); };
+$("bDesk").onclick = async () => { await run("desktopShortcut"); alertBox(t("deskDone")); };
+$("bExport").onclick = async () => { const p = await run("exportSettings"); if (p) alertBox(tf("exportDone", p)); };
+$("bImport").onclick = async () => {
+  const b = await run("pickBackup"); if (!b) return;
+  if (!await confirmBox(tf("importAsk", b.date || "?", b.version || "?"))) return;
+  await run("restoreBackup", {path: b.path});
 };
 
 // ---------------------------------------------------------------- divers
-document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+document.querySelectorAll("#tabs button[data-open]").forEach(b => b.onclick = () => { $("status").textContent = t(b.dataset.open === "openMap" ? "opening_map" : "opening_disp"); run(b.dataset.open); });
+$("bTuto").onclick = () => run("openTutorial");
 document.querySelectorAll("[data-url]").forEach(b => b.onclick = () => run("openUrl", {url: b.dataset.url}));
 document.querySelectorAll("#flags button[data-lang]").forEach(b => b.onclick = async () => {
   if (b.dataset.lang === LANG) return;
   LANG = b.dataset.lang; await run("setLang", {lang: LANG}); commSizeKey = ""; applyLang(); loadLibrary();
 });
 $("bQuit").onclick = () => run("quit");
+$("bRelay").onclick = () => run("relayToggle");
+function setRelay(d){ if (!d) return; $("relaylbl").textContent = d.text; $("bRelay").textContent = d.button; if (d.airports) airportsLbl = d.airports; }
+let airportsLbl = "";
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });
 
 function onEvent(ev, data){
@@ -872,6 +1037,7 @@ function onEvent(ev, data){
   } else if (ev === "status") $("status").textContent = data;
   else if (ev === "sim") setSim(data);
   else if (ev === "launcher") loadLauncher();
+  else if (ev === "relay") setRelay(data);
   else if (ev === "changed") { loadLibrary(); if (currentTab === "vol") refreshFlight(); }
 }
 
@@ -884,6 +1050,7 @@ function onEvent(ev, data){
   showTab(d.settings.library ? "lib" : "set");
   loadLibrary();
   launcherTick();
+  call("relayInfo").then(setRelay, () => {});
 })();
 </script>
 </body>

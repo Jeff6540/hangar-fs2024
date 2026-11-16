@@ -332,6 +332,76 @@ namespace HangarFS2024
                 case "launchMsfs":
                     hangar.LaunchMsfs();
                     return null;
+                case "detectStreamed":
+                    return new JValue(Hangar.DetectStreamed(JsonStore.Str(a["community"])));
+                case "detectMsfs":
+                    return new JValue(Hangar.DetectMsfsLaunch());
+                case "setValue":
+                    hangar.SetValue(JsonStore.Str(a["key"]), a["value"]);
+                    return null;
+                case "testFshub":
+                    return new JValue(await Task.Run(() => hangar.TestFshub()));
+                case "setStartup":
+                    {
+                        bool on = (bool)a["on"], adm = (bool)a["admin"];
+                        string err = await Task.Run(() => hangar.SetStartup(on, adm));
+                        if (err != "") throw new Exception(err);
+                        return hangar.SettingsView();
+                    }
+                case "restartAdmin":
+                    if (SystemTools.Relaunch(true, false)) Close();
+                    return null;
+                case "desktopShortcut":
+                    SystemTools.CreateDesktopShortcut();
+                    hangar.Status(Hangar.L("Raccourci créé sur le Bureau.", "Shortcut created on the Desktop."));
+                    return null;
+                case "screens":
+                    {
+                        var arr = new JArray();
+                        int i = 0;
+                        foreach (var s in Win.Monitors())
+                            arr.Add(new JObject { ["dev"] = s.DeviceName, ["num"] = ++i, ["primary"] = s.Primary, ["x"] = s.Bounds.X, ["y"] = s.Bounds.Y,
+                                ["w"] = s.Bounds.Width, ["h"] = s.Bounds.Height, ["label"] = Win.MonitorLabel(s, i) });
+                        return arr;
+                    }
+                case "exportSettings":
+                    {
+                        using (var dlg = new SaveFileDialog())
+                        {
+                            dlg.Title = Hangar.L("Exporter mes réglages", "Export my settings");
+                            dlg.Filter = Hangar.L("Sauvegarde Hangar FS 2024", "Hangar FS 2024 backup") + "|*.zip";
+                            dlg.FileName = "Hangar_FS2024_reglages_" + DateTime.Now.ToString("yyyy-MM-dd") + ".zip";
+                            dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                            if (dlg.ShowDialog(this) != DialogResult.OK) return JValue.CreateNull();
+                            SystemTools.Export(dlg.FileName, hangar.Cfg);
+                            hangar.Log(Hangar.L("Réglages exportés : ", "Settings exported: ") + Path.GetFileName(dlg.FileName));
+                            return new JValue(dlg.FileName);
+                        }
+                    }
+                case "pickBackup":
+                    {
+                        using (var dlg = new OpenFileDialog())
+                        {
+                            dlg.Title = Hangar.L("Restaurer mes réglages", "Restore my settings");
+                            dlg.Filter = Hangar.L("Sauvegarde Hangar FS 2024", "Hangar FS 2024 backup") + "|*.zip";
+                            if (dlg.ShowDialog(this) != DialogResult.OK) return JValue.CreateNull();
+                            var r = SystemTools.ReadBackup(dlg.FileName);
+                            return new JObject { ["path"] = dlg.FileName, ["date"] = r[0]["date"], ["version"] = r[0]["version"] };
+                        }
+                    }
+                case "restoreBackup":
+                    {
+                        if (hangar.SimRunning()) throw new Exception(Hangar.L("Ferme d'abord MSFS 2024 : l'appli redémarre après la restauration.", "Close MSFS 2024 first: the app restarts after restoring."));
+                        var r = SystemTools.ReadBackup(JsonStore.Str(a["path"]));
+                        if (File.Exists(AppInfo.ConfigFile))
+                            File.Copy(AppInfo.ConfigFile, Path.Combine(AppInfo.BaseDir, "config_avant_restauration_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".json"), true);
+                        var cfg = r[1];
+                        cfg["lang"] = Hangar.Lang;
+                        JsonStore.Save(AppInfo.ConfigFile, cfg);
+                        hangar.Cfg = cfg;
+                        if (SystemTools.Relaunch(false, false)) Close();
+                        return null;
+                    }
                 case "removeCommunity":
                     await Task.Run(() => hangar.RemoveCommunityLinks(StrList(a["links"])));
                     return null;

@@ -758,6 +758,7 @@ namespace HangarFS2024
                         }
                     }
                 }
+                if (CfgB("flight_only", false)) errors += ParkOtherAirports(wantedLinks);
                 St["flight"] = new JObject { ["route"] = plan["route"], ["icaos"] = new JArray(icaos) };
                 undo = null;
                 foreach (var p in wanted)
@@ -784,6 +785,45 @@ namespace HangarFS2024
             }
             Changed();
             return new JObject { ["done"] = true };
+        }
+
+        // « Ne charger que les scènes du vol » : les autres scènes d'aéroport activées à la main sont mises de côté
+        // (jamais les ★ protégées, les non-aéroports, les vrais dossiers ni les liens externes)
+        int ParkOtherAirports(HashSet<string> wantedLinks)
+        {
+            var parked = St["parked"] as JArray;
+            if (parked == null) { parked = new JArray(); St["parked"] = parked; }
+            var known = new HashSet<string>(parked.Select(e => JsonStore.Str(e["link"])));
+            int moved = 0, errors = 0;
+            var codes = new List<string>();
+            foreach (var prop in LinksObj.Properties().ToList())
+            {
+                var v = prop.Value as JObject;
+                if (v == null || JsonStore.Str(v["kind"]) != "manual" || wantedLinks.Contains(prop.Name)) continue;
+                var p = ByPath(JsonStore.Str(v["target"]));
+                if (p == null || p.Pinned) continue;
+                var ai = AirportIcaos(p);
+                if (ai.Count == 0) continue;
+                var ov = Overrides[p.FullPath] as JObject;
+                bool manualCodes = ov != null && ov["icao"] != null;
+                if (!manualCodes && Scanner.IsDecorPack(p.Name + " " + p.Title)) continue;
+                string target = JsonStore.Str(v["target"]);
+                try { Unlink(prop.Name); }
+                catch (Exception e)
+                {
+                    errors++;
+                    Log(string.Format(L("Erreur en mettant de côté {0} : {1}", "Error setting aside {0}: {1}"), Base(prop.Name), e.Message));
+                    continue;
+                }
+                if (known.Add(prop.Name)) parked.Add(new JObject { ["link"] = prop.Name, ["target"] = target });
+                moved++;
+                var first = ai.FirstOrDefault(c => !codes.Contains(c));
+                if (first != null) codes.Add(first);
+            }
+            if (moved > 0)
+                Log(string.Format(L("Mis de côté (autres aéroports) : {0} scène(s) — {1}{2}", "Set aside (other airports): {0} scenery(ies) — {1}{2}"),
+                    moved, string.Join(", ", codes.Take(5)), codes.Count > 5 ? "…" : ""));
+            return errors;
         }
 
         int ParkLinks(List<Pkg> packages, string why)
@@ -971,6 +1011,12 @@ namespace HangarFS2024
                 ["library"] = CfgS("library"), ["community"] = CfgS("community"),
                 ["simbrief_user"] = CfgS("simbrief_user"), ["sim_exe"] = CfgS("sim_exe"),
                 ["include_alternates"] = CfgB("include_alternates", true), ["auto_unlink"] = CfgB("auto_unlink", true),
+                ["relay_auto"] = CfgB("relay_auto", true), ["flight_only"] = CfgB("flight_only", false),
+                ["streamed"] = CfgS("streamed") != "" ? CfgS("streamed") : DetectStreamed(CfgS("community")), ["msfs_launch"] = CfgS("msfs_launch"),
+                ["simconnect_dir"] = CfgS("simconnect_dir"), ["startup"] = SystemTools.StartWithWindows || CfgB("startup_admin", false),
+                ["startup_admin"] = CfgB("startup_admin", false), ["is_admin"] = Win.IsAdmin(), ["screen"] = CfgS("screen") == "" ? "auto" : CfgS("screen"),
+                ["screen_main"] = CfgB("screen_main", true), ["screen_map"] = CfgB("screen_map", true), ["screen_dispatch"] = CfgB("screen_dispatch", true),
+                ["fshub_va"] = CfgS("fshub_va"), ["fshub_token"] = CfgS("fshub_token"), ["colorblind"] = CfgB("colorblind", false),
                 ["lang"] = Lang,
             };
         }
@@ -989,6 +1035,10 @@ namespace HangarFS2024
                 Cfg["simbrief_user"] = JsonStore.Str(s["simbrief_user"]).Trim();
                 string exe = JsonStore.Str(s["sim_exe"]).Trim();
                 if (exe != "") Cfg["sim_exe"] = exe;
+                if (s["streamed"] != null) Cfg["streamed"] = JsonStore.Str(s["streamed"]).Trim();
+                if (s["msfs_launch"] != null) Cfg["msfs_launch"] = JsonStore.Str(s["msfs_launch"]).Trim();
+                if (s["simconnect_dir"] != null) Cfg["simconnect_dir"] = JsonStore.Str(s["simconnect_dir"]).Trim();
+                DupStreamed = null;
                 if (s["include_alternates"] != null) Cfg["include_alternates"] = (bool)s["include_alternates"];
                 if (s["auto_unlink"] != null) Cfg["auto_unlink"] = (bool)s["auto_unlink"];
                 SaveCfg();
@@ -998,9 +1048,76 @@ namespace HangarFS2024
 
         public void SetOption(string key, bool value)
         {
-            if (key != "include_alternates" && key != "auto_unlink") return;
+            if (key != "include_alternates" && key != "auto_unlink" && key != "relay_auto" && key != "flight_only") return;
             lock (Gate) { Cfg[key] = value; SaveCfg(); }
             Changed();
+        }
+
+        // réglages appliqués tout de suite (écrans, FSHub, accessibilité)
+        public void SetValue(string key, JToken value)
+        {
+            var allowed = new HashSet<string> { "screen", "screen_main", "screen_map", "screen_dispatch", "fshub_va", "fshub_token", "colorblind" };
+            if (!allowed.Contains(key)) return;
+            lock (Gate)
+            {
+                if (key == "fshub_va")
+                {
+                    string code = System.Text.RegularExpressions.Regex.Replace(JsonStore.Str(value).ToUpperInvariant(), "[^A-Z0-9]", "");
+                    value = code.Length > 8 ? code.Substring(0, 8) : code;
+                }
+                if (key == "fshub_token") value = JsonStore.Str(value).Trim();
+                Cfg[key] = value;
+                SaveCfg();
+            }
+            if ((key == "fshub_va" || key == "fshub_token") && Relay.Fshub != null) Relay.Fshub.IdentToken = "";
+            if (key == "colorblind") PushMap();
+        }
+
+        public string TestFshub()
+        {
+            string tok = CfgS("fshub_token");
+            if (tok == "") return L("Colle d'abord ta clé FSHub (fshub.io → ton nom → Settings → Integrations).", "Paste your FSHub key first (fshub.io → your name → Settings → Integrations).");
+            var r = FshubFeed.Identify(tok, CfgS("fshub_va"));
+            JObject me = r[0], al = r[1];
+            string meName = JsonStore.Str(me["name"]) != "" ? JsonStore.Str(me["name"]) : L("profil trouvé", "profile found");
+            if (JsonStore.Str(al["id"]) == "")
+                return "✓ " + meName + string.Format(L(" · tu n'es pas membre de {0} sur FSHub : ses pilotes s'affichent quand même via le radar public", " · you are not a member of {0} on FSHub: its pilots are shown anyway through the public radar"),
+                    JsonStore.Str(al["abbr"]) != "" ? JsonStore.Str(al["abbr"]) : L("cette VA", "this VA"));
+            var res = FshubFeed.OnlinePilots(tok, JsonStore.Str(al["id"]));
+            if (res.Item2 == "airline")
+                return string.Format("✓ {0} · {1}{2} · " + L("{3} pilote(s) en ligne", "{3} pilot(s) online"), meName, JsonStore.Str(al["name"]),
+                    JsonStore.Str(al["abbr"]) != "" ? " (" + JsonStore.Str(al["abbr"]) + ")" : "", res.Item1.Count);
+            return string.Format(L("⚠ {0} · FSHub refuse la liste des pilotes de {1} : affichage de tes amis FSHub en ligne ({2})", "⚠ {0} · FSHub refuses the pilot list of {1}: showing your online FSHub friends ({2})"),
+                meName, JsonStore.Str(al["name"]), res.Item1.Count);
+        }
+
+        public string SetStartup(bool on, bool admin)
+        {
+            if (admin) on = true;
+            string err = "";
+            try
+            {
+                if (on && admin)
+                {
+                    if (!SystemTools.CreateAdminTask()) err = L("La tâche administrateur n'a pas pu être créée (confirmation Windows refusée ?).", "The administrator task could not be created (Windows confirmation refused?).");
+                    else SystemTools.SetStartWithWindows(true);
+                }
+                else
+                {
+                    if (SystemTools.TaskExists() && !SystemTools.DeleteAdminTask()) err = L("La tâche administrateur n'a pas pu être supprimée (confirmation Windows refusée ?).", "The administrator task could not be deleted (Windows confirmation refused?).");
+                    else SystemTools.SetStartWithWindows(on);
+                }
+            }
+            catch (Exception) { err = L("Impossible de modifier le démarrage avec Windows.", "Unable to change Windows startup."); }
+            bool task = SystemTools.TaskExists();
+            lock (Gate) { Cfg["startup_admin"] = task; SaveCfg(); }
+            if (err != "") return err;
+            string msg = task ? L("Hangar FS 2024 démarrera avec Windows en mode administrateur, sans confirmation.", "Hangar FS 2024 will start with Windows in administrator mode, without confirmation.")
+                       : SystemTools.StartWithWindows ? L("Hangar FS 2024 démarrera avec Windows (mode normal).", "Hangar FS 2024 will start with Windows (normal mode).")
+                       : L("Hangar FS 2024 ne démarrera plus avec Windows.", "Hangar FS 2024 will no longer start with Windows.");
+            Status(msg);
+            Log(msg);
+            return "";
         }
 
         public void SetLang(string lang)
