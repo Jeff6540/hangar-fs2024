@@ -1978,7 +1978,9 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   var T = {"on": "Show pilots connected to %s (public %s data, refreshed every 15 s)", "off": "%s unavailable: %s", "hide": "Pilots connected to %s — click to hide", "ground": "on ground", "air": "airborne", "hdg": "hdg", "src": "%s data", "relay": "relay stopped", "leg_v": "VATSIM pilots", "leg_i": "IVAO pilots"};
   var RELAY = 'http://localhost:8765/net?src=';
   var SRC = { vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#56B4E9', leg: T.leg_v },
-              ivao:   { label: 'IVAO',   color: '#e11d48', cb: '#D55E00', leg: T.leg_i } };
+              ivao:   { label: 'IVAO',   color: '#e11d48', cb: '#D55E00', leg: T.leg_i, dark: true } };
+  /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
+  var DARK = '#1f2937';
   var st = {};
   Object.keys(SRC).forEach(function (k) {
     var on = false; try { on = localStorage.getItem('al_net_' + k) === '1'; } catch (e) {}
@@ -2000,7 +2002,9 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   }
   function icon(k, p) {
     var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
-    var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft) : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
+    var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft)
+      : SRC[k].dark ? k2.planeSvg(size, p.hdg, DARK, color(k), 2, p.aircraft)
+      : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
     return L.divIcon({ className: 'alfs-icon', html: svg, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function tip(k, p) {
@@ -2080,8 +2084,8 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     if (lg && !document.getElementById('alNetLeg')) {
       var d = document.createElement('div'); d.id = 'alNetLeg';
       d.innerHTML = Object.keys(SRC).map(function (k) {
-        return '<div class="alsh"><svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;flex:none;width:14px;height:14px"><g fill="' + color(k) +
-          '" stroke="#fff" stroke-width="1.3">' + '<path d="M12 2l1.6 6.5L21 13v1.8l-7.4-2.3-.5 5.6 2.4 1.8V21L12 20l-3.5 1v-1.1l2.4-1.8-.5-5.6L3 14.8V13l7.4-4.5z"/>' +
+        return '<div class="alsh"><svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;flex:none;width:14px;height:14px"><g fill="' + (SRC[k].dark ? DARK : color(k)) +
+          '" stroke="' + (SRC[k].dark ? color(k) : '#fff') + '" stroke-width="' + (SRC[k].dark ? 2 : 1.3) + '">' + '<path d="M12 2l1.6 6.5L21 13v1.8l-7.4-2.3-.5 5.6 2.4 1.8V21L12 20l-3.5 1v-1.1l2.4-1.8-.5-5.6L3 14.8V13l7.4-4.5z"/>' +
           '</g></svg> ' + SRC[k].leg + '</div>';
       }).join('');
       lg.insertBefore(d, lg.children[2] || null);

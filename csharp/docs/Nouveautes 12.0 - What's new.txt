@@ -13,7 +13,7 @@ Nouvelle version entièrement réécrite (C#)
 - Tes réglages, ta bibliothèque, tes profils et ta liste du Démarrage auto d'une version 11.x sont repris automatiquement.
 
 Plan & suivi de vol : pilotes VATSIM et IVAO
-- Deux nouveaux boutons, VATSIM (vert) et IVAO (rouge), à côté de « Toutes les VA FSHub ».
+- Deux nouveaux boutons, VATSIM (avions verts) et IVAO (avions gris foncé bordés de rouge, pour ne pas les confondre avec les gros porteurs du trafic IA), à côté de « Toutes les VA FSHub ».
 - Chaque réseau s'active ou se désactive d'un clic ; ils sont désactivés par défaut et ton choix est gardé.
 - Pas d'étiquette sur la carte pour la garder lisible : un clic sur un avion affiche son indicatif, son type, départ → arrivée, altitude, vitesse et cap (aucun nom de pilote).
 - Trafic IA et autres VA FSHub : les infos d'un avion s'affichent aussi d'un clic (et non plus au survol).
@@ -43,7 +43,7 @@ New, fully rewritten version (C#)
 - Your settings, library, profiles and Auto launch list from a 11.x version are carried over automatically.
 
 Flight plan & tracking: VATSIM and IVAO pilots
-- Two new buttons, VATSIM (green) and IVAO (red), next to "All FSHub VAs".
+- Two new buttons, VATSIM (green aircraft) and IVAO (dark grey aircraft with a red outline, so they are not mixed up with AI heavies), next to "All FSHub VAs".
 - Each network turns on or off with a click; they are off by default and your choice is kept.
 - No labels on the map to keep it readable: click an aircraft to see its callsign, type, departure → arrival, altitude, speed and heading (no pilot name).
 - AI traffic and other FSHub VAs: aircraft details now also open with a click (no longer on hover).
