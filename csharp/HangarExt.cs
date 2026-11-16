@@ -268,6 +268,7 @@ namespace HangarFS2024
         CancellationTokenSource relayStop;
         public bool RelayPortBusy, RelayManualOff, RelayDllMissing;
         public Func<string, bool> CloseWebWindow = w => false;   // fourni par la fenêtre principale
+        public Action ReloadWebWindows = () => { };                // idem : recharge les cartes ouvertes
         public Action<string> OpenUrl = u => { };
 
         public void InitRelay()

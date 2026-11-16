@@ -62,6 +62,18 @@ namespace HangarFS2024
                 try { Invoke((Action)(() => { WebWindow f; if (webWins.TryGetValue(w, out f) && !f.IsDisposed) { f.Close(); ok = true; } })); } catch (Exception) { }
                 return ok;
             };
+            hangar.ReloadWebWindows = () =>
+            {
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        foreach (var kv in new List<KeyValuePair<string, WebWindow>>(webWins))
+                            if (kv.Key != "tuto" && !kv.Value.IsDisposed) kv.Value.ReloadPage();
+                    }));
+                }
+                catch (Exception) { }
+            };
             hangar.OnLauncher += () => PushRelay();
             hangar.OpenUrl = WebWindow.OpenExternal;
             PlaceMain();

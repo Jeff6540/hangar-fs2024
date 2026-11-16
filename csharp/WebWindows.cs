@@ -55,6 +55,12 @@ namespace HangarFS2024
             try { Process.Start(new ProcessStartInfo(u) { UseShellExecute = true }); } catch (Exception) { }
         }
 
+        // recharge la page (ex. après un changement du mode daltonien)
+        public void ReloadPage()
+        {
+            try { if (web.CoreWebView2 != null) web.CoreWebView2.Reload(); } catch (Exception) { }
+        }
+
         public void PlaceOn(Screen mon, bool maximize)
         {
             if (mon == null) { if (maximize) WindowState = FormWindowState.Maximized; return; }

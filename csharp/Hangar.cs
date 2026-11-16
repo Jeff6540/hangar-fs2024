@@ -1072,7 +1072,7 @@ namespace HangarFS2024
                 SaveCfg();
             }
             if ((key == "fshub_va" || key == "fshub_token") && Relay.Fshub != null) Relay.Fshub.IdentToken = "";
-            if (key == "colorblind") PushMap();
+            if (key == "colorblind") { PushMap(); ReloadWebWindows(); }   // les cartes ouvertes prennent tout de suite les nouvelles couleurs
         }
 
         public string TestFshub()
