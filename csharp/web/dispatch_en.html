@@ -545,14 +545,14 @@ html body #alFlightCard .alf-open:hover,html body .alf-open:hover{background:#7D
 /* Hangar FS 2024 : choix du fond de carte (Plan, Plan sombre, Satellite, Relief) sur les cartes plein écran.
    Ajouté par-dessus la page sans modifier sa logique ; le bouton FOND SOMBRE reste synchronisé. */
 (function () {
-  var OSM = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var OSM = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', DARKT = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
   function base(map) {
     var osm = null;
     map.eachLayer(function (l) { if (!osm && l instanceof L.TileLayer) osm = l; });
-    if (!osm) osm = L.tileLayer(OSM, { maxZoom: 19, subdomains: 'abc' }).addTo(map);
+    if (!osm) osm = L.tileLayer(OSM, { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
     return {
       plan: osm,
-      dark: L.tileLayer(OSM, { maxZoom: 19, subdomains: 'abc' }),
+      dark: L.tileLayer(DARKT, { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }),
       topo: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors' })
     };
@@ -561,7 +561,7 @@ html body #alFlightCard .alf-open:hover,html body .alf-open:hover{background:#7D
     var b = base(map), current = b.plan, busy = false;
     if (isDark()) { map.removeLayer(b.plan); b.dark.addTo(map); current = b.dark; }
     L.control.layers({
-      'Map (OpenStreetMap)': b.plan, 'Dark map': b.dark,
+      'Map (CARTO)': b.plan, 'Dark map': b.dark,
       'Satellite (Esri)': b.sat, 'Terrain (Esri)': b.topo
     }, null, { collapsed: true, position: 'topleft' }).addTo(map);
     var tg = map.getContainer().querySelector('.leaflet-control-layers-toggle');
@@ -2444,6 +2444,11 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
 </script><!--HANGAR_CB--><style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */
 .leaflet-container{background:#1A2430!important}/* fond pendant le chargement des carrés : sombre au lieu de blanc */
 
+</style><style id="hangar-123-carto">/* 12.3 : Plan sombre = vraie carte sombre CARTO, sans filtre (cartes plein écran et suivi) */
+#trafficMapWrapper.map-dark-tiles .leaflet-tile-pane,#fullMapWrapper.map-dark-tiles .leaflet-tile-pane{filter:none!important}
+/* liseré clair autour des avions quand le fond est sombre */
+.map-dark-tiles .leaflet-marker-icon svg g{paint-order:stroke}
+#trafficMapWrapper.map-dark-tiles .traffic-icon svg,#trafficMapWrapper.map-dark-tiles .alfs-icon svg{filter:drop-shadow(0 0 1px rgba(230,237,245,.95)) drop-shadow(0 0 2px rgba(0,0,0,.6))!important}
 </style></head>
 <body class="flex flex-col">
 
@@ -3690,7 +3695,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
             return evaluateAirportForAircraft(apt.icao, ac, singleRole);
         }
 
-        const osmTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const osmTileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
         function toggleTutorial() {
             const content = document.getElementById('tutorialContent');
@@ -3709,7 +3714,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
 
         function initMaps() {
             miniMap = L.map('leafletMiniMap', { zoomControl: false, attributionControl: false }).setView([46.6031, 1.8883], 4);
-            miniMapLayer = L.tileLayer(osmTileUrl, { maxZoom: 19, subdomains: 'abc', attribution: '&copy; OSM' }).addTo(miniMap);
+            miniMapLayer = L.tileLayer(osmTileUrl, { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(miniMap);
             
             document.getElementById('aircraftSearchInput').value = "A320 — A320-200";
             document.getElementById('modalAircraftSearchInput').value = "A320 — A320-200";
@@ -4456,7 +4461,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
             tmStart();
             if (!trafficMap) {
                 trafficMap = L.map('leafletTrafficMap', { zoomControl: true, attributionControl: false }).setView([46.6031, 1.8883], 5);
-                L.tileLayer(osmTileUrl, { maxZoom: 19, subdomains: 'abc', attribution: '&copy; OSM' }).addTo(trafficMap);
+                L.tileLayer(osmTileUrl, { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(trafficMap);
                 sbLayer = L.layerGroup().addTo(trafficMap);
                 sbLabelLayer = L.layerGroup().addTo(trafficMap);
                 trafficLayer = L.layerGroup().addTo(trafficMap);
@@ -4484,7 +4489,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
             document.getElementById('interactiveMapModal').classList.remove('hidden');
             if (!fullMap) {
                 fullMap = L.map('leafletFullMap', { zoomControl: true, attributionControl: false }).setView([46.6031, 1.8883], 5);
-                fullMapLayer = L.tileLayer(osmTileUrl, { maxZoom: 19, subdomains: 'abc', attribution: '&copy; OSM' }).addTo(fullMap);
+                fullMapLayer = L.tileLayer(osmTileUrl, { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(fullMap);
                 fullMarkersLayer = L.layerGroup().addTo(fullMap);
                 
                 fullMap.on('moveend', populateFullMapMarkers);
