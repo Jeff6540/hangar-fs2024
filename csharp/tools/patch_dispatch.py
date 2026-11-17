@@ -639,3 +639,7 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_seams123(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.3 : rotation des avions sans redessiner l'icône (appliquée directement dans les pages) ----
+ROT_JS = '<script id="hangar-123-rot">\n/* 12.3 : quand seul le cap change, on tourne l\'avion déjà affiché au lieu de redessiner son icône (pas de scintillement) */\nwindow.alTurn = function (mk, oldSig, newSig, hdg) {\n  if (!mk || oldSig == null) return false;\n  var a = String(oldSig), b = String(newSig), i = a.indexOf(\'|\'), j = b.indexOf(\'|\');\n  if (i < 0 || j < 0 || a.slice(i) !== b.slice(j)) return false;      /* autre chose que le cap a changé */\n  var el = mk.getElement && mk.getElement(), svg = el && el.querySelector(\'svg\');\n  if (!svg) return false;\n  svg.style.transform = \'rotate(\' + (hdg || 0) + \'deg)\';\n  return true;\n};\n</script>'

@@ -114,7 +114,18 @@ host.appendChild(b);});</script><link rel="icon" type="image/png" href="/icon_di
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS & JS CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script><script id="hangar-123-rot">
+/* 12.3 : quand seul le cap change, on tourne l'avion déjà affiché au lieu de redessiner son icône (pas de scintillement) */
+window.alTurn = function (mk, oldSig, newSig, hdg) {
+  if (!mk || oldSig == null) return false;
+  var a = String(oldSig), b = String(newSig), i = a.indexOf('|'), j = b.indexOf('|');
+  if (i < 0 || j < 0 || a.slice(i) !== b.slice(j)) return false;      /* autre chose que le cap a changé */
+  var el = mk.getElement && mk.getElement(), svg = el && el.querySelector('svg');
+  if (!svg) return false;
+  svg.style.transform = 'rotate(' + (hdg || 0) + 'deg)';
+  return true;
+};
+</script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #020509; color: #E2E8F0; overflow-x: hidden; }
         .font-mono-digits { font-family: 'JetBrains Mono', monospace; }
@@ -1523,7 +1534,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
         mk._sig = sig; markers[p.id] = mk; rtBind(mk);
       } else {
         mk.setLatLng([lat, lon]);
-        if (mk._sig !== sig) { mk.setIcon(icon(p)); mk._sig = sig; }
+        if (mk._sig !== sig) { if (!window.alTurn(mk, mk._sig, sig, p.hdg)) mk.setIcon(icon(p)); mk._sig = sig; }
         mk.setTooltipContent(tip(p));
       }
       mk._p = p;
@@ -1725,7 +1736,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
         mk._sig = sig; allMk[id] = mk; rtBind(mk);
       } else {
         mk.setLatLng(ll);
-        if (mk._sig !== sig) { mk.setIcon(allIcon(p)); mk._sig = sig; }
+        if (mk._sig !== sig) { if (!window.alTurn(mk, mk._sig, sig, p.hdg)) mk.setIcon(allIcon(p)); mk._sig = sig; }
         mk.setTooltipContent(allTip(p));
       }
       mk._p = p;
@@ -4024,7 +4035,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
             m.setLatLng(latLng);
             const cat = acCategory(a);
             const sig = `${a.hdg}|${a.ground}|${cat}`;
-            if (m._sig !== sig) { m.setIcon(trafficIcon(a.hdg, isUser, a.ground, cat, a)); m._sig = sig; }
+            if (m._sig !== sig) { if (!window.alTurn(m, m._sig, sig, a.hdg)) m.setIcon(trafficIcon(a.hdg, isUser, a.ground, cat, a)); m._sig = sig; }
             m.setTooltipContent(trafficTooltip(a, isUser));
             return m;
         }
