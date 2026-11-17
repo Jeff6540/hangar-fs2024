@@ -20,8 +20,8 @@ NET_JS = r"""<script>
 (function () {
   var T = __TXT__;
   var RELAY = 'http://localhost:8765/net?src=';
-  var SRC = { vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#009E73', leg: T.leg_v },
-              ivao:   { label: 'IVAO',   color: '#e11d48', cb: '#D55E00', leg: T.leg_i, dark: true } };
+  /* 12.3 : VATSIM et IVAO retirés de l'appli (le module garde seulement le mouvement fluide des avions) */
+  var SRC = {};
   /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
   var DARK = '#1f2937';
   var st = {};
@@ -29,7 +29,7 @@ NET_JS = r"""<script>
     var on = false; try { on = localStorage.getItem('al_net_' + k) === '1'; } catch (e) {}
     st[k] = { on: on, data: null, err: '', mk: {}, layer: null, btn: null, t: 0 };
   });
-  window.alNetOn = function () { return st.vatsim.on || st.ivao.on; };
+  window.alNetOn = function () { return false; };
   function K() { return window.alNetKit; }
   function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
 

@@ -21,8 +21,7 @@ Features:
   - Profiles: a set of add-ons (sceneries, aircraft...) saved under a
     name and activated in one click ("Profiles..." button).
   - Flight plan & tracking: built-in flight planner, your aircraft,
-    MSFS AI traffic, the pilots of your FSHub VA live, VATSIM and IVAO
-    pilots live (tick boxes), and airport
+    MSFS AI traffic, the pilots of your FSHub VA live, and airport
     runways, taxiways and parking spots when you zoom in
     (OpenStreetMap).
   - Colorblind mode (Settings > Accessibility > "Colorblind mode" tile).
@@ -66,7 +65,7 @@ If Windows shows "Windows protected your PC": click "More info", then
 If Microsoft Defender or your antivirus flags the app: this is a
 possible false positive with unsigned apps (version 12.0 scored
 0 alerts on VirusTotal). The app contains nothing harmful and only
-connects to SimBrief, FSHub, VATSIM, IVAO, weather services,
+connects to SimBrief, FSHub, weather services,
 OurAirports and OpenStreetMap (airport layouts). If Defender quarantined the file:
 Windows Security > Virus & threat protection > Protection history >
 the alert > Actions > Allow / Restore.
@@ -138,9 +137,7 @@ running, the app locks itself (red banner) to prevent mistakes.
   latest flight plan", then "Prepare the flight": only your flight's
   sceneries are activated, and removed when MSFS closes.
 - Flight plan & tracking tab: flight planner, weather, a map with
-  your aircraft and AI traffic, the "VATSIM" and "IVAO" buttons
-  (pilots online on these networks, off by default; they also follow
-  the "Range" menu), the "All FSHub VAs" button (FSHub
+  your aircraft and AI traffic, the "All FSHub VAs" button (FSHub
   global radar, off by default; click an FSHub aircraft to see its
   filed route and track; "Range" menu to show only nearby flights or
   those along your route), your own track in blue, your SimBrief
@@ -177,7 +174,7 @@ The relay status is shown at the bottom of the app (on/off button).
   it only creates and removes links.
 - Your settings stay on your PC, in: %APPDATA%\HangarFS2024
   (nothing is sent anywhere; only SimBrief, weather services, FSHub,
-  VATSIM, IVAO and OpenStreetMap are queried online).
+  and OpenStreetMap are queried online).
 
 ===============================================================
   IMPORTANT - MSFS 2024 CONTENT.XML FILE (ICAO duplicates)

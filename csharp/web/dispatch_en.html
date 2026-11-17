@@ -1443,6 +1443,33 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     });
   }
 
+  /* 12.3 : avance de chaque avion depuis SON dernier relevé FSHub (et pas depuis la dernière lecture du relais),
+     sans jamais le faire reculer : si un nouveau relevé est un peu derrière, l'avion attend qu'il le rattrape. */
+  var alPos = {};
+  function alStamp(k, p) {
+    var s = alPos[k];
+    if (!s || s.lat !== p.lat || s.lon !== p.lon) s = alPos[k] = { lat: p.lat, lon: p.lon, t: Date.now() };
+    return s.t;
+  }
+  function alAhead(k, p, live) {
+    var t0 = alStamp(k, p), lat = p.lat, lon = p.lon, dt = Math.min(90, (Date.now() - t0) / 1000);
+    if (live && !p.ground && p.gs > 30 && p.hdg != null && dt > 0) {
+      var d = p.gs * dt / 3600 / 60, h = p.hdg * Math.PI / 180;
+      lat = p.lat + d * Math.cos(h);
+      lon = p.lon + d * Math.sin(h) / Math.max(0.05, Math.cos(p.lat * Math.PI / 180));
+    }
+    return [lat, lon];
+  }
+  function alNoBack(mk, ll, p) {
+    var a = mk && mk._alLL;
+    if (a && p.hdg != null && !p.ground) {
+      var h = p.hdg * Math.PI / 180, c = Math.cos(a[0] * Math.PI / 180);
+      var dy = ll[0] - a[0], dx = (ll[1] - a[1]) * c, along = dy * Math.cos(h) + dx * Math.sin(h);
+      if (along < 0 && Math.sqrt(dx * dx + dy * dy) * 60 < 5) return a;   /* un peu derrière : on ne recule pas */
+    }
+    if (mk) mk._alLL = ll;
+    return ll;
+  }
   function render() {
     vaLinks();
     if (btn) {
@@ -1464,20 +1491,14 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     if (!layer) layer = L.layerGroup().addTo(m);
     if (!on || !data || !data.enabled) { layer.clearLayers(); markers = {}; if (legend) legend.style.display = 'none'; return; }
     var seen = {};
-    var dt = data._t ? Math.min(30, (Date.now() - data._t) / 1000) : 0;
     (data.pilots || []).forEach(function (p) {
       if (p.me || p.lat == null || p.lon == null) return;
-      var lat = p.lat, lon = p.lon;
-      if (p.live && !p.ground && p.gs > 30 && p.hdg != null && dt > 0) {  /* avance l'avion entre deux relevés */
-        var d = p.gs * dt / 3600 / 60, h = p.hdg * Math.PI / 180;
-        lat = p.lat + d * Math.cos(h);
-        lon = p.lon + d * Math.sin(h) / Math.max(0.05, Math.cos(p.lat * Math.PI / 180));
-      }
+      var ll0 = alNoBack(markers[p.id], alAhead('va' + p.id, p, p.live), p), lat = ll0[0], lon = ll0[1];
       if (p.ground && !showGround()) return;
       seen[p.id] = true;
       var mk = markers[p.id], sig = p.hdg + '|' + p.ground + '|' + p.phase + '|' + p.route + '|' + p.aircraft + '|' + zoomed();
       if (!mk) {
-        mk = L.marker([lat, lon], { icon: icon(p), keyboard: false, zIndexOffset: 700 }).addTo(layer);
+        mk = L.marker([lat, lon], { icon: icon(p), keyboard: false, zIndexOffset: 700 }).addTo(layer); mk._alLL = [lat, lon];
         mk.bindTooltip(tip(p), { direction: 'top', offset: [0, -14] });
         mk._sig = sig; markers[p.id] = mk; rtBind(mk);
       } else {
@@ -1666,7 +1687,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     var m = map(); if (!m) return;
     if (!allLayer) allLayer = L.layerGroup().addTo(m);
     radDraw();
-    if (radSel) { var _on = allOn || (window.alNetOn && window.alNetOn()); radSel.style.display = ''; radSel.style.opacity = _on ? '' : '.55'; radSel.title = _on ? radSel._t || radSel.title : 'The radius applies when "All FSHub VAs", VATSIM or IVAO is on'; if (_on) radSel._t = radSel._t || radSel.title; }
+    if (radSel) { var _on = allOn || (window.alNetOn && window.alNetOn()); radSel.style.display = ''; radSel.style.opacity = _on ? '' : '.55'; radSel.title = _on ? radSel._t || radSel.title : 'The radius applies when "All FSHub VAs" is on'; if (_on) radSel._t = radSel._t || radSel.title; }
     if (!allOn || !allData) { allLayer.clearLayers(); allMk = {}; return; }
     var keepIt = radFilter(), shown = 0;
     var mine = {}, myVa = data && data.airline && data.airline.id;
@@ -1677,13 +1698,13 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       if (p.ground && !showGround()) return;
       if (keepIt && !keepIt(p.lat, p.lon)) return;
       var id = String(p.id); seen[id] = 1; shown++;
-      var mk = allMk[id], sig = p.hdg + '|' + p.ground;
+      var mk = allMk[id], sig = p.hdg + '|' + p.ground, ll = alNoBack(mk, alAhead('all' + id, p, true), p);
       if (!mk) {
-        mk = L.marker([p.lat, p.lon], { icon: allIcon(p), keyboard: false, zIndexOffset: 500 }).addTo(allLayer);
+        mk = L.marker(ll, { icon: allIcon(p), keyboard: false, zIndexOffset: 500 }).addTo(allLayer); mk._alLL = ll;
         mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
         mk._sig = sig; allMk[id] = mk; rtBind(mk);
       } else {
-        mk.setLatLng([p.lat, p.lon]);
+        mk.setLatLng(ll);
         if (mk._sig !== sig) { mk.setIcon(allIcon(p)); mk._sig = sig; }
         mk.setTooltipContent(allTip(p));
       }
@@ -1781,7 +1802,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   document.head.appendChild(css);
 
   function start() { build(); poll(); pollAll(); setInterval(poll, 5000); setInterval(pollAll, 10000); setInterval(render, 1000);
-    setInterval(function () { if (allOn && rad !== 'all') renderAll(); }, 3000); }
+    setInterval(function () { if (allOn) renderAll(); }, 1000); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script><script>
@@ -2028,8 +2049,8 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 (function () {
   var T = {"on": "Show pilots connected to %s (public %s data, refreshed every 15 s)", "off": "%s unavailable: %s", "hide": "Pilots connected to %s — click to hide", "ground": "on ground", "air": "airborne", "hdg": "hdg", "src": "%s data", "relay": "relay stopped", "leg_v": "VATSIM pilots", "leg_i": "IVAO pilots"};
   var RELAY = 'http://localhost:8765/net?src=';
-  var SRC = { vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#009E73', leg: T.leg_v },
-              ivao:   { label: 'IVAO',   color: '#e11d48', cb: '#D55E00', leg: T.leg_i, dark: true } };
+  /* 12.3 : VATSIM et IVAO retirés de l'appli (le module garde seulement le mouvement fluide des avions) */
+  var SRC = {};
   /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
   var DARK = '#1f2937';
   var st = {};
@@ -2037,7 +2058,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     var on = false; try { on = localStorage.getItem('al_net_' + k) === '1'; } catch (e) {}
     st[k] = { on: on, data: null, err: '', mk: {}, layer: null, btn: null, t: 0 };
   });
-  window.alNetOn = function () { return st.vatsim.on || st.ivao.on; };
+  window.alNetOn = function () { return false; };
   function K() { return window.alNetKit; }
   function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
 

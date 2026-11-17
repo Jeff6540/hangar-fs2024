@@ -201,6 +201,14 @@ R["en"] += [
    "a <b>Glideslope intercept altitude</b> box: the altitude at which you capture the ILS glideslope, printed on your approach chart (e.g. 3000); type it once, it is kept for that airport and runway and shown in the short line (if SimBrief gives no ILS frequency, only the runway course is shown)"),
 ]
 
+# 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
+CUT = {
+ "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",
+         "<p><b>Mouvement des avions</b></p><p>Entre deux mises à jour, les avions glissent en douceur au lieu de sauter. Les avions FSHub (ta VA et les autres VA) avancent selon leur cap et leur vitesse depuis leur dernier relevé, sans jamais reculer ; pendant un zoom, ils suivent la carte.</p>")],
+ "en": [(r"<p><b>VATSIM and IVAO pilots</b></p>.*?until the next position\.</p>",
+         "<p><b>Aircraft movement</b></p><p>Between two updates, aircraft glide smoothly instead of jumping. FSHub aircraft (your VA and the other VAs) move along their heading and speed since their last report, never backwards; during a zoom, they follow the map.</p>")],
+}
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),
@@ -221,5 +229,8 @@ if __name__ == "__main__":
             s = s.replace(a, b)
         for a, b in GLOBAL.get(lang, []):   # remplacements partout (idempotents)
             s = s.replace(a, b)
+        import re
+        for rx, b in CUT.get(lang, []):
+            s = re.sub(rx, lambda m: b, s, flags=re.S)
         open(p, "w", encoding="utf-8").write(s)
         print("ok :", p)

@@ -15,8 +15,7 @@ Il propose aussi :
     sous un nom et active en un clic (bouton "Profils...") ;
   - un mode adapte aux daltoniens (Reglages > Accessibilite > tuile "Mode daltonien") ;
   - une page "Plan & suivi de vol" avec ton avion, le trafic IA, les
-    pilotes de ta VA FSHub (radar FSHub), les pilotes VATSIM et IVAO
-    en direct (cases a cocher), et les pistes,
+    pilotes de ta VA FSHub (radar FSHub), et les pistes,
     taxiways et parkings des aeroports quand tu zoomes (OpenStreetMap).
 
 Un tutoriel illustre complet est dans l'appli : bouton "? Tutoriel"
@@ -54,7 +53,7 @@ Si Windows affiche "Windows a protege votre ordinateur" : clique sur
 Si Microsoft Defender ou ton antivirus signale l'appli : c'est un faux
 positif possible avec les applis non signees (la version 12.0 est
 passee a 0 alerte sur VirusTotal). L'appli ne contient rien de
-dangereux et ne se connecte qu'a SimBrief, FSHub, VATSIM, IVAO, la
+dangereux et ne se connecte qu'a SimBrief, FSHub, la
 meteo, OurAirports et OpenStreetMap (plans d'aeroport). Si Defender a mis le fichier en quarantaine :
 Securite Windows > Protection contre les virus et menaces > Historique
 de protection > l'alerte > Actions > Autoriser / Restaurer.
@@ -127,8 +126,6 @@ ouvert, l'appli se verrouille (bandeau rouge) pour eviter les erreurs.
   fermeture de MSFS.
 - Onglet Plan & suivi de vol : plan de vol, meteo, carte avec ton
   avion, le trafic IA, le bouton "Ma VA FSHub" (pilotes en direct),
-  les boutons "VATSIM" et "IVAO" (pilotes en ligne sur ces reseaux,
-  desactives par defaut ; ils suivent aussi le menu "Rayon"),
   le bouton "Toutes les VA FSHub" (radar global FSHub, desactive
   par defaut ; clic sur un avion FSHub : sa route deposee et sa
   trajectoire ; menu "Rayon" pour n'afficher que les vols proches
@@ -192,7 +189,7 @@ anglais (l'appli redemarre).
   il cree et retire seulement des liens.
 - Tes reglages restent sur ton PC, dans : %APPDATA%\HangarFS2024
   (rien n'est envoye ailleurs ; seuls SimBrief, la meteo, FSHub,
-  VATSIM, IVAO et OpenStreetMap sont consultes sur internet).
+  et OpenStreetMap sont consultes sur internet).
 
 ===============================================================
   IMPORTANT - FICHIER CONTENT.XML DE MSFS 2024 (Doublons ICAO)

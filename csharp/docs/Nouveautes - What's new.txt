@@ -15,7 +15,10 @@ Version 12.3 — nouveau look, rien de retiré
 - Carte addons : volet de droite repliable pour agrandir la carte ; la légende devient des interrupteurs ON / OFF.
 - Avionics Dispatch : choix en tuiles (Départ → Arrivée / Aléatoire, Départs / Arrivées, IFR / VFR) ; la carte plein écran (Agrandir) range ses boutons sur deux lignes, avec « Je clique pour ▲ Départ / ■ Arrivée », les filtres d'aéroports en ON / OFF et une légende repliable.
 - Plan & suivi de vol : mêmes couleurs que l'appli ; dans la fenêtre de suivi, chaque volet (Légende, Plan SimBrief, Météo, Ma VA) se replie d'un clic, et le bouton « Tout réduire » libère toute la carte.
-- Mode daltonien : les avions VATSIM passent en vert bleuté, pour ne plus les confondre avec les avions IA de type non identifié (bleu ciel). Le mot ON / OFF accompagne toujours la couleur.
+- Suivi : VATSIM et IVAO retirés (peu utiles ici) ; les avions FSHub avancent sans à-coups et ne reculent plus, ceux des autres VA ne se figent plus, et tous suivent la carte pendant un zoom.
+- Suivi : la trajectoire de ton avion ne trace plus de grandes lignes au chargement du simulateur ; le menu Rayon reste affiché ; les volets indiquent « réduire » / « déplier ».
+- Volet du plan : plus de « ILS [object Object] » (axe de piste seul si SimBrief ne donne pas de fréquence) ; la case « Altitude d'interception du glide » est expliquée.
+- Mode daltonien : le mot ON / OFF accompagne toujours la couleur.
 - Tutoriel mis à jour (français et anglais).
 
 Version 12.2 — corrections
@@ -44,7 +47,10 @@ Version 12.3 — new look, nothing removed
 - Add-on map: foldable right panel to enlarge the map; the legend becomes ON / OFF switches.
 - Avionics Dispatch: choices as tiles (Departure → Arrival / Random, Departures / Arrivals, IFR / VFR); the full-screen map (Enlarge) arranges its buttons on two rows, with "Click sets ▲ Departure / ■ Arrival", ON / OFF airport filters and a foldable legend.
 - Flight plan & tracking: same colours as the app; in the tracking window, each panel (Legend, SimBrief plan, Weather, My VA) folds with one click, and the "Collapse all" button frees the whole map.
-- Colorblind mode: VATSIM aircraft turn bluish green, so they are no longer mixed up with unidentified AI aircraft (sky blue). The word ON / OFF always comes with the colour.
+- Tracking: VATSIM and IVAO removed (of little use here); FSHub aircraft move smoothly and never go backwards, other VAs' aircraft no longer freeze, and all follow the map during a zoom.
+- Tracking: your aircraft's track no longer draws long lines while the simulator loads; the Range menu stays visible; panels show "collapse" / "expand".
+- Plan panel: no more "ILS [object Object]" (runway course only if SimBrief gives no frequency); the "Glideslope intercept altitude" box is explained.
+- Colorblind mode: the word ON / OFF always comes with the colour.
 - Tutorial updated (French and English).
 
 Version 12.2 — fixes

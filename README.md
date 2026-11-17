@@ -8,7 +8,7 @@ Gestionnaire d'add-ons pour **Microsoft Flight Simulator 2024**, piloté par ton
 - Bibliothèque d'add-ons rangée par dossiers : l'appli crée et retire de simples liens vers le dossier Community, sans jamais copier ni supprimer tes add-ons.
 - Vol SimBrief : seules les scènes des aéroports de ton vol sont activées, puis retirées à la fermeture de MSFS.
 - Carte des scènes, profils d'add-ons, démarrage automatique de tes applis de vol.
-- Plan & suivi de vol : carte avec ton avion, le trafic IA, ta VA FSHub, le radar global FSHub, les pilotes VATSIM et IVAO en direct (cases à cocher), plans d'aéroport OpenStreetMap.
+- Plan & suivi de vol : carte avec ton avion, le trafic IA, ta VA FSHub, le radar global FSHub, plans d'aéroport OpenStreetMap.
 - Programme Windows en C# : un simple `Hangar FS 2024.exe`, rien à installer (Windows 10 ou 11), 0 alerte sur VirusTotal.
 - Interface en français et en anglais, tutoriel intégré.
 
@@ -19,7 +19,7 @@ Gestionnaire d'add-ons pour **Microsoft Flight Simulator 2024**, piloté par ton
 - Add-on library sorted in folders: the app creates and removes simple links to the Community folder, never copying or deleting your add-ons.
 - SimBrief flight: only the sceneries of your flight's airports are activated, then removed when MSFS closes.
 - Scenery map, add-on profiles, auto-launch of your flight apps.
-- Flight plan & tracking: map with your aircraft, AI traffic, your FSHub VA, the FSHub global radar, live VATSIM and IVAO pilots (tick boxes), OpenStreetMap airport layouts.
+- Flight plan & tracking: map with your aircraft, AI traffic, your FSHub VA, the FSHub global radar, OpenStreetMap airport layouts.
 - Windows program written in C#: a single `Hangar FS 2024.exe`, nothing to install (Windows 10 or 11), 0 alerts on VirusTotal.
 - French and English interface, built-in tutorial.
 
