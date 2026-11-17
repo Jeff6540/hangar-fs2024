@@ -566,11 +566,29 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
     return true;
   }
   /* fond de carte : pas de fondu entre l'ancien et le nouveau niveau de zoom (sinon les deux cartes se voient l'une sur l'autre) */
+  /* sous le fond choisi, une copie très allégée (niveau 6, quelques images seulement) : pendant qu'une zone se charge,
+     on voit cette version floue au lieu de rectangles sombres. Et le zoom avance par demi-crans, plus doux. */
+  function backdrop(m, l) {
+    if (m._alBack && m._alBack._src === l) return;
+    if (m._alBack) { m.removeLayer(m._alBack); m._alBack = null; }
+    var o = {}; for (var k in l.options) o[k] = l.options[k];
+    o.maxNativeZoom = 6; o.minZoom = 0; o.keepBuffer = 1; o.zIndex = 0; o.attribution = '';
+    var b = L.tileLayer(l._url, o); b._alBackdrop = true; b._src = l; m._alBack = b;
+    l.setZIndex(1); b.addTo(m);
+  }
   function tiles(m) {
     if (!m) return;
     m._fadeAnimated = false;
-    m.eachLayer(function (l) { if (l instanceof L.TileLayer && !l._alT) { l._alT = true; l.options.updateWhenZooming = false; l.options.keepBuffer = 4; } });
-    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd', function () { tiles(m); }); }
+    if (!m._alSteps) { m._alSteps = true; m.options.zoomSnap = 0.5; m.options.zoomDelta = 0.5; m.options.wheelPxPerZoomLevel = 90; }
+    var base = null;
+    m.eachLayer(function (l) {
+      if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
+      if (!l._alT) { l._alT = true; l.options.keepBuffer = 4; }
+      base = l;
+    });
+    if (base) backdrop(m, base);
+    else if (m._alBack) { m.removeLayer(m._alBack); m._alBack = null; }
+    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd layerremove', function (e) { if (e.layer instanceof L.TileLayer && !e.layer._alBackdrop) setTimeout(function () { tiles(m); }, 0); }); }
   }
   function hook() {
     var m = null, f = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; f = (typeof fullMap !== 'undefined') ? fullMap : null; } catch (e) {}
