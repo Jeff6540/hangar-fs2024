@@ -135,6 +135,16 @@ R["en"] += [
   ("<td>Colour-blind friendly colours: safe palette,", "<td>\"Colorblind mode\" tile: safe palette,"),
 ]
 
+# 12.3 étape 5 : petites fenêtres
+R["fr"] += [
+  ("<li>Pour chaque profil, choisis ce qu'il remplace : <b>Seulement", "<li>Pour chaque profil, choisis ce qu'il remplace, en cliquant sur une des tuiles à droite de la liste : <b>Seulement"),
+  ("sauf si tu coches <b>Ne pas tenir compte des add-ons ★ protégés</b>", "sauf si tu allumes la tuile <b>Ne pas tenir compte des add-ons ★ protégés</b>"),
+]
+R["en"] += [
+  ("<li>For each profile, choose what it replaces: <b>Airport", "<li>For each profile, choose what it replaces, by clicking one of the tiles right of the list: <b>Airport"),
+  ("unless you tick <b>Ignore ★ protected add-ons</b>", "unless you switch on the <b>Ignore ★ protected add-ons</b> tile"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

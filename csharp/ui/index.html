@@ -178,6 +178,25 @@ footer{flex:none;display:flex;align-items:center;gap:18px;padding:6px 22px 10px}
 .mtext{white-space:pre-wrap;line-height:1.45;margin-bottom:14px;font-weight:600}
 .mbody{margin-bottom:14px}
 .mbtns{display:flex;justify-content:flex-end;gap:8px}
+.mbox.has-body{padding:0;display:flex;flex-direction:column;overflow:hidden}
+.mbox.has-body .mtext{flex:none;margin:0;padding:16px 22px 14px;font-size:16px;font-weight:700;border-bottom:1px solid var(--border);background:#0F151C}
+.mbox.has-body .mtext::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);margin-right:10px;vertical-align:2px}
+.mbox.has-body .mbody{flex:1 1 auto;min-height:0;overflow:auto;margin:0;padding:16px 22px}
+.mbox.has-body .mbtns{flex:none;padding:12px 22px;border-top:1px solid var(--border);background:#0F151C}
+.mbox.has-body .msub{font-size:13px;font-weight:400;color:var(--muted);margin:6px 0 0 18px;line-height:1.45;white-space:pre-wrap}
+.mbox:not(.has-body){border-left:3px solid var(--accent)}
+.mbody .muted{line-height:1.45}
+.mbody .tiles{margin:6px 0}
+.mbody .tile{width:250px}
+.mbody .list{border-radius:12px}
+.plist{max-height:50vh;overflow:auto;background:var(--field);border:1px solid var(--border);border-radius:12px;min-width:380px;padding:4px}.pitem{padding:6px 10px;cursor:pointer;border-radius:8px}.pitem:hover{background:var(--hover)}.pitem.sel{background:rgba(56,189,248,.16);color:#F1F5F9;box-shadow:inset 3px 0 0 var(--accent)}
+.mbody fieldset{border:1px solid var(--border);border-radius:14px;margin:0 0 12px;padding:8px 12px 10px;background:#0F151C}
+.mbody fieldset legend{padding:0 6px;font-weight:700;color:var(--accent-hi)}
+.mbody fieldset label{display:flex;gap:10px;align-items:center;padding:8px 10px;margin:4px 0;border-radius:10px;border:1px solid var(--border);background:#121821}
+.mbody fieldset label:hover{border-color:#33404F}
+.mbody fieldset label:has(input:checked){border-color:rgba(56,189,248,.6);background:linear-gradient(rgba(56,189,248,.14),rgba(56,189,248,.05))}
+.mbody fieldset input[type=radio]{accent-color:var(--accent)}
+table.props{border-collapse:separate;border-spacing:0 2px}table.props td{padding:6px 14px 6px 0;border-bottom:1px solid var(--border)}table.props tr:last-child td{border-bottom:0}
 .tiles{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
 .tile{--tc:var(--accent);position:relative;display:inline-flex;flex-direction:column;justify-content:space-between;gap:8px;width:210px;min-height:86px;padding:11px 12px;border-radius:16px;background:#10161E;border:1px solid var(--border);cursor:pointer;text-align:left;box-sizing:border-box}
 .tile:hover{border-color:#33404F}
@@ -203,7 +222,6 @@ footer{flex:none;display:flex;align-items:center;gap:18px;padding:6px 22px 10px}
 .tile:has(input:disabled){opacity:.5;cursor:default}
 .dform{display:grid;grid-template-columns:max-content minmax(380px,1fr) auto;gap:8px 10px;align-items:center}.dform input[type=text]{width:100%}.dform .span2{grid-column:2 / span 2}
 input[type=number]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--fg)}
-.plist{max-height:50vh;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;min-width:380px}.pitem{padding:4px 10px;cursor:pointer}.pitem:hover{background:var(--hover)}.pitem.sel{background:var(--sel)}
 th.c,td.c{text-align:center}
 tr.litem{cursor:pointer}tr.litem:hover td{background:var(--hover)}tr.litem.sel td{background:var(--sel)}
 .lt-run td{color:var(--ok)}.lt-wait td{color:var(--accent-hi)}.lt-err td{color:#ff9a9a}.lt-off td{color:var(--off)}
@@ -665,8 +683,9 @@ async function run(cmd, args){
 function modal(text, buttons, bodyNode){
   return new Promise(resolve => {
     const ov = document.createElement("div"); ov.className = "modal";
-    const box = document.createElement("div"); box.className = "mbox"; ov.appendChild(box);
+    const box = document.createElement("div"); box.className = "mbox" + (bodyNode ? " has-body" : ""); ov.appendChild(box);
     const tx = document.createElement("div"); tx.className = "mtext"; tx.textContent = text || ""; if (!text) tx.style.display = "none"; box.appendChild(tx);
+    if (bodyNode && text && text.includes("\n")) { const k = text.indexOf("\n"); tx.textContent = text.slice(0, k); const sub = document.createElement("div"); sub.className = "msub"; sub.textContent = text.slice(k + 1).trim(); tx.appendChild(sub); }
     if (bodyNode) { const b = document.createElement("div"); b.className = "mbody"; b.appendChild(bodyNode); box.appendChild(b); }
     const bt = document.createElement("div"); bt.className = "mbtns"; box.appendChild(bt);
     buttons.forEach(b => {
@@ -1068,9 +1087,10 @@ async function showProfiles(){
   const side = () => {
     const p = d.profiles.find(x => x.index === cur);
     if (!p) { sideBox.innerHTML = '<div class="muted">' + esc(t("noProf")) + "</div>"; return; }
-    sideBox.innerHTML = "<div>" + esc(t("profReplaces")) + '</div><label class="chk" style="margin-top:4px"><input type="radio" name="psc" value="scenes"> ' + esc(t("scopeScenesLong")) +
-      '</label><br><label class="chk" style="margin-top:4px"><input type="radio" name="psc" value="all"> ' + esc(t("scopeAllLong")) +
-      '</label><br><label class="chk" style="margin-top:10px"><input type="checkbox" id="ppin"> ' + esc(t("ignorePinsLong")) + '</label><div class="muted" style="margin-top:12px;white-space:pre-wrap">' +
+    const PT = (inp, ic, lbl, radio) => '<label class="tile' + (radio ? " radio" : "") + '" style="width:100%">' + inp + '<span class="ti">' + tIcon(ic) + '</span><span><span class="tt">' + esc(lbl) + '</span><br><span class="ts"></span></span></label>';
+    sideBox.innerHTML = '<div class="muted">' + esc(t("profReplaces")) + '</div><div class="tiles" style="flex-direction:column">' +
+      PT('<input type="radio" name="psc" value="scenes">', "target", t("scopeScenesLong"), true) + PT('<input type="radio" name="psc" value="all">', "layers", t("scopeAllLong"), true) +
+      PT('<input type="checkbox" id="ppin">', "shield", t("ignorePinsLong")) + '</div><div class="muted" style="margin-top:12px;white-space:pre-wrap">' +
       esc(tf("profFolders", (p.folders || []).join(", ") || "—") + "\n" + tf("profAddons", p.count) + "\n" + p.addons.map(n => "• " + n).join("\n") + (p.count > 12 ? "\n• …" : "") +
         (p.missing.length ? "\n" + tf("profMissing", p.missing.slice(0, 5).join(", ")) : "") + (d.suspended ? "\n" + tf("profSusp", d.suspended) : "")) + "</div>";
     sideBox.querySelector('input[value="' + p.scope + '"]').checked = true; sideBox.querySelector("#ppin").checked = p.ignore_pinned;
@@ -1078,7 +1098,7 @@ async function showProfiles(){
     sideBox.querySelector("#ppin").onchange = async e => { await run("profileEdit", {index: p.index, change: {ignore_pinned: e.target.checked}}); reload(); };
   };
   const reload = async () => { try { d = await call("profiles"); } catch (e) { return; } if (!d.profiles.some(p => p.index === cur)) cur = d.profiles.length ? 0 : -1; fill(); };
-  const btns = el("div", "row"); btns.style.marginTop = "10px";
+  const btns = el("div", "row"); btns.style.marginTop = "10px"; btns.style.flexWrap = "wrap";
   const B = (label, fn, cls) => { const b = mkBtn(label, fn); if (cls) b.className += " " + cls; btns.appendChild(b); return b; };
   B(t("profActivate"), async () => {
     if (cur < 0) return;
@@ -1123,7 +1143,7 @@ async function contentConfirm(){
   const P = (title, text) => { body.appendChild(el("div", "", "<b>" + esc(title) + "</b>")).style.marginTop = "10px"; const d = el("div", "", esc(text)); body.appendChild(d); return d; };
   P(t("cxWhat"), t("cxWhatText")); P(t("cxNot"), t("cxNotText")); P(t("cxWhere"), c.path); const dest = P(t("cxBackup"), c.backup);
   body.appendChild(el("div", "muted", esc(t("cxNever")))).style.marginTop = "4px";
-  const hide = el("label", "chk", '<input type="checkbox"> ' + esc(t("cxHide"))); hide.style.marginTop = "10px"; body.appendChild(hide);
+  const hideT = mkTile(t("cxHide"), "eye", false); const hide = {firstChild: hideT.input}; const hw = el("div", "tiles"); hw.style.marginTop = "12px"; hw.appendChild(hideT.el); body.appendChild(hw);
   const change = mkBtn(t("cxChange"), async () => { const v = await run("browse", {title: t("cxWhereAsk"), current: folder}); if (v) { folder = v; dest.textContent = v + "\\Content.xml"; } });
   change.style.marginTop = "10px"; body.appendChild(el("div")).appendChild(change);
   const r = await modal(t("cxTitle"), [{label: t("cancel"), value: "cancel"}, {label: t("cxNoBackup"), value: "no"}, {label: t("cxSave"), value: "yes", cls: "accent"}], body);
@@ -1218,7 +1238,7 @@ async function showDuplicates(){
     else { const pr = pk.filter(isOn); if (pr.length && await confirmBox(tf("confirmRemove", pr.length, names8(pr.map(p => p.name))), true)) await run("remove", {paths: pr.map(p => p.path)}); }
     await loadLibrary(); reload();
   };
-  const row = el("div", "row"); row.style.marginTop = "10px";
+  const row = el("div", "row"); row.style.marginTop = "10px"; row.style.flexWrap = "wrap";
   const B = (label, fn, cls) => { const b = mkBtn(label, fn); if (cls) b.className += " " + cls; row.appendChild(b); };
   B(t("dupDisDef"), () => actDefault(false), "warnb lk"); B(t("dupEnDef"), () => actDefault(true), "lk");
   B(t("dupDisAdd"), () => actAddon(false), "danger lk"); B(t("dupEnAdd"), () => actAddon(true), "accent lk");
