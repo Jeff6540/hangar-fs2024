@@ -20,7 +20,7 @@ NET_JS = r"""<script>
 (function () {
   var T = __TXT__;
   var RELAY = 'http://localhost:8765/net?src=';
-  var SRC = { vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#56B4E9', leg: T.leg_v },
+  var SRC = { vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#009E73', leg: T.leg_v },
               ivao:   { label: 'IVAO',   color: '#e11d48', cb: '#D55E00', leg: T.leg_i, dark: true } };
   /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
   var DARK = '#1f2937';
@@ -250,7 +250,7 @@ THEME_123 = r"""<style id="hangar-123">
   --al-bg:#0B0F14; --al-card:#121821; --al-card2:#151D27; --al-field:#0F151C;
   --al-line:#1E2733; --al-line2:#2A3646; --al-text:#E6EDF5; --al-muted:#8B98A9; --al-dim:#64748B;
   --al-blue:#38BDF8; --al-blue-hi:#7DD3FC; --al-sky:#7DD3FC; --al-ink:#06202C;
-  --r-card:16px; --r-ctl:999px;
+  --r-card:16px; --r-ctl:10px;
 }
 html body{background:radial-gradient(1200px 520px at 50% -160px,#0f2233 0%,transparent 70%),#0B0F14!important}
 html body header.avionics-panel{border-bottom:1px solid rgba(56,189,248,.45)!important}
@@ -301,3 +301,96 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_theme123(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.3 étape 8 : fenêtre de suivi — volets repliables, « Tout réduire », VATSIM vert pour les daltoniens ----
+TRK_TXT = {
+    "fr": {"leg": "Légende", "plan": "Plan SimBrief", "met": "Météo départ / arrivée", "va": "Ma VA en ligne",
+           "all": "TOUT RÉDUIRE", "open": "TOUT DÉPLIER", "tip": "Réduire ou déplier tous les volets pour agrandir la carte (un clic sur un volet le replie ou le rouvre)"},
+    "en": {"leg": "Legend", "plan": "SimBrief plan", "met": "Departure / arrival weather", "va": "My VA online",
+           "all": "COLLAPSE ALL", "open": "EXPAND ALL", "tip": "Collapse or expand all panels to enlarge the map (one click on a panel's title folds or opens it)"},
+}
+
+TRK_CSS = r"""<style id="hangar-123-trk">
+/* volets repliables de la fenêtre de suivi */
+html body #alMainLegend{pointer-events:auto!important}
+.al-fold{position:relative}
+.al-fold::before{content:attr(data-al-t) "  ▾";display:block;position:sticky;top:-10px;margin:-2px -2px 6px;padding:2px 2px 6px;border-bottom:1px solid rgba(56,189,248,.25);
+  font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7DD3FC;cursor:pointer;background:inherit;z-index:2}
+.al-fold.al-col{width:auto!important;min-width:0!important;max-width:none!important;max-height:none!important;height:auto!important;overflow:hidden!important;padding:7px 14px!important;
+  border-radius:999px!important;cursor:pointer;border-color:rgba(56,189,248,.55)!important}
+.al-fold.al-col>*{display:none!important}
+.al-fold.al-col{font-size:0!important;line-height:0!important}
+.al-fold.al-col::before{line-height:1.4}
+.al-fold.al-col::before{content:attr(data-al-t) "  ▸";margin:0;padding:0;border:0;position:static}
+.al-fold.al-col:hover{background:rgba(56,189,248,.18)!important}
+#alFoldAll[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+</style>"""
+
+TRK_JS = r"""<script>
+/* Hangar FS 2024 12.3 : volets repliables (clic sur le titre) et bouton Tout réduire */
+(function () {
+  var T = __TXT__;
+  var P = [['alMainLegend', T.leg], ['sbInfo', T.plan], ['trafficMetarBox', T.met], ['alFshubLegend', T.va]];
+  function key(id) { return 'al_fold_' + id; }
+  function set(el, col) {
+    el.classList.toggle('al-col', col);
+    try { localStorage.setItem(key(el.id), col ? '1' : '0'); } catch (e) {}
+    sync(); setTimeout(function () { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 30);
+  }
+  function els() { return P.map(function (p) { return document.getElementById(p[0]); }).filter(Boolean); }
+  function sync() {
+    var b = document.getElementById('alFoldAll'); if (!b) return;
+    var all = els().filter(function (e) { return e.style.display !== 'none' && !e.classList.contains('hidden'); });
+    var col = all.length && all.every(function (e) { return e.classList.contains('al-col'); });
+    b.setAttribute('aria-pressed', col ? 'true' : 'false');
+    b.querySelector('span').textContent = col ? T.open : T.all;
+  }
+  function hook() {
+    P.forEach(function (p) {
+      var el = document.getElementById(p[0]); if (!el || el._alFold) return;
+      el._alFold = true; el.classList.add('al-fold'); el.setAttribute('data-al-t', p[1]);
+      var saved = null; try { saved = localStorage.getItem(key(p[0])); } catch (e) {}
+      if (saved === '1') el.classList.add('al-col');
+      el.addEventListener('click', function (e) {
+        if (el.classList.contains('al-col')) { e.stopPropagation(); e.preventDefault(); set(el, false); return; }
+        if (e.target === el && e.clientY - el.getBoundingClientRect().top < 26) { e.stopPropagation(); e.preventDefault(); set(el, true); }
+      }, true);
+    });
+    sync();
+  }
+  window.alFoldAll = function () {
+    var list = els(), col = !list.every(function (e) { return e.classList.contains('al-col'); });
+    list.forEach(function (e) { set(e, col); });
+  };
+  function start() { hook(); setInterval(hook, 1500); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>"""
+
+
+def patch_tracking123(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if 'id="hangar-123-trk"' in s:
+        print("déjà fait (suivi 12.3) :", path); return
+    def rep(a, b):
+        nonlocal s
+        assert s.count(a) == 1, (path, a[:80], s.count(a))
+        s = s.replace(a, b)
+    import json
+    t = TRK_TXT[lang]
+    rep('<div class="absolute top-3 right-3 z-[1000] bg-cockpit-950/90', '<div id="alMainLegend" class="absolute top-3 right-3 z-[1000] bg-cockpit-950/90')
+    rep('<button onclick="closeTrafficMapModal()" class="ml-auto w-6 h-6',
+        '<button id="alFoldAll" onclick="alFoldAll()" aria-pressed="false" title="%s" class="ml-auto px-2.5 py-1 bg-cockpit-800 text-slate-200 text-[10px] font-bold rounded border border-cockpit-border cursor-pointer whitespace-nowrap">'
+        '<i class="fa-solid fa-compress"></i> <span>%s</span></button>\n            <button onclick="closeTrafficMapModal()" class="w-6 h-6' % (t["tip"], t["all"]))
+    # daltoniens : VATSIM en vert bleuté (le bleu ciel est déjà le « type non identifié » du trafic IA)
+    s = s.replace("vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#56B4E9',", "vatsim: { label: 'VATSIM', color: '#22c55e', cb: '#009E73',")
+    rep("<!--HANGAR_CB-->", TRK_CSS + TRK_JS.replace("__TXT__", json.dumps(t, ensure_ascii=False)) + "<!--HANGAR_CB-->")
+    open(path, "w", encoding="utf-8").write(s)
+    print("ok (suivi 12.3) :", path)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_tracking123(os.path.join(_web, "dispatch_%s.html" % _l), _l)

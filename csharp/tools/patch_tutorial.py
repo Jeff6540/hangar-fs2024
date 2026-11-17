@@ -167,6 +167,18 @@ R["en"] += [
    "open in your usual browser.</p><p>The page uses the app's colours: dark cards, sky-blue titles and main button, rounded buttons.</p><h3>The main page</h3>"),
 ]
 
+# 12.3 étape 8 : volets repliables de la fenêtre de suivi
+R["fr"] += [
+  ("La légende en haut à droite indique aussi les couleurs : doré pour ta VA, violet pour les autres VA FSHub.</p>",
+   "La légende en haut à droite indique aussi les couleurs : doré pour ta VA, violet pour les autres VA FSHub.</p><p><b>Volets repliables</b> : un clic sur le titre bleu d'un volet (Légende, Plan SimBrief, Météo départ / arrivée, Ma VA en ligne) le replie en une petite étiquette ; un clic sur l'étiquette le rouvre. Le bouton <b>Tout réduire</b>, en haut à droite, replie tous les volets d'un coup pour agrandir la carte (il devient <b>Tout déplier</b>). L'appli garde ton choix pour la prochaine fois.</p>"),
+  ("les avions VATSIM sont verts, et les avions IVAO", "les avions VATSIM sont verts (vert bleuté en mode daltonien, pour ne pas les confondre avec le bleu ciel des avions IA de type non identifié), et les avions IVAO"),
+]
+R["en"] += [
+  ("The legend at the top right also shows the colours: gold for your VA, purple for the other FSHub VAs.</p>",
+   "The legend at the top right also shows the colours: gold for your VA, purple for the other FSHub VAs.</p><p><b>Folding panels</b>: one click on a panel's blue title (Legend, SimBrief plan, Departure / arrival weather, My VA online) folds it into a small label; one click on the label opens it again. The <b>Collapse all</b> button, top right, folds every panel at once to enlarge the map (it then reads <b>Expand all</b>). The app remembers your choice.</p>"),
+  ("VATSIM aircraft are green and IVAO aircraft", "VATSIM aircraft are green (bluish green in colorblind mode, so they are not mixed up with the sky blue of unidentified AI aircraft) and IVAO aircraft"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),
