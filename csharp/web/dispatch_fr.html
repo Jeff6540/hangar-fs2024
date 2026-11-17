@@ -1148,7 +1148,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
     var lda = num(r.length_lda) || num(r.length), fac = num(dist.factored_distance);
     return { icao: icao, rwy: r.identifier, lda: lda, wet: wet, rain: mt && mt.wet, flaps: cd.flap_setting || dist.flap_setting,
       brakes: dist.brake_setting, vref: vref, vapp: vref ? vref + add : null, add: add, act: num(dist.actual_distance), fac: fac,
-      margin: lda && fac ? lda - fac : null, mt: mt, c: c, ils: String(r.ils_frequency || '').trim(), crs: num(r.magnetic_course), elev: num(r.elevation) != null ? num(r.elevation) : num((pd.destination || {}).elevation) };
+      margin: lda && fac ? lda - fac : null, mt: mt, c: c, ils: (typeof r.ils_frequency === 'string' || typeof r.ils_frequency === 'number') ? String(r.ils_frequency).trim() : '', crs: num(r.magnetic_course), elev: num(r.elevation) != null ? num(r.elevation) : num((pd.destination || {}).elevation) };
   }
   function gsKey(icao, rwy) { return 'al_gs_' + icao + '_' + String(rwy).replace(/^0+(?=\d)/, ''); }
 
@@ -1171,7 +1171,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
   }
   function gsHtml(l, edit) {
     var k = gsKey(l.icao, l.rwy), v = ls(k);
-    if (edit) return 'Interception glide : <input class="alp-gs" data-k="' + k + '" value="' + esc(v || '') + '" placeholder="____" inputmode="numeric" maxlength="5"> ft <span class="alp-m">(d’après ta carte)</span>';
+    if (edit) return '<span title="Altitude à laquelle tu captes le glide de l’ILS : elle est écrite sur ta carte d’approche (ex. 3000). Tape-la ici : elle est gardée pour cette piste et rappelée dans la ligne courte.">Altitude d’interception du glide :</span> <input class="alp-gs" data-k="' + k + '" value="' + esc(v || '') + '" placeholder="____" inputmode="numeric" maxlength="5"> ft <span class="alp-m">(à recopier de ta carte d’approche, gardé pour cette piste)</span>';
     return v ? ' · glide <span class="alp-y">' + esc(v) + '</span> ft' : '';
   }
   function lLine(l, full) {
@@ -1187,6 +1187,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
     if (l.act && l.fac) s += '<br>Distance réelle ' + ft(l.act) + ' · pondérée ' + ft(l.fac) +
          (l.margin != null ? ' · <span class="' + (l.margin > 0 ? 'alp-ok' : 'alp-w') + '">marge ' + ft(l.margin) + '</span>' : '');
     if (l.ils) s += '<br>ILS ' + esc(l.ils) + (l.crs != null ? ' · CRS ' + String(Math.round(l.crs)).padStart(3, '0') + '°' : '');
+    else if (l.crs != null) s += '<br>Axe de piste ' + String(Math.round(l.crs)).padStart(3, '0') + '°';
     s += '<br>' + gsHtml(l, true);
     if (l.c && l.c.head <= -3) s += '<div class="alp-n">⚠ Vent arrière : distances SimBrief non corrigées.</div>';
     return s;

@@ -191,6 +191,16 @@ R["en"] += [
    "(Map, Dark map, Satellite, Terrain).</li></ul><p><b>The full-screen map (Enlarge)</b>: the top bar is arranged on two rows. Top: Main menu, the route summary (departure → arrival, distance, compatibility), <b>Swap</b>, <b>Clear</b>, <b>Validate</b> and the cross to close. Bottom: <b>Click sets</b> (<b>▲ Departure</b> and <b>■ Arrival</b> tiles: choose what your next click does; with no choice, the 1st click sets the departure and the 2nd the arrival), the <b>airport</b> filters (Large, Medium, Airfields, each with ON / OFF), the <b>aircraft</b>, the <b>altitude</b> and Dark background. A <b>legend</b>, bottom right, recalls the colours and folds with a click on its title.</p>"),
 ]
 
+# 12.3 : altitude d'interception du glide expliquée
+R["fr"] += [
+  ("case <b>Interception glide</b> à remplir d'après ta carte (retenue pour chaque aéroport et piste)",
+   "case <b>Altitude d'interception du glide</b> : l'altitude à laquelle tu captes le glide de l'ILS, écrite sur ta carte d'approche (ex. 3000) ; tu la tapes une fois, elle est retenue pour cet aéroport et cette piste et rappelée dans la ligne courte (si SimBrief ne donne pas de fréquence ILS, seul l'axe de piste est affiché)"),
+]
+R["en"] += [
+  ("a <b>Glideslope intercept</b> box to fill in from your chart (kept for each airport and runway)",
+   "a <b>Glideslope intercept altitude</b> box: the altitude at which you capture the ILS glideslope, printed on your approach chart (e.g. 3000); type it once, it is kept for that airport and runway and shown in the short line (if SimBrief gives no ILS frequency, only the runway course is shown)"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),
