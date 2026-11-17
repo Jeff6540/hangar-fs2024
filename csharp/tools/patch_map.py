@@ -88,8 +88,6 @@ try { if (localStorage.getItem("volet") === "1") setPanel(true); } catch (e) {}
     a = '$("refresh").addEventListener("click", load);'
     assert s.count(a) == 1
     s = s.replace(a, js.strip() + "\n" + a, 1)
-    # zoom plus doux (quarts de niveau, molette moins sensible)
-    s = s.replace('const map = L.map("map", {worldCopyJump:true, preferCanvas:true})', 'const map = L.map("map", {worldCopyJump:true, preferCanvas:true, zoomSnap:0.25, zoomDelta:0.25, wheelPxPerZoomLevel:160, wheelDebounceTime:60, fadeAnimation:false})', 1)
     # trajet SimBrief : bleu ciel
     s = s.replace('#3b82f6', '#38BDF8')
     return s

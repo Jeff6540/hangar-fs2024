@@ -151,7 +151,7 @@ const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-const map = L.map("map", {worldCopyJump:true, preferCanvas:true, zoomSnap:0.25, zoomDelta:0.25, wheelPxPerZoomLevel:160, wheelDebounceTime:60, fadeAnimation:false}).setView([45, 5], 5);
+const map = L.map("map", {worldCopyJump:true, preferCanvas:true}).setView([45, 5], 5);
 const attr = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const bases = {
