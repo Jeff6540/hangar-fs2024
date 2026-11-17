@@ -115,6 +115,26 @@ R = {
  ],
 }
 
+# 12.3 étape 4 : Réglages en cartes et tuiles
+R["fr"] += [
+  ("ta VA FSHub ; les dossiers et chemins se valident avec", "ta VA FSHub, rangés en <b>cartes</b> (Dossiers et chemins, Démarrage, Accessibilité, Écrans, FSHub, Raccourci, Sauvegarde, Aide et licence). Les options sont des <b>tuiles</b> : un clic l'allume (voyant et « ON ») ou l'éteint. Les dossiers et chemins se valident avec"),
+  ("Les cases, les écrans, le code de ta VA et la clé FSHub s'appliquent tout de suite.", "Les tuiles, l'écran choisi, le code de ta VA et la clé FSHub s'appliquent tout de suite."),
+  ("<li>La case « Toujours ouvrir Hangar FS 2024 en mode administrateur » est utile", "<li>La tuile « Toujours ouvrir en mode administrateur » est utile"),
+  ("si « Démarrer avec Windows » est coché). Les deux cases sont indépendantes", "si la tuile « Démarrer avec Windows » est allumée). Les deux tuiles sont indépendantes"),
+  ("ne le coche que si tu en as besoin.</li>", "ne l'allume que si tu en as besoin.</li>"),
+  ("<li>Coche les fenêtres à placer : Hangar FS 2024,", "<li>Allume les tuiles des fenêtres à placer : Hangar FS 2024,"),
+  ("<td>Couleurs adaptées aux daltoniens : palette lisible,", "<td>Tuile « Mode daltonien » : palette lisible,"),
+]
+R["en"] += [
+  ("your FSHub VA; folders and paths are confirmed with", "your FSHub VA, arranged in <b>cards</b> (Folders and paths, Startup, Accessibility, Screens, FSHub, Shortcut, Backup, Help and licence). Options are <b>tiles</b>: one click switches a tile on (light and \"ON\") or off. Folders and paths are confirmed with"),
+  ("Tick boxes, screens, your VA code and the FSHub key apply immediately.", "Tiles, the chosen screen, your VA code and the FSHub key apply immediately."),
+  ("<li>The \"Always open Hangar FS 2024 in administrator mode\" box is useful", "<li>The \"Always open in administrator mode\" tile is useful"),
+  ("if \"Start with Windows\" is ticked). Both boxes are independent", "if the \"Start with Windows\" tile is on). Both tiles are independent"),
+  ("only tick it if you need it.</li>", "only switch it on if you need it.</li>"),
+  ("<li>Tick the windows to place: Hangar FS 2024,", "<li>Switch on the tiles of the windows to place: Hangar FS 2024,"),
+  ("<td>Colour-blind friendly colours: safe palette,", "<td>\"Colorblind mode\" tile: safe palette,"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

@@ -161,6 +161,12 @@ input[type=password]{background:var(--field);border:1px solid var(--border);bord
 .dlist table td{max-width:420px}tr.ditem{cursor:pointer}tr.ditem:hover td{background:var(--hover)}tr.ditem.sel td{background:var(--sel)}
 tr.dgrp td{font-weight:700;background:#20252e}tr.dgrp.conf td{color:var(--warn)}tr.don td{background:var(--cat-ours)}tr.doff td{color:var(--off)}
 tr.h-missing td{color:#ff9a9a}tr.h-moved td{color:var(--ok)}table.props td{padding:4px 12px 4px 0;white-space:normal;max-width:620px}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;max-width:1400px;padding-bottom:10px}
+.setcard{flex:none;min-height:auto}
+.setcard.wide{grid-column:1 / -1}
+.cardh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-hi)}
+.setcard .note{max-width:none}
+.setcard .form{max-width:none}
 .note{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--muted);white-space:pre-wrap;max-width:1100px;line-height:1.45}
 .soonbox{margin:auto;text-align:center;color:var(--muted);max-width:560px;line-height:1.6}
 .soonbox .big{font-size:42px}
@@ -356,7 +362,10 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 
   <!-- Réglages -->
   <section class="tab" id="tab-set" style="overflow:auto">
-    <div class="form">
+   <div class="setgrid">
+    <div class="pane setcard wide">
+      <div class="cardh" data-t="cardPaths"></div>
+      <div class="form">
       <span data-t="setLib"></span><input type="text" id="sLib"><button class="btn" data-browse="sLib" data-t="browse"></button><span></span>
       <span data-t="setComm"></span><input type="text" id="sComm"><button class="btn" data-browse="sComm" data-t="browse"></button><button class="btn" id="bDetect" data-t="detect"></button>
       <span data-t="setStreamed"></span><input type="text" id="sStreamed"><button class="btn" data-browse="sStreamed" data-t="browse"></button><button class="btn" id="bDetectStreamed" data-t="detect"></button>
@@ -365,52 +374,71 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <span data-t="setSimc"></span><input type="text" id="sSimc"><button class="btn" data-browse="sSimc" data-t="browse"></button><span></span>
       <span></span><span class="muted" data-t="setSimcHelp" style="grid-column:2 / span 3"></span>
       <span></span><div class="row" style="grid-column:2 / span 3"><button class="btn accent lk" id="bSave" data-t="save"></button><span class="muted" id="saveLbl"></span></div>
-
-      <span data-t="setStart" style="align-self:start;padding-top:4px"></span>
-      <div style="grid-column:2 / span 3">
-        <label class="chk"><input type="checkbox" id="sStartup"><span data-t="setStartupOpt"></span></label>
-        <div style="margin:8px 0 0 0">
-          <label class="chk"><input type="checkbox" id="sStartupAdmin"><span data-t="setAdminOpt"></span></label>
-          <div class="muted" data-t="setAdminHelp" style="margin:3px 0 0 26px"></div>
-          <div class="row" style="margin:6px 0 0 0"><span class="muted" id="adminMode"></span><button class="btn" id="bRestartAdmin" data-t="restartAdmin"></button></div>
-        </div>
       </div>
+    </div>
 
-      <span data-t="setScreens" style="align-self:start;padding-top:4px"></span>
-      <div style="grid-column:2 / span 3;flex-wrap:nowrap;align-items:flex-start" class="row">
+    <div class="pane setcard">
+      <div class="cardh" data-t="cardStart"></div>
+      <div class="tiles">
+        <label class="tile"><input type="checkbox" id="sStartup"><span class="ti" data-ic="windows"></span><span><span class="tt" data-t="tStartup"></span><br><span class="ts"></span></span></label>
+        <label class="tile"><input type="checkbox" id="sStartupAdmin"><span class="ti" data-ic="shield"></span><span><span class="tt" data-t="tAdmin"></span><br><span class="ts"></span></span></label>
+      </div>
+      <div class="muted" data-t="setAdminHelp"></div>
+      <div class="row"><span class="muted" id="adminMode"></span><button class="btn" id="bRestartAdmin" data-t="restartAdmin"></button></div>
+    </div>
+
+    <div class="pane setcard">
+      <div class="cardh" data-t="cardAccess"></div>
+      <div class="tiles"><label class="tile"><input type="checkbox" id="sCb"><span class="ti" data-ic="eye"></span><span><span class="tt" data-t="tCb"></span><br><span class="ts"></span></span></label></div>
+      <div class="muted" data-t="cbHelp"></div>
+    </div>
+
+    <div class="pane setcard wide">
+      <div class="cardh" data-t="cardScreens"></div>
+      <div class="row" style="flex-wrap:wrap;align-items:flex-start;gap:18px">
         <div id="scrDraw"></div>
-        <div>
+        <div style="flex:1;min-width:280px">
           <div class="row"><span data-t="scrWin"></span><select id="sScreen"></select><button class="btn" id="bIdentify" data-t="identifyAll"></button></div>
-          <div class="row" style="margin-top:8px"><span data-t="scrPlace"></span>
-            <label class="chk"><input type="checkbox" data-scr="screen_main"><span>Hangar FS 2024</span></label>
-            <label class="chk"><input type="checkbox" data-scr="screen_map"><span data-t="scrMap"></span></label>
-            <label class="chk"><input type="checkbox" data-scr="screen_dispatch"><span data-t="scrDisp"></span></label></div>
-          <div class="muted" data-t="scrHelp" style="margin-top:6px"></div>
+          <div class="muted" style="margin:10px 0 6px" data-t="scrPlace"></div>
+          <div class="tiles">
+            <label class="tile"><input type="checkbox" data-scr="screen_main"><span class="ti" data-ic="plane"></span><span><span class="tt" data-t="tScrMain"></span><br><span class="ts"></span></span></label>
+            <label class="tile"><input type="checkbox" data-scr="screen_map"><span class="ti" data-ic="map"></span><span><span class="tt" data-t="scrMap"></span><br><span class="ts"></span></span></label>
+            <label class="tile"><input type="checkbox" data-scr="screen_dispatch"><span class="ti" data-ic="windows"></span><span><span class="tt" data-t="scrDisp"></span><br><span class="ts"></span></span></label>
+          </div>
+          <div class="muted" data-t="scrHelp" style="margin-top:8px"></div>
         </div>
       </div>
+    </div>
 
-      <span data-t="setFshub" style="align-self:start;padding-top:6px"></span>
-      <div style="grid-column:2 / span 3">
-        <div class="row"><span data-t="vaCode"></span><input type="text" id="sVa" style="width:90px"><span class="muted" data-t="vaHelp"></span></div>
-        <div class="row" style="margin-top:6px"><span data-t="fsKey"></span><input type="password" id="sKey" style="width:380px">
-          <button class="btn" id="bShowKey" data-t="show"></button><button class="btn accent" id="bTestKey" data-t="testKey"></button><span class="muted" id="keyLbl"></span></div>
+    <div class="pane setcard wide">
+      <div class="cardh" data-t="cardFshub"></div>
+      <div class="row"><span data-t="vaCode"></span><input type="text" id="sVa" style="width:90px"><span class="muted" data-t="vaHelp"></span></div>
+      <div class="row" style="flex-wrap:wrap"><span data-t="fsKey"></span><input type="password" id="sKey" style="width:380px;max-width:100%">
+        <button class="btn" id="bShowKey" data-t="show"></button><button class="btn accent" id="bTestKey" data-t="testKey"></button><span class="muted" id="keyLbl"></span></div>
+    </div>
+
+    <div class="pane setcard">
+      <div class="cardh" data-t="cardShortcut"></div>
+      <div class="row"><button class="btn" id="bDesk" data-t="deskBtn"></button></div>
+      <div class="muted" data-t="deskHelp"></div>
+    </div>
+
+    <div class="pane setcard">
+      <div class="cardh" data-t="cardBackup"></div>
+      <div class="row"><button class="btn" id="bExport" data-t="exportBtn"></button><button class="btn" id="bImport" data-t="importBtn"></button></div>
+      <div class="muted" data-t="backupHelp"></div>
+    </div>
+
+    <div class="pane setcard wide">
+      <div class="cardh" data-t="cardAbout"></div>
+      <div class="note" data-t="setHelp"></div>
+      <div class="note" data-t="license"></div>
+      <div class="row">
+        <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
+        <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
       </div>
-
-      <span data-t="setAccess"></span>
-      <div style="grid-column:2 / span 3" class="row"><label class="chk"><input type="checkbox" id="sCb"><span data-t="cbOpt"></span></label><span class="muted" data-t="cbHelp"></span></div>
-
-      <span data-t="setShortcut"></span>
-      <div style="grid-column:2 / span 3" class="row"><button class="btn" id="bDesk" data-t="deskBtn"></button><span class="muted" data-t="deskHelp"></span></div>
-
-      <span data-t="setBackup"></span>
-      <div style="grid-column:2 / span 3" class="row"><button class="btn" id="bExport" data-t="exportBtn"></button><button class="btn" id="bImport" data-t="importBtn"></button><span class="muted" data-t="backupHelp"></span></div>
     </div>
-    <div class="note" data-t="setHelp"></div>
-    <div class="note" data-t="license"></div>
-    <div class="row">
-      <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
-      <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
-    </div>
+   </div>
   </section>
 
   <section class="tab" id="tab-soon">
@@ -452,6 +480,10 @@ const TXT = {
  noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
  statCom:["Dans Community","In Community"], statApt:["Scènes d'aéroport","Airport sceneries"], statReal:["Dossiers réels","Real folders"], statBroken:["Liens cassés","Broken links"],
  railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan & suivi de vol","Flight plan & tracking"],
+ cardPaths:["Dossiers et chemins","Folders and paths"], cardStart:["Démarrage","Startup"], cardAccess:["Accessibilité","Accessibility"], cardScreens:["Écrans","Screens"],
+ cardFshub:["FSHub (compagnie virtuelle)","FSHub (virtual airline)"], cardShortcut:["Raccourci","Shortcut"], cardBackup:["Sauvegarde","Backup"], cardAbout:["Aide et licence","Help and licence"],
+ tStartup:["Démarrer avec Windows (réduit dans la barre des tâches)","Start with Windows (minimised to the taskbar)"], tAdmin:["Toujours ouvrir en mode administrateur (sans confirmation Windows)","Always open in administrator mode (no Windows prompt)"],
+ tCb:["Mode daltonien","Colorblind mode"], tScrMain:["Hangar FS 2024","Hangar FS 2024"],
  lfOptions:["Options","Options"], optHead:["Options du vol","Flight options"], tkDep:["Départ","Departure"], tkArr:["Arrivée","Arrival"],
  catours:["Appli","App"], catreal:["Dossiers","Folders"], catext:["Externes","External"], catoff:["Hors biblio","Outside library"], catbroken:["Cassés","Broken"], catdefoff:["Défaut off","Default off"],
  simbriefId:["Identifiant SimBrief :","SimBrief ID:"], fetch:["Récupérer le dernier plan de vol","Fetch the latest flight plan"],
@@ -477,16 +509,16 @@ const TXT = {
  identifyAll:["🔢  Identifier les écrans","🔢  Identify screens"], scrPlace:["Fenêtres à placer sur cet écran :","Windows to place on this screen:"], scrMap:["Carte des scènes","Scenery map"],
  scrDisp:["Plan & suivi de vol (en plein écran)","Flight plan & tracking (full screen)"], scrNone:["Écrans : lecture impossible","Screens: unable to read"],
  scrHelp:["Avec un seul écran, ou si l'écran choisi est débranché, tout s'ouvre sur l'écran principal. MSFS reste sur ton écran principal.","With a single screen, or if the chosen screen is disconnected, everything opens on the primary screen. MSFS stays on your primary screen."],
- setFshub:["Ma VA FSHub :","My FSHub VA:"], vaCode:["Code de ta VA","Your VA code"], vaHelp:["— ex. LFV : le code de ta compagnie dans son adresse fshub.io/airline/LFV. Ses pilotes en vol s'affichent sur la carte de suivi (bouton « ★ MA VA FSHUB »).","— e.g. LFV: your airline's code in its address fshub.io/airline/LFV. Its flying pilots are shown on the tracking map (\"★ MY FSHUB VA\" button)."],
+ setFshub:["Ma VA FSHub :","My FSHub VA:"], vaCode:["Code de ta VA","Your VA code"], vaHelp:["Ex. LFV : le code de ta compagnie dans son adresse fshub.io/airline/LFV. Ses pilotes en vol s'affichent sur la carte de suivi (bouton « ★ MA VA FSHUB »).","E.g. LFV: your airline's code in its address fshub.io/airline/LFV. Its flying pilots are shown on the tracking map (\"★ MY FSHUB VA\" button)."],
  fsKey:["Clé FSHub (facultative)","FSHub key (optional)"], show:["👁 Afficher","👁 Show"], hide:["🙈 Masquer","🙈 Hide"], testKey:["Tester la clé","Test the key"], testing:["Test en cours…","Testing…"],
  keyHelp:["Facultative : reconnaît ton avion pour ne pas l'afficher en double. fshub.io → ton nom → Settings → Integrations. Elle reste sur ce PC.","Optional: recognises your aircraft so it isn't shown twice. fshub.io → your name → Settings → Integrations. It stays on this PC."],
  setAccess:["Accessibilité :","Accessibility:"], cbOpt:["Couleurs adaptées aux daltoniens","Colour-blind friendly colours"],
- cbHelp:["— cartes et bibliothèque : palette lisible par les daltoniens, une lettre par type de scène (G, M, P, V), losange pour les scènes par défaut","— maps and library: colour-blind friendly palette, one letter per scenery type (G, M, P, V), diamond for default sceneries"],
+ cbHelp:["Cartes et bibliothèque : palette lisible par les daltoniens, une lettre par type de scène (G, M, P, V), losange pour les scènes par défaut","Maps and library: colour-blind friendly palette, one letter per scenery type (G, M, P, V), diamond for default sceneries"],
  setShortcut:["Raccourci :","Shortcut:"], deskBtn:["🖥  Créer le raccourci sur le Bureau","🖥  Create the Desktop shortcut"],
- deskHelp:["— raccourci « Hangar FS 2024 » avec l'icône de l'appli (s'il a été supprimé, ou pour le remettre à jour)","— \"Hangar FS 2024\" shortcut with the app icon (if it was deleted, or to update it)"],
+ deskHelp:["Raccourci « Hangar FS 2024 » avec l'icône de l'appli (s'il a été supprimé, ou pour le remettre à jour)","\"Hangar FS 2024\" shortcut with the app icon (if it was deleted, or to update it)"],
  deskDone:["Le raccourci « Hangar FS 2024 » est sur le Bureau.","The \"Hangar FS 2024\" shortcut is on the Desktop."], setBackup:["Sauvegarde :","Backup:"],
  exportBtn:["💾  Exporter mes réglages…","💾  Export my settings…"], importBtn:["📂  Restaurer…","📂  Restore…"],
- backupHelp:["— réglages, profils et applis du Démarrage auto dans un seul fichier (changement de PC, réinstallation de Windows)","— settings, profiles and Auto launch apps in a single file (new PC, Windows reinstall)"],
+ backupHelp:["Réglages, profils et applis du Démarrage auto dans un seul fichier (changement de PC, réinstallation de Windows)","Settings, profiles and Auto launch apps in a single file (new PC, Windows reinstall)"],
  exportDone:["Réglages exportés dans :\n%s\n\nCe fichier est personnel : il contient ton identifiant SimBrief et ta clé FSHub. Ne le partage pas.","Settings exported to:\n%s\n\nThis file is personal: it contains your SimBrief ID and your FSHub key. Don't share it."],
  importAsk:["Remplacer tes réglages actuels par ceux de la sauvegarde du %s (version %s) ?\n\nTes réglages actuels sont d'abord gardés à côté. L'appli redémarre ensuite ; vérifie alors les dossiers dans Réglages s'il s'agit d'un autre PC.","Replace your current settings with those of the backup from %s (version %s)?\n\nYour current settings are kept aside first. The app then restarts; check the folders in Settings if it is another PC."],
  license:["Hangar FS 2024 © 2026 Jeff40 — logiciel libre sous licence MIT : utilisation, modification et redistribution autorisées en gardant la mention de l'auteur et de la licence. Code source et versions officielles : github.com/jeff6540/hangar-fs2024 et la page flightsim.to","Hangar FS 2024 © 2026 Jeff40 — free software under the MIT licence: use, modification and redistribution allowed as long as the author and licence notice are kept. Source code and official versions: github.com/jeff6540/hangar-fs2024 and the flightsim.to page"],
