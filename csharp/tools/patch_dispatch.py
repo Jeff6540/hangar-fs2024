@@ -600,3 +600,21 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_zoom123(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.3 : plus de lignes noires entre les carrés de la carte ----
+SEAMS_CSS = '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container img.leaflet-tile{width:257px!important;height:257px!important;max-width:none!important}\n.leaflet-container .leaflet-tile-container img.leaflet-tile{outline:1px solid transparent}\n</style>'
+
+
+def patch_seams123(path):
+    s = open(path, encoding="utf-8").read()
+    if 'hangar-123-seams' in s:
+        return
+    s = s.replace("</head>", SEAMS_CSS + "</head>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_seams123(os.path.join(_web, "dispatch_%s.html" % _l))

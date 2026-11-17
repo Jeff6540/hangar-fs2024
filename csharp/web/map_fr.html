@@ -102,7 +102,10 @@ button .bi{width:24px;height:24px;margin-left:-9px;border-radius:50%;background:
 .leaflet-control-layers,.leaflet-bar{border-radius:12px!important;overflow:hidden;border:1px solid var(--line)!important}
 #nopos{background:var(--field);border-radius:10px;padding:6px 8px 6px 22px}
 </style>
-</head>
+<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */
+.leaflet-container img.leaflet-tile{width:257px!important;height:257px!important;max-width:none!important}
+.leaflet-container .leaflet-tile-container img.leaflet-tile{outline:1px solid transparent}
+</style></head>
 <body>
 <div id="app">
   <div id="map" style="position:relative"></div><button id="showPanel">« Légende et réglages</button>
