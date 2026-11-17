@@ -18,6 +18,7 @@ Version 12.3 — nouveau look, rien de retiré
 - Suivi : VATSIM et IVAO retirés (peu utiles ici) ; les avions FSHub avancent sans à-coups et ne reculent plus, ceux des autres VA ne se figent plus, et tous suivent la carte pendant un zoom.
 - Suivi : la trajectoire de ton avion ne trace plus de grandes lignes au chargement du simulateur ; le menu Rayon reste affiché ; les volets indiquent « réduire » / « déplier ».
 - Volet du plan : plus de « ILS [object Object] » (axe de piste seul si SimBrief ne donne pas de fréquence) ; la case « Altitude d'interception du glide » est expliquée.
+- Cartes : plus de quadrillage noir ni d'effet de surimpression au zoom ; pendant le chargement, une version floue de la carte s'affiche au lieu de zones blanches ou sombres ; le zoom avance par demi-crans.
 - Mode daltonien : le mot ON / OFF accompagne toujours la couleur.
 - Tutoriel mis à jour (français et anglais).
 
@@ -50,6 +51,7 @@ Version 12.3 — new look, nothing removed
 - Tracking: VATSIM and IVAO removed (of little use here); FSHub aircraft move smoothly and never go backwards, other VAs' aircraft no longer freeze, and all follow the map during a zoom.
 - Tracking: your aircraft's track no longer draws long lines while the simulator loads; the Range menu stays visible; panels show "collapse" / "expand".
 - Plan panel: no more "ILS [object Object]" (runway course only if SimBrief gives no frequency); the "Glideslope intercept altitude" box is explained.
+- Maps: no more black grid lines or ghosting when zooming; while loading, a blurred version of the map shows instead of white or dark areas; zoom moves in half steps.
 - Colorblind mode: the word ON / OFF always comes with the colour.
 - Tutorial updated (French and English).
 
