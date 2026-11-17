@@ -63,9 +63,9 @@ main{flex:1;min-height:0;background:transparent;margin:0}
 .tab.on{display:flex}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .grow{flex:1}
-.btn{display:inline-flex;align-items:center;gap:8px;height:36px;background:#151D27;border:1px solid var(--line);border-radius:999px;padding:0 15px;cursor:pointer;white-space:nowrap;font-weight:600;font-size:13px;color:var(--fg)}
-.btn:hover{background:#1C2632;border-color:#33404F}
-.btn .bi{flex:none;width:24px;height:24px;margin-left:-9px;border-radius:50%;background:#1E2733;display:grid;place-items:center;font-size:11.5px;line-height:1}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;background:#1B2531;border:1px solid #33414F;border-radius:999px;padding:0 15px;cursor:pointer;white-space:nowrap;font-weight:600;font-size:13px;color:var(--fg)}
+.btn:hover{background:#243142;border-color:#46566A}
+.btn .bi{flex:none;width:24px;height:24px;margin-left:-9px;border-radius:50%;background:#2A3646;display:grid;place-items:center;font-size:11.5px;line-height:1}
 .btn.accent{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .btn.accent:hover{background:var(--accent-hi);border-color:var(--accent-hi)}
 .btn.accent .bi{background:var(--ink);color:var(--accent)}
@@ -318,7 +318,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     </div>
     <div class="row">
       <button class="btn accent lk" id="bPrepare" data-t="prepare"></button>
-      <button class="btn lk" id="bEnd" data-t="endFlight"></button>
+      <button class="btn lk warnb" id="bEnd" data-t="endFlight"></button>
       <span id="flightLbl"></span>
     </div>
     <div data-t="journal"></div>
@@ -430,7 +430,7 @@ const TXT = {
  colRole:["Rôle","Role"], colApt:["Aéroport","Airport"], colScenes:["Scène(s) dans ta bibliothèque","Scenery in your library"],
  noScene:["aucune — scène par défaut du simulateur","none — simulator default scenery"],
  optAlt:["Inclure les aéroports de dégagement","Include alternate airports"], optAuto:["Retirer les scènes automatiquement à la fermeture du simulateur","Remove sceneries automatically when the simulator closes"],
- prepare:["✈  Préparer le vol (lier les scènes)","✈  Prepare the flight (link sceneries)"], endFlight:["Terminer le vol (retirer les scènes)","End the flight (remove sceneries)"],
+ prepare:["✈  Préparer le vol (lier les scènes)","✈  Prepare the flight (link sceneries)"], endFlight:["■  Terminer le vol (retirer les scènes)","■  End the flight (remove sceneries)"],
  noFlight:["Aucun vol actif.","No active flight."], flightOn:["Vol actif : %s — %s scène(s) du vol chargée(s)","Active flight: %s — %s flight scenery(ies) loaded"],
  parkedN:[" · %s scène(s) d'aéroport mise(s) de côté"," · %s airport scenery(ies) set aside"], journal:["Journal","Log"],
  setLib:["Bibliothèque d'add-ons :","Add-on library:"], setComm:["Dossier Community :","Community folder:"], setExe:["Exécutable du simulateur :","Simulator executable:"],
