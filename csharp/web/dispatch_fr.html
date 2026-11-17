@@ -2324,6 +2324,45 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();
+</script><script id="hangar-123-zoom">
+/* Hangar FS 2024 12.3 : les positions des avions sont mises à jour chaque seconde ; pendant un zoom, une mise à jour
+   les replaçait à l'échelle de l'ancien zoom, et ils semblaient flotter au-dessus de la carte. On la garde pour la fin du zoom. */
+(function () {
+  function guard() {
+    if (!window.L || !L.Marker || L.Marker.prototype._alZoomGuard) return !!(window.L && L.Marker);
+    var P = L.Marker.prototype, setLL = P.setLatLng, setIc = P.setIcon;
+    P._alZoomGuard = true;
+    function busy(m) { return m && (m._alZooming || m._animatingZoom); }
+    function later(mk, m) {
+      if (mk._alPend) return; mk._alPend = true;
+      m.once('zoomend', function () {
+        mk._alPend = false;
+        if (mk._alIcon) { var ic = mk._alIcon; mk._alIcon = null; setIc.call(mk, ic); }
+        if (mk._map) setLL.call(mk, mk._latlng);
+      });
+    }
+    P.setLatLng = function (ll) {
+      var m = this._map;
+      if (busy(m)) { this._latlng = L.latLng(ll); later(this, m); return this; }
+      return setLL.call(this, ll);
+    };
+    P.setIcon = function (ic) {
+      var m = this._map;
+      if (busy(m)) { this._alIcon = ic; this.options.icon = ic; later(this, m); return this; }
+      return setIc.call(this, ic);
+    };
+    return true;
+  }
+  function hook() {
+    var m = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; } catch (e) {}
+    if (m && !m._alZoomHook) {
+      m._alZoomHook = true;
+      m.on('zoomstart', function () { m._alZooming = true; });
+      m.on('zoomend', function () { m._alZooming = false; });
+    }
+  }
+  var t = setInterval(function () { if (guard()) hook(); }, 500);
+})();
 </script><!--HANGAR_CB--></head>
 <body class="flex flex-col">
 

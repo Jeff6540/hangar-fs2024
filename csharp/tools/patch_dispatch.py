@@ -533,3 +533,62 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_plan123(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.3 : pendant un zoom, les avions ne sont plus déplacés (sinon ils « flottent » au-dessus de la carte) ----
+ZOOM_JS = r"""<script id="hangar-123-zoom">
+/* Hangar FS 2024 12.3 : les positions des avions sont mises à jour chaque seconde ; pendant un zoom, une mise à jour
+   les replaçait à l'échelle de l'ancien zoom, et ils semblaient flotter au-dessus de la carte. On la garde pour la fin du zoom. */
+(function () {
+  function guard() {
+    if (!window.L || !L.Marker || L.Marker.prototype._alZoomGuard) return !!(window.L && L.Marker);
+    var P = L.Marker.prototype, setLL = P.setLatLng, setIc = P.setIcon;
+    P._alZoomGuard = true;
+    function busy(m) { return m && (m._alZooming || m._animatingZoom); }
+    function later(mk, m) {
+      if (mk._alPend) return; mk._alPend = true;
+      m.once('zoomend', function () {
+        mk._alPend = false;
+        if (mk._alIcon) { var ic = mk._alIcon; mk._alIcon = null; setIc.call(mk, ic); }
+        if (mk._map) setLL.call(mk, mk._latlng);
+      });
+    }
+    P.setLatLng = function (ll) {
+      var m = this._map;
+      if (busy(m)) { this._latlng = L.latLng(ll); later(this, m); return this; }
+      return setLL.call(this, ll);
+    };
+    P.setIcon = function (ic) {
+      var m = this._map;
+      if (busy(m)) { this._alIcon = ic; this.options.icon = ic; later(this, m); return this; }
+      return setIc.call(this, ic);
+    };
+    return true;
+  }
+  function hook() {
+    var m = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; } catch (e) {}
+    if (m && !m._alZoomHook) {
+      m._alZoomHook = true;
+      m.on('zoomstart', function () { m._alZooming = true; });
+      m.on('zoomend', function () { m._alZooming = false; });
+    }
+  }
+  var t = setInterval(function () { if (guard()) hook(); }, 500);
+})();
+</script>"""
+
+
+def patch_zoom123(path):
+    s = open(path, encoding="utf-8").read()
+    if 'id="hangar-123-zoom"' in s:
+        print("déjà fait (zoom 12.3) :", path); return
+    assert s.count("<!--HANGAR_CB-->") == 1
+    s = s.replace("<!--HANGAR_CB-->", ZOOM_JS + "<!--HANGAR_CB-->", 1)
+    open(path, "w", encoding="utf-8").write(s)
+    print("ok (zoom 12.3) :", path)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_zoom123(os.path.join(_web, "dispatch_%s.html" % _l))
