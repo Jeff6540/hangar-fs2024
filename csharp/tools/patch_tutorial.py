@@ -145,6 +145,18 @@ R["en"] += [
   ("unless you tick <b>Ignore ★ protected add-ons</b>", "unless you switch on the <b>Ignore ★ protected add-ons</b> tile"),
 ]
 
+# 12.3 étape 6 : Carte addons
+R["fr"] += [
+  ("<li><b>Recherche</b> : tape un code OACI ou un nom puis Entrée pour zoomer dessus.</li>",
+   "<li>Chaque ligne de la légende est un <b>interrupteur</b> : un clic masque ce type de scène sur la carte (la ligne s'éteint et affiche « OFF »), un autre clic le réaffiche (« ON »). Le chiffre donne le nombre de scènes.</li><li>Le bouton <b>»</b> en haut du panneau le <b>masque</b> pour agrandir la carte ; le bouton <b>« Légende et réglages</b>, en haut à droite de la carte, le fait revenir. Ton choix est gardé.</li><li><b>Recherche</b> : tape un code OACI ou un nom puis Entrée pour zoomer dessus.</li>"),
+  ("<li><b>Daltoniens</b> : coche « Couleurs adaptées aux daltoniens » dans Réglages.", "<li><b>Daltoniens</b> : allume la tuile « Mode daltonien » dans Réglages."),
+]
+R["en"] += [
+  ("<li><b>Search</b>: type an ICAO code or a name then Enter to zoom on it.</li>",
+   "<li>Each legend line is a <b>switch</b>: one click hides that scenery type on the map (the line dims and shows \"OFF\"), another click shows it again (\"ON\"). The number gives how many sceneries there are.</li><li>The <b>»</b> button at the top of the panel <b>hides</b> it to enlarge the map; the <b>« Legend and settings</b> button, at the top right of the map, brings it back. Your choice is kept.</li><li><b>Search</b>: type an ICAO code or a name then Enter to zoom on it.</li>"),
+  ("<li><b>Colour blindness</b>: tick \"Colour-blind friendly colours\" in Settings.", "<li><b>Colour blindness</b>: switch on the \"Colorblind mode\" tile in Settings."),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

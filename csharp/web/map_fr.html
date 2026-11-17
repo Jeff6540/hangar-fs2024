@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="icon_map.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-:root{--bg:#1b1f26;--panel:#232831;--field:#2c323c;--hover:#363d49;--fg:#e6e9ee;--muted:#9aa3ae;--border:#3a414d;--accent:#3b82f6}
+:root{--bg:#1b1f26;--panel:#232831;--field:#2c323c;--hover:#363d49;--fg:#e6e9ee;--muted:#9aa3ae;--border:#3a414d;--accent:#38BDF8}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px "Segoe UI",system-ui,sans-serif}
 #app{display:grid;grid-template-columns:1fr 310px;height:100%}
 #map{height:100%;background:#11151b}
@@ -59,13 +59,55 @@ label.rng input{width:100%;accent-color:var(--accent)}
 #nopos{margin:0;padding-left:16px} #nopos li{font-size:12px;padding:2px 0;color:var(--muted)}
 #nopos b{color:var(--fg);font-weight:600}
 @media (max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:62% 38%} aside{border-left:0;border-top:1px solid var(--border)}}
+/* ==== style 12.3 ==== */
+:root{--bg:#0B0F14;--panel:#10161E;--card:#121821;--field:#0F151C;--hover:#18222E;--fg:#E6EDF5;--muted:#8B98A9;--border:#1E2733;--line:#253041;--accent:#38BDF8;--accent-hi:#7DD3FC}
+html,body{font:14px "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+#app{grid-template-columns:1fr 340px;transition:grid-template-columns .2s}
+body.nopanel #app{grid-template-columns:1fr 0}
+@media (max-width:760px){#app{grid-template-columns:1fr}body.nopanel #app{grid-template-columns:1fr;grid-template-rows:1fr 0}}
+body.nopanel aside{padding:0;border:0;overflow:hidden}
+aside{background:var(--panel);border-left:1px solid var(--border);padding:14px}
+.hd{margin:-14px -14px 12px;height:96px;border-bottom:1px solid rgba(56,189,248,.45);position:relative}
+#hidePanel{position:absolute;top:10px;right:10px;width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;background:rgba(11,15,20,.65);border:1px solid #33414F;font-size:15px}
+.hd{padding-right:48px}
+.cnt:empty{display:none}
+#showPanel{display:none;position:absolute;top:12px;right:12px;z-index:1000;height:36px;padding:0 15px;border-radius:999px;background:#1B2531;border:1px solid #33414F;color:var(--fg);font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+body.nopanel #showPanel{display:inline-flex;align-items:center;gap:6px}
+#meta{padding:0 2px}
+.sec{margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px}
+.sec:first-of-type{margin-top:12px}
+.sec h2{color:var(--accent-hi);font-weight:700;margin:0 0 8px}
+.sec.plain{background:none;border:0;padding:0 2px}
+input[type=search]{background:var(--field);border:1px solid var(--line);border-radius:999px;padding:9px 14px}
+input[type=search]:focus{outline:2px solid var(--accent)}
+label.row{position:relative;padding:7px 10px;margin:5px 0;border-radius:12px;border:1px solid var(--border);background:#0F151C;transition:opacity .15s}
+label.row:hover{border-color:#33404F}
+label.row input[type=checkbox]{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+label.row::after{content:"OFF";flex:none;margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.06em;color:#5B6778;min-width:22px;text-align:right}
+label.row:has(input:checked){border-color:rgba(56,189,248,.45);background:linear-gradient(rgba(56,189,248,.10),rgba(56,189,248,.03))}
+label.row:has(input:checked)::after{content:"ON";color:var(--accent)}
+label.row:not(:has(input:checked)){opacity:.55}
+label.row:not(:has(input:checked)) .sw{filter:grayscale(1)}
+label.row:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+.cnt{background:#1E2733;border-radius:999px;padding:1px 8px;min-width:14px;text-align:center}
+label.rng input{accent-color:var(--accent)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{display:inline-flex;align-items:center;gap:7px;height:36px;background:#1B2531;border:1px solid #33414F;border-radius:999px;padding:0 13px;font-weight:600;color:var(--fg)}
+button:hover{background:#243142;border-color:#475569}
+button .bi{width:24px;height:24px;margin-left:-9px;border-radius:50%;background:#2A3646;display:grid;place-items:center;font-size:13px}
+#closeMap{justify-content:center;color:#FCA5A5;border-color:rgba(229,72,77,.6);background:rgba(229,72,77,.08)}
+#closeMap .bi{background:rgba(229,72,77,.25)}
+#closeMap:hover{background:#E5484D;color:#fff;border-color:#E5484D}
+.leaflet-popup-content-wrapper{border-radius:14px;border:1px solid var(--line)}
+.leaflet-control-layers,.leaflet-bar{border-radius:12px!important;overflow:hidden;border:1px solid var(--line)!important}
+#nopos{background:var(--field);border-radius:10px;padding:6px 8px 6px 22px}
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="map"></div>
+  <div id="map" style="position:relative"></div><button id="showPanel">« Légende et réglages</button>
   <aside>
-    <div class="hd"><img src="logo.svg" alt=""><div><h1>Carte des scènes</h1><div class="s">Hangar FS 2024 · MSFS 2024</div></div></div>
+    <div class="hd"><button id="hidePanel" title="Masquer le volet pour agrandir la carte">»</button><img src="logo.svg" alt=""><div><h1>Carte des scènes</h1><div class="s">Hangar FS 2024 · MSFS 2024</div></div></div>
     <div class="muted" id="meta">Chargement…</div>
     <div class="sec"><input type="search" id="q" placeholder="ICAO ou nom (Entrée pour zoomer)…"></div>
     <div class="sec"><h2>Légende — type de scène</h2><div id="cats"></div></div>
@@ -74,17 +116,17 @@ label.rng input{width:100%;accent-color:var(--accent)}
       <label class="row"><input type="checkbox" id="showOff" checked><span class="sw st" style="background:#ffffff;border-color:#6b7280;color:#6b7280">✕</span>Désactivée (blanche avec ✕)<span class="cnt" id="cOff"></span></label>
     </div>
     <div class="sec"><h2>Affichage</h2>
-      <label class="row"><input type="checkbox" id="showRoute" checked><span class="sw" style="background:#3b82f6;border-color:#3b82f6;border-radius:2px;height:4px;width:13px"></span>Plan de vol SimBrief</label>
+      <label class="row"><input type="checkbox" id="showRoute" checked><span class="sw" style="background:#38BDF8;border-color:#38BDF8;border-radius:2px;height:4px;width:13px"></span>Plan de vol SimBrief</label>
       <label class="row"><input type="checkbox" id="labels">Afficher les codes ICAO</label>
       <label class="rng">Taille des pastilles <output id="sizeOut"></output>
         <input type="range" id="size" min="0.8" max="2.6" step="0.1" value="1.3"></label>
       <label class="rng">Fond de carte <output id="dimOut"></output>
         <input type="range" id="dim" min="0.25" max="1" step="0.05" value="1"></label>
     </div>
-    <div class="sec"><button id="refresh">⟳ Actualiser</button> <button id="fit">Tout voir</button>
-      <button id="closeMap" style="margin-top:8px;width:100%">✕ Fermer la carte</button></div>
+    <div class="sec"><div class="btns"><button id="refresh"><span class="bi">⟳</span>Actualiser</button><button id="fit"><span class="bi">⤢</span>Tout voir</button></div>
+      <button id="closeMap" style="margin-top:10px;width:100%"><span class="bi">✕</span>Fermer la carte</button></div>
     <div class="sec"><h2>Add-ons sans position connue</h2><ul id="nopos"></ul></div>
-    <div class="sec muted">Fonds de carte © OpenStreetMap contributors, Esri · Positions et tailles : OurAirports. La carte suit l'appli en direct.</div>
+    <div class="sec plain muted">Fonds de carte © OpenStreetMap contributors, Esri · Positions et tailles : OurAirports. La carte suit l'appli en direct.</div>
   </aside>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -167,6 +209,10 @@ $("q").addEventListener("keydown", e => {
   map.setView(m.getLatLng(), Math.max(map.getZoom(), 10));
   m.openPopup();
 });
+function setPanel(hide){ document.body.classList.toggle("nopanel", hide); try { localStorage.setItem("volet", hide ? "1" : "0"); } catch (e) {} setTimeout(() => map.invalidateSize(), 230); }
+$("hidePanel").addEventListener("click", () => setPanel(true));
+$("showPanel").addEventListener("click", () => setPanel(false));
+try { if (localStorage.getItem("volet") === "1") setPanel(true); } catch (e) {}
 $("refresh").addEventListener("click", load);
 $("closeMap").addEventListener("click", () => {
   fetch("close?w=map").then(r => r.text()).then(t => { if (t !== "ok") window.close(); }).catch(() => window.close());
@@ -219,12 +265,12 @@ function draw() {
   const r = DATA.route;
   if (r && r.points.length && $("showRoute").checked) {
     const main = r.points.filter(x => x.primary).map(x => [x.lat, x.lon]);
-    if (main.length > 1) L.polyline(main, {color:"#3b82f6", weight:3, opacity:.9}).addTo(routeLayer);
+    if (main.length > 1) L.polyline(main, {color:"#38BDF8", weight:3, opacity:.9}).addTo(routeLayer);
     const dest = main[main.length - 1];
     r.points.filter(x => !x.primary).forEach(x => {
-      if (dest) L.polyline([dest, [x.lat, x.lon]], {color:"#3b82f6", weight:2, dashArray:"6 6", opacity:.7}).addTo(routeLayer);
+      if (dest) L.polyline([dest, [x.lat, x.lon]], {color:"#38BDF8", weight:2, dashArray:"6 6", opacity:.7}).addTo(routeLayer);
     });
-    r.points.forEach(x => L.circleMarker([x.lat, x.lon], {radius:4, color:"#fff", weight:2, fillColor:"#3b82f6", fillOpacity:1})
+    r.points.forEach(x => L.circleMarker([x.lat, x.lon], {radius:4, color:"#fff", weight:2, fillColor:"#38BDF8", fillOpacity:1})
       .bindTooltip(`${x.role} : ${x.icao}`, {direction:"bottom", offset:[0,6]}).addTo(routeLayer));
   }
 
