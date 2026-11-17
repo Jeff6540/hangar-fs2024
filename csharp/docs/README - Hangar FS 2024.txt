@@ -25,7 +25,7 @@ Features:
     pilots live (tick boxes), and airport
     runways, taxiways and parking spots when you zoom in
     (OpenStreetMap).
-  - Colour-blind friendly mode (Settings > Accessibility).
+  - Colorblind mode (Settings > Accessibility > "Colorblind mode" tile).
   - Multi-screen support, Windows startup, administrator mode.
 
 A complete illustrated tutorial is built into the app:
@@ -70,7 +70,7 @@ connects to SimBrief, FSHub, VATSIM, IVAO, weather services,
 OurAirports and OpenStreetMap (airport layouts). If Defender quarantined the file:
 Windows Security > Virus & threat protection > Protection history >
 the alert > Actions > Allow / Restore.
-Tip: only tick "Always open in administrator mode" (Settings) if you launch apps that
+Tip: only switch on the "Always open in administrator mode" tile (Settings) if you launch apps that
 require it (SayIntentions, REX Atmos...).
 
 
@@ -224,8 +224,8 @@ If anything goes wrong:
   - Or by hand: with MSFS and the app closed, copy
     Desktop\fs_2024_xml_backup\Content.xml in place of the "Content" file.
 
-Uninstall: quit the app ("Quit" button), untick "Start with Windows"
-if you had ticked it, then delete the app folder, the Desktop
+Uninstall: quit the app ("Quit" button), switch off the "Start with Windows"
+tile if you had switched it on, then delete the app folder, the Desktop
 shortcut and the %APPDATA%\HangarFS2024 folder.
 
 

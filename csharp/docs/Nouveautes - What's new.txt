@@ -1,9 +1,21 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.2
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.3
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.3 — nouveau look, rien de retiré
+- Nouvelle présentation : menu sur le côté gauche (repliable avec « Réduire le menu »), couleurs bleu ciel, titre de la page en haut, drapeaux et Tutoriel en haut à droite.
+- Bibliothèque : chiffres clés en haut (add-ons dans Community, scènes d'aéroport, dossiers réels, liens cassés).
+- Boutons en pilule avec une icône ronde ; les options à cocher deviennent des tuiles avec un voyant et ON / OFF (Démarrage auto, Vol SimBrief, Réglages, Profils…).
+- Vol SimBrief : départ et arrivée en grand, comme un billet ; bouton « Terminer le vol » en orange ; la page défile si la fenêtre est petite.
+- Réglages rangés en cartes (Dossiers, Démarrage, Accessibilité, Écrans, FSHub, Raccourci, Sauvegarde).
+- Petites fenêtres (Profils, Doublons ICAO, Quarantaine, Propriétés, choix de scène…) : titre en haut, boutons en bas, même style partout.
+- Carte addons : volet de droite repliable pour agrandir la carte ; la légende devient des interrupteurs ON / OFF.
+- Plan & suivi de vol : mêmes couleurs que l'appli ; dans la fenêtre de suivi, chaque volet (Légende, Plan SimBrief, Météo, Ma VA) se replie d'un clic, et le bouton « Tout réduire » libère toute la carte.
+- Mode daltonien : les avions VATSIM passent en vert bleuté, pour ne plus les confondre avec les avions IA de type non identifié (bleu ciel). Le mot ON / OFF accompagne toujours la couleur.
+- Tutoriel mis à jour (français et anglais).
 
 Version 12.2 — corrections
 - Bibliothèque : quand tu sélectionnes un add-on déjà dans Community pour le retirer, sa coche disparaît (case vide bordée de bleu) : on voit tout de suite ce qui sera retiré.
@@ -20,6 +32,18 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.3 — new look, nothing removed
+- New layout: menu on the left side (foldable with "Collapse menu"), sky-blue colours, page title at the top, flags and Tutorial at the top right.
+- Library: key numbers at the top (add-ons in Community, airport sceneries, real folders, broken links).
+- Pill buttons with a round icon; tick options become tiles with a light and ON / OFF (Auto launch, SimBrief flight, Settings, Profiles…).
+- SimBrief flight: departure and arrival in large letters, like a ticket; orange "End the flight" button; the page scrolls when the window is small.
+- Settings arranged in cards (Folders, Startup, Accessibility, Screens, FSHub, Shortcut, Backup).
+- Small windows (Profiles, ICAO duplicates, Quarantine, Properties, scenery choice…): title at the top, buttons at the bottom, same style everywhere.
+- Add-on map: foldable right panel to enlarge the map; the legend becomes ON / OFF switches.
+- Flight plan & tracking: same colours as the app; in the tracking window, each panel (Legend, SimBrief plan, Weather, My VA) folds with one click, and the "Collapse all" button frees the whole map.
+- Colorblind mode: VATSIM aircraft turn bluish green, so they are no longer mixed up with unidentified AI aircraft (sky blue). The word ON / OFF always comes with the colour.
+- Tutorial updated (French and English).
 
 Version 12.2 — fixes
 - Library: when you select an add-on already in Community to remove it, its tick disappears (empty box with a blue outline): you see right away what will be removed.

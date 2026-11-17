@@ -13,7 +13,7 @@ Il propose aussi :
   - le chargement des seules scenes de ton vol SimBrief ;
   - des profils : un ensemble d'add-ons (scenes, avions...) enregistre
     sous un nom et active en un clic (bouton "Profils...") ;
-  - un mode adapte aux daltoniens (Reglages > Accessibilite) ;
+  - un mode adapte aux daltoniens (Reglages > Accessibilite > tuile "Mode daltonien") ;
   - une page "Plan & suivi de vol" avec ton avion, le trafic IA, les
     pilotes de ta VA FSHub (radar FSHub), les pilotes VATSIM et IVAO
     en direct (cases a cocher), et les pistes,
@@ -58,7 +58,7 @@ dangereux et ne se connecte qu'a SimBrief, FSHub, VATSIM, IVAO, la
 meteo, OurAirports et OpenStreetMap (plans d'aeroport). Si Defender a mis le fichier en quarantaine :
 Securite Windows > Protection contre les virus et menaces > Historique
 de protection > l'alerte > Actions > Autoriser / Restaurer.
-Conseil : ne coche "Toujours ouvrir en mode administrateur" (Reglages) que si tu
+Conseil : n'allume la tuile "Toujours ouvrir en mode administrateur" (Reglages) que si tu
 lances des applis qui l'exigent (SayIntentions, REX Atmos...).
 
 
@@ -239,8 +239,8 @@ En cas de souci :
   - Ou a la main : MSFS et l'appli fermes, copie
     Bureau\fs_2024_xml_backup\Content.xml a la place du fichier "Content".
 
-Desinstaller : quitte l'appli (bouton "Quitter"), decoche
-"Demarrer avec Windows" si tu l'avais coche, puis supprime
+Desinstaller : quitte l'appli (bouton "Quitter"), eteins
+la tuile "Demarrer avec Windows" si tu l'avais allumee, puis supprime
 le dossier de l'appli, le raccourci du Bureau et le dossier
 %APPDATA%\HangarFS2024.
 
