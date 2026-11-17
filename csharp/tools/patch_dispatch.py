@@ -565,13 +565,21 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
     };
     return true;
   }
+  /* fond de carte : pas de fondu entre l'ancien et le nouveau niveau de zoom (sinon les deux cartes se voient l'une sur l'autre) */
+  function tiles(m) {
+    if (!m) return;
+    m._fadeAnimated = false;
+    m.eachLayer(function (l) { if (l instanceof L.TileLayer && !l._alT) { l._alT = true; l.options.updateWhenZooming = false; l.options.keepBuffer = 4; } });
+    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd', function () { tiles(m); }); }
+  }
   function hook() {
-    var m = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; } catch (e) {}
+    var m = null, f = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; f = (typeof fullMap !== 'undefined') ? fullMap : null; } catch (e) {}
     if (m && !m._alZoomHook) {
       m._alZoomHook = true;
       m.on('zoomstart', function () { m._alZooming = true; });
       m.on('zoomend', function () { m._alZooming = false; });
     }
+    tiles(m); tiles(f);
   }
   var t = setInterval(function () { if (guard()) hook(); }, 500);
 })();
