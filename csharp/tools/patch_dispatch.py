@@ -282,6 +282,8 @@ html body .raw,html body .taf{color:#D6ECFA!important;border-radius:12px!importa
 /* cartes plein écran : liseré bleu ciel */
 html body #mapToolbar,html body #trafficMapModal>.avionics-panel{border-bottom:1px solid rgba(56,189,248,.45)!important}
 html body #mapToolbar button:hover,html body #trafficMapModal>.avionics-panel button:hover{background:rgba(56,189,248,.25)!important;border-color:rgba(125,211,252,.6)!important}
+html body .alf-open{background:#38BDF8!important;color:#06202C!important;border-radius:999px!important;box-shadow:0 4px 16px rgba(56,189,248,.28)!important}
+html body .alf-open:hover{background:#7DD3FC!important}
 ::-webkit-scrollbar-thumb{background:#2A3646!important;border-radius:999px}
 </style>"""
 
