@@ -305,9 +305,9 @@ if __name__ == "__main__":
 
 # ---- 12.3 étape 8 : fenêtre de suivi — volets repliables, « Tout réduire », VATSIM vert pour les daltoniens ----
 TRK_TXT = {
-    "fr": {"leg": "Légende", "plan": "Plan SimBrief", "met": "Météo départ / arrivée", "va": "Ma VA en ligne",
+    "fr": {"leg": "Légende", "plan": "Plan SimBrief", "met": "Météo départ / arrivée", "va": "Ma VA en ligne", "perf": "Piste et vent",
            "all": "TOUT RÉDUIRE", "open": "TOUT DÉPLIER", "tip": "Réduire ou déplier tous les volets pour agrandir la carte (un clic sur un volet le replie ou le rouvre)"},
-    "en": {"leg": "Legend", "plan": "SimBrief plan", "met": "Departure / arrival weather", "va": "My VA online",
+    "en": {"leg": "Legend", "plan": "SimBrief plan", "met": "Departure / arrival weather", "va": "My VA online", "perf": "Runway and wind",
            "all": "COLLAPSE ALL", "open": "EXPAND ALL", "tip": "Collapse or expand all panels to enlarge the map (one click on a panel's title folds or opens it)"},
 }
 
@@ -324,14 +324,16 @@ html body #alMainLegend{pointer-events:auto!important}
 .al-fold.al-col::before{line-height:1.4}
 .al-fold.al-col::before{content:attr(data-al-t) "  ▸";margin:0;padding:0;border:0;position:static}
 .al-fold.al-col:hover{background:rgba(56,189,248,.18)!important}
-#alFoldAll[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+html body #trafficMapModal>.avionics-panel button#alFoldAll{color:#E6EDF5!important}
+html body #trafficMapModal>.avionics-panel button#alFoldAll[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+html body #trafficMapModal>.avionics-panel button#alFoldAll[aria-pressed="true"] *{color:#06202C!important}
 </style>"""
 
 TRK_JS = r"""<script>
 /* Hangar FS 2024 12.3 : volets repliables (clic sur le titre) et bouton Tout réduire */
 (function () {
   var T = __TXT__;
-  var P = [['alMainLegend', T.leg], ['sbInfo', T.plan], ['trafficMetarBox', T.met], ['alFshubLegend', T.va]];
+  var P = [['alMainLegend', T.leg], ['sbInfo', T.plan], ['trafficMetarBox', T.met], ['alFshubLegend', T.va], ['alPerfSolo', T.perf]];
   function key(id) { return 'al_fold_' + id; }
   function set(el, col) {
     el.classList.toggle('al-col', col);
