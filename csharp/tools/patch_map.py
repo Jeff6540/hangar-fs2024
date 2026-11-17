@@ -59,7 +59,7 @@ def patch(s, lang):
         return s
     t = T[lang]
     s = s.replace("</style>", CSS + "</style>", 1)
-    s = s.replace("</head>", '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container img.leaflet-tile{width:257px!important;height:257px!important;max-width:none!important}\n.leaflet-container .leaflet-tile-container img.leaflet-tile{outline:1px solid transparent}\n</style>' + "</head>", 1)
+    s = s.replace("</head>", '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container .leaflet-tile-container img.leaflet-tile{mix-blend-mode:plus-lighter}\n</style>' + "</head>", 1)
     # bouton masquer dans l'en-tête du volet, bouton afficher sur la carte
     a = '<div class="hd">'
     assert s.count(a) == 1

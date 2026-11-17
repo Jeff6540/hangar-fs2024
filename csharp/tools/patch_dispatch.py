@@ -603,7 +603,7 @@ if __name__ == "__main__":
 
 
 # ---- 12.3 : plus de lignes noires entre les carrés de la carte ----
-SEAMS_CSS = '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container img.leaflet-tile{width:257px!important;height:257px!important;max-width:none!important}\n.leaflet-container .leaflet-tile-container img.leaflet-tile{outline:1px solid transparent}\n</style>'
+SEAMS_CSS = '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container .leaflet-tile-container img.leaflet-tile{mix-blend-mode:plus-lighter}\n</style>'
 
 
 def patch_seams123(path):
