@@ -1,6 +1,6 @@
 {
-  "version": "12.2",
+  "version": "12.3",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Mode daltonien actif partout tout de suite ; démarrage avec Windows et mode administrateur indépendants",
-  "notes_en": "Colour-blind mode active everywhere right away; Windows startup and administrator mode now independent"
+  "notes_fr": "Nouveau look : menu sur le côté, bleu ciel, tuiles ON/OFF, volets repliables sur les cartes ; rien de retiré",
+  "notes_en": "New look: side menu, sky blue, ON/OFF tiles, foldable panels on the maps; nothing removed"
 }
