@@ -310,23 +310,23 @@ if __name__ == "__main__":
 # ---- 12.3 étape 8 : fenêtre de suivi — volets repliables, « Tout réduire », VATSIM vert pour les daltoniens ----
 TRK_TXT = {
     "fr": {"leg": "Légende", "plan": "Plan SimBrief", "met": "Météo départ / arrivée", "va": "Ma VA en ligne", "perf": "Piste et vent",
-           "all": "TOUT RÉDUIRE", "open": "TOUT DÉPLIER", "tip": "Réduire ou déplier tous les volets pour agrandir la carte (un clic sur un volet le replie ou le rouvre)"},
+           "red": "réduire", "unf": "déplier", "all": "TOUT RÉDUIRE", "open": "TOUT DÉPLIER", "tip": "Réduire ou déplier tous les volets pour agrandir la carte (un clic sur un volet le replie ou le rouvre)"},
     "en": {"leg": "Legend", "plan": "SimBrief plan", "met": "Departure / arrival weather", "va": "My VA online", "perf": "Runway and wind",
-           "all": "COLLAPSE ALL", "open": "EXPAND ALL", "tip": "Collapse or expand all panels to enlarge the map (one click on a panel's title folds or opens it)"},
+           "red": "collapse", "unf": "expand", "all": "COLLAPSE ALL", "open": "EXPAND ALL", "tip": "Collapse or expand all panels to enlarge the map (one click on a panel's title folds or opens it)"},
 }
 
 TRK_CSS = r"""<style id="hangar-123-trk">
 /* volets repliables de la fenêtre de suivi */
 html body #alMainLegend{pointer-events:auto!important}
 .al-fold{position:relative}
-.al-fold::before{content:attr(data-al-t) "  ▾";display:block;position:sticky;top:-10px;margin:-2px -2px 6px;padding:2px 2px 6px;border-bottom:1px solid rgba(56,189,248,.25);
+.al-fold::before{content:attr(data-al-t) "   ▾ " attr(data-al-r);display:block;position:sticky;top:-10px;margin:-2px -2px 6px;padding:2px 2px 6px;border-bottom:1px solid rgba(56,189,248,.25);
   font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7DD3FC;cursor:pointer;background:inherit;z-index:2}
 .al-fold.al-col{width:auto!important;min-width:0!important;max-width:none!important;max-height:none!important;height:auto!important;overflow:hidden!important;padding:7px 14px!important;
   border-radius:999px!important;cursor:pointer;border-color:rgba(56,189,248,.55)!important}
 .al-fold.al-col>*{display:none!important}
 .al-fold.al-col{font-size:0!important;line-height:0!important}
 .al-fold.al-col::before{line-height:1.4}
-.al-fold.al-col::before{content:attr(data-al-t) "  ▸";margin:0;padding:0;border:0;position:static}
+.al-fold.al-col::before{content:attr(data-al-t) "   ▸ " attr(data-al-o);margin:0;padding:0;border:0;position:static}
 .al-fold.al-col:hover{background:rgba(56,189,248,.18)!important}
 html body #trafficMapModal>.avionics-panel button#alFoldAll{color:#E6EDF5!important}
 html body #trafficMapModal>.avionics-panel button#alFoldAll[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
@@ -355,7 +355,7 @@ TRK_JS = r"""<script>
   function hook() {
     P.forEach(function (p) {
       var el = document.getElementById(p[0]); if (!el || el._alFold) return;
-      el._alFold = true; el.classList.add('al-fold'); el.setAttribute('data-al-t', p[1]);
+      el._alFold = true; el.classList.add('al-fold'); el.setAttribute('data-al-t', p[1]); el.setAttribute('data-al-r', T.red); el.setAttribute('data-al-o', T.unf);
       var saved = null; try { saved = localStorage.getItem(key(p[0])); } catch (e) {}
       if (saved === '1') el.classList.add('al-col');
       el.addEventListener('click', function (e) {
