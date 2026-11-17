@@ -48,6 +48,10 @@ R = {
   ("<li>Les <b>drapeaux</b> 🇫🇷 et 🇬🇧, à droite des onglets,", "<li>Les <b>drapeaux</b> 🇫🇷 et 🇬🇧, en haut à droite,"),
   ("avec les drapeaux à droite des onglets (voir", "avec les drapeaux en haut à droite (voir"),
   ("<figcaption>À droite des onglets : les drapeaux", "<figcaption>En haut à droite : les drapeaux"),
+  ("<b>La case « 🅿 Vérifier que l'avion est sur un aéroport connu »</b>", "<b>La tuile « Vérifier que l'avion est sur un aéroport connu (🅿) »</b>"),
+  ("au survol du 🅿 et de la case.", "au survol du 🅿 et de la tuile."),
+  ("<li>Règle le démarrage et les options (tableau ci-dessous), puis <b>Enregistrer</b>.</li>", "<li>Règle le démarrage et les options : chaque choix est une <b>tuile</b> ; un clic l'allume (voyant allumé et « ON ») ou l'éteint (tableau ci-dessous). Puis <b>Enregistrer</b>.</li>"),
+  ("<td>Décoche pour garder l'appli dans la liste sans la lancer</td>", "<td>Éteins cette tuile pour garder l'appli dans la liste sans la lancer</td>"),
  ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
@@ -94,7 +98,18 @@ R = {
   ("The 🇫🇷 and 🇬🇧 <b>flags</b>, right of the tabs,", "The 🇫🇷 and 🇬🇧 <b>flags</b>, at the top right,"),
   ("with the flags right of the tabs (see", "with the flags at the top right (see"),
   ("<figcaption>Right of the tabs: the flags", "<figcaption>Top right: the flags"),
+  ("<b>The \"🅿 Check that the aircraft is at a known airport\" box</b>", "<b>The \"Check that the aircraft is at a known airport (🅿)\" tile</b>"),
+  ("hovering the 🅿 and the box.", "hovering the 🅿 and the tile."),
+  ("Set the start and the options (table below), then <b>Save</b>.", "Set the start and the options: each choice is a <b>tile</b>; one click switches it on (light on and \"ON\") or off (table below). Then <b>Save</b>."),
+  ("<td>Untick to keep the app in the list without launching it</td>", "<td>Switch this tile off to keep the app in the list without launching it</td>"),
  ],
+}
+
+# remplacements faits partout dans la page (texte qui revient plusieurs fois)
+GLOBAL = {
+ "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),
+        ("bouton ⏻ de la barre du bas", "bouton ⏻ en bas du menu")],
+ "en": [(" button in the bottom bar;", " button at the bottom of the menu;"), ("with the ⏻ button in the bottom bar,", "with the ⏻ button at the bottom of the menu,")],
 }
 
 if __name__ == "__main__":
@@ -107,6 +122,8 @@ if __name__ == "__main__":
             if b in s or a not in s or (len(pr) > 2 and pr[2] in s):
                 continue  # déjà fait
             assert s.count(a) == 1, (lang, a[:60], s.count(a))
+            s = s.replace(a, b)
+        for a, b in GLOBAL.get(lang, []):   # remplacements partout (idempotents)
             s = s.replace(a, b)
         open(p, "w", encoding="utf-8").write(s)
         print("ok :", p)
