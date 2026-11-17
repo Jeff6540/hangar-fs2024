@@ -140,7 +140,7 @@ NET_JS = r"""<script>
 
   /* mouvement fluide : chaque avion glisse vers sa nouvelle position (coupé pendant les zooms) */
   var css = document.createElement('style');
-  css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
+  css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear,left 1s linear,top 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon{transition:none!important}' +
     '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}' +
     'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
@@ -603,7 +603,7 @@ if __name__ == "__main__":
 
 
 # ---- 12.3 : plus de lignes noires entre les carrés de la carte ----
-SEAMS_CSS = '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n.leaflet-container .leaflet-tile-container img.leaflet-tile{mix-blend-mode:plus-lighter}\n</style>'
+SEAMS_CSS = '<style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */\n\n</style>'
 
 
 def patch_seams123(path):
@@ -611,6 +611,9 @@ def patch_seams123(path):
     if 'hangar-123-seams' in s:
         return
     s = s.replace("</head>", SEAMS_CSS + "</head>", 1)
+    tag = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"'
+    if 'hangar-123-2d' not in s and tag in s:
+        s = s.replace(tag, '<script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script>' + tag, 1)
     open(path, "w", encoding="utf-8").write(s)
 
 

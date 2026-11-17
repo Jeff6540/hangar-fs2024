@@ -114,7 +114,7 @@ host.appendChild(b);});</script><link rel="icon" type="image/png" href="/icon_di
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS & JS CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #020509; color: #E2E8F0; overflow-x: hidden; }
         .font-mono-digits { font-family: 'JetBrains Mono', monospace; }
@@ -2189,7 +2189,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 
   /* mouvement fluide : chaque avion glisse vers sa nouvelle position (coupé pendant les zooms) */
   var css = document.createElement('style');
-  css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
+  css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear,left 1s linear,top 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon{transition:none!important}' +
     '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}' +
     'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
@@ -2413,7 +2413,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
   var t = setInterval(function () { if (guard()) hook(); }, 500);
 })();
 </script><!--HANGAR_CB--><style id="hangar-123-seams">/* 12.3 : plus de lignes noires entre les carrés de la carte (affichage Windows agrandi) */
-.leaflet-container .leaflet-tile-container img.leaflet-tile{mix-blend-mode:plus-lighter}
+
 </style></head>
 <body class="flex flex-col">
 
