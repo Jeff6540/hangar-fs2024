@@ -579,7 +579,7 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
   function tiles(m) {
     if (!m) return;
     m._fadeAnimated = false;
-    if (!m._alSteps) { m._alSteps = true; m.options.zoomSnap = 0.5; m.options.zoomDelta = 0.5; m.options.wheelPxPerZoomLevel = 90; }
+    if (!m._alSteps) { m._alSteps = true; m.options.zoomSnap = 0.25; m.options.zoomDelta = 0.25; m.options.wheelPxPerZoomLevel = 160; m.options.wheelDebounceTime = 60; }
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
