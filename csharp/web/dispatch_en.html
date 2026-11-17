@@ -1446,24 +1446,44 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   /* 12.3 : avance de chaque avion depuis SON dernier relevé FSHub (et pas depuis la dernière lecture du relais),
      sans jamais le faire reculer : si un nouveau relevé est un peu derrière, l'avion attend qu'il le rattrape. */
   var alPos = {};
+  /* la direction suivie est la vraie route au sol, calculée entre les deux derniers relevés (le cap du nez dérive avec le vent) */
   function alStamp(k, p) {
+    var s = alPos[k], now = Date.now();
+    if (!s || s.lat !== p.lat || s.lon !== p.lon) {
+      var n = { lat: p.lat, lon: p.lon, t: now, trk: s && s.trk, gsr: s && s.gsr };
+      if (s) {
+        var c = Math.cos(p.lat * Math.PI / 180), dy = p.lat - s.lat, dx = (p.lon - s.lon) * c;
+        var dnm = Math.sqrt(dx * dx + dy * dy) * 60, dts = (now - s.t) / 1000;
+        if (dnm > 0.05 && dnm < 60 && dts > 2 && dts < 300) {
+          n.trk = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+          n.gsr = dnm / dts * 3600;
+        }
+      }
+      s = alPos[k] = n;
+    }
+    return s;
+  }
+  function alCourse(k, p) {
     var s = alPos[k];
-    if (!s || s.lat !== p.lat || s.lon !== p.lon) s = alPos[k] = { lat: p.lat, lon: p.lon, t: Date.now() };
-    return s.t;
+    if (s && s.trk != null && p.hdg != null) {
+      var dif = Math.abs(((s.trk - p.hdg) % 360 + 540) % 360 - 180);
+      if (dif < 45) return s.trk;          /* route au sol plausible : on la suit */
+    }
+    return p.hdg;
   }
   function alAhead(k, p, live) {
-    var t0 = alStamp(k, p), lat = p.lat, lon = p.lon, dt = Math.min(90, (Date.now() - t0) / 1000);
-    if (live && !p.ground && p.gs > 30 && p.hdg != null && dt > 0) {
-      var d = p.gs * dt / 3600 / 60, h = p.hdg * Math.PI / 180;
+    var s = alStamp(k, p), lat = p.lat, lon = p.lon, dt = Math.min(90, (Date.now() - s.t) / 1000), crs = alCourse(k, p);
+    if (live && !p.ground && p.gs > 30 && crs != null && dt > 0) {
+      var d = p.gs * dt / 3600 / 60, h = crs * Math.PI / 180;
       lat = p.lat + d * Math.cos(h);
       lon = p.lon + d * Math.sin(h) / Math.max(0.05, Math.cos(p.lat * Math.PI / 180));
     }
     return [lat, lon];
   }
-  function alNoBack(mk, ll, p) {
-    var a = mk && mk._alLL;
-    if (a && p.hdg != null && !p.ground) {
-      var h = p.hdg * Math.PI / 180, c = Math.cos(a[0] * Math.PI / 180);
+  function alNoBack(mk, ll, p, k) {
+    var a = mk && mk._alLL, crs = k ? alCourse(k, p) : p.hdg;
+    if (a && crs != null && !p.ground) {
+      var h = crs * Math.PI / 180, c = Math.cos(a[0] * Math.PI / 180);
       var dy = ll[0] - a[0], dx = (ll[1] - a[1]) * c, along = dy * Math.cos(h) + dx * Math.sin(h);
       if (along < 0 && Math.sqrt(dx * dx + dy * dy) * 60 < 5) return a;   /* un peu derrière : on ne recule pas */
     }
@@ -1493,7 +1513,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     var seen = {};
     (data.pilots || []).forEach(function (p) {
       if (p.me || p.lat == null || p.lon == null) return;
-      var ll0 = alNoBack(markers[p.id], alAhead('va' + p.id, p, p.live), p), lat = ll0[0], lon = ll0[1];
+      var ll0 = alNoBack(markers[p.id], alAhead('va' + p.id, p, p.live), p, 'va' + p.id), lat = ll0[0], lon = ll0[1];
       if (p.ground && !showGround()) return;
       seen[p.id] = true;
       var mk = markers[p.id], sig = p.hdg + '|' + p.ground + '|' + p.phase + '|' + p.route + '|' + p.aircraft + '|' + zoomed();
@@ -1698,7 +1718,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       if (p.ground && !showGround()) return;
       if (keepIt && !keepIt(p.lat, p.lon)) return;
       var id = String(p.id); seen[id] = 1; shown++;
-      var mk = allMk[id], sig = p.hdg + '|' + p.ground, ll = alNoBack(mk, alAhead('all' + id, p, true), p);
+      var mk = allMk[id], sig = p.hdg + '|' + p.ground, ll = alNoBack(mk, alAhead('all' + id, p, true), p, 'all' + id);
       if (!mk) {
         mk = L.marker(ll, { icon: allIcon(p), keyboard: false, zIndexOffset: 500 }).addTo(allLayer); mk._alLL = ll;
         mk.bindTooltip(allTip(p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
