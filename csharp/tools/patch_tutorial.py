@@ -52,6 +52,11 @@ R = {
   ("au survol du 🅿 et de la case.", "au survol du 🅿 et de la tuile."),
   ("<li>Règle le démarrage et les options (tableau ci-dessous), puis <b>Enregistrer</b>.</li>", "<li>Règle le démarrage et les options : chaque choix est une <b>tuile</b> ; un clic l'allume (voyant allumé et « ON ») ou l'éteint (tableau ci-dessous). Puis <b>Enregistrer</b>.</li>"),
   ("<td>Décoche pour garder l'appli dans la liste sans la lancer</td>", "<td>Éteins cette tuile pour garder l'appli dans la liste sans la lancer</td>"),
+  ("<li>L'appli affiche la route et les aéroports trouvés (départ, arrivée et, si « Inclure les aéroports de dégagement » est coché, les dégagements), avec les scènes correspondantes de ta bibliothèque.</li>",
+   "<li>L'appli affiche le départ et l'arrivée en grand, comme sur un billet, puis la route et les aéroports trouvés (départ, arrivée et, si la tuile « Inclure les aéroports de dégagement » est allumée, les dégagements), avec les scènes correspondantes de ta bibliothèque.</li>"),
+  ("si « Retirer les scènes automatiquement à la fermeture du simulateur » est coché, et le plan", "si la tuile « Retirer les scènes automatiquement à la fermeture du simulateur » est allumée, et le plan"),
+  ("<li><b>Terminer le vol (retirer les scènes)</b> retire le vol en cours", "<li>Les <b>options du vol</b> sont des tuiles : un clic l'allume (voyant et « ON ») ou l'éteint. Un bandeau vert sous les boutons rappelle le vol en cours.</li><li><b>■ Terminer le vol (retirer les scènes)</b>, le bouton orange, retire le vol en cours"),
+  ("<li><b>Ne charger que les scènes du vol</b> : cochée,", "<li><b>Ne charger que les scènes du vol</b> : tuile allumée,"),
  ],
  "en": [
   ("Windows: the app is a ready-to-use folder, nothing else to install. It contains its own official Python (<code>runtime</code> folder, program signed by the Python Software Foundation) and the compiled app (<code>app</code> folder): no unknown .exe that antivirus software could take for a virus.",
@@ -102,6 +107,11 @@ R = {
   ("hovering the 🅿 and the box.", "hovering the 🅿 and the tile."),
   ("Set the start and the options (table below), then <b>Save</b>.", "Set the start and the options: each choice is a <b>tile</b>; one click switches it on (light on and \"ON\") or off (table below). Then <b>Save</b>."),
   ("<td>Untick to keep the app in the list without launching it</td>", "<td>Switch this tile off to keep the app in the list without launching it</td>"),
+  ("<li>The app shows the route and the airports found (departure, arrival and, if \"Include alternate airports\" is ticked, the alternates), with the matching sceneries of your library.</li>",
+   "<li>The app shows the departure and arrival in large letters, like a ticket, then the route and the airports found (departure, arrival and, if the \"Include alternate airports\" tile is on, the alternates), with the matching sceneries of your library.</li>"),
+  ("if \"Remove sceneries automatically when the simulator closes\" is ticked, and the plan", "if the \"Remove sceneries automatically when the simulator closes\" tile is on, and the plan"),
+  ("<li><b>End the flight (remove sceneries)</b> removes the current flight", "<li>The <b>flight options</b> are tiles: one click switches a tile on (light and \"ON\") or off. A green banner under the buttons shows the current flight.</li><li><b>■ End the flight (remove sceneries)</b>, the orange button, removes the current flight"),
+  ("<li><b>Load only the flight's sceneries</b>: when ticked,", "<li><b>Load only the flight's sceneries</b>: when the tile is on,"),
  ],
 }
 

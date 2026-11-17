@@ -133,7 +133,18 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 .c-ext td:first-child{border-left:4px solid #3a86b8}.c-off td:first-child{border-left:4px solid #7a68b8}
 .c-broken td{background:var(--cat-broken)}.c-defoff td:first-child{border-left:4px solid #b8b83a}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
-#log{flex:1;min-height:120px;overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:12.5px Consolas,monospace;white-space:pre-wrap;user-select:text}
+.ticket{display:flex;align-items:center;gap:22px}
+.tk-lbl{font-size:11.5px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+.tk-code{font-size:32px;font-weight:700;line-height:1.05}
+.tk-name{color:#B4C0CF}
+.tk-mid{flex:1;display:flex;align-items:center;gap:10px}
+.tk-mid span{flex:1;height:2px;background:var(--line)}
+.tk-mid svg{width:26px;height:26px;stroke:var(--accent)}
+.planline{font:13px Consolas,monospace;color:#B4C0CF;background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;white-space:pre-wrap;user-select:text}
+.flightlbl:empty{display:none}
+.flightlbl{background:#0F2A1F;border:1px solid #1F5A40;color:var(--ok);border-radius:12px;padding:9px 14px;font-weight:600}
+.flightlbl.idle{background:var(--field);border-color:var(--border);color:var(--muted);font-weight:500}
+#log{flex:1;min-height:120px;overflow:auto;background:var(--field);border:1px solid var(--border);border-radius:12px;padding:8px 10px;font:12.5px Consolas,monospace;white-space:pre-wrap;user-select:text}
 .apt-off td{color:var(--off)}.apt-none td{color:var(--warn)}
 .form{display:grid;grid-template-columns:max-content 1fr auto auto;gap:8px 10px;align-items:center;max-width:1100px}
 .form input[type=text]{width:100%}
@@ -160,6 +171,8 @@ footer{flex:none;display:flex;align-items:center;gap:18px;padding:6px 22px 10px}
 .tiles{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
 .tile{--tc:var(--accent);position:relative;display:inline-flex;flex-direction:column;justify-content:space-between;gap:8px;width:210px;min-height:86px;padding:11px 12px;border-radius:16px;background:#10161E;border:1px solid var(--border);cursor:pointer;text-align:left;box-sizing:border-box}
 .tile:hover{border-color:#33404F}
+.tiles.fit{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr))}
+.tiles.fit .tile{width:auto;min-height:78px}
 .tile input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .tile::before{content:"";position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#2A3646}
 .tile .ti{flex:none;width:28px;height:28px;border-radius:50%;background:#1E2733;display:grid;place-items:center}
@@ -296,33 +309,45 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 
   <!-- Vol SimBrief -->
   <section class="tab" id="tab-vol">
-    <div class="row">
-      <span data-t="simbriefId"></span>
+    <div class="pane row" style="flex:none;flex-direction:row;flex-wrap:wrap;align-items:center">
+      <span class="muted" data-t="simbriefId"></span>
       <input type="text" id="sbUser" style="width:200px">
       <button class="btn" id="bFetch" data-t="fetch"></button>
-      <button class="btn accent" id="bLaunch" data-t="launchMsfs" style="margin-left:12px"></button>
+      <button class="btn accent" id="bLaunch" data-t="launchMsfs" style="margin-left:6px"></button>
       <span class="grow"></span>
       <button class="btn" data-url="https://dispatch.simbrief.com/" data-t="openSimbrief"></button>
       <button class="btn" data-url="https://lfv-planner.netlify.app/">🌐  LFV Planner</button>
     </div>
-    <div class="title" id="planLbl"></div>
-    <div class="list" style="flex:none;max-height:220px"><table id="aptTable"></table></div>
-    <div class="row">
-      <label class="chk"><input type="checkbox" id="optAlt"><span data-t="optAlt"></span></label>
-      <label class="chk" style="margin-left:16px"><input type="checkbox" id="optAuto"><span data-t="optAuto"></span></label>
-      <label class="chk" style="margin-left:16px"><input type="checkbox" id="optRelay"><span data-t="optRelay"></span></label>
+    <div class="pane" style="flex:none;gap:12px">
+      <div id="ticket" class="ticket" style="display:none">
+        <div class="tk-end"><div class="tk-lbl" data-t="tkDep"></div><div class="tk-code" id="tkDep"></div><div class="tk-name" id="tkDepN"></div></div>
+        <div class="tk-mid"><span></span><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16l20-6-20-6 4 6z"/></svg><span></span></div>
+        <div class="tk-end" style="text-align:right"><div class="tk-lbl" data-t="tkArr"></div><div class="tk-code" id="tkArr"></div><div class="tk-name" id="tkArrN"></div></div>
+      </div>
+      <div class="planline" id="planLbl"></div>
+      <div class="list" style="flex:none;max-height:190px"><table id="aptTable"></table></div>
     </div>
-    <div class="row">
-      <label class="chk"><input type="checkbox" id="optOnly"><span data-t="optOnly"></span></label>
-      <span class="muted" data-t="optOnlyHelp"></span>
+    <div class="split" style="min-height:220px">
+      <div class="pane" style="flex:1.7;overflow:auto">
+        <div class="head" data-t="optHead"></div>
+        <div class="tiles fit">
+          <label class="tile"><input type="checkbox" id="optAlt"><span class="ti" data-ic="globe"></span><span><span class="tt" data-t="optAlt"></span><br><span class="ts"></span></span></label>
+          <label class="tile"><input type="checkbox" id="optAuto"><span class="ti" data-ic="trash"></span><span><span class="tt" data-t="optAuto"></span><br><span class="ts"></span></span></label>
+          <label class="tile"><input type="checkbox" id="optRelay"><span class="ti" data-ic="radio"></span><span><span class="tt" data-t="optRelay"></span><br><span class="ts"></span></span></label>
+          <label class="tile"><input type="checkbox" id="optOnly"><span class="ti" data-ic="target"></span><span><span class="tt" data-t="optOnly"></span><br><span class="ts"></span></span></label>
+        </div>
+        <div class="muted" data-t="optOnlyHelp" style="font-size:12.5px"></div>
+        <div class="row" style="margin-top:4px">
+          <button class="btn accent lk" id="bPrepare" data-t="prepare"></button>
+          <button class="btn lk warnb" id="bEnd" data-t="endFlight"></button>
+        </div>
+        <div id="flightLbl" class="flightlbl"></div>
+      </div>
+      <div class="pane" style="flex:1">
+        <div class="head" data-t="journal"></div>
+        <div id="log"></div>
+      </div>
     </div>
-    <div class="row">
-      <button class="btn accent lk" id="bPrepare" data-t="prepare"></button>
-      <button class="btn lk warnb" id="bEnd" data-t="endFlight"></button>
-      <span id="flightLbl"></span>
-    </div>
-    <div data-t="journal"></div>
-    <div id="log"></div>
   </section>
 
   <!-- Réglages -->
@@ -423,7 +448,7 @@ const TXT = {
  noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
  statCom:["Dans Community","In Community"], statApt:["Scènes d'aéroport","Airport sceneries"], statReal:["Dossiers réels","Real folders"], statBroken:["Liens cassés","Broken links"],
  railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan & suivi de vol","Flight plan & tracking"],
- lfOptions:["Options","Options"],
+ lfOptions:["Options","Options"], optHead:["Options du vol","Flight options"], tkDep:["Départ","Departure"], tkArr:["Arrivée","Arrival"],
  catours:["Appli","App"], catreal:["Dossiers","Folders"], catext:["Externes","External"], catoff:["Hors biblio","Outside library"], catbroken:["Cassés","Broken"], catdefoff:["Défaut off","Default off"],
  simbriefId:["Identifiant SimBrief :","SimBrief ID:"], fetch:["Récupérer le dernier plan de vol","Fetch the latest flight plan"],
  openSimbrief:["🌐  Ouvrir SimBrief","🌐  Open SimBrief"], noPlan:["Aucun plan de vol chargé.","No flight plan loaded."],
@@ -1428,9 +1453,16 @@ async function pickProcesses(input, hint){
 async function refreshFlight(){
   let d; try { d = await call("flight"); } catch (e) { return; }
   const tb = $("aptTable");
+  $("ticket").style.display = "none";
   if (!d.plan) { $("planLbl").textContent = t("noPlan"); tb.innerHTML = ""; }
   else {
     const p = d.plan;
+    const dep = p.airports.find(a => a.role === "Départ"), arr = p.airports.find(a => a.role === "Arrivée");
+    if (dep && arr) {
+      $("tkDep").textContent = dep.icao; $("tkDepN").textContent = dep.name || "";
+      $("tkArr").textContent = arr.icao; $("tkArrN").textContent = arr.name || "";
+      $("ticket").style.display = "";
+    }
     let txt = (p.flight ? p.flight + "    " : "") + p.route + (p.aircraft ? "    (" + p.aircraft + ")" : "");
     $("planLbl").textContent = txt;
     let h = "<thead><tr><th>" + esc(t("colRole")) + "</th><th>ICAO</th><th>" + esc(t("colApt")) + "</th><th>" + esc(t("colScenes")) + "</th></tr></thead><tbody>";
@@ -1444,6 +1476,7 @@ async function refreshFlight(){
   let ft = d.flight ? tf("flightOn", d.flight.route, d.flight.scenes) : t("noFlight");
   if (d.parked) ft += tf("parkedN", d.parked);
   $("flightLbl").textContent = ft;
+  $("flightLbl").classList.toggle("idle", !d.flight);
 }
 $("bFetch").onclick = async () => {
   $("bFetch").disabled = true;
