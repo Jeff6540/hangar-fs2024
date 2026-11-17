@@ -1665,7 +1665,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     var m = map(); if (!m) return;
     if (!allLayer) allLayer = L.layerGroup().addTo(m);
     radDraw();
-    if (radSel) radSel.style.display = (allOn || (window.alNetOn && window.alNetOn())) ? '' : 'none';
+    if (radSel) { var _on = allOn || (window.alNetOn && window.alNetOn()); radSel.style.display = ''; radSel.style.opacity = _on ? '' : '.55'; radSel.title = _on ? radSel._t || radSel.title : 'The radius applies when "All FSHub VAs", VATSIM or IVAO is on'; if (_on) radSel._t = radSel._t || radSel.title; }
     if (!allOn || !allData) { allLayer.clearLayers(); allMk = {}; return; }
     var keepIt = radFilter(), shown = 0;
     var mine = {}, myVa = data && data.airline && data.airline.id;
@@ -1744,6 +1744,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       [['all', 'Everywhere'], ['150', '150 NM'], ['300', '300 NM'], ['500', '500 NM'], ['route', 'Along my route']].forEach(function (o) {
         var op = document.createElement('option'); op.value = o[0]; op.textContent = o[0] === 'all' ? 'Range: everywhere' : (o[0] === 'route' ? 'Along my route' : 'Range: ' + o[1]); radSel.appendChild(op);
       });
+      radSel._t = radSel.title;
       radSel.value = rad;
       allBtn.parentNode.insertBefore(radSel, allBtn.nextSibling);
       radSel.addEventListener('change', function () { rad = radSel.value; try { localStorage.setItem(KEY_RAD, rad); } catch (e) {} renderAll(); if (window.alNetRender) window.alNetRender(); });
