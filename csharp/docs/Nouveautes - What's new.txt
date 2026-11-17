@@ -13,6 +13,7 @@ Version 12.3 — nouveau look, rien de retiré
 - Réglages rangés en cartes (Dossiers, Démarrage, Accessibilité, Écrans, FSHub, Raccourci, Sauvegarde).
 - Petites fenêtres (Profils, Doublons ICAO, Quarantaine, Propriétés, choix de scène…) : titre en haut, boutons en bas, même style partout.
 - Carte addons : volet de droite repliable pour agrandir la carte ; la légende devient des interrupteurs ON / OFF.
+- Avionics Dispatch : choix en tuiles (Départ → Arrivée / Aléatoire, Départs / Arrivées, IFR / VFR) ; la carte plein écran (Agrandir) range ses boutons sur deux lignes, avec « Je clique pour ▲ Départ / ■ Arrivée », les filtres d'aéroports en ON / OFF et une légende repliable.
 - Plan & suivi de vol : mêmes couleurs que l'appli ; dans la fenêtre de suivi, chaque volet (Légende, Plan SimBrief, Météo, Ma VA) se replie d'un clic, et le bouton « Tout réduire » libère toute la carte.
 - Mode daltonien : les avions VATSIM passent en vert bleuté, pour ne plus les confondre avec les avions IA de type non identifié (bleu ciel). Le mot ON / OFF accompagne toujours la couleur.
 - Tutoriel mis à jour (français et anglais).
@@ -41,6 +42,7 @@ Version 12.3 — new look, nothing removed
 - Settings arranged in cards (Folders, Startup, Accessibility, Screens, FSHub, Shortcut, Backup).
 - Small windows (Profiles, ICAO duplicates, Quarantine, Properties, scenery choice…): title at the top, buttons at the bottom, same style everywhere.
 - Add-on map: foldable right panel to enlarge the map; the legend becomes ON / OFF switches.
+- Avionics Dispatch: choices as tiles (Departure → Arrival / Random, Departures / Arrivals, IFR / VFR); the full-screen map (Enlarge) arranges its buttons on two rows, with "Click sets ▲ Departure / ■ Arrival", ON / OFF airport filters and a foldable legend.
 - Flight plan & tracking: same colours as the app; in the tracking window, each panel (Legend, SimBrief plan, Weather, My VA) folds with one click, and the "Collapse all" button frees the whole map.
 - Colorblind mode: VATSIM aircraft turn bluish green, so they are no longer mixed up with unidentified AI aircraft (sky blue). The word ON / OFF always comes with the colour.
 - Tutorial updated (French and English).
