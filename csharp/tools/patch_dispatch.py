@@ -141,7 +141,8 @@ NET_JS = r"""<script>
   /* mouvement fluide : chaque avion glisse vers sa nouvelle position (coupé pendant les zooms) */
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear}' +
-    '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon,#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon{transition:none!important}' +
+    '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon{transition:none!important}' +
+    '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}' +
     'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
     'color:var(--c)!important;border:1px solid var(--c)!important}' +
     'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
