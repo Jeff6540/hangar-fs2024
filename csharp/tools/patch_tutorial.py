@@ -157,6 +157,16 @@ R["en"] += [
   ("<li><b>Colour blindness</b>: tick \"Colour-blind friendly colours\" in Settings.", "<li><b>Colour blindness</b>: switch on the \"Colorblind mode\" tile in Settings."),
 ]
 
+# 12.3 étape 7 : Plan & suivi de vol aux couleurs de l'appli
+R["fr"] += [
+  ("s'ouvrent dans ton navigateur habituel.</p><h3>La page principale</h3>",
+   "s'ouvrent dans ton navigateur habituel.</p><p>La page reprend les couleurs de l'appli : cartes sombres, titres et bouton principal en bleu ciel, boutons arrondis.</p><h3>La page principale</h3>"),
+]
+R["en"] += [
+  ("open in your usual browser.</p><h3>The main page</h3>",
+   "open in your usual browser.</p><p>The page uses the app's colours: dark cards, sky-blue titles and main button, rounded buttons.</p><h3>The main page</h3>"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

@@ -241,3 +241,63 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_click(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.3 : palette bleu ciel de l'appli et boutons pilules (page Plan & suivi de vol) ----
+THEME_123 = r"""<style id="hangar-123">
+/* ===== Hangar FS 2024 12.3 : mêmes couleurs que l'appli (bleu ciel), boutons en pilule ===== */
+:root{
+  --al-bg:#0B0F14; --al-card:#121821; --al-card2:#151D27; --al-field:#0F151C;
+  --al-line:#1E2733; --al-line2:#2A3646; --al-text:#E6EDF5; --al-muted:#8B98A9; --al-dim:#64748B;
+  --al-blue:#38BDF8; --al-blue-hi:#7DD3FC; --al-sky:#7DD3FC; --al-ink:#06202C;
+  --r-card:16px; --r-ctl:999px;
+}
+html body{background:radial-gradient(1200px 520px at 50% -160px,#0f2233 0%,transparent 70%),#0B0F14!important}
+html body header.avionics-panel{border-bottom:1px solid rgba(56,189,248,.45)!important}
+html body header.avionics-panel a:hover{background:rgba(56,189,248,.22)!important;border-color:rgba(125,211,252,.6)!important}
+html body .avionics-panel:not(header){background:var(--al-card)!important;box-shadow:0 10px 28px rgba(0,0,0,.30)!important}
+.avionics-panel h3{font-size:12px!important;text-transform:uppercase;letter-spacing:.08em!important;color:var(--al-blue-hi)!important}
+.avionics-panel h3 i{color:var(--al-blue)!important}
+/* bouton principal : bleu ciel, texte foncé (comme dans l'appli) */
+html body .bg-cockpit-cyan,html body #mapToolbar button.bg-cockpit-cyan,html body #trafficMapModal>.avionics-panel button.bg-cockpit-cyan{
+  background:var(--al-blue)!important;color:var(--al-ink)!important;box-shadow:0 4px 16px rgba(56,189,248,.28)!important;border-color:transparent!important;font-weight:700!important}
+html body .bg-cockpit-cyan *,html body #mapToolbar button.bg-cockpit-cyan *,html body #trafficMapModal>.avionics-panel button.bg-cockpit-cyan *{color:var(--al-ink)!important}
+html body .hover\:bg-cockpit-cyan:hover,html body button.bg-cockpit-cyan:hover{background:var(--al-blue-hi)!important;color:var(--al-ink)!important}
+html body .hover\:bg-cockpit-cyan:hover *{color:var(--al-ink)!important}
+.bg-cockpit-cyan\/20,.bg-cockpit-cyan\/15,.bg-cockpit-cyan\/10{background-color:rgba(56,189,248,.14)!important}
+.border-cockpit-cyan,.border-cockpit-cyan\/50,.border-cockpit-cyan\/40,.border-cockpit-cyan\/30{border-color:rgba(56,189,248,.5)!important}
+/* boutons secondaires : gris clair lisible, en pilule */
+html body button.bg-cockpit-900,html body button.bg-cockpit-800,html body a.bg-cockpit-900{background:#1B2531!important;border:1px solid #33414F!important;color:var(--al-text)!important}
+html body button.bg-cockpit-900:hover,html body button.bg-cockpit-800:hover{background:#243142!important;border-color:#475569!important}
+html body button{border-radius:999px!important}
+/* champs arrondis */
+html body input:not([type=checkbox]):not([type=radio]):not([type=range]),html body select{border-radius:12px!important}
+html body textarea{border-radius:12px!important}
+html body input:focus,html body select:focus,html body textarea:focus{border-color:var(--al-blue)!important;box-shadow:0 0 0 3px rgba(56,189,248,.22)!important}
+:focus-visible{outline:2px solid var(--al-blue)!important}
+html body input[type=checkbox],html body input[type=radio],html body input[type=range]{accent-color:var(--al-blue)}
+/* encarts, METAR */
+html body .raw,html body .taf{color:#D6ECFA!important;border-radius:12px!important}
+#mapMiniContainer{border-radius:16px!important}
+/* cartes plein écran : liseré bleu ciel */
+html body #mapToolbar,html body #trafficMapModal>.avionics-panel{border-bottom:1px solid rgba(56,189,248,.45)!important}
+html body #mapToolbar button:hover,html body #trafficMapModal>.avionics-panel button:hover{background:rgba(56,189,248,.25)!important;border-color:rgba(125,211,252,.6)!important}
+::-webkit-scrollbar-thumb{background:#2A3646!important;border-radius:999px}
+</style>"""
+
+
+def patch_theme123(path):
+    s = open(path, encoding="utf-8").read()
+    if 'id="hangar-123"' in s:
+        print("déjà fait (12.3) :", path); return
+    a = '<style id="addons-links-theme">'
+    i = s.index(a); j = s.index("</style>", i) + len("</style>")
+    s = s[:j] + THEME_123 + s[j:]
+    open(path, "w", encoding="utf-8").write(s)
+    print("ok (12.3) :", path)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_theme123(os.path.join(_web, "dispatch_%s.html" % _l))
