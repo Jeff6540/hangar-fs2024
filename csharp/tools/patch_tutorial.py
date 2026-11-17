@@ -179,6 +179,18 @@ R["en"] += [
   ("VATSIM aircraft are green and IVAO aircraft", "VATSIM aircraft are green (bluish green in colorblind mode, so they are not mixed up with the sky blue of unidentified AI aircraft) and IVAO aircraft"),
 ]
 
+# 12.3 : Avionics Dispatch — tuiles et carte plein écran sur deux lignes
+R["fr"] += [
+  ("IFR ou VFR, et l'altitude de croisière.</li>", "IFR ou VFR, et l'altitude de croisière. Chaque choix (Départ → Arrivée / Aléatoire, Départs / Arrivées, IFR / VFR) est une tuile : celle qui est allumée affiche un voyant et « ON ».</li>", "Chaque choix (Départ → Arrivée"),
+  ("(Plan, Plan sombre, Satellite, Relief).</li></ul>",
+   "(Plan, Plan sombre, Satellite, Relief).</li></ul><p><b>La carte plein écran (Agrandir)</b> : la barre du haut est rangée sur deux lignes. En haut : Menu principal, le résumé de la route (départ → arrivée, distance, compatibilité), <b>Inverser</b>, <b>Effacer</b>, <b>Valider</b> et la croix pour fermer. En bas : <b>Je clique pour</b> (tuiles <b>▲ Départ</b> et <b>■ Arrivée</b> : choisis ce que fera ton prochain clic ; sans choix, le 1er clic donne le départ et le 2e l'arrivée), les filtres d'<b>aéroports</b> (Gros, Moyens, Aérodromes, chacun avec ON / OFF), l'<b>avion</b>, l'<b>altitude</b> et Fond sombre. Une <b>légende</b>, en bas à droite, rappelle les couleurs et se replie d'un clic sur son titre.</p>"),
+]
+R["en"] += [
+  ("IFR or VFR, and the cruise altitude.</li>", "IFR or VFR, and the cruise altitude. Each choice (Departure → Arrival / Random, Departures / Arrivals, IFR / VFR) is a tile: the one switched on shows a light and \"ON\".</li>", "Each choice (Departure → Arrival"),
+  ("(Map, Dark map, Satellite, Terrain).</li></ul>",
+   "(Map, Dark map, Satellite, Terrain).</li></ul><p><b>The full-screen map (Enlarge)</b>: the top bar is arranged on two rows. Top: Main menu, the route summary (departure → arrival, distance, compatibility), <b>Swap</b>, <b>Clear</b>, <b>Validate</b> and the cross to close. Bottom: <b>Click sets</b> (<b>▲ Departure</b> and <b>■ Arrival</b> tiles: choose what your next click does; with no choice, the 1st click sets the departure and the 2nd the arrival), the <b>airport</b> filters (Large, Medium, Airfields, each with ON / OFF), the <b>aircraft</b>, the <b>altitude</b> and Dark background. A <b>legend</b>, bottom right, recalls the colours and folds with a click on its title.</p>"),
+]
+
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

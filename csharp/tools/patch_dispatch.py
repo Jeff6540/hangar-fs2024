@@ -398,3 +398,135 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_tracking123(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.3 : page principale (choix en tuiles) et carte plein écran « Plan de vol personnel » (barre sur deux lignes, légende) ----
+PLAN_TXT = {
+    "fr": {"title": "PLAN DE VOL PERSONNEL", "click": "Je clique pour", "apt": "Aéroports", "ac": "Avion", "leg": "Légende",
+           "l1": "Gros aéroport", "l2": "Moyen", "l3": "Aérodrome", "dep": "Départ", "arr": "Arrivée", "route": "Route",
+           "hint": "Sans choix, 1er clic = départ, 2e clic = arrivée", "swap": "Inverser", "clear": "Effacer"},
+    "en": {"title": "PERSONAL FLIGHT PLAN", "click": "Click sets", "apt": "Airports", "ac": "Aircraft", "leg": "Legend",
+           "l1": "Large airport", "l2": "Medium", "l3": "Airfield", "dep": "Departure", "arr": "Arrival", "route": "Route",
+           "hint": "With no choice, 1st click = departure, 2nd click = arrival", "swap": "Swap", "clear": "Clear"},
+}
+
+PLAN_CSS = r"""<style id="hangar-123-plan">
+/* page principale : choix en tuiles avec voyant et ON / OFF */
+html body #btnGenModeManual,html body #btnGenModeRandom,html body #btnModeDep,html body #btnModeArr,html body #btnTypeIfr,html body #btnTypeVfr{
+  position:relative!important;justify-content:flex-start!important;gap:9px!important;min-height:44px;padding:6px 26px 6px 8px!important;border-radius:14px!important;
+  background:#10161E!important;border:1px solid #1E2733!important;color:#B4C0CF!important;font-size:12px!important;text-align:left;box-shadow:none!important;transform:none!important}
+html body #btnGenModeManual i,html body #btnGenModeRandom i,html body #btnModeDep i,html body #btnModeArr i,html body #btnTypeIfr i,html body #btnTypeVfr i{
+  width:24px;height:24px;border-radius:50%;background:#1E2733;display:inline-grid;place-items:center;font-size:11px;flex:none;color:#8B98A9!important}
+html body #btnGenModeManual::before,html body #btnGenModeRandom::before,html body #btnModeDep::before,html body #btnModeArr::before,html body #btnTypeIfr::before,html body #btnTypeVfr::before{
+  content:"";position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:#2A3646}
+html body #btnGenModeManual::after,html body #btnGenModeRandom::after,html body #btnModeDep::after,html body #btnModeArr::after,html body #btnTypeIfr::after,html body #btnTypeVfr::after{
+  content:"OFF";position:absolute;right:9px;bottom:6px;font-size:9px;font-weight:800;letter-spacing:.06em;color:#5B6778}
+html body #btnGenModeManual.bg-cockpit-cyan,html body #btnGenModeRandom.bg-cockpit-cyan,html body #btnModeDep.bg-cockpit-cyan,html body #btnModeArr.bg-cockpit-cyan,html body #btnTypeIfr.bg-cockpit-cyan,html body #btnTypeVfr.bg-cockpit-cyan{
+  background:linear-gradient(rgba(56,189,248,.16),rgba(56,189,248,.05))!important;border-color:rgba(56,189,248,.6)!important;color:#F1F5F9!important}
+html body [id^="btn"].bg-cockpit-cyan i{background:#38BDF8!important;color:#06202C!important}
+html body #btnGenModeManual.bg-cockpit-cyan::before,html body #btnGenModeRandom.bg-cockpit-cyan::before,html body #btnModeDep.bg-cockpit-cyan::before,html body #btnModeArr.bg-cockpit-cyan::before,html body #btnTypeIfr.bg-cockpit-cyan::before,html body #btnTypeVfr.bg-cockpit-cyan::before{background:#38BDF8;box-shadow:0 0 8px #38BDF8}
+html body #btnGenModeManual.bg-cockpit-cyan::after,html body #btnGenModeRandom.bg-cockpit-cyan::after,html body #btnModeDep.bg-cockpit-cyan::after,html body #btnModeArr.bg-cockpit-cyan::after,html body #btnTypeIfr.bg-cockpit-cyan::after,html body #btnTypeVfr.bg-cockpit-cyan::after{content:"ON";color:#38BDF8}
+html body #btnTypeIfr.bg-cockpit-amber,html body #btnTypeVfr.bg-cockpit-amber{background:linear-gradient(rgba(245,165,36,.18),rgba(245,165,36,.05))!important;border-color:rgba(245,165,36,.6)!important;color:#F1F5F9!important}
+html body #btnTypeIfr.bg-cockpit-amber i,html body #btnTypeVfr.bg-cockpit-amber i{background:#F5A524!important;color:#1a1204!important}
+html body #btnTypeIfr.bg-cockpit-amber::before,html body #btnTypeVfr.bg-cockpit-amber::before{background:#F5A524;box-shadow:0 0 8px #F5A524}
+html body #btnTypeIfr.bg-cockpit-amber::after,html body #btnTypeVfr.bg-cockpit-amber::after{content:"ON";color:#F5A524}
+html body #btnGenModeManual:hover,html body #btnGenModeRandom:hover,html body #btnModeDep:hover,html body #btnModeArr:hover,html body #btnTypeIfr:hover,html body #btnTypeVfr:hover{border-color:#33404F!important}
+.al-seg{background:transparent!important;border:0!important;padding:0!important;gap:8px!important}
+
+/* carte plein écran : barre sur deux lignes */
+html body #mapToolbar{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+#mapToolbar .al-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#mapToolbar .al-grow{flex:1}
+#mapToolbar .al-title{font:700 13px "Segoe UI",Inter,sans-serif;letter-spacing:.06em;color:#E6EDF5;white-space:nowrap}
+#mapToolbar .al-grp{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 12px;border:1px solid #1E2733;border-radius:14px;background:rgba(11,15,20,.75)}
+#mapToolbar .al-gl{font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8B98A9;white-space:nowrap}
+html body #mapToolbar #modalRouteInfo{display:block!important;font-size:12.5px!important;padding:8px 14px!important;border-radius:999px!important;border:1px solid rgba(52,211,153,.45)!important;background:rgba(11,15,20,.8)!important}
+/* tuiles Départ / Arrivée et filtres d'aéroports */
+html body #mapToolbar #btnChangeDep,html body #mapToolbar #btnChangeArr,html body #mapToolbar #filterBtnLarge,html body #mapToolbar #filterBtnMedium,html body #mapToolbar #filterBtnSmall{
+  position:relative!important;display:inline-flex!important;align-items:center;gap:7px;height:38px;padding:0 28px 0 12px!important;border-radius:12px!important;
+  background:#10161E!important;border:1px solid #1E2733!important;color:#B4C0CF!important;font:700 12px "Segoe UI",Inter,sans-serif!important;opacity:1!important;transform:none!important;box-shadow:none!important}
+html body #mapToolbar #btnChangeDep::before,html body #mapToolbar #btnChangeArr::before,html body #mapToolbar #filterBtnLarge::before,html body #mapToolbar #filterBtnMedium::before,html body #mapToolbar #filterBtnSmall::before{
+  content:"";position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:#2A3646}
+html body #mapToolbar #btnChangeDep::after,html body #mapToolbar #btnChangeArr::after,html body #mapToolbar #filterBtnLarge::after,html body #mapToolbar #filterBtnMedium::after,html body #mapToolbar #filterBtnSmall::after{
+  content:"OFF";position:absolute;right:7px;bottom:5px;font-size:8.5px;font-weight:800;letter-spacing:.06em;color:#5B6778}
+html body #mapToolbar #btnChangeDep.scale-105,html body #mapToolbar #btnChangeArr.scale-105,html body #mapToolbar #filterBtnLarge.bg-cockpit-900,html body #mapToolbar #filterBtnMedium.bg-cockpit-900,html body #mapToolbar #filterBtnSmall.bg-cockpit-900{
+  background:linear-gradient(rgba(56,189,248,.16),rgba(56,189,248,.05))!important;border-color:rgba(56,189,248,.6)!important;color:#F1F5F9!important}
+html body #mapToolbar #btnChangeDep.scale-105::before,html body #mapToolbar #btnChangeArr.scale-105::before,html body #mapToolbar #filterBtnLarge.bg-cockpit-900::before,html body #mapToolbar #filterBtnMedium.bg-cockpit-900::before,html body #mapToolbar #filterBtnSmall.bg-cockpit-900::before{background:#38BDF8;box-shadow:0 0 8px #38BDF8}
+html body #mapToolbar #btnChangeDep.scale-105::after,html body #mapToolbar #btnChangeArr.scale-105::after,html body #mapToolbar #filterBtnLarge.bg-cockpit-900::after,html body #mapToolbar #filterBtnMedium.bg-cockpit-900::after,html body #mapToolbar #filterBtnSmall.bg-cockpit-900::after{content:"ON";color:#38BDF8}
+html body #mapToolbar #btnChangeArr.scale-105{background:linear-gradient(rgba(245,165,36,.18),rgba(245,165,36,.05))!important;border-color:rgba(245,165,36,.6)!important}
+html body #mapToolbar #btnChangeArr.scale-105::before{background:#F5A524;box-shadow:0 0 8px #F5A524}
+html body #mapToolbar #btnChangeArr.scale-105::after{color:#F5A524}
+#mapToolbar #btnChangeDep b{color:#38BDF8}#mapToolbar #btnChangeArr b{color:#F5A524}
+html body #mapToolbar #modalAircraftSearchInput{height:36px}
+html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
+/* légende de la carte plein écran */
+#alPlanLegend{position:absolute;right:12px;bottom:12px;z-index:1000;background:rgba(11,15,20,.92);border:1px solid #2A3646;border-radius:12px;padding:10px 12px;font:12px "Segoe UI",Inter,sans-serif;color:#E6EDF5;line-height:1.75}
+#alPlanLegend .d{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+#alPlanLegend .m{color:#8B98A9;font-size:11px}
+</style>"""
+
+PLAN_JS = r"""<script>
+/* Hangar FS 2024 12.3 : barre de la carte plein écran rangée sur deux lignes (mêmes boutons, mêmes fonctions) + légende */
+(function () {
+  var T = __TXT__;
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function build() {
+    var tb = document.getElementById('mapToolbar'); if (!tb || tb._al) return; tb._al = true;
+    var q = function (s) { return tb.querySelector(s); };
+    var back = q('button[onclick="closeInteractiveMapModal()"]'), theme = q('button[onclick^="toggleMapTheme"]');
+    var close = tb.querySelectorAll('button[onclick="closeInteractiveMapModal()"]'); close = close[close.length - 1];
+    var info = document.getElementById('modalRouteInfo'), swap = q('button[onclick="swapInteractiveRoute()"]'),
+        reset = q('button[onclick="resetInteractiveSelection()"]'), valid = document.getElementById('applyRouteBtn');
+    var dep = document.getElementById('btnChangeDep'), arr = document.getElementById('btnChangeArr');
+    var fL = document.getElementById('filterBtnLarge'), fM = document.getElementById('filterBtnMedium'), fS = document.getElementById('filterBtnSmall');
+    var acBox = document.getElementById('modalAircraftSearchInput'); acBox = acBox && acBox.closest('.relative.z-\\[100\\]') || (acBox && acBox.parentNode.parentNode);
+    var alt = document.getElementById('mapCruiseAltitudeSelect'); alt = alt && alt.parentNode;
+    if (swap) swap.insertAdjacentHTML('beforeend', ' ' + T.swap); if (reset) reset.insertAdjacentHTML('beforeend', ' ' + T.clear);
+    var r1 = el('div', 'al-row'), r2 = el('div', 'al-row');
+    [back, el('span', 'al-title', '🗺 ' + T.title), el('span', 'al-grow'), info, swap, reset, valid, close].forEach(function (x) { if (x) r1.appendChild(x); });
+    var g1 = el('div', 'al-grp', '<span class="al-gl">' + T.click + '</span>'); g1.title = T.hint; [dep, arr].forEach(function (x) { if (x) g1.appendChild(x); });
+    var g2 = el('div', 'al-grp', '<span class="al-gl">' + T.apt + '</span>'); [fL, fM, fS].forEach(function (x) { if (x) g2.appendChild(x); });
+    var g3 = el('div', 'al-grp', '<span class="al-gl">' + T.ac + '</span>'); if (acBox) g3.appendChild(acBox);
+    var g4 = el('div', 'al-grp'); if (alt) g4.appendChild(alt);
+    [g1, g2, g3, g4, el('span', 'al-grow'), theme].forEach(function (x) { if (x) r2.appendChild(x); });
+    while (tb.firstChild) tb.removeChild(tb.firstChild);
+    tb.appendChild(r1); tb.appendChild(r2);
+    var wrap = document.getElementById('fullMapWrapper');
+    if (wrap && !document.getElementById('alPlanLegend')) {
+      var lg = el('div', '', '<div><span class="d" style="background:#38BDF8"></span>' + T.l1 + ' &nbsp; <span class="d" style="background:#F5B544"></span>' + T.l2 +
+        ' &nbsp; <span class="d" style="background:#c084fc"></span>' + T.l3 + '</div><div><b style="color:#38BDF8">▲</b> ' + T.dep + ' &nbsp; <b style="color:#F5A524">■</b> ' + T.arr +
+        ' &nbsp; <span style="color:#38BDF8">┅</span> ' + T.route + '</div><div class="m">' + T.hint + '</div>');
+      lg.id = 'alPlanLegend'; wrap.appendChild(lg);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
+</script>"""
+
+
+def patch_plan123(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if 'id="hangar-123-plan"' in s:
+        print("déjà fait (plan 12.3) :", path); return
+    import re, json
+    t = PLAN_TXT[lang]
+    # libellés Départ / Arrivée avec une forme (lisible sans les couleurs)
+    for bid, sym in (("btnChangeDep", "▲"), ("btnChangeArr", "■")):
+        m = re.search(r'(<button id="%s"[^>]*>)\s*([^<]+?)\s*</button>' % bid, s)
+        assert m, bid
+        s = s.replace(m.group(0), m.group(1) + "<b>%s</b> %s</button>" % (sym, m.group(2).strip().capitalize()), 1)
+    # conteneurs des choix de la page principale : plus d'encadré, tuiles espacées
+    for bid in ("btnGenModeManual", "btnModeDep", "btnTypeIfr"):
+        i = s.index('id="%s"' % bid); j = s.rindex('<div class="grid grid-cols-2 gap-1 p-1', 0, i)
+        s = s[:j] + '<div class="al-seg grid grid-cols-2 gap-1 p-1' + s[j + len('<div class="grid grid-cols-2 gap-1 p-1'):]
+    # le lien Ma VA / légende : la légende se replie comme celles du suivi
+    s = s.replace("['alPerfSolo', T.perf]];", "['alPerfSolo', T.perf], ['alPlanLegend', T.leg]];", 1)
+    s = s.replace("<!--HANGAR_CB-->", PLAN_CSS + PLAN_JS.replace("__TXT__", json.dumps(t, ensure_ascii=False)) + "<!--HANGAR_CB-->", 1)
+    open(path, "w", encoding="utf-8").write(s)
+    print("ok (plan 12.3) :", path)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_plan123(os.path.join(_web, "dispatch_%s.html" % _l), _l)
