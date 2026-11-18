@@ -576,6 +576,19 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
     var b = L.tileLayer(l._url, o); b._alBackdrop = true; b._src = l; m._alBack = b;
     l.setZIndex(1); b.addTo(m);
   }
+  /* image de carte qui n'arrive pas (serveur surchargé…) : on réessaie 2 fois, après une courte pause */
+  function retry(l) {
+    l.on('tileerror', function (e) {
+      var img = e.tile, n = +(img.getAttribute('data-al-try') || 0);
+      if (n >= 2 || !e.coords) return;
+      img.setAttribute('data-al-try', n + 1);
+      setTimeout(function () {
+        if (!img.parentNode) return;                       /* l'image n'est plus à l'écran */
+        var u = l.getTileUrl(e.coords);
+        img.src = u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + (n + 1);
+      }, 800 * (n + 1));
+    });
+  }
   function tiles(m) {
     if (!m) return;
     m._fadeAnimated = false;
@@ -583,7 +596,7 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
-      if (!l._alT) { l._alT = true; l.options.keepBuffer = 4; }
+      if (!l._alT) { l._alT = true; l.options.keepBuffer = 4; l.options.updateInterval = 150; retry(l); }
       base = l;
     });
     if (base) backdrop(m, base);

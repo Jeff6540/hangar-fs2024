@@ -314,5 +314,21 @@ let lost = 0;
 watch();
 setInterval(watch, 1200);
 </script>
-</body>
+<script id="hangar-123-retry">
+/* 12.3 : images de carte ratées réessayées 2 fois ; mises à jour un peu plus fréquentes */
+(function () {
+  function retry(l) {
+    if (l._alR) return; l._alR = true; l.options.updateInterval = 150; l.options.keepBuffer = 4;
+    l.on('tileerror', function (e) {
+      var img = e.tile, n = +(img.getAttribute('data-al-try') || 0);
+      if (n >= 2 || !e.coords) return;
+      img.setAttribute('data-al-try', n + 1);
+      setTimeout(function () { if (!img.parentNode) return; var u = l.getTileUrl(e.coords); img.src = u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + (n + 1); }, 800 * (n + 1));
+    });
+  }
+  function hook() { if (typeof map === 'undefined' || !map.eachLayer) return; map.eachLayer(function (l) { if (l instanceof L.TileLayer) retry(l); }); if (!map._alRH) { map._alRH = true; map.on('layeradd', function (e) { if (e.layer instanceof L.TileLayer) retry(e.layer); }); } }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+  setTimeout(hook, 1000);
+})();
+</script></body>
 </html>
