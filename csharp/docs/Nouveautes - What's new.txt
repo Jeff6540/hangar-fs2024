@@ -19,6 +19,7 @@ Version 12.3 — nouveau look, rien de retiré
 - Suivi : la trajectoire de ton avion ne trace plus de grandes lignes au chargement du simulateur ; le menu Rayon reste affiché ; les volets indiquent « réduire » / « déplier ».
 - Volet du plan : plus de « ILS [object Object] » (axe de piste seul si SimBrief ne donne pas de fréquence) ; la case « Altitude d'interception du glide » est expliquée.
 - Cartes : plus de quadrillage noir ni d'effet de surimpression au zoom ; pendant le chargement, une version floue de la carte s'affiche au lieu de zones blanches ou sombres ; le zoom avance par demi-crans.
+- Suivi : les avions tournent en douceur quand ils changent de cap, et un fin liseré clair les fait ressortir sur le Plan sombre.
 - Mode daltonien : le mot ON / OFF accompagne toujours la couleur.
 - Tutoriel mis à jour (français et anglais).
 
@@ -52,6 +53,7 @@ Version 12.3 — new look, nothing removed
 - Tracking: your aircraft's track no longer draws long lines while the simulator loads; the Range menu stays visible; panels show "collapse" / "expand".
 - Plan panel: no more "ILS [object Object]" (runway course only if SimBrief gives no frequency); the "Glideslope intercept altitude" box is explained.
 - Maps: no more black grid lines or ghosting when zooming; while loading, a blurred version of the map shows instead of white or dark areas; zoom moves in half steps.
+- Tracking: aircraft turn smoothly when their heading changes, and a thin light outline makes them stand out on the Dark map.
 - Colorblind mode: the word ON / OFF always comes with the colour.
 - Tutorial updated (French and English).
 
