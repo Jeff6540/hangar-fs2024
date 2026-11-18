@@ -556,6 +556,9 @@ namespace HangarFS2024
                     {
                         var updInfo = a["info"] as JObject;
                         if (updInfo == null) return null;
+                        if (hangar.SimRunning())
+                            return new JObject { ["blocked"] = Hangar.L("Flight Simulator est ouvert. Ferme-le d'abord, puis clique à nouveau sur Mettre à jour.",
+                                                                        "Flight Simulator is running. Close it first, then click Update again.") };
                         var updTask = Task.Run(() =>
                         {
                             try

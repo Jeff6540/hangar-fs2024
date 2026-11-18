@@ -1708,7 +1708,8 @@ $("bUpdGo").onclick = async () => {
   const ok = await modal(t("updConfirm").replace("{v}", UPD.version), [{label: t("updGo"), value: true, cls: "accent"}, {label: t("cancel"), value: false}]);
   if (!ok) return;
   $("updBanner").classList.add("busy"); $("updText").textContent = t("updChecking");
-  run("updateApply", {info: UPD});
+  const r = await run("updateApply", {info: UPD});
+  if (r && r.blocked) { showUpd(UPD); alertBox(r.blocked); }
 };
 $("sUpd").onchange = () => run("setValue", {key: "update_check", value: $("sUpd").checked});
 function onEvent(ev, data){
