@@ -209,16 +209,6 @@ CUT = {
          "<p><b>Aircraft movement</b></p><p>Between two updates, aircraft glide smoothly instead of jumping. FSHub aircraft (your VA and the other VAs) move along their heading and speed since their last report, never backwards; during a zoom, they follow the map.</p>")],
 }
 
-# 12.3 : Plan sombre = vraie carte sombre Esri
-R["fr"] += [
-  ("(icône des calques) : Plan OpenStreetMap, Plan sombre, Satellite, Relief.</li>",
-   "(icône des calques) : Plan (OpenStreetMap), Plan sombre (vraie carte sombre d'Esri, avec les noms des lieux), Satellite et Relief (Esri).</li>"),
-]
-R["en"] += [
-  ("(layers icon): Map OpenStreetMap, Dark map, Satellite, Terrain.</li>",
-   "(layers icon): Map (OpenStreetMap), Dark map (a true dark map from Esri, with place names), Satellite and Terrain (Esri).</li>"),
-]
-
 # remplacements faits partout dans la page (texte qui revient plusieurs fois)
 GLOBAL = {
  "fr": [(" de la barre du bas ;", " en bas du menu ;"), ("Bouton ⏻ dans la barre du bas de Hangar FS 2024", "Bouton ⏻ en bas du menu de Hangar FS 2024"),

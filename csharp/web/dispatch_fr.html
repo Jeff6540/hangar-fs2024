@@ -552,7 +552,7 @@ html body #alFlightCard .alf-open:hover,html body .alf-open:hover{background:#7D
     if (!osm) osm = L.tileLayer(OSM, { maxZoom: 19, subdomains: 'abc' }).addTo(map);
     return {
       plan: osm,
-      dark: L.layerGroup([L.tileLayer('https://{s}.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 16, subdomains: ['server', 'services'], attribution: 'Fond sombre © Esri, HERE, Garmin, © OpenStreetMap', zIndex: 1 }), (function () { var t = L.tileLayer('https://{s}.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 16, subdomains: ['server', 'services'], zIndex: 5 }); t._alLabels = true; return t; })()]),
+      dark: L.tileLayer(OSM, { maxZoom: 19, subdomains: 'abc' }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }),
       topo: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Fond © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors' })
     };
@@ -2434,13 +2434,12 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
-      if (l._alLabels) { if (!l._alT) { l._alT = true; retry(l); } return; }
       if (!l._alT) { l._alT = true; l.options.keepBuffer = 4; l.options.updateInterval = 150; retry(l); }
       base = l;
     });
     if (base) backdrop(m, base);
     else if (m._alBack) { m.removeLayer(m._alBack); m._alBack = null; }
-    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd layerremove', function (e) { if ((e.layer instanceof L.TileLayer && !e.layer._alBackdrop) || e.layer instanceof L.LayerGroup) setTimeout(function () { tiles(m); }, 0); }); }
+    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd layerremove', function (e) { if (e.layer instanceof L.TileLayer && !e.layer._alBackdrop) setTimeout(function () { tiles(m); }, 0); }); }
   }
   function hook() {
     var m = null, f = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; f = (typeof fullMap !== 'undefined') ? fullMap : null; } catch (e) {}
@@ -2458,8 +2457,6 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
 
 </style><style id="hangar-123-halo">/* 12.3 : liseré clair autour des avions quand le fond est sombre */
 #trafficMapWrapper.map-dark-tiles .traffic-icon svg,#trafficMapWrapper.map-dark-tiles .alfs-icon svg{filter:drop-shadow(0 0 1px rgba(230,237,245,.95)) drop-shadow(0 0 2px rgba(0,0,0,.6))!important}
-</style><style id="hangar-123-esridark">/* 12.3 : Plan sombre = vraie carte sombre Esri (fond + noms), sans filtre, sur le suivi et la carte plein écran */
-#trafficMapWrapper.map-dark-tiles .leaflet-tile-pane,#fullMapWrapper.map-dark-tiles .leaflet-tile-pane{filter:none!important}
 </style></head>
 <body class="flex flex-col">
 
