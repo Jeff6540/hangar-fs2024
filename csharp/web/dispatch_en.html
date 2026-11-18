@@ -114,7 +114,7 @@ host.appendChild(b);});</script><link rel="icon" type="image/png" href="/icon_di
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS & JS CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script><script id="hangar-123-rot">
+    <script id="hangar-123-rot">
 /* 12.3 : quand seul le cap change, on tourne l'avion déjà affiché au lieu de redessiner son icône (pas de scintillement) */
 window.alTurn = function (mk, oldSig, newSig, hdg) {
   if (!mk || oldSig == null) return false;
@@ -481,7 +481,7 @@ html body .avionics-panel input+span,html body .avionics-panel input~span[class*
 html body .avionics-panel .avionics-panel,html body .avionics-panel [class*="bg-cockpit-900"][class*="border"]{border-radius:12px!important}
 
 /* ===== Cartes plein écran (Agrandir, Plan & suivi de vol) : même style que la page ===== */
-html body #interactiveMapModal,html body #trafficMapModal{background:rgba(10,12,16,.88)!important;backdrop-filter:blur(10px)!important}
+html body #interactiveMapModal,html body #trafficMapModal{background:rgb(10,12,16)!important;backdrop-filter:none!important}
 html body #mapToolbar,html body #trafficMapModal>.avionics-panel{
   background:#0f1724 url(/bg_modal.svg) center 65%/cover no-repeat!important;
   border:1px solid var(--al-line2)!important;border-bottom:1px solid rgba(59,130,246,.45)!important;
@@ -2431,8 +2431,6 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
   }
   function tiles(m) {
     if (!m) return;
-    m._fadeAnimated = false;
-    if (!m._alSteps) { m._alSteps = true; m.options.zoomSnap = 0.5; m.options.zoomDelta = 0.5; m.options.wheelPxPerZoomLevel = 90; }
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;

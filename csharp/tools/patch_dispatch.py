@@ -591,8 +591,6 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
   }
   function tiles(m) {
     if (!m) return;
-    m._fadeAnimated = false;
-    if (!m._alSteps) { m._alSteps = true; m.options.zoomSnap = 0.5; m.options.zoomDelta = 0.5; m.options.wheelPxPerZoomLevel = 90; }
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
@@ -643,8 +641,8 @@ def patch_seams123(path):
         return
     s = s.replace("</head>", SEAMS_CSS + "</head>", 1)
     tag = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"'
-    if 'hangar-123-2d' not in s and tag in s:
-        s = s.replace(tag, '<script id="hangar-123-2d">window.L_DISABLE_3D = true; /* 12.3 : carte positionnée sans 3D (plus de lignes entre les carrés ni de surimpression au zoom) */</script>' + tag, 1)
+    if False:
+        s = s.replace(tag, '' + tag, 1)
     open(path, "w", encoding="utf-8").write(s)
 
 
