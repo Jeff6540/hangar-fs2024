@@ -594,12 +594,13 @@ ZOOM_JS = r"""<script id="hangar-123-zoom">
     var base = null;
     m.eachLayer(function (l) {
       if (!(l instanceof L.TileLayer) || l._alBackdrop) return;
+      if (l._alLabels) { if (!l._alT) { l._alT = true; retry(l); } return; }
       if (!l._alT) { l._alT = true; l.options.keepBuffer = 4; l.options.updateInterval = 150; retry(l); }
       base = l;
     });
     if (base) backdrop(m, base);
     else if (m._alBack) { m.removeLayer(m._alBack); m._alBack = null; }
-    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd layerremove', function (e) { if (e.layer instanceof L.TileLayer && !e.layer._alBackdrop) setTimeout(function () { tiles(m); }, 0); }); }
+    if (!m._alTileHook) { m._alTileHook = true; m.on('layeradd layerremove', function (e) { if ((e.layer instanceof L.TileLayer && !e.layer._alBackdrop) || e.layer instanceof L.LayerGroup) setTimeout(function () { tiles(m); }, 0); }); }
   }
   function hook() {
     var m = null, f = null; try { m = (typeof trafficMap !== 'undefined') ? trafficMap : null; f = (typeof fullMap !== 'undefined') ? fullMap : null; } catch (e) {}
@@ -654,3 +655,6 @@ if __name__ == "__main__":
 
 # ---- 12.3 : rotation des avions sans redessiner l'icône (appliquée directement dans les pages) ----
 ROT_JS = '<script id="hangar-123-rot">\n/* 12.3 : quand seul le cap change, on tourne l\'avion déjà affiché au lieu de redessiner son icône (pas de scintillement) */\nwindow.alTurn = function (mk, oldSig, newSig, hdg) {\n  if (!mk || oldSig == null) return false;\n  var a = String(oldSig), b = String(newSig), i = a.indexOf(\'|\'), j = b.indexOf(\'|\');\n  if (i < 0 || j < 0 || a.slice(i) !== b.slice(j)) return false;      /* autre chose que le cap a changé */\n  var el = mk.getElement && mk.getElement(), svg = el && el.querySelector(\'svg\');\n  if (!svg) return false;\n  svg.style.transform = \'rotate(\' + (hdg || 0) + \'deg)\';\n  return true;\n};\n</script>'
+
+# ---- 12.3 : Plan sombre Esri (appliqué directement dans les pages) ----
+ESRI_DARK_CSS = '<style id="hangar-123-esridark">/* 12.3 : Plan sombre = vraie carte sombre Esri (fond + noms), sans filtre, sur le suivi et la carte plein écran */\n#trafficMapWrapper.map-dark-tiles .leaflet-tile-pane,#fullMapWrapper.map-dark-tiles .leaflet-tile-pane{filter:none!important}\n</style>'

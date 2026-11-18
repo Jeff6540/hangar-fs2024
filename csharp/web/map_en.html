@@ -156,7 +156,7 @@ const attr = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const bases = {
   "Map (OpenStreetMap)": L.tileLayer(OSM, {maxZoom:19, attribution: attr}),
-  "Dark map": L.tileLayer(OSM, {maxZoom:19, attribution: attr, className:"dark-tiles"}),
+  "Dark map": L.layerGroup([L.tileLayer("https://{s}.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {maxZoom:19, maxNativeZoom:16, subdomains:["server","services"], attribution:"Fond sombre © Esri, HERE, Garmin, © OpenStreetMap", zIndex:1}), L.tileLayer("https://{s}.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {maxZoom:19, maxNativeZoom:16, subdomains:["server","services"], zIndex:5})]),
   "Satellite (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, attribution:"Imagery © Esri, Maxar, Earthstar Geographics"}),
   "Terrain (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {maxZoom:19, attribution: "Tiles © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors"}),
 };
