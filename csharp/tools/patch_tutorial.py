@@ -215,6 +215,8 @@ GLOBAL = {
         ("bouton ⏻ de la barre du bas", "bouton ⏻ en bas du menu")],
  "en": [(" button in the bottom bar;", " button at the bottom of the menu;"), ("with the ⏻ button in the bottom bar,", "with the ⏻ button at the bottom of the menu,")],
 }
+# 12.3 : bouton LFV Planner retiré de la page Vol SimBrief
+GLOBAL.setdefault("fr", []).append((", ou <b>🌐 LFV Planner</b> pour le planificateur des Fous Volants.</li>", ".</li>"))
 
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
