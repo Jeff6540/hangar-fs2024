@@ -152,17 +152,17 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 const map = L.map("map", {worldCopyJump:true, preferCanvas:true}).setView([45, 5], 5);
-const attr = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>';
-const OSM = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", DARKT = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const attr = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const bases = {
-  "Plan (CARTO)": L.tileLayer(OSM, {maxZoom:20, subdomains:"abcd", attribution: attr}),
-  "Plan sombre": L.tileLayer(DARKT, {maxZoom:20, subdomains:"abcd", attribution: attr}),
+  "Plan (OpenStreetMap)": L.tileLayer(OSM, {maxZoom:19, attribution: attr}),
+  "Plan sombre": L.tileLayer(OSM, {maxZoom:19, attribution: attr, className:"dark-tiles"}),
   "Satellite (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, attribution:"Imagerie © Esri, Maxar, Earthstar Geographics"}),
   "Relief (Esri)": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {maxZoom:19, attribution: "Fond © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors"}),
 };
 let savedBase = null;
 try { savedBase = localStorage.getItem("fond"); } catch (e) {}
-(bases[savedBase] || bases["Plan (CARTO)"]).addTo(map);
+(bases[savedBase] || bases["Plan (OpenStreetMap)"]).addTo(map);
 map.on("baselayerchange", e => { try { localStorage.setItem("fond", e.name); } catch (err) {} });
 L.control.layers(bases, null, {position:"topleft"}).addTo(map);
 L.control.scale({imperial:false}).addTo(map);
