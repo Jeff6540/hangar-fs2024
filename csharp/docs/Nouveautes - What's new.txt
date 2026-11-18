@@ -7,6 +7,7 @@ FRANÇAIS
 
 Version 12.4 — mise à jour en un clic
 - Quand une nouvelle version sort, un bandeau bleu apparaît en haut de l'appli. Un clic sur « Mettre à jour » : téléchargement, vérification, installation et redémarrage automatiques. Tes réglages, profils et liens sont conservés.
+- La mise à jour ne se fait que si Flight Simulator est fermé : jamais de coupure en plein vol.
 - Réglages → À propos : tuile « Vérifier les mises à jour au démarrage » (allumée par défaut) et bouton « Vérifier maintenant ».
 - Seules les versions officielles publiées sur GitHub sont acceptées, et le fichier est contrôlé avant installation.
 
@@ -47,6 +48,7 @@ ENGLISH
 
 Version 12.4 — one-click update
 - When a new version is out, a blue banner appears at the top of the app. One click on "Update": automatic download, verification, install and restart. Your settings, profiles and links are kept.
+- The update only runs when Flight Simulator is closed: never an interruption mid-flight.
 - Settings → About: "Check for updates at startup" tile (on by default) and "Check now" button.
 - Only official versions published on GitHub are accepted, and the file is checked before installing.
 

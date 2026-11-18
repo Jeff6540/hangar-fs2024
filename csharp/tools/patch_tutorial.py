@@ -208,7 +208,7 @@ R["fr"] += [
   "Vérifie la version dans le titre. Si besoin, Réglages → À propos → <b>Vérifier maintenant</b> puis <b>Mettre à jour</b>. Puis F5 dans la fenêtre de la page</td></tr>"
   "<tr><td>La mise à jour automatique échoue (« dossier protégé en écriture »)</td><td>L'appli est installée dans un dossier protégé (ex. Program Files). Relance-la en administrateur et clique à nouveau sur Mettre à jour, ou télécharge la nouvelle version à la main et remplace le dossier de l'appli</td></tr>"),
  ("<tr><td>Accessibilité</td><td>Tuile « Mode daltonien »",
-  "<tr><td>À propos / Mises à jour</td><td>Tuile « Vérifier les mises à jour au démarrage » (allumée par défaut) et bouton <b>Vérifier maintenant</b>. Quand une nouvelle version sort, un bandeau bleu apparaît en haut : <b>Mettre à jour</b> télécharge, vérifie, installe et relance l'appli tout seul ; tes réglages, profils et liens sont conservés. <b>Nouveautés</b> ouvre la page de la version, <b>Plus tard</b> masque le bandeau</td></tr>"
+  "<tr><td>À propos / Mises à jour</td><td>Tuile « Vérifier les mises à jour au démarrage » (allumée par défaut) et bouton <b>Vérifier maintenant</b>. Quand une nouvelle version sort, un bandeau bleu apparaît en haut : <b>Mettre à jour</b> télécharge, vérifie, installe et relance l'appli tout seul (seulement quand Flight Simulator est fermé) ; tes réglages, profils et liens sont conservés. <b>Nouveautés</b> ouvre la page de la version, <b>Plus tard</b> masque le bandeau</td></tr>"
   "<tr><td>Accessibilité</td><td>Tuile « Mode daltonien »", "Vérifier les mises à jour au démarrage"),
 ]
 R["en"] += [
@@ -216,7 +216,7 @@ R["en"] += [
   "Check the version in the title. If needed, Settings → About → <b>Check now</b> then <b>Update</b>. Then F5 in the page window</td></tr>"
   "<tr><td>Automatic update fails (\"write-protected folder\")</td><td>The app is installed in a protected folder (e.g. Program Files). Restart it as administrator and click Update again, or download the new version manually and replace the app folder</td></tr>"),
  ("<tr><td>Accessibility</td><td>\"Colorblind mode\" tile",
-  "<tr><td>About / Updates</td><td>\"Check for updates at startup\" tile (on by default) and <b>Check now</b> button. When a new version is out, a blue banner appears at the top: <b>Update</b> downloads, verifies, installs and restarts the app by itself; your settings, profiles and links are kept. <b>What's new</b> opens the release page, <b>Later</b> hides the banner</td></tr>"
+  "<tr><td>About / Updates</td><td>\"Check for updates at startup\" tile (on by default) and <b>Check now</b> button. When a new version is out, a blue banner appears at the top: <b>Update</b> downloads, verifies, installs and restarts the app by itself (only when Flight Simulator is closed); your settings, profiles and links are kept. <b>What's new</b> opens the release page, <b>Later</b> hides the banner</td></tr>"
   "<tr><td>Accessibility</td><td>\"Colorblind mode\" tile", "Check for updates at startup"),
 ]
 
