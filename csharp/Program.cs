@@ -35,6 +35,7 @@ namespace HangarFS2024
                                     AppInfo.Name, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+                Updater.CleanupOld();   // fichiers .old d'une mise à jour précédente
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 var form = new MainForm();

@@ -250,6 +250,8 @@ namespace HangarFS2024
                         ["version"] = AppInfo.Version, ["lang"] = Hangar.Lang,
                         ["settings"] = hangar.SettingsView(), ["sim"] = hangar.SimRunning(),
                     };
+                    if (hangar.CfgB("update_check", true))
+                        Task.Run(() => { System.Threading.Thread.Sleep(4000); try { var found = Updater.Check(); if (found != null) Push("update", new JObject { ["available"] = found }); } catch (Exception) { } });
                     var _ = Task.Run(() =>
                     {
                         try { hangar.Rescan(); }
@@ -541,6 +543,28 @@ namespace HangarFS2024
                     {
                         string p = JsonStore.Str(a["path"]);
                         if (p != "" && Directory.Exists(p)) Process.Start("explorer.exe", "\"" + p + "\"");
+                        return null;
+                    }
+                case "updateCheck":
+                    {
+                        JObject updFound = null;
+                        try { updFound = await Task.Run(() => Updater.Check()); }
+                        catch (Exception ex) { return new JObject { ["error"] = Hangar.L("Impossible de vérifier les mises à jour (", "Unable to check for updates (") + ex.Message + ")." }; }
+                        return updFound ?? new JObject { ["none"] = true, ["version"] = AppInfo.Version };
+                    }
+                case "updateApply":
+                    {
+                        var updInfo = a["info"] as JObject;
+                        if (updInfo == null) return null;
+                        var updTask = Task.Run(() =>
+                        {
+                            try
+                            {
+                                Updater.Apply(updInfo, (pc, txt) => Push("update", new JObject { ["progress"] = pc, ["text"] = txt }));
+                                BeginInvoke((Action)(() => Close()));
+                            }
+                            catch (Exception ex) { Push("update", new JObject { ["error"] = ex.Message }); }
+                        });
                         return null;
                     }
                 case "quit":

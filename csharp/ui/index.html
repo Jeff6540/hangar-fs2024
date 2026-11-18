@@ -155,6 +155,11 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 #scrDraw{position:relative;width:300px;height:92px;flex:none}.scr{position:absolute;border:2px solid var(--border);background:var(--panel);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.scr b{font-size:16px}.scr.on{border-color:var(--accent);background:#1b2a44;color:#fff}
 input[type=password]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;color:var(--fg)}
 /* daltoniens : présent dans Community = bleu ciel ; simplement coché = jaune (palette Okabe-Ito) */body.cb .box.act,body.cb .box.actpart{background:#56B4E9;border-color:#56B4E9}body.cb tr.item.act td{background:#163d55}body.cb tr.item.act:hover td{background:#1d4a66}body.cb .box.on,body.cb .box.part{background:#F0E442;border-color:#F0E442}body.cb .box.on::after{border-color:#1b1f26}body.cb .box.part::after{background:#1b1f26}body.cb .box.acton{background:transparent;border:2px solid #F0E442}body.cb tr.item.chk td{background:#3a4150}
+#updBanner{display:none;flex:none;background:#0E2A3A;border:1px solid #1F5E7E;color:#CFEFFF;font-weight:600;padding:8px 10px 8px 14px;align-items:center;gap:10px;margin:0 22px 10px;border-radius:10px}
+#updBanner.on{display:flex}
+#updBanner .ti{width:22px;height:22px;flex:none}
+#updBar{display:none;width:180px;height:8px;border-radius:4px;background:#14394D;overflow:hidden}#updBar i{display:block;height:100%;width:0;background:#4FC3F7;transition:width .2s}
+#updBanner.busy #updBar{display:block}#updBanner.busy .btn{display:none}
 #issueBanner{display:none;flex:none;background:#2A1F0B;border:1px solid #6B4A12;color:var(--warn);font-weight:600;padding:8px 10px 8px 16px;align-items:center;gap:10px;margin:0 22px 10px;border-radius:12px}
 .ctx{position:fixed;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 0;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .ctxitem{padding:6px 14px;cursor:pointer}.ctxitem:hover{background:var(--sel)}.ctxitem.off{color:var(--off);cursor:default}.ctxitem.off:hover{background:none}.ctxsep{height:1px;background:var(--border);margin:4px 0}
@@ -260,6 +265,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
   <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto" data-t="tuto"></button></div>
 </div>
 <div id="lock" data-t="lockBanner"></div>
+<div id="updBanner"><span class="ti" data-ic="globe"></span><span id="updText"></span><span class="grow"></span><span id="updBar"><i></i></span><button class="btn" id="bUpdNews" data-t="updNews"></button><button class="btn accent" id="bUpdGo" data-t="updGo"></button><button class="btn" id="bUpdLater" data-t="updLater"></button></div>
 <div id="issueBanner"><span id="issueText"></span><span class="grow"></span><button class="btn" id="bIssues" data-t="seeRepair"></button></div>
 <main>
   <!-- Bibliothèque -->
@@ -454,6 +460,8 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
         <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
         <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
       </div>
+      <div class="tiles"><label class="tile"><input type="checkbox" id="sUpd"><span class="ti" data-ic="globe"></span><span><span class="tt" data-t="tUpd"></span><br><span class="ts"></span></span></label></div>
+      <div class="row"><button class="btn" id="bUpdCheck" data-t="updCheck"></button><span class="muted" id="updState"></span></div>
     </div>
    </div>
   </section>
@@ -498,6 +506,12 @@ const TXT = {
  statCom:["Dans Community","In Community"], statApt:["Scènes d'aéroport","Airport sceneries"], statReal:["Dossiers réels","Real folders"], statBroken:["Liens cassés","Broken links"],
  railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan & suivi de vol","Flight plan & tracking"],
  cardPaths:["Dossiers et chemins","Folders and paths"], cardStart:["Démarrage","Startup"], cardAccess:["Accessibilité","Accessibility"], cardScreens:["Écrans","Screens"],
+ tUpd:["Vérifier les mises à jour au démarrage","Check for updates at startup"],
+ updCheck:["Vérifier maintenant","Check now"], updGo:["Mettre à jour","Update"], updNews:["Nouveautés","What's new"], updLater:["Plus tard","Later"],
+ updAvail:["Nouvelle version {v} disponible (tu as la {c}). Un clic : téléchargement, installation et redémarrage automatiques — tes réglages sont conservés.","New version {v} available (you have {c}). One click: automatic download, install and restart — your settings are kept."],
+ updNone:["Tu as la dernière version ({v}).","You have the latest version ({v})."], updChecking:["Vérification…","Checking…"],
+ updConfirm:["Mettre à jour vers la version {v} ?\nL'appli va se fermer puis se rouvrir toute seule. Tes réglages, profils et liens sont conservés.","Update to version {v}?\nThe app will close and reopen by itself. Your settings, profiles and links are kept."],
+ updFail:["La mise à jour n'a pas pu se faire :","The update could not be completed:"],
  cardFshub:["FSHub (compagnie virtuelle)","FSHub (virtual airline)"], cardShortcut:["Raccourci","Shortcut"], cardBackup:["Sauvegarde","Backup"], cardAbout:["Aide et licence","Help and licence"],
  tStartup:["Démarrer avec Windows (réduit dans la barre des tâches)","Start with Windows (minimised to the taskbar)"], tAdmin:["Toujours ouvrir en mode administrateur (sans confirmation Windows)","Always open in administrator mode (no Windows prompt)"],
  tCb:["Mode daltonien","Colorblind mode"], tScrMain:["Hangar FS 2024","Hangar FS 2024"],
@@ -1580,7 +1594,7 @@ function fillSettings(s){
   if (s.flight_only !== undefined) $("optOnly").checked = !!s.flight_only;
   $("sStartup").checked = !!s.startup; $("sStartupAdmin").checked = !!s.startup_admin;
   $("adminMode").textContent = t(s.is_admin ? "modeAdmin" : "modeNormal"); $("bRestartAdmin").style.display = s.is_admin ? "none" : "";
-  $("sVa").value = s.fshub_va || ""; $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind;
+  $("sVa").value = s.fshub_va || ""; $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind; $("sUpd").checked = s.update_check !== false;
   document.body.classList.toggle("cb", !!s.colorblind);
   document.querySelectorAll("[data-scr]").forEach(c => c.checked = s[c.dataset.scr] !== false);
   if (!s.fshub_token) $("keyLbl").textContent = t("keyHelp");
@@ -1673,7 +1687,37 @@ function setRelay(d){ if (!d) return; $("relaylbl").textContent = d.text; $("bRe
 let airportsLbl = "";
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });
 
+let UPD = null;
+function showUpd(u){
+  UPD = u; $("updText").textContent = t("updAvail").replace("{v}", u.version).replace("{c}", INFO_VERSION());
+  $("updBanner").classList.add("on"); $("updBanner").classList.remove("busy");
+}
+function INFO_VERSION(){ return (document.body.dataset.version || "{{VERSION}}"); }
+async function checkUpd(manual){
+  if (manual) $("updState").textContent = t("updChecking");
+  const r = await run("updateCheck", {}); if (!r) return;
+  if (r.error) { if (manual) $("updState").textContent = r.error; return; }
+  if (r.none) { if (manual) $("updState").textContent = t("updNone").replace("{v}", r.version); return; }
+  $("updState").textContent = ""; showUpd(r);
+}
+$("bUpdCheck").onclick = () => checkUpd(true);
+$("bUpdLater").onclick = () => $("updBanner").classList.remove("on");
+$("bUpdNews").onclick = () => { if (UPD && UPD.page) run("openUrl", {url: UPD.page}); };
+$("bUpdGo").onclick = async () => {
+  if (!UPD) return;
+  const ok = await modal(t("updConfirm").replace("{v}", UPD.version), [{label: t("updGo"), value: true, cls: "accent"}, {label: t("cancel"), value: false}]);
+  if (!ok) return;
+  $("updBanner").classList.add("busy"); $("updText").textContent = t("updChecking");
+  run("updateApply", {info: UPD});
+};
+$("sUpd").onchange = () => run("setValue", {key: "update_check", value: $("sUpd").checked});
 function onEvent(ev, data){
+  if (ev === "update") {
+    if (data.available) showUpd(data.available);
+    else if (data.error) { $("updBanner").classList.remove("busy"); alertBox(t("updFail") + "\n" + data.error); }
+    else { $("updText").textContent = data.text + " " + data.progress + " %"; $("updBar").firstChild.style.width = data.progress + "%"; }
+    return;
+  }
   if (ev === "log") {
     const l = $("log"); const atEnd = l.scrollTop + l.clientHeight >= l.scrollHeight - 4;
     l.textContent += (l.textContent ? "\n" : "") + data;

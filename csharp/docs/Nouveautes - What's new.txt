@@ -1,9 +1,14 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.3
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.4
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.4 — mise à jour en un clic
+- Quand une nouvelle version sort, un bandeau bleu apparaît en haut de l'appli. Un clic sur « Mettre à jour » : téléchargement, vérification, installation et redémarrage automatiques. Tes réglages, profils et liens sont conservés.
+- Réglages → À propos : tuile « Vérifier les mises à jour au démarrage » (allumée par défaut) et bouton « Vérifier maintenant ».
+- Seules les versions officielles publiées sur GitHub sont acceptées, et le fichier est contrôlé avant installation.
 
 Version 12.3 — nouveau look, rien de retiré
 - Nouvelle présentation : menu sur le côté gauche (repliable avec « Réduire le menu »), couleurs bleu ciel, titre de la page en haut, drapeaux et Tutoriel en haut à droite.
@@ -39,6 +44,11 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.4 — one-click update
+- When a new version is out, a blue banner appears at the top of the app. One click on "Update": automatic download, verification, install and restart. Your settings, profiles and links are kept.
+- Settings → About: "Check for updates at startup" tile (on by default) and "Check now" button.
+- Only official versions published on GitHub are accepted, and the file is checked before installing.
 
 Version 12.3 — new look, nothing removed
 - New layout: menu on the left side (foldable with "Collapse menu"), sky-blue colours, page title at the top, flags and Tutorial at the top right.
