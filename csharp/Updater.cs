@@ -69,6 +69,7 @@ namespace HangarFS2024
                 ["size"] = asset["size"],
                 ["digest"] = JsonStore.Str(asset["digest"]),
                 ["page"] = JsonStore.Str(rel["html_url"]),
+                ["notes"] = JsonStore.Str(rel["body"]),   // texte de la page de version (FR, puis EN après ---)
             };
         }
 

@@ -1018,7 +1018,7 @@ namespace HangarFS2024
                 ["simconnect_dir"] = CfgS("simconnect_dir"), ["startup"] = SystemTools.StartWithWindows,
                 ["startup_admin"] = CfgB("startup_admin", false) && SystemTools.TaskIsOurs(), ["is_admin"] = Win.IsAdmin(), ["screen"] = CfgS("screen") == "" ? "auto" : CfgS("screen"),
                 ["screen_main"] = CfgB("screen_main", true), ["screen_map"] = CfgB("screen_map", true), ["screen_dispatch"] = CfgB("screen_dispatch", true),
-                ["fshub_va"] = CfgS("fshub_va"), ["fshub_token"] = CfgS("fshub_token"), ["colorblind"] = CfgB("colorblind", false), ["update_check"] = CfgB("update_check", true),
+                ["fshub_va"] = CfgS("fshub_va"), ["fshub_token"] = CfgS("fshub_token"), ["colorblind"] = CfgB("colorblind", false), ["update_check"] = CfgB("update_check", true), ["whatsnew_seen"] = CfgS("whatsnew_seen"),
                 ["lang"] = Lang,
             };
         }
@@ -1058,7 +1058,7 @@ namespace HangarFS2024
         // réglages appliqués tout de suite (écrans, FSHub, accessibilité)
         public void SetValue(string key, JToken value)
         {
-            var allowed = new HashSet<string> { "screen", "screen_main", "screen_map", "screen_dispatch", "fshub_va", "fshub_token", "colorblind", "update_check" };
+            var allowed = new HashSet<string> { "screen", "screen_main", "screen_map", "screen_dispatch", "fshub_va", "fshub_token", "colorblind", "update_check", "whatsnew_seen" };
             if (!allowed.Contains(key)) return;
             lock (Gate)
             {

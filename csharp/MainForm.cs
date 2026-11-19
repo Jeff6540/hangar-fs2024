@@ -372,6 +372,13 @@ namespace HangarFS2024
                     if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
                     OpenWeb("dispatch", "/dispatch", JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
                     return null;
+                case "openNotes":
+                    {   // liste complète des nouveautés, à côté de l'appli
+                        string nf = Path.Combine(Updater.AppDir, "Nouveautes - What's new.txt");
+                        if (File.Exists(nf)) Process.Start(new ProcessStartInfo(nf) { UseShellExecute = true });
+                        else OpenUrl("https://github.com/Jeff6540/hangar-fs2024/releases/latest");
+                        return null;
+                    }
                 case "openTracking": return await OpenDispatchAt("track");
                 case "openPlan": return await OpenDispatchAt("plan");
                 case "openJournal":

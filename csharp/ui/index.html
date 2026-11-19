@@ -155,6 +155,9 @@ tr.grp td .n{color:var(--muted);font-weight:400}
 #scrDraw{position:relative;width:300px;height:92px;flex:none}.scr{position:absolute;border:2px solid var(--border);background:var(--panel);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.scr b{font-size:16px}.scr.on{border-color:var(--accent);background:#1b2a44;color:#fff}
 input[type=password]{background:var(--field);border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;color:var(--fg)}
 /* daltoniens : présent dans Community = bleu ciel ; simplement coché = jaune (palette Okabe-Ito) */body.cb .box.act,body.cb .box.actpart{background:#56B4E9;border-color:#56B4E9}body.cb tr.item.act td{background:#163d55}body.cb tr.item.act:hover td{background:#1d4a66}body.cb .box.on,body.cb .box.part{background:#F0E442;border-color:#F0E442}body.cb .box.on::after{border-color:#1b1f26}body.cb .box.part::after{background:#1b1f26}body.cb .box.acton{background:transparent;border:2px solid #F0E442}body.cb tr.item.chk td{background:#3a4150}
+.wn{max-width:620px;font-size:14px;line-height:1.55;color:#DCE6F0}
+.wn p{margin:0 0 10px}.wn .wn-h{font-size:16px;color:#FFFFFF;margin-bottom:12px}
+.wn ul{margin:0 0 10px 18px;padding:0}.wn li{margin:0 0 5px}
 #updBanner{display:none;flex:none;background:#0E2A3A;border:1px solid #1F5E7E;color:#CFEFFF;font-weight:600;padding:8px 10px 8px 14px;align-items:center;gap:10px;margin:0 22px 10px;border-radius:10px}
 #updBanner.on{display:flex}
 #updBanner .ti{width:22px;height:22px;flex:none}
@@ -520,6 +523,7 @@ const TXT = {
  updNone:["Tu as la dernière version ({v}).","You have the latest version ({v})."], updChecking:["Vérification…","Checking…"],
  updConfirm:["Mettre à jour vers la version {v} ?\nL'appli va se fermer puis se rouvrir toute seule. Tes réglages, profils et liens sont conservés.","Update to version {v}?\nThe app will close and reopen by itself. Your settings, profiles and links are kept."],
  updFail:["La mise à jour n'a pas pu se faire :","The update could not be completed:"],
+ wnFull:["Tout le détail","All the details"], wnOk:["OK, compris !","OK, got it!"], wnTitle:["Quoi de neuf","What's new"],
  cardFshub:["FSHub (compagnie virtuelle)","FSHub (virtual airline)"], cardShortcut:["Raccourci","Shortcut"], cardBackup:["Sauvegarde","Backup"], cardAbout:["Aide et licence","Help and licence"],
  tStartup:["Démarrer avec Windows (réduit dans la barre des tâches)","Start with Windows (minimised to the taskbar)"], tAdmin:["Toujours ouvrir en mode administrateur (sans confirmation Windows)","Always open in administrator mode (no Windows prompt)"],
  tCb:["Mode daltonien","Colorblind mode"], tScrMain:["Hangar FS 2024","Hangar FS 2024"],
@@ -1611,6 +1615,7 @@ function fillSettings(s){
   $("sStartup").checked = !!s.startup; $("sStartupAdmin").checked = !!s.startup_admin;
   $("adminMode").textContent = t(s.is_admin ? "modeAdmin" : "modeNormal"); $("bRestartAdmin").style.display = s.is_admin ? "none" : "";
   $("sVa").value = s.fshub_va || ""; $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind; $("sUpd").checked = s.update_check !== false;
+  if (!window.__wnDone && s.whatsnew_seen !== "{{VERSION}}") { window.__wnDone = true; setTimeout(showWhatsNew, 1200); }   /* une fois après chaque mise à jour */
   document.body.classList.toggle("cb", !!s.colorblind);
   document.querySelectorAll("[data-scr]").forEach(c => c.checked = s[c.dataset.scr] !== false);
   if (!s.fshub_token) $("keyLbl").textContent = t("keyHelp");
@@ -1704,6 +1709,31 @@ let airportsLbl = "";
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) e.preventDefault(); });
 
 let UPD = null;
+/* « Quoi de neuf » : écrit pour chaque version, dans le ton de l'annonce Discord (une ligne = un paragraphe) */
+const WHATSNEW = { fr: "✈️ <b>Bienvenue dans la version {{VERSION}} !</b>\n🔔 <b>Quoi de neuf, ici même</b> : à chaque mise à jour, cette fenêtre te résume les nouveautés. Et avant de mettre à jour, le bouton « Nouveautés » du bandeau bleu les affiche directement dans l'appli.\n📒 <b>Journal de vol</b> : ton vol raconté phase par phase, de la porte à la porte, avec ton profil comparé au plan SimBrief (TOC / TOD), ton taux de toucher et l'historique de tes vols.\n🗺️ <b>Suivi de vol relooké</b> : météo lisible en un coup d'œil, piste et vent en dessin, aéroports sur la carte, plans .PLN.\n🧭 <b>Navigation plus simple</b> : un menu sur toutes les pages, une barre de titre sombre.\n⛽ Et plein de petites améliorations : altitude de croisière conseillée, SEL TEMP / FLEX, carburant à bord…", en: "✈️ <b>Welcome to version {{VERSION}}!</b>\n🔔 <b>What's new, right here</b>: after each update, this window sums up what's new. And before updating, the \"What's new\" button of the blue banner shows it right in the app.\n📒 <b>Flight log</b>: your flight told phase by phase, gate to gate, with your profile compared with the SimBrief plan (TOC / TOD), your touchdown rate and the history of your flights.\n🗺️ <b>Tracking map makeover</b>: weather readable at a glance, runway and wind drawing, airports on the map, .PLN plans.\n🧭 <b>Easier navigation</b>: a menu on every page, a dark title bar.\n⛽ And plenty of small improvements: advised cruise altitude, SEL TEMP / FLEX, fuel on board…" };
+function wnNode(html){
+  const d = document.createElement("div"); d.className = "wn";
+  html.split("\n").filter(x => x.trim()).forEach((l, i) => { const p = document.createElement("p"); if (i === 0) p.className = "wn-h"; p.innerHTML = l; d.appendChild(p); });
+  return d;
+}
+/* texte de la page de version GitHub (Markdown simple) : partie française, ou anglaise après la ligne --- */
+function mdNode(md){
+  const parts = String(md || "").split(/\n-{3,}\n/), txt = (LANG === "en" && parts[1]) ? parts[1] : parts[0];
+  const esc = x => x.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"})[c]);
+  const fmt = x => esc(x).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<i>$1</i>");
+  const d = document.createElement("div"); d.className = "wn"; let ul = null;
+  txt.split("\n").forEach(l => {
+    if (/^\s*[-*] /.test(l)) { if (!ul) { ul = document.createElement("ul"); d.appendChild(ul); } const li = document.createElement("li"); li.innerHTML = fmt(l.replace(/^\s*[-*] /, "")); ul.appendChild(li); return; }
+    ul = null; if (!l.trim()) return;
+    const p = document.createElement("p"); if (/^#+ /.test(l)) { p.className = "wn-h"; l = l.replace(/^#+ /, ""); } p.innerHTML = fmt(l); d.appendChild(p);
+  });
+  return d;
+}
+async function showWhatsNew(){
+  const r = await modal(t("wnTitle"), [{label: t("wnFull"), value: "full"}, {label: t("wnOk"), value: "ok", cls: "accent"}], wnNode(WHATSNEW[LANG === "en" ? "en" : "fr"]));
+  run("setValue", {key: "whatsnew_seen", value: "{{VERSION}}"});
+  if (r === "full") run("openNotes", {});
+}
 function showUpd(u){
   UPD = u; $("updText").textContent = t("updAvail").replace("{v}", u.version).replace("{c}", INFO_VERSION());
   $("updBanner").classList.add("on"); $("updBanner").classList.remove("busy");
@@ -1718,7 +1748,10 @@ async function checkUpd(manual){
 }
 $("bUpdCheck").onclick = () => checkUpd(true);
 $("bUpdLater").onclick = () => $("updBanner").classList.remove("on");
-$("bUpdNews").onclick = () => { if (UPD && UPD.page) run("openUrl", {url: UPD.page}); };
+$("bUpdNews").onclick = () => {
+  if (UPD && UPD.notes) modal(t("wnTitle") + " · " + UPD.version, [{label: "OK", value: true, cls: "accent"}], mdNode(UPD.notes));
+  else if (UPD && UPD.page) run("openUrl", {url: UPD.page});
+};
 $("bUpdGo").onclick = async () => {
   if (!UPD) return;
   const ok = await modal(t("updConfirm").replace("{v}", UPD.version), [{label: t("updGo"), value: true, cls: "accent"}, {label: t("cancel"), value: false}]);

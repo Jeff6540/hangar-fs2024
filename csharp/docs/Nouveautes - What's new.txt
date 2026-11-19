@@ -1,9 +1,14 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.7
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.8
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.8 — quoi de neuf
+- Après chaque mise à jour, une fenêtre « Quoi de neuf » résume les nouveautés au premier lancement (une seule fois).
+- Avant de mettre à jour, le bouton « Nouveautés » du bandeau bleu affiche le résumé directement dans l'appli.
+- « Tout le détail » ouvre la liste complète des nouveautés.
 
 Version 12.7 — journal de vol et nouveau look
 Journal de vol (nouveau)
@@ -84,6 +89,11 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.8 — what's new
+- After each update, a "What's new" window sums up the changes at first launch (only once).
+- Before updating, the "What's new" button of the blue banner shows the summary right in the app.
+- "All the details" opens the full list of changes.
 
 Version 12.7 — flight log and new look
 Flight log (new)
