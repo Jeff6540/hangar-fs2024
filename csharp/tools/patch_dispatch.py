@@ -668,10 +668,11 @@ APT_CSS = r"""<style id="hangar-124-apt">
 .hg-apt .d{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#38BDF8;border:2px solid #06121C;box-shadow:0 0 0 1px rgba(255,255,255,.75)}
 .hg-apt.m .d{left:-4px;top:-4px;width:8px;height:8px;background:#7DD3FC}
 .hg-apt.s .d{left:-4px;top:-4px;width:8px;height:8px;background:#FFFFFF;border-width:2px}
-.hg-apt .c{position:absolute;left:8px;top:-8px;white-space:nowrap;font:800 11px/1.2 system-ui,Segoe UI,sans-serif;color:#FFFFFF;letter-spacing:.3px;
-  text-shadow:0 0 2px #06121C,0 0 2px #06121C,0 0 3px #06121C,0 0 4px #06121C;pointer-events:auto}
-.hg-apt.s .c{font-size:10px;font-weight:700;color:#F1F5F9}
-.hg-apt .n{display:block;font-weight:600;font-size:10px;color:#DCE6F0;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.hg-apt .c{position:absolute;left:8px;top:-9px;white-space:nowrap;font:800 10.5px/1.25 system-ui,Segoe UI,sans-serif;color:#7DD3FC;letter-spacing:.4px;
+  background:rgba(6,18,28,.88);border:1px solid #2B6F92;border-radius:4px;padding:0 4px;text-shadow:none;pointer-events:auto}
+.hg-apt.l .c{color:#38BDF8;border-color:#38BDF8}
+.hg-apt.s .c{font-size:9.5px;font-weight:700;color:#C8E6F5;border-color:#3A5568}
+.hg-apt .n{display:block;font-weight:600;font-size:9.5px;letter-spacing:0;color:#DCE6F0;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .leaflet-tooltip.hg-apt-tip{background:#0E1A24;color:#E6EDF5;border:1px solid #1F5E7E;border-radius:8px;font:12px/1.35 system-ui,Segoe UI,sans-serif;padding:5px 9px}
 .leaflet-tooltip.hg-apt-tip:before{display:none}
 html body #trafficMapModal>.avionics-panel button#hgAptBtn,html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn{background:#1A2633!important;color:#9FB3C8!important;border:1px solid #33475A!important;opacity:1!important}
@@ -684,8 +685,8 @@ APT_JS = r"""<script id="hangar-124-apt-js">
   function rd(k) { try { return localStorage.getItem(k) === '1'; } catch (e) { return false; } }
   function wr(k, v) { try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) {} }
   var on = rd(KEY), names = rd(KEYN), map = null, layer = null, lists = null, listsSize = 0, timer = null;
-  /* grands visibles dès le zoom 4, moyens dès 7, petits dès 9 ; au plus 350 étiquettes à la fois */
-  var MINZ = { large_airport: 4, medium_airport: 7, small_airport: 9, seaplane_base: 10 };
+  /* grands visibles dès le zoom 4, moyens dès 8, petits dès 9 ; au plus 350 étiquettes à la fois */
+  var MINZ = { large_airport: 4, medium_airport: 8, small_airport: 9, seaplane_base: 10 };
   var CLS = { large_airport: 'l', medium_airport: 'm', small_airport: 's', seaplane_base: 's' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function db() { try { return (typeof airportsDB !== 'undefined' && airportsDB) ? airportsDB : null; } catch (e) { return null; } }
