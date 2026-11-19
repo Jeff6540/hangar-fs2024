@@ -1645,10 +1645,11 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
       ui.sel = 'cur'; setTimeout(function () { loadList(true); }, 400);
     };
   }
-  function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; }
+  function rail(k) { document.querySelectorAll('#hgRail .it').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); }); }   /* menu : la page affichée est allumée */
+  function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; rail('dispatch'); }
   window.hgCloseAll = close;   /* menu repliable : « Plan & suivi de vol » revient à la page */
   window.hgOpenJournal = function () {
-    build(); var d = document.getElementById('hgJournal'); d.classList.add('on'); ui.open = true;
+    build(); var d = document.getElementById('hgJournal'); d.classList.add('on'); ui.open = true; rail('journal');
     loadList(true);
   };
   function loadList(reshow) {
