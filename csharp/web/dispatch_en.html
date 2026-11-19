@@ -6117,10 +6117,10 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-127-jrn-js">
 (function () {
-  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
+  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
   var KEY = 'hg_jr_cur', HKEY = 'hg_jr_hist';
   var PLANE_D = 'M12 2c.8 0 1.4.7 1.4 1.5V9l7.6 4.4v2l-7.6-2.3v4.6l2 1.5V21l-3.4-1-3.4 1v-1.8l2-1.5v-4.6L3 15.4v-2L10.6 9V3.5C10.6 2.7 11.2 2 12 2z';
-  var GR = [[1, 2], [3, 4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];
+  var GR = [[1, 2], [3], [4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];   /* 12.7 : le repoussage a sa propre phase */
   function grOf(P) { for (var i = 0; i < GR.length; i++) if (GR[i].indexOf(P) >= 0) return i; return -1; }
   function nm(a, b, c, d) { var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2);
     var h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y; return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(h))); }
@@ -6205,7 +6205,7 @@ ${waypoint(arr)}
       var pd = window.alPlanData, dep = '';
       if (pd && pd.origin && Number.isFinite(parseFloat(pd.origin.pos_lat)) && nm(u.lat, u.lon, parseFloat(pd.origin.pos_lat), parseFloat(pd.origin.pos_long)) < 15) dep = String(pd.origin.icao_code || '').toUpperCase();
       if (!dep && u.ground) dep = nearest(u.lat, u.lon);
-      rec = { id: String(now), v: 1, t0: now, dep: dep, arr: '', type: '', cs: u.callsign || '', free: true, partial: !u.ground, g: {}, trk: [], dist: 0,
+      rec = { id: String(now), v: 2, t0: now, dep: dep, arr: '', type: '', cs: u.callsign || '', free: true, partial: !u.ground, g: {}, trk: [], dist: 0,
               fuel0: f.fuel_kg != null ? f.fuel_kg : null, fuelL: f.fuel_kg != null ? f.fuel_kg : null, maxAlt: 0, out: null, tko: null, ldg: null, inT: null };
       attachPlan();
     }
@@ -6305,9 +6305,16 @@ ${waypoint(arr)}
     if (hit || !bridge()) { ui.data = hit || null; render(); return; }
     fetch('/journal-get?id=' + encodeURIComponent(ui.sel), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { ui.data = j; render(); }).catch(function () { ui.data = null; render(); });
   }
+  /* vols enregistrés avant l'ajout du repoussage : on décale les phases */
+  function v2(r) {
+    if (!r || r.v === 2 || !r.g) return r;
+    var c = JSON.parse(JSON.stringify(r)), g = {};
+    Object.keys(r.g).forEach(function (k) { var i = +k; g[i === 0 ? 0 : i + 1] = r.g[k]; });
+    c.g = g; if (c.cur != null && c.cur > 0) c.cur++; c.v = 2; return c;
+  }
   var rsT = null; function renderSoon() { clearTimeout(rsT); rsT = setTimeout(render, 300); }
   function render() {
-    var r = ui.data, L = document.getElementById('hgJLeft'), S = document.getElementById('hgJSum'), Pf = document.getElementById('hgJProf');
+    var r = v2(ui.data), L = document.getElementById('hgJLeft'), S = document.getElementById('hgJSum'), Pf = document.getElementById('hgJProf');
     if (!L) return;
     if (!r) { L.innerHTML = '<div class="jempty">' + T.none + '</div>'; S.innerHTML = ''; Pf.innerHTML = ''; drawMap(null); return; }
     /* frise des phases */
@@ -6318,12 +6325,11 @@ ${waypoint(arr)}
       if (g) {
         var cells = [];
         if (g.fuel) cells.push(['' + T.fuel, kg(g.fuel)]);
-        if (i >= 1 && i <= 8) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);
-        if (i === 3 || i === 5 || i === 6) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
-        if (i === 3) cells.push([T.alt, ftx(g.altMax)]);
-        if (i === 4) cells.push([T.alt, ftx(g.altMax)]);
-        if (i === 2 && r.tko) cells.push([T.rot, (r.tko.ias != null ? r.tko.ias : r.tko.gs) + ' kt']);
-        if (i === 7 && r.ldg) {
+        if (i >= 2 && i <= 9) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);
+        if (i === 4 || i === 6 || i === 7) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
+        if (i === 4 || i === 5) cells.push([T.alt, ftx(g.altMax)]);
+        if (i === 3 && r.tko) cells.push([T.rot, (r.tko.ias != null ? r.tko.ias : r.tko.gs) + ' kt']);
+        if (i === 8 && r.ldg) {
           if (r.ldg.vs != null) cells.push([T.td, '<span>' + r.ldg.vs + ' ft/min</span><span class="jrate r' + rate(r.ldg.vs) + '">' + T.rate[rate(r.ldg.vs)] + '</span>', 'w']);
           if (r.ldg.ias != null) cells.push([T.ias, r.ldg.ias + ' kt']);
           if (r.ldg.flaps != null) cells.push([T.flaps, String(r.ldg.flaps)]);
@@ -6354,10 +6360,10 @@ ${waypoint(arr)}
     W = Math.max(300, Math.round(W || 1000)); H = Math.max(120, Math.round(H || 190)); var ml = 46, mr = 12, mt = 10, mb = 22, p = r.plan, tr = r.trk || [];
     var xMax = Math.max(p && p.dist || 0, r.dist || 0, 10), yMax = 1000;
     tr.forEach(function (q) { yMax = Math.max(yMax, q[2]); }); if (p) p.prof.forEach(function (q) { yMax = Math.max(yMax, q[1]); });
-    yMax = Math.ceil(yMax * 1.1 / 5000) * 5000;
+    var st = [1000, 2000, 5000, 10000].filter(function (v) { return yMax * 1.1 / v <= 5; })[0] || 10000; yMax = Math.ceil(yMax * 1.1 / st) * st;
     var X = function (v) { return ml + (W - ml - mr) * v / xMax; }, Y = function (v) { return mt + (H - mt - mb) * (1 - v / yMax); };
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
-    for (var a = 0; a <= yMax; a += yMax / 4) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (ml - 6) + '" y="' + (Y(a) + 3) + '" text-anchor="end" font-size="10" fill="#7F93A8">' + (a >= 18000 ? 'FL' + Math.round(a / 100) : Math.round(a / 1000) + 'k') + '</text>';
+    for (var a = 0; a <= yMax; a += st) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (ml - 6) + '" y="' + (Y(a) + 3) + '" text-anchor="end" font-size="10" fill="#7F93A8">' + (a >= 18000 ? 'FL' + Math.round(a / 100) : Math.round(a / 1000) + 'k') + '</text>';
     var step = xMax > 1500 ? 500 : xMax > 600 ? 200 : xMax > 200 ? 50 : 20;
     for (var x = 0; x <= xMax; x += step) s += '<text x="' + X(x) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="#7F93A8">' + x + '</text>';
     if (p && p.prof.length > 1) {
