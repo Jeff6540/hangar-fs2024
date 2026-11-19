@@ -35,6 +35,12 @@ body{display:flex;flex-direction:row}
 #bRelay{align-self:flex-start}
 #bQuit{width:100%;justify-content:center;border-color:#4A2A2E!important;color:#F2A3A3!important;background:transparent!important}
 #bQuit:hover{background:rgba(229,72,77,.12)!important}
+#bDiscord{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 10px;padding:8px 10px;border-radius:12px;border:1px solid rgba(88,101,242,.55);
+  background:linear-gradient(180deg,rgba(88,101,242,.22),rgba(88,101,242,.10));color:#E6E9FF;cursor:pointer;text-align:left;font-family:inherit}
+#bDiscord:hover{border-color:rgba(129,140,248,.9);background:linear-gradient(180deg,rgba(88,101,242,.32),rgba(88,101,242,.16))}
+#bDiscord .dc-logo{flex:none;width:32px;height:32px;border-radius:9px;background:#38BDF8;display:grid;place-items:center}
+#bDiscord .dc-t{display:flex;flex-direction:column;min-width:0}#bDiscord b{font-size:12.5px;font-weight:650}#bDiscord small{font-size:11px;color:#AEB4F5}
+body.rail #bDiscord{justify-content:center;padding:6px 0}body.rail #bDiscord .dc-t{display:none}
 body.rail #bQuit::before{content:"✕";font-weight:700}
 body.rail .sstat .r{justify-content:center}
 body.rail #side{width:70px;padding:16px 10px}
@@ -262,6 +268,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="lbl" data-t="tabSet"></span></button>
   </nav>
   <div class="sidefoot">
+    <button id="bDiscord" type="button" data-url="https://discord.gg/h68MzUjkkH"><span class="dc-logo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#06202C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11"/><path d="M7 21v-6h10v6"/></svg></span><span class="dc-t"><b data-t="dcTitle"></b><small data-t="dcSub"></small></span></button>
     <div class="sstat">
       <div class="r"><span class="dot" id="relayDot"></span><span class="t" id="relaylbl"></span></div>
       <button class="btn" id="bRelay" style="height:30px;padding:0 12px;font-size:12px"></button>
@@ -469,6 +476,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <div class="note" data-t="license"></div>
       <div class="row">
         <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
+        <button class="btn" data-url="https://discord.gg/h68MzUjkkH" data-t="dcBtn"></button>
         <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
       </div>
       <div class="tiles"><label class="tile"><input type="checkbox" id="sUpd"><span class="ti" data-ic="globe"></span><span><span class="tt" data-t="tUpd"></span><br><span class="ts"></span></span></label></div>
@@ -523,6 +531,7 @@ const TXT = {
  updNone:["Tu as la dernière version ({v}).","You have the latest version ({v})."], updChecking:["Vérification…","Checking…"],
  updConfirm:["Mettre à jour vers la version {v} ?\nL'appli va se fermer puis se rouvrir toute seule. Tes réglages, profils et liens sont conservés.","Update to version {v}?\nThe app will close and reopen by itself. Your settings, profiles and links are kept."],
  updFail:["La mise à jour n'a pas pu se faire :","The update could not be completed:"],
+ dcTitle:["Remarque ou bug ?","Feedback or bug?"], dcSub:["Viens en parler sur le Discord","Come and tell us on Discord"], dcBtn:["Discord : remarque ou bug","Discord: feedback or bug"], wnDc:["Discord","Discord"],
  wnFull:["Tout le détail","All the details"], wnOk:["OK, compris !","OK, got it!"], wnTitle:["Quoi de neuf","What's new"],
  cardFshub:["FSHub (compagnie virtuelle)","FSHub (virtual airline)"], cardShortcut:["Raccourci","Shortcut"], cardBackup:["Sauvegarde","Backup"], cardAbout:["Aide et licence","Help and licence"],
  tStartup:["Démarrer avec Windows (réduit dans la barre des tâches)","Start with Windows (minimised to the taskbar)"], tAdmin:["Toujours ouvrir en mode administrateur (sans confirmation Windows)","Always open in administrator mode (no Windows prompt)"],
@@ -1730,9 +1739,10 @@ function mdNode(md){
   return d;
 }
 async function showWhatsNew(){
-  const r = await modal(t("wnTitle"), [{label: t("wnFull"), value: "full"}, {label: t("wnOk"), value: "ok", cls: "accent"}], wnNode(WHATSNEW[LANG === "en" ? "en" : "fr"]));
+  const r = await modal(t("wnTitle"), [{label: t("wnDc"), value: "dc"}, {label: t("wnFull"), value: "full"}, {label: t("wnOk"), value: "ok", cls: "accent"}], wnNode(WHATSNEW[LANG === "en" ? "en" : "fr"] + "\n" + (LANG === "en" ? "💬 <b>Feedback or bug?</b> Come and tell us on the Discord." : "💬 <b>Une remarque, un bug ?</b> Viens en parler sur le Discord.")));
   run("setValue", {key: "whatsnew_seen", value: "{{VERSION}}"});
   if (r === "full") run("openNotes", {});
+  if (r === "dc") run("openUrl", {url: "https://discord.gg/h68MzUjkkH"});
 }
 function showUpd(u){
   UPD = u; $("updText").textContent = t("updAvail").replace("{v}", u.version).replace("{c}", INFO_VERSION());
