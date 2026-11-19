@@ -6222,6 +6222,7 @@ ${waypoint(arr)}
               fuel0: f.fuel_kg != null ? f.fuel_kg : null, fuelL: f.fuel_kg != null ? f.fuel_kg : null, maxAlt: 0, out: null, tko: null, ldg: null, inT: null };
       attachPlan();
     }
+    if (rec.v !== 2) rec = v2(rec);   /* vol commencé avec une ancienne version : on met ses phases au nouveau rangement avant de continuer */
     attachPlan();
     var gi = grOf(P), dt = rec.last ? Math.min(10, (now - rec.last) / 1000) : 0;
     /* plein de carburant au sol avant le départ : on repart du nouveau niveau */
