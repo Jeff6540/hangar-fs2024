@@ -1176,11 +1176,12 @@ html body #trafficMetarBox,html body #tmBody,html body #sbInfo,html body #alPerf
 .hm-n{font-size:11px;color:#8FA3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 .hm-c{font:800 10px "Segoe UI",Inter,sans-serif;letter-spacing:.06em;padding:2px 8px;border-radius:999px;color:#06121C}
 .hm-c.VFR{background:#22C55E}.hm-c.MVFR{background:#3B82F6;color:#fff}.hm-c.IFR{background:#EF4444;color:#fff}.hm-c.LIFR{background:#D946EF;color:#fff}
-.hm-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+.hm-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:6px}
 .hm-k{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px 8px;min-width:0}
 .hm-l{font:700 9px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7F93A8}
-.hm-v{font:700 13px/1.25 "Segoe UI",Inter,sans-serif;color:#F1F5F9;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.hm-v{font:700 13px/1.25 "Segoe UI",Inter,sans-serif;color:#F1F5F9;display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px}
 .hm-v small{font-size:10.5px;color:#9FB3C8;font-weight:600}
+.hm-v .br{flex-basis:100%;height:0}
 .hm-v svg{flex:none}
 .hm-raw{margin-top:6px}
 .hm-raw summary{cursor:pointer;font-size:10.5px;color:#7F93A8;list-style:none}
@@ -1248,9 +1249,9 @@ LOOK_JS = r"""<script id="hangar-127-look-js">
     else if (!raw) body = '<div class="hm-no">' + T.none + '</div>';
     else {
       var p = parse(raw), tiles = [];
-      if (p.dir != null) tiles.push(tile(T.wind, p.spd === 0 ? T.calm : (p.dir === 'VRB' ? T['var'] : arrow(p.dir) + p.dir + '°') + ' ' + p.spd + ' kt' + (p.gust ? ' <small>' + T.gust + ' ' + p.gust + '</small>' : '')));
+      if (p.dir != null) tiles.push(tile(T.wind, p.spd === 0 ? T.calm : (p.dir === 'VRB' ? T['var'] : arrow(p.dir) + p.dir + '°') + ' ' + p.spd + ' kt' + (p.gust ? '<span class="br"></span><small>' + T.gust + ' ' + p.gust + ' kt</small>' : '')));
       if (p.vis != null) tiles.push(tile(T.vis, p.vis >= 10 ? T.more : (p.vis < 5 ? p.vis.toFixed(1) : Math.round(p.vis)) + ' km'));
-      tiles.push(tile(T.cloud, p.cavok ? 'CAVOK' : (p.clouds.length ? p.clouds.slice(0, 2).map(function (c) { return c[0] + ' <small>' + c[1].toLocaleString() + ' ft</small>'; }).join(' ') : T.clear)));
+      tiles.push(tile(T.cloud, p.cavok ? 'CAVOK' : (p.clouds.length ? p.clouds.slice(0, 2).map(function (c) { return c[0] + ' <small>' + c[1].toLocaleString() + ' ft</small>'; }).join('<span class="br"></span>') : T.clear)));
       if (p.t != null) tiles.push(tile(T.temp, p.t + '° <small>/ ' + (p.dp != null ? p.dp + '°' : '—') + '</small>'));
       if (p.qnh) tiles.push(tile(T.qnh, p.qnh));
       cat = p.cat ? '<span class="hm-c ' + p.cat + '">' + p.cat + '</span>' : '';
@@ -1276,3 +1277,133 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_look127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 (suite) : piste et vent en dessin, vol façon carte d'embarquement, finitions ----
+LOOK2_TXT = {
+ "fr": {"head": "face", "tail": "arrière", "cross": "travers", "calm": "vent calme", "vrb": "vent variable", "rwy": "piste"},
+ "en": {"head": "head", "tail": "tail", "cross": "cross", "calm": "calm wind", "vrb": "variable wind", "rwy": "runway"},
+}
+LOOK2_CSS = r"""<style id="hangar-127-look2">
+/* piste et vent : schéma */
+.hg-rw{display:flex;align-items:center;gap:12px;margin:2px 0 8px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
+.hg-rw svg{flex:none}
+.hg-rw .k{font:700 9px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7F93A8}
+.hg-rw .v{font:800 15px/1.2 "Segoe UI",Inter,sans-serif;color:#F1F5F9}
+.hg-rw .v.ok{color:#4ADE80}.hg-rw .v.warn{color:#F5A524}.hg-rw .v.bad{color:#F87171}
+.hg-rw .g{display:grid;grid-template-columns:auto auto;gap:2px 14px}
+/* vol en cours : carte d'embarquement */
+.hg-bp{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin:10px 0 4px}
+.hg-bp .ap{min-width:0}
+.hg-bp .ic{font:800 26px/1 "Segoe UI Variable Display","Segoe UI",Inter,sans-serif;color:#FFFFFF;letter-spacing:.04em}
+.hg-bp .ct{font-size:11px;color:#8FA3B8;margin-top:3px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hg-bp .ap.r{text-align:right}
+.hg-bp .ln{position:relative;height:26px}
+.hg-bp .ln::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed rgba(148,163,184,.35)}
+.hg-bp .ln .done{position:absolute;left:0;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,rgba(56,189,248,.2),#38BDF8);border-radius:2px;transition:width .8s ease}
+.hg-bp .ln .pl{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;transition:left .8s ease;filter:drop-shadow(0 0 6px rgba(56,189,248,.6))}
+.hg-bp .ln .dot{position:absolute;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#38BDF8}
+.hg-bp .ln .dot.e{right:0;background:#0B1520;border:2px solid #38BDF8;width:10px;height:10px;margin-top:-5px}
+#alFlightPanel .hg-bp~.alf-bar{display:none!important}
+/* finitions */
+@keyframes hgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+html body #trafficMapWrapper .al-fold:not(.al-col)>*{animation:hgIn .22s ease both}
+html body #trafficMapWrapper .leaflet-tooltip:not(.hg-apt-tip){background:rgba(9,14,21,.95)!important;color:#E6EDF5!important;border:1px solid rgba(125,211,252,.25)!important;
+  border-radius:10px!important;box-shadow:0 8px 24px rgba(0,0,0,.45)!important;font:12px/1.4 "Segoe UI",Inter,sans-serif!important;padding:6px 10px!important}
+html body #trafficMapWrapper .leaflet-tooltip::before{display:none!important}
+html body #trafficMapWrapper .leaflet-control-zoom a{background:rgba(9,14,21,.92)!important;color:#E6EDF5!important;border-color:rgba(125,211,252,.2)!important}
+html body #trafficMapWrapper .leaflet-control-zoom a:hover{background:rgba(56,189,248,.2)!important}
+html body #trafficMapWrapper .leaflet-control-zoom{border:1px solid rgba(125,211,252,.2)!important;border-radius:12px!important;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4)!important}
+#trafficMapModal ::-webkit-scrollbar{width:8px;height:8px}
+#trafficMapModal ::-webkit-scrollbar-thumb{background:rgba(125,211,252,.25);border-radius:8px}
+#trafficMapModal ::-webkit-scrollbar-track{background:transparent}
+</style>"""
+LOOK2_JS = r"""<script id="hangar-127-look2-js">
+(function () {
+  var T = __TXT__;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  /* ---- piste et vent en dessin : la piste orientée, la flèche du vent, les composantes ---- */
+  window.hgRwy = function (name, mt, c) {
+    var n = parseInt(String(name || '').replace(/[^0-9]/g, ''), 10); if (!n) return '';
+    var hdg = (n % 36) * 10 || 360, opp = ((n + 18 - 1) % 36) + 1;
+    var xw = 15; try { var v = parseInt(localStorage.getItem('al_xwind_max'), 10); if (v > 0) xw = v; } catch (e) {}
+    var wind = '';
+    if (mt && mt.spd != null && !mt.vrb && mt.spd > 0) {
+      wind = '<g transform="rotate(' + mt.dir + ' 50 50)"><line x1="50" y1="4" x2="50" y2="30" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"/>' +
+             '<path d="M43 26 L50 38 L57 26 Z" fill="#7DD3FC"/></g>';
+    }
+    var rw = '<g transform="rotate(' + hdg + ' 50 50)"><rect x="44" y="18" width="12" height="64" rx="2" fill="#2B3644" stroke="#8FA3B8" stroke-width="1"/>' +
+             '<line x1="50" y1="24" x2="50" y2="76" stroke="#E6EDF5" stroke-width="1" stroke-dasharray="4 4"/>' +
+             '</g>';
+    var rad = hdg * Math.PI / 180, dx = Math.sin(rad), dy = -Math.cos(rad);
+    rw += '<text x="' + (50 - dx * 43).toFixed(1) + '" y="' + (53 - dy * 43).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="800" fill="#FFFFFF" font-family="Segoe UI,sans-serif" paint-order="stroke" stroke="#0B121A" stroke-width="3">' + esc(name) + '</text>' +
+          '<text x="' + (50 + dx * 43).toFixed(1) + '" y="' + (53 + dy * 43).toFixed(1) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#8FA3B8" font-family="Segoe UI,sans-serif" paint-order="stroke" stroke="#0B121A" stroke-width="3">' + String(opp).padStart(2, '0') + '</text>';
+    var svg = '<svg width="92" height="92" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="rgba(148,163,184,.25)" stroke-width="1"/>' +
+              '<text x="50" y="9" text-anchor="middle" font-size="7" fill="#64748B" font-family="Segoe UI,sans-serif">N</text>' + rw + wind + '</svg>';
+    var info;
+    if (!mt || mt.spd == null) info = '';
+    else if (mt.vrb) info = '<div class="v">' + T.vrb + ' ' + mt.spd + ' kt</div>';
+    else if (!mt.spd) info = '<div class="v ok">' + T.calm + '</div>';
+    else if (c) {
+      var hc = c.head >= 0 ? 'ok' : (c.head > -3 ? 'warn' : 'bad'), xc = (c.cross > xw || c.gcross > xw) ? 'bad' : (c.cross > xw * 0.7 ? 'warn' : 'ok');
+      info = '<div class="g"><div><div class="k">' + (c.head >= 0 ? T.head : T.tail) + '</div><div class="v ' + hc + '">' + Math.abs(c.head) + ' kt</div></div>' +
+             '<div><div class="k">' + T.cross + '</div><div class="v ' + xc + '">' + c.cross + (c.gcross > c.cross ? '<small style="font-size:10px"> / ' + c.gcross + '</small>' : '') + ' kt</div></div></div>';
+    } else info = '';
+    return '<div class="hg-rw">' + svg + '<div><div class="k">' + T.rwy + ' ' + esc(name) + '</div>' + info + '</div></div>';
+  };
+
+  /* ---- vol en cours façon carte d'embarquement ---- */
+  var PLANE = '<svg class="pl" viewBox="0 0 24 24"><path fill="#FFFFFF" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>';
+  function apInfo(icao) { var a = null; try { a = airportsDB[icao]; } catch (e) {} return a ? (a.city || a.name || '') : ''; }
+  function pass() {
+    var host = document.getElementById('alFlightPanel'); if (!host) return;
+    var bar = host.querySelector('.alf-bar'), pd = window.alPlanData;
+    var old = host.querySelector('.hg-bp');
+    if (!bar || !pd || !pd.origin || !pd.destination) { if (old) old.remove(); return; }
+    var dep = String(pd.origin.icao_code || '').toUpperCase(), arr = String(pd.destination.icao_code || '').toUpperCase();
+    var b = bar.querySelector('b'), pct = b ? parseFloat(b.style.width) || 0 : 0;
+    var key = dep + arr;
+    if (!old || old.parentNode !== bar.parentNode) {
+      if (old) old.remove();
+      old = document.createElement('div'); old.className = 'hg-bp';
+      bar.parentNode.insertBefore(old, bar);
+    }
+    if (old.dataset.k !== key) {
+      old.dataset.k = key;
+      old.innerHTML = '<div class="ap"><div class="ic">' + esc(dep) + '</div><div class="ct">' + esc(apInfo(dep)) + '</div></div>' +
+        '<div class="ln"><span class="dot"></span><span class="done"></span>' + PLANE + '<span class="dot e"></span></div>' +
+        '<div class="ap r"><div class="ic">' + esc(arr) + '</div><div class="ct" style="margin-left:auto">' + esc(apInfo(arr)) + '</div></div>';
+    }
+    old.querySelector('.done').style.width = pct + '%';
+    old.querySelector('.pl').style.left = pct + '%';
+  }
+  setInterval(pass, 1000);
+})();
+</script>"""
+RWY_ANCHORS = [
+ ("    var s = head + (t.len ? ' <span class=\"alp-m\">· ' + ft(t.len) + '</span>' : '') +",
+  "    var s = (window.hgRwy ? window.hgRwy(t.rwy, t.mt, t.c) : '') + head + (t.len ? ' <span class=\"alp-m\">· ' + ft(t.len) + '</span>' : '') +"),
+ ("    var s = head + ' <span class=\"alp-m\">· ' + (l.lda ? ft(l.lda) : '')",
+  "    var s = (window.hgRwy ? window.hgRwy(l.rwy, l.mt, l.c) : '') + head + ' <span class=\"alp-m\">· ' + (l.lda ? ft(l.lda) : '')"),
+ ("    var h = '<span class=\"alp-l\">▼ ' + esc(icao) + (apt && apt.name",
+  "    var h = (window.hgRwy && best ? window.hgRwy(best.name, mt, best.c) : '') + '<span class=\"alp-l\">▼ ' + esc(icao) + (apt && apt.name"),
+]
+
+
+def patch_look127b(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-127-look2" in s:
+        return
+    import json
+    for a, b in RWY_ANCHORS:
+        assert s.count(a) == 1, (path, a[:40])
+        s = s.replace(a, b)
+    s = s.replace("</head>", LOOK2_CSS + "</head>", 1)
+    s = s.replace("</body>", LOOK2_JS.replace("__TXT__", json.dumps(LOOK2_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_look127b(os.path.join(_web, "dispatch_%s.html" % _l), _l)

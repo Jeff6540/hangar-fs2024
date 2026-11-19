@@ -272,6 +272,11 @@ R["fr"] += [("<tr><td>METAR · Mon plan</td><td>Météo du départ et de l'arriv
 R["en"] += [("<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s</td></tr>",
   "<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s, in small boxes: wind (the arrow shows where it blows), visibility, clouds, temperature / dew point, QNH. The coloured badge gives the category: <b>VFR</b> green, <b>MVFR</b> blue, <b>IFR</b> red, <b>LIFR</b> purple. \"Raw METAR\" unfolds the original text. In the bar, a switched-on button has a sky-blue outline; its dot recalls the layer's colour on the map</td></tr>", "LIFR</b> purple")]
 
+
+# 12.7 (suite) : piste et vent dessinés, carte d'embarquement
+R["fr"] += [("<tr><td>METAR · Vol libre</td>", "<tr><td>Piste et vent</td><td>Un petit dessin montre la piste orientée et la flèche du vent. À côté, le vent de face (vert) ou arrière (orange ou rouge) et le vent de travers (rouge s'il dépasse ton seuil)</td></tr><tr><td>Mon vol</td><td>Façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux selon la distance parcourue</td></tr><tr><td>METAR · Vol libre</td>", "<tr><td>Mon vol</td>")]
+R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>Runway and wind</td><td>A small drawing shows the runway oriented and the wind arrow. Next to it, the headwind (green) or tailwind (orange or red) and the crosswind (red above your limit)</td></tr><tr><td>My flight</td><td>Like a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them with the distance flown</td></tr><tr><td>METAR · Free flight</td>", "<tr><td>My flight</td>")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

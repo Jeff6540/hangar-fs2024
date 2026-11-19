@@ -9,6 +9,9 @@ Version 12.7 — nouveau look de la carte de suivi
 - Boutons de la barre tous du même style : allumé = contour bleu ciel, la couleur de chaque calque devient une petite pastille.
 - Encadrés sur la carte (légende, météo, piste et vent, VA) en verre fumé, avec la même police et plus d'espace.
 - METAR en tableau de bord : vent avec flèche, visibilité, nuages, température, QNH et pastille VFR / MVFR / IFR / LIFR ; le METAR brut se déplie en dessous.
+- Piste et vent en dessin : la piste orientée, la flèche du vent, et les vents de face / arrière / travers en couleur (vert, orange, rouge).
+- Vol en cours façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux.
+- Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
 
 Version 12.6 — carte de suivi plus propre, vol libre, plans .PLN
 - Quand tu termines le vol dans Vol SimBrief, la carte de suivi se remet à zéro : plus de plan, de trajectoire, de METAR ni de piste et vent de l'ancien vol.
@@ -68,6 +71,9 @@ Version 12.7 — new look for the tracking map
 - Bar buttons all share one style: on = sky-blue outline, each layer's colour becomes a small dot.
 - Map panels (legend, weather, runway and wind, VA) in smoked glass, with the same font and more space.
 - METAR as a dashboard: wind with arrow, visibility, clouds, temperature, QNH and a VFR / MVFR / IFR / LIFR badge; the raw METAR unfolds below.
+- Runway and wind as a drawing: the runway oriented, the wind arrow, and head / tail / cross wind in colour (green, orange, red).
+- Current flight as a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them.
+- Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.
 
 Version 12.6 — cleaner tracking map, free flight, .PLN plans
 - When you end the flight in SimBrief flight, the tracking map resets: no more plan, track, METAR or runway and wind from the previous flight.
