@@ -1010,3 +1010,26 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_fullmap126(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.6 : code OACI aussi sur les aérodromes (points jaunes) de la carte Plan de vol personnel, dès le zoom 8 ----
+SMALLLBL_OLD = ("                if (showLabels && categoryKey !== 'small') {\n"
+                "                    const label = L.divIcon({ className: 'oaci-label', html: escapeHtml(apt.icao), iconSize: [45, 16], iconAnchor: [-8, 12] });")
+SMALLLBL_NEW = ("                if (showLabels && (categoryKey !== 'small' || zoom >= 8)) {   /* 12.6 : aérodromes aussi, en plus petit, dès le zoom 8 */\n"
+                "                    const label = L.divIcon({ className: categoryKey === 'small' ? 'oaci-label oaci-small' : 'oaci-label', html: escapeHtml(apt.icao), iconSize: [45, 16], iconAnchor: [-8, 12] });")
+SMALLLBL_CSS = '<style id="hangar-126-smalllbl">.oaci-label.oaci-small{font-size:9px!important;opacity:.92}</style>'
+
+
+def patch_smalllbl126(path):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-126-smalllbl" in s:
+        return
+    assert s.count(SMALLLBL_OLD) == 1, path
+    s = s.replace(SMALLLBL_OLD, SMALLLBL_NEW).replace("</head>", SMALLLBL_CSS + "</head>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_smalllbl126(os.path.join(_web, "dispatch_%s.html" % _l))

@@ -2481,7 +2481,7 @@ html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],
 #tmFree input:focus{outline:none;border-color:#38BDF8}
 #tmFree .auto{font-size:9.5px;color:#8FA3B8}
 #hgPlnBtn{white-space:nowrap}
-</style></head>
+</style><style id="hangar-126-smalllbl">.oaci-label.oaci-small{font-size:9px!important;opacity:.92}</style></head>
 <body class="flex flex-col">
 
     <!-- En-tête style HUD Avionique avec boutons centrés -->
@@ -4645,8 +4645,8 @@ html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],
                 const compatLine = compat.status === 'ok' ? '' :
                     `<br><span>${compat.status === 'blocked' ? '⛔ Incompatible' : '⚠ Sous conditions'} : ${escapeHtml(compat.reasons.slice(0, 2).join(' · '))}</span>`;
                 const marker = L.circleMarker(latLng, { radius: pointRadius, color: pointStroke, dashArray: pointDash, fillColor: pointColor, fillOpacity: pointOpacity, weight: pointWeight });
-                if (showLabels && categoryKey !== 'small') {
-                    const label = L.divIcon({ className: 'oaci-label', html: escapeHtml(apt.icao), iconSize: [45, 16], iconAnchor: [-8, 12] });
+                if (showLabels && (categoryKey !== 'small' || zoom >= 8)) {   /* 12.6 : aérodromes aussi, en plus petit, dès le zoom 8 */
+                    const label = L.divIcon({ className: categoryKey === 'small' ? 'oaci-label oaci-small' : 'oaci-label', html: escapeHtml(apt.icao), iconSize: [45, 16], iconAnchor: [-8, 12] });
                     fullMarkersLayer.addLayer(L.marker(latLng, { icon: label, interactive: false }));
                 }
                 marker.bindTooltip(() => `<b>${escapeHtml(apt.icao)}</b> - ${escapeHtml(apt.name)} (${escapeHtml(apt.city)})<br><span>${escapeHtml(airportSurfaceSummary(apt.icao))}</span>${compatLine}`, { direction: 'top', offset: [0, -4] });

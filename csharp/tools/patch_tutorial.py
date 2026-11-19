@@ -252,8 +252,8 @@ R["en"] += [
 
 
 # 12.6 : terrains sans code OACI masqués sur la carte Plan de vol personnel
-R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF),", "(Gros, Moyens, Aérodromes, chacun avec ON / OFF ; seuls les terrains avec un vrai code OACI à 4 lettres sont affichés, pas les « FR-0901 »),")]
-R["en"] += [("(Large, Medium, Airfields, each with ON / OFF),", "(Large, Medium, Airfields, each with ON / OFF; only fields with a real 4-letter ICAO code are shown, not \"FR-0901\" ones),")]
+R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF),", "(Gros, Moyens, Aérodromes, chacun avec ON / OFF ; seuls les terrains avec un vrai code OACI à 4 lettres sont affichés, pas les « FR-0901 » ; leur code OACI s'affiche quand tu zoomes),")]
+R["en"] += [("(Large, Medium, Airfields, each with ON / OFF),", "(Large, Medium, Airfields, each with ON / OFF; only fields with a real 4-letter ICAO code are shown, not \"FR-0901\" ones; their ICAO code shows when you zoom in),")]
 
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
