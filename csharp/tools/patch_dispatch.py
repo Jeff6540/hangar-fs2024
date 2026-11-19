@@ -1474,6 +1474,7 @@ JRN_CSS = r"""<style id="hangar-127-jrn">
 .jpf .lg{display:flex;gap:14px;font-size:11.5px;color:#8FA3B8;margin:0 0 4px 2px;flex-wrap:wrap}
 .jpf .lg span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid #38BDF8;margin-right:6px;vertical-align:3px}
 .jpf .lg .p::before{border-top:2px dashed #94A3B8}
+#hgJMap .hg-jplane{background:none!important;border:0!important;filter:drop-shadow(0 0 6px rgba(245,158,11,.7))}
 #hgJMap{border-radius:14px;overflow:hidden;min-height:200px;background:#1A2430!important}
 #hgJMap .hg-jdark{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.92) saturate(.6)}
 .jempty{padding:30px;color:#8FA3B8;font-size:13px;text-align:center}
@@ -1483,6 +1484,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
 (function () {
   var T = __TXT__;
   var KEY = 'hg_jr_cur', HKEY = 'hg_jr_hist';
+  var PLANE_D = 'M12 2c.8 0 1.4.7 1.4 1.5V9l7.6 4.4v2l-7.6-2.3v4.6l2 1.5V21l-3.4-1-3.4 1v-1.8l2-1.5v-4.6L3 15.4v-2L10.6 9V3.5C10.6 2.7 11.2 2 12 2z';
   var GR = [[1, 2], [3, 4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];
   function grOf(P) { for (var i = 0; i < GR.length; i++) if (GR[i].indexOf(P) >= 0) return i; return -1; }
   function nm(a, b, c, d) { var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2);
@@ -1723,7 +1725,10 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
         s += '<line x1="' + X(a0[3]).toFixed(1) + '" y1="' + Y(a0[2]).toFixed(1) + '" x2="' + X(a1[3]).toFixed(1) + '" y2="' + Y(a1[2]).toFixed(1) + '" stroke="' + (COL[a1[5]] || '#38BDF8') + '" stroke-width="2.6" stroke-linecap="round"/>';
       }
       var lt = tr[tr.length - 1];
-      if (!r.t1) s += '<circle cx="' + X(lt[3]) + '" cy="' + Y(lt[2]) + '" r="5" fill="#F59E0B" stroke="#0B121A" stroke-width="2"/>';
+      if (!r.t1) {   /* petit avion au bout du profil, incliné selon la montée ou la descente */
+        var pv = tr[Math.max(0, tr.length - 4)], ang = Math.atan2(Y(lt[2]) - Y(pv[2]), Math.max(1, X(lt[3]) - X(pv[3]))) * 180 / Math.PI;
+        s += '<g transform="translate(' + X(lt[3]).toFixed(1) + ',' + Y(lt[2]).toFixed(1) + ') rotate(' + (90 + ang).toFixed(0) + ') translate(-11,-11)"><path fill="#F59E0B" stroke="#0B121A" stroke-width="1" transform="scale(0.92)" d="' + PLANE_D + '"/></g>';
+      }
     }
     return s + '</svg>';
   }
@@ -1743,8 +1748,14 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     function apt(code, ll) { if (!ll) return; L.circleMarker(ll, { radius: 6, color: '#06121C', weight: 2, fillColor: '#38BDF8', fillOpacity: 1 }).bindTooltip(code, { permanent: true, direction: 'right', className: 'hg-apt-tip' }).addTo(ui.layers); }
     if (r.plan && r.plan.route) { apt(r.plan.dep, r.plan.route[0]); apt(r.plan.arr, r.plan.route[r.plan.route.length - 1]); }
     else if (tr.length) { apt(r.dep || '', tr[0]); if (r.t1) apt(r.arr || '', tr[tr.length - 1]); }
-    if (!r.t1 && tr.length) L.circleMarker(tr[tr.length - 1], { radius: 7, color: '#0B121A', weight: 2, fillColor: '#F59E0B', fillOpacity: 1 }).addTo(ui.layers);
-    if (b.length > 1 && !ui.fitted) { try { ui.map.fitBounds(L.latLngBounds(b).pad(0.15)); } catch (e) {} }
+    if (!r.t1 && tr.length) {   /* ton avion, orienté selon son cap */
+      var u = window.alUser, pos = tr[tr.length - 1], hd = 0;
+      if (ui.sel === 'cur' && u && u.lat != null) { pos = [u.lat, u.lon]; hd = u.hdg || 0; }
+      else if (tr.length > 1) { var a = tr[tr.length - 2], c = tr[tr.length - 1]; hd = (Math.atan2((c[1] - a[1]) * Math.cos(c[0] * Math.PI / 180), c[0] - a[0]) * 180 / Math.PI + 360) % 360; }
+      L.marker(pos, { interactive: false, zIndexOffset: 1000, icon: L.divIcon({ className: 'hg-jplane', iconSize: [30, 30], iconAnchor: [15, 15],
+        html: '<svg width="30" height="30" viewBox="0 0 24 24" style="transform:rotate(' + Math.round(hd) + 'deg)"><path fill="#F59E0B" stroke="#0B121A" stroke-width="1" d="' + PLANE_D + '"/></svg>' }) }).addTo(ui.layers);
+    }
+    if (b.length > 1 && ui.fitId !== r.id) { ui.fitId = r.id; try { ui.map.fitBounds(L.latLngBounds(b).pad(0.15)); } catch (e) {} }   /* recadre une fois par vol, pas à chaque mise à jour */
   }
   /* bouton dans la barre de la carte de suivi, ouverture depuis l'appli */
   setInterval(function () {
