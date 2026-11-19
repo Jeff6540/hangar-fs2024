@@ -1595,7 +1595,8 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
       var g = rec.g[gi] = rec.g[gi] || {};
       if (!g.t0) g.t0 = now; g.t1 = now; g.dur = (g.dur || 0) + dt;
       var gs = u.gs || 0, vs = f.vs, alt = f.ialt != null ? f.ialt : (u.alt || 0);   /* altitude de l'altimètre, comme sur le PFD */
-      g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1;
+      var onGnd = !!u.ground && !(f.agl != null && f.agl > 50), taxiG = gi === 2 || gi === 9;
+      if (!taxiG || (onGnd && gs < 60)) { g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1; }   /* roulage : seulement la vraie vitesse de roulage */
       if (vs != null) { g.vsMax = Math.max(g.vsMax == null ? -99999 : g.vsMax, vs); g.vsMin = Math.min(g.vsMin == null ? 99999 : g.vsMin, vs); g.vsSum = (g.vsSum || 0) + vs; }
       g.altMax = Math.max(g.altMax || 0, alt); g.altMin = Math.min(g.altMin == null ? 99999 : g.altMin, alt);
       if (f.ias != null) g.iasMax = Math.max(g.iasMax || 0, f.ias);
@@ -1607,18 +1608,19 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     rec.maxAlt = Math.max(rec.maxAlt || 0, altI);
     if (rec.lastPos) { var dd = nm(rec.lastPos[0], rec.lastPos[1], u.lat, u.lon); if (dd > 0.02 && dd < 60) rec.dist += dd; }
     /* envol et toucher */
+    var gnd = !!u.ground && !(f.agl != null && f.agl > 50);
     if (prev) {
-      if (prev.ground && !u.ground && !rec.tko) rec.tko = { t: now, ias: f.ias != null ? f.ias : prev.ias, gs: Math.round(u.gs || 0) };
-      if (!prev.ground && u.ground && rec.tko && P >= 9) rec.ldg = { t: now, vs: prev.vs != null ? Math.round(prev.vs) : null, ias: prev.ias, gs: Math.round(u.gs || 0), flaps: f.flaps != null ? f.flaps : prev.flaps };
+      if (prev.ground && !gnd && !rec.tko) rec.tko = { t: now, ias: f.ias != null ? f.ias : prev.ias, gs: Math.round(u.gs || 0) };
+      if (!prev.ground && gnd && rec.tko && P >= 9) rec.ldg = { t: now, vs: prev.vs != null ? Math.round(prev.vs) : null, ias: prev.ias, gs: Math.round(u.gs || 0), flaps: f.flaps != null ? f.flaps : prev.flaps };
     }
     /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
     var tr = rec.trk, lp = tr[tr.length - 1], ts = Math.round((now - rec.t0) / 1000);
-    if (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
+    if (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== gnd)) {
       tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(altI), +rec.dist.toFixed(1), ts, P]);
       if (tr.length > 3000) rec.trk = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; });
     }
     rec.lastPos = [u.lat, u.lon]; rec.last = now;
-    prev = { ground: !!u.ground, vs: f.vs, ias: f.ias, flaps: f.flaps };
+    prev = { ground: gnd, vs: f.vs, ias: f.ias, flaps: f.flaps };
     /* fin du vol : débarquement, ou un nouveau vol commence après l'atterrissage */
     if (P === 14 && rec.ldg) { sv(KEY, rec); finish(true); return; }
     if (P <= 2 && rec.ldg) { finish(true); return; }
@@ -1849,6 +1851,9 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
 })();
 </script>"""
 JRN_ANCHORS = [
+ ('    var now = Date.now(), P = st.phase || 0, ground = !!u.ground, gs = u.gs || 0, alt = u.alt || 0;',
+  '    var now = Date.now(), P = st.phase || 0, ground = !!u.ground && !(f && f.agl != null && f.agl > 50), gs = u.gs || 0, alt = u.alt || 0;   /* 12.7 : « au sol » confirmé par la hauteur sol */'),
+
  ('      i(\'ALTITUDE\', fmt(u.alt) + \' <span class="u">ft</span>\') +',
   '      i(\'ALTITUDE\', fmt(f && f.ialt != null ? f.ialt : u.alt) + \' <span class="u">ft</span>\') +   /* 12.7 : altimètre */'),
 
