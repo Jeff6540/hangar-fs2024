@@ -1,9 +1,15 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.5
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.6
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.6 — carte de suivi plus propre, vol libre, plans .PLN
+- Quand tu termines le vol dans Vol SimBrief, la carte de suivi se remet à zéro : plus de plan, de trajectoire, de METAR ni de piste et vent de l'ancien vol.
+- Sans plan de vol, la carte n'affiche plus de METAR d'aéroports pris au hasard. Une trajectoire de vol libre arrêtée depuis plus de 30 minutes n'est pas reprise au lancement.
+- Vol libre : le METAR du départ s'affiche tout seul quand ton avion est au sol sur un aéroport ; tape un aéroport d'arrivée (case ARR) pour voir son METAR.
+- Nouveau bouton « .PLN » : affiche un plan de vol enregistré depuis la carte du monde de MSFS, exporté par Avionics Dispatch ou par un autre logiciel.
 
 Version 12.5 — aéroports sur la carte de suivi
 - Nouveau bouton « AÉROPORTS » sur la carte Plan & suivi de vol : les codes OACI s'affichent en petit, les grands aéroports d'abord, puis les moyens et les petits quand tu zoomes.
@@ -50,6 +56,12 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.6 — cleaner tracking map, free flight, .PLN plans
+- When you end the flight in SimBrief flight, the tracking map resets: no more plan, track, METAR or runway and wind from the previous flight.
+- Without a flight plan, the map no longer shows METARs of random airports. A free-flight track stopped for more than 30 minutes is not restored at launch.
+- Free flight: the departure METAR shows by itself when your aircraft is on the ground at an airport; type an arrival airport (ARR box) to see its METAR.
+- New ".PLN" button: shows a flight plan saved from the MSFS world map, exported by Avionics Dispatch or by other software.
 
 Version 12.5 — airports on the tracking map
 - New "AIRPORTS" button on the Flight plan & tracking map: ICAO codes appear in small letters, large airports first, then medium and small ones as you zoom in.

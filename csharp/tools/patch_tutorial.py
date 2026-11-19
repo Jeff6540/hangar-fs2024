@@ -229,6 +229,27 @@ R["en"] += [("<tr><td>Follow my aircraft</td><td>Active (blue) or inactive butto
   "<tr><td>Follow my aircraft</td><td>Active (blue) or inactive button: the map follows your aircraft (in orange)</td></tr>"
   "<tr><td>Airports · Names</td><td>Active (blue) or inactive button: shows airports with their ICAO code in small letters. Large airports first, then medium and small ones as you zoom in. Hover an airport to see its name, city and elevation. <b>Names</b> also writes the name under each code. The app remembers your choice</td></tr>")]
 
+
+# 12.6 : carte propre en fin de vol, METAR en vol libre, plan .PLN
+R["fr"] += [
+ ("Importer le plan</td><td>Dessine ton plan SimBrief avec SID, route et STAR</td></tr>",
+  "Importer le plan</td><td>Dessine ton plan SimBrief avec SID, route et STAR</td></tr>"
+  "<tr><td>.PLN</td><td>Affiche un plan de vol au format .PLN : celui que tu enregistres depuis la carte du monde de MSFS (bouton Enregistrer), celui exporté par Avionics Dispatch, ou un autre logiciel (Little Navmap…). Choisis le fichier, la route s'affiche comme un plan SimBrief</td></tr>", ".PLN</td><td>"),
+ ("<tr><td>METAR · Mon plan</td><td>Météo du départ et de l'arrivée, actualisée toutes les 60 s</td></tr>",
+  "<tr><td>METAR · Mon plan</td><td>Météo du départ et de l'arrivée, actualisée toutes les 60 s</td></tr>"
+  "<tr><td>METAR · Vol libre</td><td>Sans plan de vol : le METAR du départ s'affiche tout seul quand ton avion est au sol sur un aéroport (ou tape son code dans DÉP). Tape un code OACI dans ARR puis Entrée pour voir le METAR de ton arrivée</td></tr>"
+  "<tr><td>Fin du vol</td><td>Quand tu cliques sur Terminer le vol dans Vol SimBrief, la carte se remet à zéro : plus de plan, de trajectoire, de METAR ni de piste et vent de l'ancien vol. Une trajectoire de vol libre arrêtée depuis plus de 30 minutes n'est pas reprise au prochain lancement</td></tr>", "METAR · Vol libre"),
+]
+R["en"] += [
+ ("Import plan</td><td>Draws your SimBrief plan with SID, route and STAR</td></tr>",
+  "Import plan</td><td>Draws your SimBrief plan with SID, route and STAR</td></tr>"
+  "<tr><td>.PLN</td><td>Shows a .PLN flight plan: the one you save from the MSFS world map (Save button), the one exported by Avionics Dispatch, or from other software (Little Navmap…). Pick the file and the route appears like a SimBrief plan</td></tr>", ".PLN</td><td>"),
+ ("<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s</td></tr>",
+  "<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s</td></tr>"
+  "<tr><td>METAR · Free flight</td><td>Without a flight plan: the departure METAR shows by itself when your aircraft is on the ground at an airport (or type its code in DEP). Type an ICAO code in ARR then Enter to see your arrival METAR</td></tr>"
+  "<tr><td>End of flight</td><td>When you click End the flight in SimBrief flight, the map resets: no more plan, track, METAR or runway and wind from the previous flight. A free-flight track stopped for more than 30 minutes is not restored at the next launch</td></tr>", "METAR · Free flight"),
+]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

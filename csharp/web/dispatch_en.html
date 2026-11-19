@@ -641,6 +641,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   function fmt(n) { return Number.isFinite(n) ? Math.round(n).toLocaleString('fr-FR') : '—'; }
 
   /* ---------- plan de vol : SimBrief (importé dans la page ou récupéré via le relais) ---------- */
+  window.addEventListener('al-plan-clear', function () { plan = null; });   /* 12.6 : vol terminé dans Hangar FS 2024 */
   function takePlan(data) {
     try {
       var o = data.origin || {}, d = data.destination || {}, g = data.general || {}, ac = data.aircraft || {}, atc = data.atc || {};
@@ -911,8 +912,10 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 (function () {
   var RELAY = 'http://localhost:8765', KEY = 'al_mytrack_v1', MAXPTS = 6000, MAXAGE_H = 12;
   var tr = load(), line = null, live = null, lastPos = null;
-  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts) return t; } catch (e) {} return { sig: '', pts: [] }; }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(tr)); } catch (e) {} }
+  /* 12.6 : une trajectoire non mise à jour depuis 30 min (vol terminé, appli fermée) n'est pas reprise */
+  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts && (!t.t || Date.now() - t.t < 30 * 60000)) return t; } catch (e) {} return { sig: '', pts: [] }; }
+  function save() { tr.t = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(tr)); } catch (e) {} }
+  window.alTrackReset = function () { tr = { sig: '', pts: [] }; save(); draw(); };
   function map() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nm(a, b, c, d) {
@@ -2471,6 +2474,13 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
 .leaflet-tooltip.hg-apt-tip:before{display:none}
 html body #trafficMapModal>.avionics-panel button#hgAptBtn,html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn{background:#1A2633!important;color:#9FB3C8!important;border:1px solid #33475A!important;opacity:1!important}
 html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+</style><style id="hangar-126-flt">
+#tmFree{display:flex;align-items:center;gap:6px;margin:2px 0 6px;flex-wrap:wrap}
+#tmFree label{display:flex;align-items:center;gap:4px;font-weight:700;color:#7DD3FC}
+#tmFree input{width:64px;background:#0B1520;border:1px solid #2B6F92;border-radius:5px;color:#E6EDF5;padding:2px 5px;font:700 11px/1.3 ui-monospace,Consolas,monospace;text-transform:uppercase}
+#tmFree input:focus{outline:none;border-color:#38BDF8}
+#tmFree .auto{font-size:9.5px;color:#8FA3B8}
+#hgPlnBtn{white-space:nowrap}
 </style></head>
 <body class="flex flex-col">
 
@@ -5602,6 +5612,161 @@ ${waypoint(arr)}
     /* la base des aéroports finit de charger après la carte : on redessine une fois qu'elle est complète */
     if (on && map && (!lists || listsSize < 5000) && db() && Object.keys(db()).length !== listsSize) draw();
   }, 1000);
+})();
+</script><script id="hangar-126-flt-js">
+(function () {
+  var T = {"free": "METAR · FREE FLIGHT", "dep": "DEP", "arr": "ARR", "refresh": "Refresh METAR", "hint": "No flight plan: the departure METAR shows when your aircraft is on the ground at an airport (or type its code). Type an arrival airport to see its METAR.", "depAuto": "found automatically from your aircraft's position", "phDep": "auto", "phArr": "ICAO", "pln": ".PLN", "plnTip": "Show a .PLN flight plan (saved from the MSFS world map, or exported by Avionics Dispatch)", "plnOk": ".PLN plan loaded", "plnBad": "Unreadable .PLN file or no waypoints", "noPlan": "SimBrief: no plan imported", "ended": "Flight ended in Hangar FS 2024: the map has been reset."}, RELAY = 'http://localhost:8765';
+  var free = { dep: '', arr: '', auto: '' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function db() { try { return (typeof airportsDB !== 'undefined' && airportsDB) ? airportsDB : null; } catch (e) { return null; } }
+  function nm(a, b, c, d) { var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2);
+    var h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y; return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(h))); }
+  function code(v) { v = String(v || '').trim().toUpperCase(); try { if (typeof resolveAirportCode === 'function') { var r = resolveAirportCode(v); if (r) return String(r).toUpperCase(); } } catch (e) {} return v; }
+  function hasPlan() { try { return !!(sbPlanAirports && (sbPlanAirports.dep || sbPlanAirports.arr)); } catch (e) { return false; } }
+
+  /* ---------- aérodrome de départ trouvé d'après la position de ton avion au sol ---------- */
+  function nearest(lat, lon) {
+    var d = db(); if (!d) return '';
+    var best = '', bd = 3;   /* à moins de 3 NM */
+    for (var k in d) { var a = d[k]; if (!a || !/^[A-Z][A-Z0-9]{3}$/.test(a.icao) || Math.abs(a.lat - lat) > 0.1) continue;
+      var x = nm(lat, lon, a.lat, a.lon); if (x < bd) { bd = x; best = a.icao; } }
+    return best;
+  }
+  function watchDep() {
+    var u = window.alUser;
+    if (!u || u.lat == null || !u.ground) return;
+    var n = nearest(u.lat, u.lon);
+    if (n && n !== free.auto) { free.auto = n; if (!hasPlan() && tmSel.label === 'LIBRE') useFree(); }
+  }
+
+  /* ---------- METAR : plan s'il y en a un, sinon vol libre (jamais l'ancien plan ni les aéroports d'exemple) ---------- */
+  function useFree() {
+    tmSel = { dep: free.dep || free.auto || '', arr: free.arr || '', label: 'LIBRE' };
+    var n = document.getElementById('tmNote'); if (n) n.style.display = 'none';
+    tmRefresh();
+  }
+  tmUsePlan = function () {
+    if (hasPlan()) { tmSet(sbPlanAirports.dep, sbPlanAirports.arr, 'PLAN'); return; }
+    useFree();
+  };
+  var origHeader = tmHeader;
+  tmHeader = function (label) {
+    if (label !== 'LIBRE') return origHeader(label);
+    var depVal = free.dep || '', autoTxt = !free.dep && free.auto ? '<span class="auto" title="' + esc(T.depAuto) + '">auto : ' + esc(free.auto) + '</span>' : '';
+    return '<div class="flex items-center gap-2 mb-1"><b class="text-white">' + esc(T.free) + '</b>' +
+      '<button onclick="tmUsePlan()" title="' + esc(T.refresh) + '" class="ml-auto px-1.5 py-0.5 bg-cockpit-800 border border-cockpit-border rounded cursor-pointer hover:bg-cockpit-cyan hover:text-cockpit-950"><i class="fa-solid fa-rotate"></i></button></div>' +
+      '<div id="tmFree"><label>' + esc(T.dep) + ' <input id="tmFreeDep" maxlength="8" placeholder="' + esc(free.auto || T.phDep) + '" value="' + esc(depVal) + '"></label>' + autoTxt +
+      '<label>' + esc(T.arr) + ' <input id="tmFreeArr" maxlength="8" placeholder="' + esc(T.phArr) + '" value="' + esc(free.arr) + '"></label></div>';
+  };
+  var origRefresh = tmRefresh;
+  tmRefresh = function () {
+    var box = document.getElementById('tmBody');
+    if (box && box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   /* on ne coupe pas la saisie */
+    if (tmSel.label === 'LIBRE' && !tmSel.dep && !tmSel.arr) {
+      if (box) box.innerHTML = tmHeader('LIBRE') + '<div class="text-slate-400">' + esc(T.hint) + '</div>';
+      return;
+    }
+    return origRefresh.apply(this, arguments);
+  };
+  document.addEventListener('change', function (e) {
+    var id = e.target && e.target.id;
+    if (id !== 'tmFreeDep' && id !== 'tmFreeArr') return;
+    if (id === 'tmFreeDep') free.dep = code(e.target.value); else free.arr = code(e.target.value);
+    e.target.blur(); useFree();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target && (e.target.id === 'tmFreeDep' || e.target.id === 'tmFreeArr')) e.target.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  /* ---------- fin du vol dans Hangar FS 2024 : plus de plan, de trajectoire ni de METAR de l'ancien vol ---------- */
+  function clearPlan(silent) {
+    try { if (typeof sbLayer !== 'undefined' && sbLayer) sbLayer.clearLayers(); } catch (e) {}
+    try { if (typeof sbLabelLayer !== 'undefined' && sbLabelLayer) sbLabelLayer.clearLayers(); } catch (e) {}
+    try { sbFixes = []; sbBounds = null; } catch (e) {}
+    try { sbPlanAirports = null; } catch (e) {}
+    var info = document.getElementById('sbInfo'); if (info) { info.innerHTML = ''; info.classList.add('hidden'); }
+    try { if (typeof setSbStatus === 'function') setSbStatus(T.noPlan, false); } catch (e) {}
+    window.alPlanData = null; window.alFlightAirports = null;
+    try { window.dispatchEvent(new Event('al-plan-clear')); } catch (e) {}
+    if (window.alTrackReset) window.alTrackReset();
+    free = { dep: '', arr: '', auto: '' };
+    useFree();
+    if (!silent && window.hgFlightToast) window.hgFlightToast(T.ended);
+  }
+  window.hgClearPlan = clearPlan;
+  var hadPlan = null;
+  function pollPlan() {
+    fetch(RELAY + '/plan-current', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (p) {
+      var has = !!(p && p.has);
+      if (hadPlan === true && !has) clearPlan(false);
+      hadPlan = has;
+    }).catch(function () {});
+  }
+
+  /* ---------- plan .PLN (carte du monde de MSFS, Avionics Dispatch, Little Navmap…) ---------- */
+  function dms(s) {
+    var m = String(s).trim().match(/^([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+([\d.]+)/i);
+    if (!m) { var f = parseFloat(s); return Number.isFinite(f) ? f : NaN; }
+    var v = (+m[2]) + (+m[3]) / 60 + parseFloat(m[4]) / 3600;
+    return /[SW]/i.test(m[1]) ? -v : v;
+  }
+  function parsePln(text) {
+    var x = new DOMParser().parseFromString(text, 'application/xml');
+    if (x.getElementsByTagName('parsererror').length) return null;
+    var g = function (n, tag) { var e = n.getElementsByTagName(tag)[0]; return e ? e.textContent.trim() : ''; };
+    var wps = Array.prototype.slice.call(x.getElementsByTagName('ATCWaypoint')), fix = [];
+    wps.forEach(function (w, i) {
+      var pos = g(w, 'WorldPosition').split(','), lat = dms(pos[0]), lon = dms(pos[1]), alt = parseFloat(pos[2]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      var type = g(w, 'ATCWaypointType'), id = g(w, 'ICAOIdent') || w.getAttribute('id') || ('WP' + (i + 1));
+      fix.push({ ident: id, name: '', type: /airport/i.test(type) ? 'apt' : 'wpt', via_airway: g(w, 'ATCAirway'),
+                 pos_lat: lat, pos_long: lon, altitude_feet: Number.isFinite(alt) && alt > 0 ? Math.round(alt) : '',
+                 is_sid_star: (g(w, 'DepartureFP') || g(w, 'ArrivalFP') || g(w, 'ApproachTypeFP')) ? 1 : 0 });
+    });
+    if (fix.length < 2) return null;
+    var dep = (g(x, 'DepartureID') || fix[0].ident).toUpperCase(), arr = (g(x, 'DestinationID') || fix[fix.length - 1].ident).toUpperCase();
+    var a0 = fix[0], a1 = fix[fix.length - 1], cruise = parseInt(g(x, 'CruisingAlt'), 10) || 0;
+    return { navlog: { fix: fix },
+      origin: { icao_code: dep, pos_lat: a0.pos_lat, pos_long: a0.pos_long }, destination: { icao_code: arr, pos_lat: a1.pos_lat, pos_long: a1.pos_long },
+      general: { route: fix.slice(1, -1).map(function (f) { return f.ident; }).join(' '), initial_altitude: cruise },
+      aircraft: {}, atc: {}, tlr: null, params: { time_generated: Math.floor(Date.now() / 1000) } };
+  }
+  function loadPln(file) {
+    var rd = new FileReader();
+    rd.onload = function () {
+      var d = null; try { d = parsePln(String(rd.result || '')); } catch (e) { d = null; }
+      if (!d) { try { setSbStatus(T.plnBad, true); } catch (e) {} return; }
+      try { (window.drawSimbriefPlan || drawSimbriefPlan)(d); } catch (e) { try { setSbStatus(T.plnBad, true); } catch (e2) {} return; }
+      try { setSbStatus(T.plnOk + ' : ' + d.origin.icao_code + ' → ' + d.destination.icao_code + ' (' + file.name + ')', false); } catch (e) {}
+    };
+    rd.readAsText(file);
+  }
+  function addPlnButton() {
+    if (document.getElementById('hgPlnBtn')) return;
+    var ref = document.querySelector('#trafficMapModal button[onclick="importSimbriefPlan()"]'); if (!ref) return;
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pln,.PLN,.xml'; inp.style.display = 'none'; inp.id = 'hgPlnFile';
+    inp.onchange = function () { if (inp.files && inp.files[0]) loadPln(inp.files[0]); inp.value = ''; };
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'hgPlnBtn'; b.title = T.plnTip;
+    b.className = 'px-2 py-1 bg-cockpit-800 text-slate-200 text-[10px] font-bold rounded transition border border-cockpit-border cursor-pointer whitespace-nowrap';
+    b.innerHTML = '<i class="fa-solid fa-file-import"></i> ' + T.pln;
+    b.onclick = function () { inp.click(); };
+    ref.parentNode.insertBefore(b, ref.nextSibling); ref.parentNode.insertBefore(inp, b.nextSibling);
+  }
+
+  window.hgFlightToast = function (msg) {
+    var wrap = document.getElementById('trafficMapWrapper'); if (!wrap) return;
+    var t = document.getElementById('alPlanToast');
+    if (!t) { t = document.createElement('div'); t.id = 'alPlanToast'; wrap.appendChild(t); }
+    t.className = 'ok'; t.textContent = msg; t.style.display = '';
+    clearTimeout(t._hg); t._hg = setTimeout(function () { t.style.display = 'none'; }, 6000);
+  };
+
+  function start() {
+    pollPlan(); setInterval(pollPlan, 4000);
+    setInterval(function () { addPlnButton(); watchDep(); }, 3000);
+    addPlnButton();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script></body>
 </html>
