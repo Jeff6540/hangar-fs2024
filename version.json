@@ -1,6 +1,6 @@
 {
-  "version": "12.6",
+  "version": "12.7",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Carte de suivi remise à zéro en fin de vol, METAR en vol libre, import .PLN, barre rangée en groupes ; aérodromes sans code OACI masqués",
-  "notes_en": "Tracking map resets at end of flight, free-flight METAR, .PLN import, toolbar in groups; airfields without ICAO code hidden"
+  "notes_fr": "Journal de vol (phases, profil TOC/TOD, historique), nouveau look de la carte de suivi, altitude conseillée, menus sur toutes les pages",
+  "notes_en": "Flight log (phases, TOC/TOD profile, history), new tracking map look, advised altitude, menus on every page"
 }
