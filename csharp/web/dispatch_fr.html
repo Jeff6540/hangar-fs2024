@@ -6157,12 +6157,27 @@ ${waypoint(arr)}
       fuel: fu.est_burn ? Math.round(parseFloat(fu.est_burn) * k) : null, block: ti.est_block ? Math.round(ti.est_block / 60) : null,
       air: ti.est_time_enroute ? Math.round(ti.est_time_enroute / 60) : null, dist: +cum.toFixed(0), cruise: parseInt((data.general || {}).initial_altitude, 10) || null,
       prof: prof, route: route.length > 400 ? route.filter(function (_, i) { return i % 2 === 0; }) : route, toc: toc, tod: tod,
-      type: (data.aircraft || {}).icaocode || '', cs: (data.atc || {}).callsign || '' };
+      type: (data.aircraft || {}).icaocode || '', cs: (data.atc || {}).callsign || '', segs: segsOf(data, lat0, lon0) };
+  }
+  /* SID / route / STAR comme sur la carte de suivi (mêmes couleurs) */
+  function segsOf(data, lat0, lon0) {
+    try {
+      if (typeof parseSimbriefFixes !== 'function' || typeof classifySimbriefLegs !== 'function') return null;
+      var fx = parseSimbriefFixes(data); if (fx.length < 2) return null;
+      var kinds = classifySimbriefLegs(fx), out = [], cur = null;
+      for (var i = 1; i < fx.length; i++) {
+        var k = kinds[i - 1];
+        if (!cur || cur.k !== k) { cur = { k: k, pts: [[+fx[i - 1].lat.toFixed(4), +fx[i - 1].lon.toFixed(4)]] }; out.push(cur); }
+        cur.pts.push([+fx[i].lat.toFixed(4), +fx[i].lon.toFixed(4)]);
+      }
+      if (out.length && Number.isFinite(lat0)) out[0].pts.unshift([+lat0.toFixed(4), +lon0.toFixed(4)]);
+      return { s: out, f: fx.filter(function (f) { return f.type !== 'apt'; }).slice(0, 250).map(function (f, i) { return [+f.lat.toFixed(4), +f.lon.toFixed(4), f.ident]; }) };
+    } catch (e) { return null; }
   }
   function attachPlan() {
     if (!rec) return;
     var p = planInfo(window.alPlanFull); if (!p) return;
-    if (rec.plan && rec.plan.dep === p.dep && rec.plan.arr === p.arr) return;
+    if (rec.plan && rec.plan.dep === p.dep && rec.plan.arr === p.arr && (rec.plan.segs || !p.segs)) return;
     if (rec.dep && p.dep && rec.dep !== p.dep && rec.tko) return;   /* le plan ne correspond pas à ce vol */
     rec.plan = p; rec.dep = p.dep || rec.dep; rec.arr = p.arr || rec.arr; rec.type = p.type || rec.type; rec.cs = p.cs || rec.cs; rec.free = false;
   }
@@ -6377,7 +6392,12 @@ ${waypoint(arr)}
     setTimeout(function () { try { ui.map.invalidateSize(); } catch (e) {} }, 60);
     ui.layers.clearLayers(); if (!r) return;
     var b = [];
-    if (r.plan && r.plan.route && r.plan.route.length > 1) { L.polyline(r.plan.route, { color: '#94A3B8', weight: 2, dashArray: '6 6', opacity: .9 }).addTo(ui.layers); b = b.concat(r.plan.route); }
+    var COLS = { sid: '#4ADE80', route: '#FF4DDB', star: '#FB923C' };
+    try { if (typeof SB_COLORS !== 'undefined') COLS = SB_COLORS; } catch (e) {}
+    if (r.plan && r.plan.segs && r.plan.segs.s && r.plan.segs.s.length) {
+      r.plan.segs.s.forEach(function (sg) { L.polyline(sg.pts, { color: COLS[sg.k] || '#FF4DDB', weight: sg.k === 'route' ? 3 : 4, opacity: .95 }).addTo(ui.layers); b = b.concat(sg.pts); });
+      (r.plan.segs.f || []).forEach(function (f) { L.circleMarker([f[0], f[1]], { radius: 3, color: '#000', weight: 1, fillColor: '#E6EDF5', fillOpacity: 1 }).bindTooltip(String(f[2]), { direction: 'top' }).addTo(ui.layers); });
+    } else if (r.plan && r.plan.route && r.plan.route.length > 1) { L.polyline(r.plan.route, { color: '#94A3B8', weight: 2, dashArray: '6 6', opacity: .9 }).addTo(ui.layers); b = b.concat(r.plan.route); }
     var tr = (r.trk || []).map(function (q) { return [q[0], q[1]]; });
     if (tr.length > 1) { L.polyline(tr, { color: '#38BDF8', weight: 3.5, opacity: .95 }).addTo(ui.layers); b = b.concat(tr); }
     function apt(code, ll) { if (!ll) return; L.circleMarker(ll, { radius: 6, color: '#06121C', weight: 2, fillColor: '#38BDF8', fillOpacity: 1 }).bindTooltip(code, { permanent: true, direction: 'right', className: 'hg-apt-tip' }).addTo(ui.layers); }

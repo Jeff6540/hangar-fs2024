@@ -11,7 +11,7 @@ Version 12.7 — nouveau look de la carte de suivi
 - METAR en tableau de bord : vent avec flèche, visibilité, nuages, température, QNH et pastille VFR / MVFR / IFR / LIFR ; le METAR brut se déplie en dessous.
 - Piste et vent en dessin : la piste orientée, la flèche du vent, et les vents de face / arrière / travers en couleur (vert, orange, rouge).
 - Vol en cours façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux.
-- Nouveau JOURNAL DE VOL : frise des phases (porte, roulage, décollage, montée, croisière, descente, approche, atterrissage, roulage, porte d'arrivée) avec temps, carburant, vitesses, vario et taux de toucher ; résumé comparé au plan SimBrief ; profil du vol sol-sol avec TOC et TOD ; carte de ta route seule ; historique de tes vols.
+- Nouveau JOURNAL DE VOL : frise des phases (porte, roulage, décollage, montée, croisière, descente, approche, atterrissage, roulage, porte d'arrivée) avec temps, carburant, vitesses, vario et taux de toucher ; résumé comparé au plan SimBrief ; profil du vol sol-sol avec TOC et TOD ; carte de ta route seule (SID, route et STAR aux mêmes couleurs que la carte de suivi) ; historique de tes vols.
 - Carte de suivi : plan SimBrief, piste et vent et météo départ / arrivée réunis dans un seul encadré « Mon vol » ; la légende se replie toute seule quand il s'ouvre.
 - Altitude de croisière conseillée (Plan de vol personnel et FMS) : selon la distance, l'avion choisi (sans dépasser son plafond) et le sens du vol (niveau impair vers l'est, pair vers l'ouest) ; un clic sur « Appliquer » la reprend.
 - Décollage : la température de poussée réduite s'affiche en clair, « SEL TEMP 46 °C » sur Boeing, « FLEX » sur Airbus, avec le réglage de poussée (D-TO2…).
@@ -79,7 +79,7 @@ Version 12.7 — new look for the tracking map
 - METAR as a dashboard: wind with arrow, visibility, clouds, temperature, QNH and a VFR / MVFR / IFR / LIFR badge; the raw METAR unfolds below.
 - Runway and wind as a drawing: the runway oriented, the wind arrow, and head / tail / cross wind in colour (green, orange, red).
 - Current flight as a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them.
-- New FLIGHT LOG: phase timeline (gate, taxi, takeoff, climb, cruise, descent, approach, landing, taxi, arrival gate) with times, fuel, speeds, vertical speed and touchdown rate; summary compared with the SimBrief plan; ground-to-ground flight profile with TOC and TOD; map of your route only; history of your flights.
+- New FLIGHT LOG: phase timeline (gate, taxi, takeoff, climb, cruise, descent, approach, landing, taxi, arrival gate) with times, fuel, speeds, vertical speed and touchdown rate; summary compared with the SimBrief plan; ground-to-ground flight profile with TOC and TOD; map of your route only (SID, route and STAR in the same colours as the tracking map); history of your flights.
 - Tracking map: SimBrief plan, runway and wind and departure / arrival weather in a single "My flight" panel; the legend folds away by itself when it opens.
 - Advised cruise altitude (Personal flight plan and FMS): from the distance, the chosen aircraft (never above its ceiling) and the direction of flight (odd levels eastbound, even westbound); one click on "Apply" takes it.
 - Takeoff: the reduced-thrust temperature is shown clearly, "SEL TEMP 46 °C" on Boeing, "FLEX" on Airbus, with the thrust setting (D-TO2…).

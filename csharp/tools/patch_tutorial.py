@@ -284,7 +284,7 @@ R["fr"] += [("<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>",
   "<li><b>À gauche, la frise</b> : Porte, Roulage, Décollage, Montée, Croisière, Descente, Approche, Atterrissage, Roulage, Porte d'arrivée. La phase en cours est en orange, les phases faites en bleu. Chaque phase montre son heure, sa durée, le carburant consommé, la vitesse sol, le vario et l'altitude ; au décollage la vitesse d'envol, à l'atterrissage le <b>taux de toucher</b> (Kiss, Doux, Correct, Ferme, Dur), la vitesse et les volets.</li>"
   "<li><b>En haut, le résumé</b> : temps bloc, temps de vol, carburant, distance, altitude max et atterrissage, comparés au plan SimBrief.</li>"
   "<li><b>Le profil du vol</b>, du sol au sol : en pointillé le profil prévu par SimBrief avec le <b>TOC</b> (fin de montée) et le <b>TOD</b> (début de descente), en couleur ton profil réel, phase par phase.</li>"
-  "<li><b>La carte</b> : seulement ta route et ta trajectoire, sans trafic ni VA.</li>"
+  "<li><b>La carte</b> : seulement ta route (SID en vert, route en rose, STAR en orange, comme sur la carte de suivi) et ta trajectoire, sans trafic ni VA.</li>"
   "<li>Chaque vol terminé est gardé : choisis-le dans la liste en haut pour le revoir, ou supprime-le. Les vols sont rangés dans le dossier des réglages de l'appli, pas dans le dossier de l'appli.</li></ul>"
   "<h3>Le menu repliable</h3><p>Sur Avionics Dispatch, la carte des scènes et le tutoriel, une colonne d'icônes à gauche s'ouvre quand tu passes la souris dessus : Bibliothèque, Carte addons, Démarrage auto, Vol SimBrief, Plan &amp; suivi de vol, Journal de vol, Réglages. Un clic ramène la fenêtre principale ou ouvre la page voulue.</p>"
   "<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>", "<h3>Le journal de vol</h3>")]
@@ -293,7 +293,7 @@ R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>",
   "<li><b>On the left, the timeline</b>: Gate, Taxi, Takeoff, Climb, Cruise, Descent, Approach, Landing, Taxi, Arrival gate. The current phase is orange, completed phases blue. Each phase shows its time, duration, fuel burned, ground speed, vertical speed and altitude; at takeoff the liftoff speed, at landing the <b>touchdown rate</b> (Butter, Soft, Good, Firm, Hard), speed and flaps.</li>"
   "<li><b>At the top, the summary</b>: block time, flight time, fuel, distance, max altitude and landing, compared with the SimBrief plan.</li>"
   "<li><b>The flight profile</b>, ground to ground: dashed, the profile planned by SimBrief with <b>TOC</b> (top of climb) and <b>TOD</b> (top of descent); in colour, your actual profile, phase by phase.</li>"
-  "<li><b>The map</b>: only your route and track, no traffic or VA.</li>"
+  "<li><b>The map</b>: only your route (SID in green, route in pink, STAR in orange, as on the tracking map) and your track, no traffic or VA.</li>"
   "<li>Each finished flight is kept: pick it in the list at the top to review it, or delete it. Flights are stored in the app's settings folder, not in the app folder.</li></ul>"
   "<h3>The collapsible menu</h3><p>On Avionics Dispatch, the sceneries map and the tutorial, a column of icons on the left opens when you hover it: Library, Add-ons map, Auto start, SimBrief flight, Flight plan &amp; tracking, Flight log, Settings. One click brings back the main window or opens the page.</p>"
   "<h3>The tracking window (\"Open tracking\" button)</h3>", "<h3>The flight log</h3>")]
