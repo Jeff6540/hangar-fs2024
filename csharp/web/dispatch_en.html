@@ -625,8 +625,8 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 (function () {
   var RELAY = 'http://localhost:8765';
   var KEY = 'al_flight_v1', KEY_FOLD = 'al_flight_fold';
-  var PH = ['', 'Boarding', 'Engine start', 'Pushback', 'Taxi out', 'Takeoff', 'Climb',
-            'Cruise', 'Descent', 'Approach', 'Final', 'Landing', 'Taxi in', 'At the gate', 'Deboarding'];
+  var PH = ['', 'Boarding', 'Engine start', 'Pushback', 'Taxi to runway', 'Takeoff', 'Climb',
+            'Cruise', 'Descent', 'Approach', 'Final', 'Landing', 'Taxi to gate', 'At the gate', 'Deboarding'];
   var st = load(), live = { relay: false, connected: false, user: null, flight: null }, plan = null, lastSave = 0;
 
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
@@ -2656,6 +2656,11 @@ html body #sbInfo:not(.al-col){max-height:calc(100% - 80px)!important;overflow:a
 .hg-adv button:hover{background:#4ADE80}
 .hg-adv.same{border-color:rgba(148,163,184,.3);background:transparent;color:#8FA3B8}.hg-adv.same button{display:none}
 .hg-adv-fms{display:flex;margin:6px 0 0}
+</style><style id="hangar-127-taxi">
+.hg-taxi{background:none!important;border:0!important}
+.hg-taxi span{position:absolute;left:18px;top:-30px;white-space:nowrap;background:rgba(9,14,21,.92);border:1px solid rgba(245,158,11,.7);border-radius:8px;
+  padding:3px 8px;font:650 11.5px "Segoe UI",Inter,sans-serif;color:#E6EDF5;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.hg-taxi b{color:#F59E0B}
 </style></head>
 <body class="flex flex-col">
 
@@ -6124,7 +6129,7 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-127-jrn-js">
 (function () {
-  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
+  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
   var KEY = 'hg_jr_cur', HKEY = 'hg_jr_hist';
   var PLANE_D = 'M12 2c.8 0 1.4.7 1.4 1.5V9l7.6 4.4v2l-7.6-2.3v4.6l2 1.5V21l-3.4-1-3.4 1v-1.8l2-1.5v-4.6L3 15.4v-2L10.6 9V3.5C10.6 2.7 11.2 2 12 2z';
   var GR = [[1, 2], [3], [4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];   /* 12.7 : le repoussage a sa propre phase */
@@ -6336,7 +6341,7 @@ ${waypoint(arr)}
         var cells = [];
         if (g.fuelE != null) cells.push([T.fob, kg(g.fuelE) + (g.fuel >= 1 ? ' <small style="color:#8FA3B8;font-weight:600">−' + Math.round(g.fuel) + '</small>' : '')]);
         else if (g.fuel) cells.push([T.fuel, kg(g.fuel)]);
-        if (i === 2 || i === 9) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);   /* au sol : vitesse sol */
+        if (i === 2 || i === 9) { cells.push([T.taxi + ' ' + T.avg, Math.round(g.n ? g.gsSum / g.n : 0) + ' kt']); cells.push([T.taxi + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']); }   /* au sol : vitesse de roulage */
         if (i >= 3 && i <= 8 && g.iasMax) cells.push([T.iasMax, Math.round(g.iasMax) + ' kt']);   /* en l'air : vitesse indiquée, comme sur le PFD */
         if (i === 4 || i === 6 || i === 7) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
         if (i === 4 || i === 5) cells.push([T.alt, ftx(g.altMax)]);
@@ -6405,7 +6410,7 @@ ${waypoint(arr)}
     if (!ui.map) {
       ui.map = L.map(el, { zoomControl: true, attributionControl: false, worldCopyJump: true }).setView([46.5, 2.5], 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, className: 'hg-jdark' }).addTo(ui.map);
-      ui.layers = L.layerGroup().addTo(ui.map);
+      ui.layers = L.layerGroup().addTo(ui.map); window.hgJMapObj = ui.map;   /* taxiways quand on zoome sur l'aéroport */
     }
     setTimeout(function () { try { ui.map.invalidateSize(); } catch (e) {} }, 60);
     ui.layers.clearLayers(); if (!r) return;
@@ -6581,6 +6586,259 @@ ${waypoint(arr)}
     var r2 = null; try { r2 = ac ? window.hgAdvisedAlt(currentDep, currentArr, ac) : null; } catch (e) {}
     paint(pf, r2, ac);
   }, 800);
+})();
+</script><script id="hangar-127-jaero-js">
+(function () {
+  var URL = 'http://localhost:8765/aeroway', KEY_ON = 'al_aeroway_on', MINZ = 13, CELL = 0.1, MAXCELLS = 6;
+  var on = true; try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}
+  var cells = {}, queue = [], busy = false, btn = null, grp = null, rnd = null, attr = null, lastErr = '';
+  var ATTR = 'Airport layouts © OpenStreetMap contributors (ODbL)';
+
+  function map() { return window.hgJMapObj || null; }   /* copie pour la carte du journal de vol */
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function wanted(m) {
+    if (m.getZoom() < MINZ) return [];
+    var b = m.getBounds(), c = m.getCenter(), out = [];
+    var s = Math.floor(b.getSouth() / CELL), n = Math.floor(b.getNorth() / CELL);
+    var w = Math.floor(b.getWest() / CELL), e = Math.floor(b.getEast() / CELL);
+    for (var la = s; la <= n; la++) for (var lo = w; lo <= e; lo++) {
+      var d = Math.pow((la + .5) * CELL - c.lat, 2) + Math.pow((lo + .5) * CELL - c.lng, 2);
+      out.push({ k: la + '_' + lo, d: d });
+    }
+    out.sort(function (a, b) { return a.d - b.d; });
+    return out.slice(0, MAXCELLS).map(function (x) { return x.k; });
+  }
+
+  function pump() {   /* une seule demande au relais pour toutes les cases manquantes */
+    if (busy) return;
+    var now = Date.now();
+    var todo = queue.filter(function (k) { var c = cells[k]; return !c || (c.state === 'err' && now - c.t > 120000); });
+    if (!todo.length) { queue = []; status(); return; }
+    /* une demande = une seule zone (un aéroport) : on ne mélange pas le départ et l'arrivée */
+    var p0 = todo[0].split('_').map(Number), ks = [], rest = [];
+    todo.forEach(function (k) {
+      var q = k.split('_').map(Number);
+      (Math.abs(q[0] - p0[0]) <= 3 && Math.abs(q[1] - p0[1]) <= 3 && ks.length < 9 ? ks : rest).push(k);
+    });
+    queue = rest;
+    var bg = ks.every(function (k) { return pre[k]; });   /* préchargement en arrière-plan : pas de ⚠ s'il échoue */
+    busy = true; ks.forEach(function (k) { cells[k] = { state: 'loading' }; }); status();
+    var ctl = window.AbortController ? new AbortController() : null;
+    var to = setTimeout(function () { if (ctl) ctl.abort(); }, 130000);
+    fetch(URL + '?cells=' + ks.join(','), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d || {} }; }); })
+      .then(function (x) {
+        var got = x.d.cells || {};
+        Object.keys(got).forEach(function (k) { cells[k] = { state: 'ok', items: got[k] || [] }; });
+        ks.forEach(function (k) { if (!got[k]) cells[k] = { state: 'err', t: Date.now() }; });
+        if (x.ok) lastErr = ''; else if (!bg) lastErr = x.d.error || 'erreur';
+        draw();
+      })
+      .catch(function () { ks.forEach(function (k) { cells[k] = { state: 'err', t: Date.now() }; }); if (!bg) lastErr = 'relay stopped or timed out'; })
+      .then(function () { clearTimeout(to); busy = false; status(); if (queue.length) setTimeout(pump, 1000); });
+  }
+
+  /* chargement anticipé des aéroports du plan SimBrief (départ, arrivée, dégagements), même carte fermée */
+  var pre = {}, preDone = '';
+  function prefetch() {
+    var apts = window.alFlightAirports || [];
+    var sig = JSON.stringify(apts);
+    if (!on || !apts.length || sig === preDone) return;
+    preDone = sig;
+    apts.forEach(function (a) {
+      var ks = {};
+      [[-.03, -.04], [-.03, .04], [.03, -.04], [.03, .04]].forEach(function (d) {
+        ks[Math.floor((a[0] + d[0]) / CELL) + '_' + Math.floor((a[1] + d[1]) / CELL)] = 1;
+      });
+      Object.keys(ks).forEach(function (k) {
+        if (!cells[k] && queue.indexOf(k) < 0) { pre[k] = 1; queue.push(k); }
+      });
+    });
+    pump();
+  }
+  window.addEventListener('al-plan', prefetch);
+
+  function refresh() {
+    var m = map(); if (!m) return;
+    try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}   /* suit le bouton TAXIWAYS de la carte de suivi */
+    if (!on || m.getZoom() < MINZ) { if (grp && m.hasLayer(grp)) m.removeLayer(grp); setAttr(m, false); status(); return; }
+    if (grp && !m.hasLayer(grp)) grp.addTo(m);
+    setAttr(m, true);
+    var now = Date.now();
+    wanted(m).forEach(function (k) {
+      var c = cells[k];
+      if ((!c || (c.state === 'err' && now - c.t > 120000)) && queue.indexOf(k) < 0) queue.push(k);
+    });
+    pump(); draw(); status();
+  }
+
+  function setAttr(m, want) {   /* mention obligatoire de la licence OpenStreetMap, en bas à droite de la carte */
+    if (!attr) {
+      attr = document.createElement('div'); attr.id = 'alAerowayAttr'; attr.textContent = ATTR;
+      m.getContainer().appendChild(attr);
+    }
+    attr.style.display = want ? '' : 'none';
+  }
+
+  /* largeur réelle en mètres -> pixels au zoom actuel */
+  function px(m, meters, lat, min) {
+    var mpp = 40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, m.getZoom() + 8);
+    return Math.max(min, meters / mpp);
+  }
+  function mid(g) { return g[Math.floor((g.length - 1) / 2)]; }
+  function label(txt, at, cls) {
+    return L.marker(at, { pane: 'alAerowayLbl', interactive: false, keyboard: false,
+      icon: L.divIcon({ className: 'alaw-lbl ' + cls, html: '<span>' + esc(txt) + '</span>', iconSize: [0, 0] }) });
+  }
+
+  function draw() {
+    var m = map(); if (!m || !grp || !on || m.getZoom() < MINZ) return;
+    grp.clearLayers();
+    var z = m.getZoom(), vb = m.getBounds().pad(0.3), cand = [];
+    var lists = { area: [], pave: [], line: [], pt: [], lbl: [] };
+    Object.keys(cells).forEach(function (k) {
+      var c = cells[k]; if (c.state !== 'ok') return;
+      c.items.forEach(function (it) {
+        var g = it.g, at = mid(g);
+        if (!vb.contains(at) && !(g.length > 1 && (vb.contains(g[0]) || vb.contains(g[g.length - 1])))) return;
+        var t = it.t, lat = g[0][0];
+        if (it.a) {
+          var fill = t === 'apron' ? '#7b8494' : (t === 'runway' ? '#3a3f48' : (t === 'taxiway' || t === 'taxilane' ? '#6b7280' : '#5b6b82'));
+          lists.area.push(L.polygon(g, { renderer: rnd, stroke: t !== 'apron', color: '#4b5563', weight: 1, fillColor: fill, fillOpacity: t === 'apron' ? .32 : .55, interactive: false }));
+          return;
+        }
+        if (g.length === 1) {
+          if (t === 'holding_position') lists.pt.push(L.circleMarker(g[0], { renderer: rnd, radius: z >= 16 ? 3.5 : 2.5, color: '#ef4444', weight: 1, fillColor: '#ef4444', fillOpacity: .9, interactive: false }));
+          else if (z >= 15) {
+            lists.pt.push(L.circleMarker(g[0], { renderer: rnd, radius: z >= 17 ? 4 : 3, color: '#0b1220', weight: 1, fillColor: '#5eead4', fillOpacity: .95, interactive: false }));
+            if (z >= 17 && it.r) cand.push({ txt: it.r, at: g[0], cls: 'pk', prio: 3 });
+          }
+          return;
+        }
+        if (t === 'runway' || t === 'stopway') {
+          lists.pave.push(L.polyline(g, { renderer: rnd, color: t === 'runway' ? '#2b2f36' : '#4b5059', weight: px(m, it.w || 45, lat, 4), opacity: .95, lineCap: 'butt', interactive: false }));
+          if (t === 'runway') {
+            lists.line.push(L.polyline(g, { renderer: rnd, color: '#f8fafc', weight: z >= 15 ? 1.6 : 1, dashArray: z >= 15 ? '10 8' : '5 5', opacity: .9, interactive: false }));
+            if (it.r) cand.push({ txt: it.r, at: at, cls: 'rw', prio: 0 });
+          }
+        } else if (t === 'taxiway' || t === 'taxilane') {
+          lists.pave.push(L.polyline(g, { renderer: rnd, color: '#4a505b', weight: px(m, it.w || (t === 'taxiway' ? 23 : 15), lat, 2.5), opacity: .9, lineJoin: 'round', interactive: false }));
+          lists.line.push(L.polyline(g, { renderer: rnd, color: '#facc15', weight: z >= 16 ? 1.8 : 1.2, opacity: t === 'taxilane' ? .7 : .95, interactive: false }));
+          if (it.r && it.r.length <= 6 && twVisible(it.r, z)) cand.push({ txt: it.r, at: at, cls: 'tw', prio: it.r.length <= 2 ? 1 : 2 });
+        } else if (t === 'holding_position') {
+          lists.line.push(L.polyline(g, { renderer: rnd, color: '#ef4444', weight: 2.5, opacity: .95, interactive: false }));
+        } else if (t === 'parking_position' && z >= 15) {
+          lists.line.push(L.polyline(g, { renderer: rnd, color: '#5eead4', weight: 1.4, opacity: .9, interactive: false }));
+          if (z >= 17 && it.r) cand.push({ txt: it.r, at: g[g.length - 1], cls: 'pk', prio: 3 });
+        }
+      });
+    });
+    lists.lbl = placeLabels(m, z, cand);
+    ['area', 'pave', 'line', 'pt', 'lbl'].forEach(function (n) { lists[n].forEach(function (l) { grp.addLayer(l); }); });
+  }
+
+  /* Lettres de taxiway selon le zoom : de loin seulement les grands axes (A, B, Q…), toutes les lettres en zoomant. */
+  function twVisible(ref, z) {
+    if (z >= 17) return true;
+    if (z >= 16) return ref.length <= 3;
+    if (z >= 15) return /^[A-Z]{1,2}$/i.test(ref);
+    return false;
+  }
+
+  /* Étiquettes sans doublon ni chevauchement : pistes d'abord, puis grands taxiways, petits taxiways, parkings.
+     Une même lettre n'est répétée que si l'étiquette précédente est assez loin à l'écran. */
+  function placeLabels(m, z, cand) {
+    var minSame = z >= 18 ? 160 : (z >= 17 ? 220 : (z >= 16 ? 280 : 360));
+    var boxes = [], byRef = {}, out = [];
+    cand.sort(function (a, b) { return a.prio - b.prio || a.txt.length - b.txt.length; });
+    cand.forEach(function (c) {
+      var p = m.project(c.at, z);
+      var w = c.txt.length * (c.cls === 'pk' ? 6 : 7.5) + 14, h = 18;
+      var x0 = c.cls === 'pk' ? p.x + 6 : p.x - w / 2, y0 = p.y - h / 2;
+      var key = c.cls + '|' + c.txt;
+      var same = byRef[key] || [];
+      for (var i = 0; i < same.length; i++) {
+        var dx = same[i].x - p.x, dy = same[i].y - p.y;
+        if (dx * dx + dy * dy < minSame * minSame) return;
+      }
+      for (var j = 0; j < boxes.length; j++) {
+        var b = boxes[j];
+        if (x0 < b[2] && x0 + w > b[0] && y0 < b[3] && y0 + h > b[1]) return;
+      }
+      boxes.push([x0 - 2, y0 - 2, x0 + w + 2, y0 + h + 2]);
+      same.push(p); byRef[key] = same;
+      out.push(label(c.txt, c.at, c.cls));
+    });
+    return out;
+  }
+
+  function status() {
+    if (!btn) return;
+    var m = map(), z = m ? m.getZoom() : 0, loading = busy || queue.length > 0, n = 0;
+    Object.keys(cells).forEach(function (k) { if (cells[k].state === 'ok') n += cells[k].items.length; });
+    btn.classList.toggle('off', !on);
+    btn.innerHTML = '<i class="fa-solid fa-road"></i> TAXIWAYS' + (on && loading ? ' …' : (on && lastErr && z >= MINZ ? ' ⚠' : ''));
+    btn.title = !on ? 'Airport layouts (OpenStreetMap) hidden — click to show' :
+      (z < MINZ ? 'Zoom in on an airport to see runways, taxiways and parking spots (OpenStreetMap)' :
+      (loading ? 'Loading the airport layout (OpenStreetMap)…' :
+      (lastErr ? 'Airport layout unavailable: ' + lastErr : 'Runways, taxiways and parking spots from OpenStreetMap — click to hide')));
+  }
+
+  function build() {
+    var m = map();
+    var ref = document.getElementById('alFshubAllBtn') || document.getElementById('alFshubBtn') || document.getElementById('trafficToggleBtn');
+    if (false) {
+      btn = document.createElement('button');
+      btn.id = 'alAerowayBtn'; btn.type = 'button';
+      btn.className = 'px-2.5 py-1 text-[10px] font-bold rounded transition cursor-pointer whitespace-nowrap';
+      ref.parentNode.insertBefore(btn, ref.nextSibling);
+      btn.addEventListener('click', function () {
+        on = !on; try { localStorage.setItem(KEY_ON, on ? '1' : '0'); } catch (e) {}
+        if (on) { preDone = ''; prefetch(); }
+        refresh();
+      });
+    }
+    if (m && !grp) {
+      if (!m.getPane('alAeroway')) { m.createPane('alAeroway').style.zIndex = 350; m.createPane('alAerowayLbl').style.zIndex = 450; }
+      m.getPane('alAerowayLbl').style.pointerEvents = 'none';
+      rnd = L.canvas({ pane: 'alAeroway', padding: 0.3 });
+      grp = L.layerGroup();
+      m.on('moveend zoomend', refresh);
+    }
+    status();
+    if (!m) return false;
+    refresh();
+    return false;
+  }
+
+  var css = document.createElement('style');
+  css.textContent =
+    'html body #trafficMapModal button#alAerowayBtn,html body #alAerowayBtn{background:linear-gradient(180deg,#facc15,#d4a20c)!important;color:#231a02!important;border:0!important;border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px}' +
+    'html body #trafficMapModal button#alAerowayBtn.off,html body #alAerowayBtn.off{background:rgba(15,20,30,.66)!important;color:#c9b04b!important;border:1px solid rgba(250,204,21,.45)!important}' +
+    '#alAerowayAttr{position:absolute;right:6px;bottom:4px;z-index:800;font:10px "Segoe UI",Inter,sans-serif;color:#cbd5e1;background:rgba(17,20,25,.7);padding:1px 6px;border-radius:4px;pointer-events:none}' +
+    '.alaw-lbl{background:none;border:0}.alaw-lbl span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font:700 11px "Segoe UI",Inter,sans-serif;padding:0 5px;border-radius:4px;line-height:16px}' +
+    '.alaw-lbl.tw span{background:#111;color:#facc15;border:1px solid #facc15}' +
+    '.alaw-lbl.rw span{background:#f8fafc;color:#111;font-size:12px}' +
+    '.alaw-lbl.pk span{background:rgba(11,18,32,.85);color:#5eead4;font-size:10px;font-weight:600;transform:translate(6px,-50%)}';
+  /* styles déjà ajoutés par le calque de la carte de suivi */
+
+  function start() { setInterval(function () { if (window.hgJMapObj && !grp) build(); else if (grp) refresh(); }, 3000); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script><script id="hangar-127-taxi-js">
+(function () {
+  var T = {"to": "Taxi to runway", "in": "Taxi to gate", "push": "Pushback"}, mk = null;
+  /* sur la carte de suivi : « Roulage vers la porte · 18 kt » à côté de ton avion quand il roule au sol */
+  setInterval(function () {
+    var m = null; try { m = (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) {}
+    if (!m || typeof L === 'undefined') return;
+    var u = window.alUser, P = window.alFlightPhase || 0, txt = P === 3 ? T.push : (P === 4 ? T.to : (P === 12 ? T['in'] : ''));
+    if (!u || !u.ground || !txt || u.lat == null) { if (mk) { m.removeLayer(mk); mk = null; } return; }
+    var html = '<span>' + txt + ' · <b>' + Math.round(u.gs || 0) + ' kt</b></span>';
+    if (!mk) mk = L.marker([u.lat, u.lon], { interactive: false, zIndexOffset: 2000, icon: L.divIcon({ className: 'hg-taxi', iconSize: [0, 0], html: html }) }).addTo(m);
+    else { mk.setLatLng([u.lat, u.lon]); var el = mk.getElement(); if (el && el.innerHTML !== html) el.innerHTML = html; }
+  }, 1000);
 })();
 </script></body>
 </html>

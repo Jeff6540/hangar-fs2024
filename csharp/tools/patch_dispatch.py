@@ -1414,15 +1414,15 @@ if __name__ == "__main__":
 # ---- 12.7 : journal de vol (enregistrement phase par phase, profil sol-sol TOC/TOD, carte épurée, historique) ----
 JRN_TXT = {
  "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
-        "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage", "Porte d'arrivée"],
-        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trafficTip": "Afficher les avions IA en vol autour de toi (vol en cours seulement)", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage vers la piste", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage vers la porte", "Porte d'arrivée"],
+        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trafficTip": "Afficher les avions IA en vol autour de toi (vol en cours seulement)", "taxi": "vitesse de roulage", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
         "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
         "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
         "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
         "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
  "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
-        "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"],
-        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"],
+        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
         "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
         "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
         "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
@@ -1701,7 +1701,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
         var cells = [];
         if (g.fuelE != null) cells.push([T.fob, kg(g.fuelE) + (g.fuel >= 1 ? ' <small style="color:#8FA3B8;font-weight:600">−' + Math.round(g.fuel) + '</small>' : '')]);
         else if (g.fuel) cells.push([T.fuel, kg(g.fuel)]);
-        if (i === 2 || i === 9) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);   /* au sol : vitesse sol */
+        if (i === 2 || i === 9) { cells.push([T.taxi + ' ' + T.avg, Math.round(g.n ? g.gsSum / g.n : 0) + ' kt']); cells.push([T.taxi + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']); }   /* au sol : vitesse de roulage */
         if (i >= 3 && i <= 8 && g.iasMax) cells.push([T.iasMax, Math.round(g.iasMax) + ' kt']);   /* en l'air : vitesse indiquée, comme sur le PFD */
         if (i === 4 || i === 6 || i === 7) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
         if (i === 4 || i === 5) cells.push([T.alt, ftx(g.altMax)]);
@@ -1770,7 +1770,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     if (!ui.map) {
       ui.map = L.map(el, { zoomControl: true, attributionControl: false, worldCopyJump: true }).setView([46.5, 2.5], 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, className: 'hg-jdark' }).addTo(ui.map);
-      ui.layers = L.layerGroup().addTo(ui.map);
+      ui.layers = L.layerGroup().addTo(ui.map); window.hgJMapObj = ui.map;   /* taxiways quand on zoome sur l'aéroport */
     }
     setTimeout(function () { try { ui.map.invalidateSize(); } catch (e) {} }, 60);
     ui.layers.clearLayers(); if (!r) return;
@@ -2050,3 +2050,66 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_selt127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 : taxiways sur la carte du journal (copie du calque de la carte de suivi), étiquette de roulage près de l'avion ----
+def _aero_clone(s):
+    a = s.index("(function () {\n  var URL = 'http://localhost:8765/aeroway'")
+    b = s.index("})();", a) + len("})();")
+    src = s[a:b]
+    reps = [
+        ("  function map() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }",
+         "  function map() { return window.hgJMapObj || null; }   /* copie pour la carte du journal de vol */"),
+        ("    var m = map(); if (!m) return;\n    if (!on ||",
+         "    var m = map(); if (!m) return;\n    try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}   /* suit le bouton TAXIWAYS de la carte de suivi */\n    if (!on ||"),
+        ("    if (ref && !document.getElementById('alAerowayBtn')) {", "    if (false) {"),
+        ("    if (!m || !btn) return false;\n    refresh();\n    return true;", "    if (!m) return false;\n    refresh();\n    return false;"),
+        ("  document.head.appendChild(css);", "  /* styles déjà ajoutés par le calque de la carte de suivi */"),
+        ("  function start() { prefetch(); var t = setInterval(function () { if (build()) clearInterval(t); }, 1000); }",
+         "  function start() { setInterval(function () { if (window.hgJMapObj && !grp) build(); else if (grp) refresh(); }, 3000); }"),
+    ]
+    for x, y in reps:
+        assert src.count(x) == 1, x[:50]
+        src = src.replace(x, y)
+    return '<script id="hangar-127-jaero-js">\n' + src + "\n</script>"
+
+TAXI_TXT = {"fr": {"to": "Roulage vers la piste", "in": "Roulage vers la porte", "push": "Repoussage"},
+            "en": {"to": "Taxi to runway", "in": "Taxi to gate", "push": "Pushback"}}
+TAXI_JS = r"""<script id="hangar-127-taxi-js">
+(function () {
+  var T = __TXT__, mk = null;
+  /* sur la carte de suivi : « Roulage vers la porte · 18 kt » à côté de ton avion quand il roule au sol */
+  setInterval(function () {
+    var m = null; try { m = (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) {}
+    if (!m || typeof L === 'undefined') return;
+    var u = window.alUser, P = window.alFlightPhase || 0, txt = P === 3 ? T.push : (P === 4 ? T.to : (P === 12 ? T['in'] : ''));
+    if (!u || !u.ground || !txt || u.lat == null) { if (mk) { m.removeLayer(mk); mk = null; } return; }
+    var html = '<span>' + txt + ' · <b>' + Math.round(u.gs || 0) + ' kt</b></span>';
+    if (!mk) mk = L.marker([u.lat, u.lon], { interactive: false, zIndexOffset: 2000, icon: L.divIcon({ className: 'hg-taxi', iconSize: [0, 0], html: html }) }).addTo(m);
+    else { mk.setLatLng([u.lat, u.lon]); var el = mk.getElement(); if (el && el.innerHTML !== html) el.innerHTML = html; }
+  }, 1000);
+})();
+</script>"""
+TAXI_CSS = r"""<style id="hangar-127-taxi">
+.hg-taxi{background:none!important;border:0!important}
+.hg-taxi span{position:absolute;left:18px;top:-30px;white-space:nowrap;background:rgba(9,14,21,.92);border:1px solid rgba(245,158,11,.7);border-radius:8px;
+  padding:3px 8px;font:650 11.5px "Segoe UI",Inter,sans-serif;color:#E6EDF5;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.hg-taxi b{color:#F59E0B}
+</style>"""
+
+
+def patch_taxi127(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-127-taxi-js" in s:
+        return
+    import json
+    clone = _aero_clone(s)
+    s = s.replace("</head>", TAXI_CSS + "</head>", 1)
+    s = s.replace("</body>", clone + TAXI_JS.replace("__TXT__", json.dumps(TAXI_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_taxi127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
