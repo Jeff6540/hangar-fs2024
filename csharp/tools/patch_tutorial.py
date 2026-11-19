@@ -250,6 +250,11 @@ R["en"] += [
   "<tr><td>End of flight</td><td>When you click End the flight in SimBrief flight, the map resets: no more plan, track, METAR or runway and wind from the previous flight. A free-flight track stopped for more than 30 minutes is not restored at the next launch</td></tr>", "METAR · Free flight"),
 ]
 
+
+# 12.6 : terrains sans code OACI masqués sur la carte Plan de vol personnel
+R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF),", "(Gros, Moyens, Aérodromes, chacun avec ON / OFF ; seuls les terrains avec un vrai code OACI à 4 lettres sont affichés, pas les « FR-0901 »),")]
+R["en"] += [("(Large, Medium, Airfields, each with ON / OFF),", "(Large, Medium, Airfields, each with ON / OFF; only fields with a real 4-letter ICAO code are shown, not \"FR-0901\" ones),")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

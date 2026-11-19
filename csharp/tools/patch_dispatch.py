@@ -990,3 +990,23 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_flt126(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.6 : carte « Plan de vol personnel » sans les terrains sans vrai code OACI (FR-0901…) ----
+FULLMAP_OLD = "                if (!airportFilters[categoryKey]) continue;\n"
+FULLMAP_NEW = ("                if (!airportFilters[categoryKey]) continue;\n"
+               "                if (!/^[A-Z][A-Z0-9]{3}$/.test(apt.icao)) continue;   /* 12.6 : sans vrai code OACI (petits terrains privés) : pas affiché */\n")
+
+
+def patch_fullmap126(path):
+    s = open(path, encoding="utf-8").read()
+    if "12.6 : sans vrai code OACI" in s:
+        return
+    assert s.count(FULLMAP_OLD) == 1, path
+    open(path, "w", encoding="utf-8").write(s.replace(FULLMAP_OLD, FULLMAP_NEW))
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_fullmap126(os.path.join(_web, "dispatch_%s.html" % _l))

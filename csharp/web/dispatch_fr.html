@@ -4621,6 +4621,7 @@ html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],
                 if (apt.type === 'large_airport') categoryKey = 'large';
                 else if (apt.type === 'medium_airport') categoryKey = 'medium';
                 if (!airportFilters[categoryKey]) continue;
+                if (!/^[A-Z][A-Z0-9]{3}$/.test(apt.icao)) continue;   /* 12.6 : sans vrai code OACI (petits terrains privés) : pas affiché */
 
                 const latLng = L.latLng(apt.lat, apt.lon);
                 if (!bounds.contains(latLng)) continue;
