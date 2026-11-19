@@ -1,6 +1,6 @@
 {
-  "version": "12.3",
+  "version": "12.4",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Nouveau look : menu sur le côté, bleu ciel, tuiles ON/OFF, volets repliables sur les cartes ; rien de retiré",
-  "notes_en": "New look: side menu, sky blue, ON/OFF tiles, foldable panels on the maps; nothing removed"
+  "notes_fr": "Mise à jour en un clic : bandeau bleu quand une nouvelle version sort, installation et redémarrage automatiques (seulement quand Flight Simulator est fermé)",
+  "notes_en": "One-click update: blue banner when a new version is out, automatic install and restart (only when Flight Simulator is closed)"
 }
