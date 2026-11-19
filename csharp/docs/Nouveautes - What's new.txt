@@ -1,9 +1,14 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.4
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.5
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.5 — aéroports sur la carte de suivi
+- Nouveau bouton « AÉROPORTS » sur la carte Plan & suivi de vol : les codes OACI s'affichent en petit, les grands aéroports d'abord, puis les moyens et les petits quand tu zoomes.
+- Survole un aéroport pour voir son nom, sa ville et son altitude ; le bouton « NOMS » écrit aussi le nom sous chaque code.
+- L'appli retient ton choix pour la prochaine fois.
 
 Version 12.4 — mise à jour en un clic
 - Quand une nouvelle version sort, un bandeau bleu apparaît en haut de l'appli. Un clic sur « Mettre à jour » : téléchargement, vérification, installation et redémarrage automatiques. Tes réglages, profils et liens sont conservés.
@@ -45,6 +50,11 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.5 — airports on the tracking map
+- New "AIRPORTS" button on the Flight plan & tracking map: ICAO codes appear in small letters, large airports first, then medium and small ones as you zoom in.
+- Hover an airport to see its name, city and elevation; the "NAMES" button also writes the name under each code.
+- The app remembers your choice for next time.
 
 Version 12.4 — one-click update
 - When a new version is out, a blue banner appears at the top of the app. One click on "Update": automatic download, verification, install and restart. Your settings, profiles and links are kept.

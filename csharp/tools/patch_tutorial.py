@@ -220,6 +220,15 @@ R["en"] += [
   "<tr><td>Accessibility</td><td>\"Colorblind mode\" tile", "Check for updates at startup"),
 ]
 
+
+# 12.5 : aéroports sur la carte de suivi
+R["fr"] += [("<tr><td>Suivre mon avion</td><td>Bouton actif (bleu) ou inactif : la carte suit ton avion (en orange)</td></tr>",
+  "<tr><td>Suivre mon avion</td><td>Bouton actif (bleu) ou inactif : la carte suit ton avion (en orange)</td></tr>"
+  "<tr><td>Aéroports · Noms</td><td>Bouton actif (bleu) ou inactif : affiche les aéroports avec leur code OACI en petit. Les grands aéroports d'abord, puis les moyens et les petits quand tu zoomes. Survole un aéroport pour voir son nom, sa ville et son altitude. <b>Noms</b> écrit aussi le nom sous chaque code. L'appli retient ton choix</td></tr>")]
+R["en"] += [("<tr><td>Follow my aircraft</td><td>Active (blue) or inactive button: the map follows your aircraft (in orange)</td></tr>",
+  "<tr><td>Follow my aircraft</td><td>Active (blue) or inactive button: the map follows your aircraft (in orange)</td></tr>"
+  "<tr><td>Airports · Names</td><td>Active (blue) or inactive button: shows airports with their ICAO code in small letters. Large airports first, then medium and small ones as you zoom in. Hover an airport to see its name, city and elevation. <b>Names</b> also writes the name under each code. The app remembers your choice</td></tr>")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

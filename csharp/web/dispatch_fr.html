@@ -2457,6 +2457,17 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
 
 </style><style id="hangar-123-halo">/* 12.3 : liseré clair autour des avions quand le fond est sombre */
 #trafficMapWrapper.map-dark-tiles .traffic-icon svg,#trafficMapWrapper.map-dark-tiles .alfs-icon svg{filter:drop-shadow(0 0 1px rgba(230,237,245,.95)) drop-shadow(0 0 2px rgba(0,0,0,.6))!important}
+</style><style id="hangar-124-apt">
+.hg-apt{background:none!important;border:none!important}
+.hg-apt .d{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:#38BDF8;border:1px solid #06202C}
+.hg-apt.m .d{background:#7DD3FC}.hg-apt.s .d{width:4px;height:4px;left:-2px;top:-2px;background:#CBD5E1}
+.hg-apt .c{position:absolute;left:6px;top:-7px;white-space:nowrap;font:700 10px/1.2 system-ui,Segoe UI,sans-serif;color:#E6EDF5;letter-spacing:.3px;
+  text-shadow:0 0 2px #06121C,0 0 2px #06121C,0 0 3px #06121C;pointer-events:auto}
+.hg-apt.s .c{font-size:9px;font-weight:600;color:#CBD5E1}
+.hg-apt .n{display:block;font-weight:500;font-size:9px;color:#B6C6D6;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.leaflet-tooltip.hg-apt-tip{background:#0E1A24;color:#E6EDF5;border:1px solid #1F5E7E;border-radius:8px;font:12px/1.35 system-ui,Segoe UI,sans-serif;padding:5px 9px}
+.leaflet-tooltip.hg-apt-tip:before{display:none}
+#hgAptBtn[aria-pressed="true"],#hgAptNamesBtn[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
 </style></head>
 <body class="flex flex-col">
 
@@ -5507,5 +5518,85 @@ ${waypoint(arr)}
             loadAirportsAndRunways();
         };
     </script>
-</body>
+<script id="hangar-124-apt-js">
+(function () {
+  var T = {"btn": "AÉROPORTS", "tip": "Afficher les aéroports (codes OACI) : les grands d'abord, les moyens puis les petits en zoomant. Survole un aéroport pour voir son nom.", "names": "NOMS", "namesTip": "Afficher aussi le nom sous le code OACI"};
+  var KEY = 'hangar_apt_on', KEYN = 'hangar_apt_names';
+  function rd(k) { try { return localStorage.getItem(k) === '1'; } catch (e) { return false; } }
+  function wr(k, v) { try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) {} }
+  var on = rd(KEY), names = rd(KEYN), map = null, layer = null, lists = null, listsSize = 0, timer = null;
+  /* grands visibles dès le zoom 4, moyens dès 7, petits dès 9 ; au plus 350 étiquettes à la fois */
+  var MINZ = { large_airport: 4, medium_airport: 7, small_airport: 9, seaplane_base: 10 };
+  var CLS = { large_airport: 'l', medium_airport: 'm', small_airport: 's', seaplane_base: 's' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function db() { try { return (typeof airportsDB !== 'undefined' && airportsDB) ? airportsDB : null; } catch (e) { return null; } }
+  function build() {
+    var d = db(); if (!d) return false;
+    var keys = Object.keys(d); if (lists && keys.length === listsSize) return true;
+    lists = { large_airport: [], medium_airport: [], small_airport: [], seaplane_base: [] }; listsSize = keys.length;
+    for (var i = 0; i < keys.length; i++) { var a = d[keys[i]]; if (a && lists[a.type]) lists[a.type].push(a); }
+    return true;
+  }
+  function draw() {
+    if (!map || !layer) return;
+    layer.clearLayers();
+    if (!on || !build()) return;
+    var z = map.getZoom(), b = map.getBounds().pad(0.1), n = 0, MAX = 350;
+    var order = ['large_airport', 'medium_airport', 'small_airport', 'seaplane_base'];
+    for (var t = 0; t < order.length && n < MAX; t++) {
+      if (z < MINZ[order[t]]) continue;
+      var L0 = lists[order[t]];
+      for (var i = 0; i < L0.length && n < MAX; i++) {
+        var a = L0[i]; if (!b.contains([a.lat, a.lon])) continue;
+        var html = '<span class="d"></span><span class="c">' + esc(a.icao) + (names ? '<span class="n">' + esc(a.name) + '</span>' : '') + '</span>';
+        var mk = L.marker([a.lat, a.lon], { icon: L.divIcon({ className: 'hg-apt ' + CLS[order[t]], html: html, iconSize: [0, 0] }),
+                                            pane: 'hgApt', keyboard: false, interactive: true, bubblingMouseEvents: true });
+        var place = [a.city, a.country].filter(Boolean).join(', ');
+        mk.bindTooltip('<b>' + esc(a.icao) + '</b> — ' + esc(a.name) + (place ? '<br><span style="color:#9FB3C8">' + esc(place) + '</span>' : '') +
+                       (a.elevation_ft ? '<br><span style="color:#9FB3C8">' + Math.round(a.elevation_ft) + ' ft</span>' : ''),
+                       { className: 'hg-apt-tip', direction: 'top', offset: [0, -6] });
+        layer.addLayer(mk); n++;
+      }
+    }
+  }
+  function later() { clearTimeout(timer); timer = setTimeout(draw, 120); }
+  function paintBtn() {
+    var b = document.getElementById('hgAptBtn'); if (b) b.setAttribute('aria-pressed', String(on));
+    var n = document.getElementById('hgAptNamesBtn'); if (n) { n.setAttribute('aria-pressed', String(names)); n.style.display = on ? '' : 'none'; }
+  }
+  window.hgToggleAirports = function () { on = !on; wr(KEY, on); paintBtn(); draw(); };
+  window.hgToggleAptNames = function () { names = !names; wr(KEYN, names); paintBtn(); draw(); };
+  function mkBtn(id, icon, text, tip, fn) {
+    var b = document.createElement('button');
+    b.id = id; b.type = 'button'; b.title = tip; b.setAttribute('aria-pressed', 'false');
+    b.className = 'px-2.5 py-1 bg-cockpit-800 text-slate-200 text-[10px] font-bold rounded transition border border-cockpit-border cursor-pointer whitespace-nowrap';
+    b.innerHTML = '<i class="fa-solid ' + icon + '"></i> ' + text;
+    b.onclick = fn; return b;
+  }
+  function addButton() {
+    if (document.getElementById('hgAptBtn')) return true;
+    var ref = document.getElementById('trafficToggleBtn'); if (!ref) return false;
+    var btn = mkBtn('hgAptBtn', 'fa-plane-departure', T.btn, T.tip, window.hgToggleAirports);
+    var nb = mkBtn('hgAptNamesBtn', 'fa-font', T.names, T.namesTip, window.hgToggleAptNames);
+    ref.parentNode.insertBefore(btn, ref.nextSibling);
+    btn.parentNode.insertBefore(nb, btn.nextSibling);
+    paintBtn(); return true;
+  }
+  function attach() {
+    var m = null; try { m = (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) {}
+    if (!m || typeof L === 'undefined') return false;
+    if (m === map) return true;
+    map = m;
+    if (!map.getPane('hgApt')) { var p = map.createPane('hgApt'); p.style.zIndex = 450; }
+    layer = L.layerGroup().addTo(map);
+    map.on('moveend zoomend', later);
+    draw(); return true;
+  }
+  setInterval(function () {
+    addButton(); attach();
+    /* la base des aéroports finit de charger après la carte : on redessine une fois qu'elle est complète */
+    if (on && map && (!lists || listsSize < 5000) && db() && Object.keys(db()).length !== listsSize) draw();
+  }, 1000);
+})();
+</script></body>
 </html>
