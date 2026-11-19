@@ -298,6 +298,11 @@ R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>",
   "<h3>The collapsible menu</h3><p>On Avionics Dispatch, the sceneries map and the tutorial, a column of icons on the left opens when you hover it: Library, Add-ons map, Auto start, SimBrief flight, Flight plan &amp; tracking, Flight log, Settings. One click brings back the main window or opens the page.</p>"
   "<h3>The tracking window (\"Open tracking\" button)</h3>", "<h3>The flight log</h3>")]
 
+
+# 12.7 : encadré unique Mon vol
+R["fr"] += [("<tr><td>METAR · Vol libre</td>", "<tr><td>Mon vol · plan, piste et météo</td><td>Avec un plan SimBrief, un seul encadré réunit le plan, la piste et le vent, et la météo du départ et de l'arrivée. Quand il s'ouvre, la légende se replie toute seule pour laisser la place (clique sur « Légende » pour la rouvrir)</td></tr><tr><td>METAR · Vol libre</td>", "Mon vol · plan, piste et météo")]
+R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>My flight · plan, runway and weather</td><td>With a SimBrief plan, a single panel gathers the plan, the runway and wind, and the departure and arrival weather. When it opens, the legend folds away by itself to make room (click \"Legend\" to reopen it)</td></tr><tr><td>METAR · Free flight</td>", "My flight · plan, runway and weather")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

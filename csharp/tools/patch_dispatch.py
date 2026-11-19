@@ -1783,3 +1783,61 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_jrn127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 : plan SimBrief + piste et vent + météo dans un seul encadré ; la légende se replie quand il s'ouvre ----
+MRG_TXT = {"fr": {"title": "Mon vol · plan, piste et météo"}, "en": {"title": "My flight · plan, runway and weather"}}
+MRG_CSS = r"""<style id="hangar-127-mrg">
+#hgMetIn{margin-top:10px;padding-top:10px;border-top:1px solid rgba(125,211,252,.18)}
+#hgMetIn .hm:last-of-type{margin-bottom:4px}
+html body #sbInfo:not(.al-col){max-height:calc(100% - 80px)!important;overflow:auto!important}
+</style>"""
+MRG_JS = r"""<script id="hangar-127-mrg-js">
+(function () {
+  var T = __TXT__, obs = null;
+  function visible(el) { return el && !el.classList.contains('hidden') && el.style.display !== 'none' && el.offsetParent !== null; }
+  function foldLegend() {
+    var lg = document.getElementById('alMainLegend');
+    if (lg && !lg.classList.contains('al-col')) { lg.classList.add('al-col'); try { localStorage.setItem('al_fold_alMainLegend', '1'); } catch (e) {} }
+  }
+  function mirror(src, dst) { if (dst.innerHTML !== src.innerHTML) dst.innerHTML = src.innerHTML; }
+  function step() {
+    var sb = document.getElementById('sbInfo'), mt = document.getElementById('trafficMetarBox'), body = document.getElementById('tmBody');
+    if (!sb || !mt || !body) return;
+    var plan = !sb.classList.contains('hidden') && sb.innerHTML.trim() !== '';
+    var box = document.getElementById('hgMetIn');
+    if (plan) {
+      if (sb.getAttribute('data-al-t') !== T.title) sb.setAttribute('data-al-t', T.title);
+      if (!box || box.parentNode !== sb) { if (box) box.remove(); box = document.createElement('div'); box.id = 'hgMetIn'; sb.appendChild(box); }
+      else if (box !== sb.lastElementChild) sb.appendChild(box);   /* toujours en dernier, après piste et vent */
+      mirror(body, box);
+      if (!obs) { obs = new MutationObserver(function () { var b = document.getElementById('hgMetIn'); if (b) mirror(body, b); }); obs.observe(body, { childList: true, subtree: true, characterData: true }); }
+      if (mt.style.display !== 'none') { mt.dataset.hgHid = '1'; mt.style.display = 'none'; }
+    } else {
+      if (box) box.remove();
+      if (mt.dataset.hgHid) { delete mt.dataset.hgHid; mt.style.display = ''; }
+    }
+    /* un encadré du vol ouvert = la légende se replie */
+    var open = (plan && !sb.classList.contains('al-col')) || (!plan && visible(mt) && !mt.classList.contains('al-col'));
+    if (open && !step.wasOpen) foldLegend();
+    step.wasOpen = open;
+  }
+  setInterval(step, 700);
+})();
+</script>"""
+
+
+def patch_mrg127(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-127-mrg" in s:
+        return
+    import json
+    s = s.replace("</head>", MRG_CSS + "</head>", 1)
+    s = s.replace("</body>", MRG_JS.replace("__TXT__", json.dumps(MRG_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_mrg127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
