@@ -1415,14 +1415,14 @@ if __name__ == "__main__":
 JRN_TXT = {
  "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
         "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage", "Porte d'arrivée"],
-        "start": "début", "dur": "durée", "fuel": "carburant", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "start": "début", "dur": "durée", "fuel": "carburant", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
         "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
         "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
         "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
         "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
  "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
         "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"],
-        "start": "start", "dur": "duration", "fuel": "fuel", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "start": "start", "dur": "duration", "fuel": "fuel", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
         "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
         "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
         "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
@@ -1582,7 +1582,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     if (f.fuel_kg != null) {
       if (rec.fuelL != null && f.fuel_kg > rec.fuelL + 5 && !rec.tko) rec.fuel0 = f.fuel_kg;
       var used = rec.fuelL != null ? rec.fuelL - f.fuel_kg : 0;
-      if (gi >= 0 && used > 0 && used < 400) { var g0 = rec.g[gi] = rec.g[gi] || {}; g0.fuel = (g0.fuel || 0) + used; }
+      if (gi >= 0) { var g0 = rec.g[gi] = rec.g[gi] || {}; if (used > 0 && used < 400) g0.fuel = (g0.fuel || 0) + used; if (g0.fuelS == null) g0.fuelS = f.fuel_kg; g0.fuelE = f.fuel_kg; }
       rec.fuelL = f.fuel_kg; if (rec.fuel0 == null) rec.fuel0 = f.fuel_kg;
     }
     if (gi >= 0) {
@@ -1691,8 +1691,10 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
       h += '<div class="jp ' + cls + '"><span class="b"></span><div class="n">' + esc(name) + (g ? ' <small>' + hm(g.t0) + ' · ' + fmtDur(g.dur) + '</small>' : ' <small>' + T.wait + '</small>') + '</div>';
       if (g) {
         var cells = [];
-        if (g.fuel) cells.push(['' + T.fuel, kg(g.fuel)]);
-        if (i >= 2 && i <= 9) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);
+        if (g.fuelE != null) cells.push([T.fob, kg(g.fuelE) + (g.fuel >= 1 ? ' <small style="color:#8FA3B8;font-weight:600">−' + Math.round(g.fuel) + '</small>' : '')]);
+        else if (g.fuel) cells.push([T.fuel, kg(g.fuel)]);
+        if (i === 2 || i === 9) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);   /* au sol : vitesse sol */
+        if (i >= 3 && i <= 8 && g.iasMax) cells.push([T.iasMax, Math.round(g.iasMax) + ' kt']);   /* en l'air : vitesse indiquée, comme sur le PFD */
         if (i === 4 || i === 6 || i === 7) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
         if (i === 4 || i === 5) cells.push([T.alt, ftx(g.altMax)]);
         if (i === 3 && r.tko) cells.push([T.rot, (r.tko.ias != null ? r.tko.ias : r.tko.gs) + ' kt']);
@@ -1715,7 +1717,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
       '<span class="meta">' + [new Date(r.t0).toLocaleDateString(), r.type, r.cs, r.free ? T.free : ''].filter(Boolean).map(esc).join(' · ') + '</span></div>' +
       '<div class="js">' + cell(T.block, block == null ? '—' : fmtDur(block), p && p.block ? T.planned + ' ' + fmtDur(p.block * 60) : '') +
       cell(T.air, air == null ? '—' : fmtDur(air), p && p.air ? T.planned + ' ' + fmtDur(p.air * 60) : '') +
-      cell(T.fuelT, kg(fuelT), p && p.fuel ? T.planned + ' ' + kg(p.fuel) : '') +
+      cell(T.fob, kg(r.fuelL), [fuelT != null ? T.used + ' ' + kg(fuelT) : '', p && p.fuel ? T.planned + ' ' + kg(p.fuel) : ''].filter(Boolean).join(' · ')) +
       cell(T.dist, Math.round(r.dist || 0) + ' NM', p && p.dist ? T.planned + ' ' + p.dist + ' NM' : '') +
       cell(T.maxAlt, ftx(r.maxAlt), p && p.cruise ? T.planned + ' ' + ftx(p.cruise) : '') +
       cell(T.ldg, r.ldg && r.ldg.vs != null ? r.ldg.vs + ' ft/min' : '—', r.ldg && r.ldg.vs != null ? T.rate[rate(r.ldg.vs)] : '') + '</div>';
@@ -1798,6 +1800,11 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
 })();
 </script>"""
 JRN_ANCHORS = [
+ ("        if (P === 5 && !st.off) { /* roulage au décollage pas encore en l'air */ if (gs < 30) P = 4; }",
+  "        if (P === 5 && !st.off) { /* roulage au décollage pas encore en l'air */ if (gs < 40) P = 4; }"),
+ ('        if (gs >= 30) { st.out = st.out || now; P = 5; }',
+  '        if (gs >= 50) { st.out = st.out || now; P = 5; }   /* 12.7 : 50 kt = course au décollage, pas un roulage rapide */'),
+
  ("      window.alFlightPhase = live.user ? (st.phase || 0) : 0; window.alUser = live.user;",
   "      window.alFlightPhase = live.user ? (st.phase || 0) : 0; window.alUser = live.user; window.alFlight = live.flight;\n"
   "      try { window.dispatchEvent(new Event('al-tick')); } catch (e) {}   /* 12.7 : journal de vol */"),
