@@ -270,7 +270,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
 </aside>
 <div id="content">
 <div id="topbar"><span id="pageTitle"></span><span class="grow"></span>
-  <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto" data-t="tuto"></button></div>
+  <div id="flags"><button data-lang="fr" title="Français"><img src="{{FLAG_FR}}" alt="FR"></button><button data-lang="en" title="English"><img src="{{FLAG_EN}}" alt="EN"></button><button id="bTuto" class="tuto" data-t="tuto"></button><button id="bDiscord" class="tuto" data-url="https://discord.gg/h68MzUjkkH" data-t="discord"></button></div>
 </div>
 <div id="lock" data-t="lockBanner"></div>
 <div id="updBanner"><span class="ti" data-ic="globe"></span><span id="updText"></span><span class="grow"></span><span id="updBar"><i></i></span><button class="btn" id="bUpdNews" data-t="updNews"></button><button class="btn accent" id="bUpdGo" data-t="updGo"></button><button class="btn" id="bUpdLater" data-t="updLater"></button></div>
@@ -465,7 +465,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <div class="note" data-t="setHelp"></div>
       <div class="note" data-t="license"></div>
       <div class="row">
-        <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button>
+        <button class="btn" data-url="https://github.com/jeff6540/hangar-fs2024">GitHub</button><button class="btn" data-url="https://discord.gg/h68MzUjkkH" data-t="discord"></button>
         <span class="muted">Hangar FS 2024 {{VERSION}} (C#)</span>
       </div>
       <div class="tiles"><label class="tile"><input type="checkbox" id="sUpd"><span class="ti" data-ic="globe"></span><span><span class="tt" data-t="tUpd"></span><br><span class="ts"></span></span></label></div>
@@ -498,7 +498,7 @@ const TXT = {
  profiles:["📋  Profils…","📋  Profiles…"], dups:["🔍  Doublons ICAO","🔍  ICAO duplicates"], quar:["⚠  Mettre en quarantaine","⚠  Quarantine"], viewQuar:["Voir la quarantaine…","View quarantine…"],
  openFolder:["Ouvrir le dossier","Open folder"], onlyLinks:["Seuls les liens sont retirés, jamais les vraies copies.","Only links are removed, never real copies."],
  commHead:["Community — %s · %s add-ons","Community — %s · %s add-ons"], computingSize:["calcul de la taille…","computing size…"], commNotFoundHead:["Community — introuvable","Community — not found"],
- colPin:["★ Protégé","★ Protected"], colCreator:["Créateur","Creator"], tuto:["❓ Tutoriel","❓ Tutorial"],
+ colPin:["★ Protégé","★ Protected"], colCreator:["Créateur","Creator"], tuto:["❓ Tutoriel","❓ Tutorial"], discord:["💬 Discord des Fous Volants","💬 Les Fous Volants Discord"],
  soonBtn:["Cette fonction arrive dans une prochaine étape de la version C#. En attendant, elle reste disponible dans la version Python 11.8.","This feature is coming in a later step of the C# version. Meanwhile, it is still available in the Python version 11.8."],
  pinLost:["\n\n%s d'entre eux ne seront plus protégés (★).","\n\n%s of them will no longer be protected (★)."],
  onlyRealSel:["La sélection ne contient que de vrais dossiers : ils ne sont jamais supprimés par l'appli.","The selection only contains real folders: the app never deletes them."], library:["Bibliothèque","Library"], search:["Rechercher…","Search…"],

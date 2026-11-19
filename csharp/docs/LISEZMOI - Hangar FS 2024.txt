@@ -21,6 +21,9 @@ Il propose aussi :
 Un tutoriel illustre complet est dans l'appli : bouton "? Tutoriel"
 en haut a droite.
 
+Remarques, idees, bugs : bouton "Discord des Fous Volants" a cote
+du Tutoriel, ou directement https://discord.gg/h68MzUjkkH
+
 Fait par un pilote des FOUS VOLANTS, compagnie virtuelle francophone
 sur FSHub. Envie de voler avec nous ?
   -> https://fshub.io/airline/LFV/overview
