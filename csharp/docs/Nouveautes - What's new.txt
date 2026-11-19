@@ -5,26 +5,31 @@ Nouveautés / What's new
 FRANÇAIS
 --------
 
-Version 12.7 — nouveau look de la carte de suivi
-- Boutons de la barre tous du même style : allumé = contour bleu ciel, la couleur de chaque calque devient une petite pastille.
-- Encadrés sur la carte (légende, météo, piste et vent, VA) en verre fumé, avec la même police et plus d'espace.
-- METAR en tableau de bord : vent avec flèche, visibilité, nuages, température, QNH et pastille VFR / MVFR / IFR / LIFR ; le METAR brut se déplie en dessous.
-- Piste et vent en dessin : la piste orientée, la flèche du vent, et les vents de face / arrière / travers en couleur (vert, orange, rouge).
-- Vol en cours façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux.
-- Nouveau JOURNAL DE VOL : frise des phases (porte, repoussage, roulage vers la piste, décollage, montée, croisière, descente, approche, atterrissage, roulage vers la porte, porte d'arrivée) avec temps, carburant à bord, vitesse sol au roulage et vitesse indiquée en vol, vario et taux de toucher ; résumé comparé au plan SimBrief ; profil du vol sol-sol avec TOC et TOD ; carte de ta route seule (SID, route et STAR aux mêmes couleurs que la carte de suivi, trafic IA en option) ; historique de tes vols.
-- Carte de suivi : plan SimBrief, piste et vent et météo départ / arrivée réunis dans un seul encadré « Mon vol » ; la légende se replie toute seule quand il s'ouvre.
-- Altitude de croisière conseillée (Plan de vol personnel et FMS) : selon la distance, l'avion choisi (sans dépasser son plafond) et le sens du vol (niveau impair vers l'est, pair vers l'ouest) ; un clic sur « Appliquer » la reprend.
-- Décollage : la température de poussée réduite s'affiche en clair, « SEL TEMP 46 °C » sur Boeing, « FLEX » sur Airbus, avec le réglage de poussée (D-TO2…).
-- Suivi de vol : la phase « Décollage » ne commence plus au roulage rapide, seulement à la course au décollage (50 kt).
-- Suivi et journal de vol : l'altitude est celle de l'altimètre (calage QNH ou STD), la même que sur ton PFD.
-- Barre de titre Windows en sombre sur toutes les fenêtres (mêmes boutons réduire, agrandir, fermer).
-- Carte de suivi : au sol, une étiquette près de ton avion indique « Roulage vers la piste / vers la porte » et ta vitesse de roulage ; la carte du journal montre aussi les taxiways en zoomant.
-- Changer de langue (drapeaux) passe aussi tout de suite Avionics Dispatch, le journal de vol, la carte des scènes et le tutoriel dans la nouvelle langue.
-- Menus : « Plan & suivi de vol » devient deux entrées, « Plan de vol » (page principale d'Avionics Dispatch) et « Suivi de vol » (la carte de suivi s'ouvre directement).
-- Suivi et journal de vol : « au sol » est confirmé par la hauteur sol (plus de faux atterrissage en vol) ; les vitesses de roulage ne comptent que le vrai roulage.
-- Menu repliable à gauche sur Avionics Dispatch, la carte des scènes et le tutoriel : retour à l'accueil ou à n'importe quelle page en un clic.
-- Bibliothèque et Community : la croix ✕ revient dans la case de recherche pour la vider d'un clic (ou touche Échap).
-- Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
+Version 12.7 — journal de vol et nouveau look
+Journal de vol (nouveau)
+- Frise des phases, de la porte à la porte : porte, repoussage, roulage vers la piste, décollage, montée, croisière, descente, approche, atterrissage, roulage vers la porte, porte d'arrivée.
+- Pour chaque phase : heure, durée, carburant à bord, vitesse de roulage au sol ou vitesse indiquée (IAS) en vol, vario, altitude ; vitesse d'envol et taux de toucher noté (Kiss, Doux, Correct, Ferme, Dur).
+- Résumé comparé au plan SimBrief (temps bloc, temps de vol, carburant, distance, altitude).
+- Profil du vol du sol au sol, prévu (avec TOC et TOD) et réel.
+- Carte de ta route (SID, route et STAR en couleurs), taxiways en zoomant, trafic IA en option.
+- Historique de tes vols, gardé avec tes réglages.
+Carte de suivi
+- Nouveau look : boutons d'un seul style avec pastille de couleur, encadrés en verre fumé.
+- Un seul encadré « Mon vol » : plan SimBrief, piste et vent dessinés, météo départ / arrivée en tableau de bord (VFR / MVFR / IFR / LIFR) ; la légende se replie toute seule.
+- Au sol, étiquette « Roulage vers la piste / vers la porte » avec ta vitesse.
+- Vol en cours façon carte d'embarquement.
+Plan de vol
+- Altitude de croisière conseillée selon la distance, l'avion et le sens du vol, avec « Appliquer ».
+- SEL TEMP (Boeing) / FLEX (Airbus) affiché en clair au décollage.
+Plus juste
+- Altitude lue sur l'altimètre, comme sur ton PFD.
+- Décollage détecté à la course au décollage (50 kt), « au sol » confirmé par la hauteur sol.
+- Distances prévues identiques à SimBrief.
+Navigation
+- Menu repliable sur toutes les pages ; entrées Plan de vol, Suivi de vol et Journal de vol.
+- Barre de titre sombre sur toutes les fenêtres.
+- Changer de langue met aussi à jour les autres fenêtres ouvertes.
+- La croix ✕ revient dans les recherches Bibliothèque et Community.
 
 Version 12.6 — carte de suivi plus propre, vol libre, plans .PLN
 - Quand tu termines le vol dans Vol SimBrief, la carte de suivi se remet à zéro : plus de plan, de trajectoire, de METAR ni de piste et vent de l'ancien vol.
@@ -80,26 +85,31 @@ Version 12.1 — carte de suivi plus lisible
 ENGLISH
 -------
 
-Version 12.7 — new look for the tracking map
-- Bar buttons all share one style: on = sky-blue outline, each layer's colour becomes a small dot.
-- Map panels (legend, weather, runway and wind, VA) in smoked glass, with the same font and more space.
-- METAR as a dashboard: wind with arrow, visibility, clouds, temperature, QNH and a VFR / MVFR / IFR / LIFR badge; the raw METAR unfolds below.
-- Runway and wind as a drawing: the runway oriented, the wind arrow, and head / tail / cross wind in colour (green, orange, red).
-- Current flight as a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them.
-- New FLIGHT LOG: phase timeline (gate, pushback, taxi to runway, takeoff, climb, cruise, descent, approach, landing, taxi to gate, arrival gate) with times, fuel on board, ground speed while taxiing and indicated airspeed in flight, vertical speed and touchdown rate; summary compared with the SimBrief plan; ground-to-ground flight profile with TOC and TOD; map of your route only (SID, route and STAR in the same colours as the tracking map, optional AI traffic); history of your flights.
-- Tracking map: SimBrief plan, runway and wind and departure / arrival weather in a single "My flight" panel; the legend folds away by itself when it opens.
-- Advised cruise altitude (Personal flight plan and FMS): from the distance, the chosen aircraft (never above its ceiling) and the direction of flight (odd levels eastbound, even westbound); one click on "Apply" takes it.
-- Takeoff: the reduced-thrust temperature is shown clearly, "SEL TEMP 46 °C" on Boeing, "FLEX" on Airbus, with the thrust setting (D-TO2…).
-- Flight tracking: the "Takeoff" phase no longer starts during a fast taxi, only on the takeoff roll (50 kt).
-- Flight tracking and log: the altitude is the altimeter's (QNH or STD setting), the same as on your PFD.
-- Dark Windows title bar on all windows (same minimize, maximize, close buttons).
-- Tracking map: on the ground, a label next to your aircraft shows "Taxi to runway / to gate" and your taxi speed; the log map also shows taxiways when zoomed in.
-- Switching language (flags) now also switches Avionics Dispatch, the flight log, the sceneries map and the tutorial right away.
-- Menus: "Flight plan & tracking" becomes two entries, "Flight plan" (Avionics Dispatch main page) and "Flight tracking" (the tracking map opens directly).
-- Flight tracking and log: "on ground" is confirmed by the height above ground (no more false landing in flight); taxi speeds only count real taxiing.
-- Collapsible menu on the left of Avionics Dispatch, the sceneries map and the tutorial: back to the home page or any page in one click.
-- Library and Community: the ✕ cross is back in the search box to clear it in one click (or the Esc key).
-- Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.
+Version 12.7 — flight log and new look
+Flight log (new)
+- Gate-to-gate phase timeline: gate, pushback, taxi to runway, takeoff, climb, cruise, descent, approach, landing, taxi to gate, arrival gate.
+- For each phase: time, duration, fuel on board, taxi speed on the ground or indicated airspeed (IAS) in flight, vertical speed, altitude; liftoff speed and rated touchdown (Butter, Soft, Good, Firm, Hard).
+- Summary compared with the SimBrief plan (block time, flight time, fuel, distance, altitude).
+- Ground-to-ground flight profile, planned (with TOC and TOD) and actual.
+- Map of your route (SID, route and STAR in colour), taxiways when zoomed in, optional AI traffic.
+- History of your flights, kept with your settings.
+Tracking map
+- New look: one button style with a colour dot, smoked-glass panels.
+- A single "My flight" panel: SimBrief plan, runway and wind drawing, departure / arrival weather dashboard (VFR / MVFR / IFR / LIFR); the legend folds away by itself.
+- On the ground, a "Taxi to runway / to gate" label with your speed.
+- Current flight as a boarding pass.
+Flight plan
+- Advised cruise altitude from the distance, aircraft and direction of flight, with "Apply".
+- SEL TEMP (Boeing) / FLEX (Airbus) shown clearly at takeoff.
+More accurate
+- Altitude read from the altimeter, as on your PFD.
+- Takeoff detected on the takeoff roll (50 kt), "on ground" confirmed by height above ground.
+- Planned distances identical to SimBrief.
+Navigation
+- Collapsible menu on every page; Flight plan, Flight tracking and Flight log entries.
+- Dark title bar on all windows.
+- Switching language also updates the other open windows.
+- The ✕ cross is back in the Library and Community searches.
 
 Version 12.6 — cleaner tracking map, free flight, .PLN plans
 - When you end the flight in SimBrief flight, the tracking map resets: no more plan, track, METAR or runway and wind from the previous flight.
