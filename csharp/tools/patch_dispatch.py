@@ -665,12 +665,13 @@ APT_TXT = {
 }
 APT_CSS = r"""<style id="hangar-124-apt">
 .hg-apt{background:none!important;border:none!important}
-.hg-apt .d{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:#38BDF8;border:1px solid #06202C}
-.hg-apt.m .d{background:#7DD3FC}.hg-apt.s .d{width:4px;height:4px;left:-2px;top:-2px;background:#CBD5E1}
-.hg-apt .c{position:absolute;left:6px;top:-7px;white-space:nowrap;font:700 10px/1.2 system-ui,Segoe UI,sans-serif;color:#E6EDF5;letter-spacing:.3px;
-  text-shadow:0 0 2px #06121C,0 0 2px #06121C,0 0 3px #06121C;pointer-events:auto}
-.hg-apt.s .c{font-size:9px;font-weight:600;color:#CBD5E1}
-.hg-apt .n{display:block;font-weight:500;font-size:9px;color:#B6C6D6;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.hg-apt .d{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#38BDF8;border:2px solid #06121C;box-shadow:0 0 0 1px rgba(255,255,255,.75)}
+.hg-apt.m .d{left:-4px;top:-4px;width:8px;height:8px;background:#7DD3FC}
+.hg-apt.s .d{left:-4px;top:-4px;width:8px;height:8px;background:#FFFFFF;border-width:2px}
+.hg-apt .c{position:absolute;left:8px;top:-8px;white-space:nowrap;font:800 11px/1.2 system-ui,Segoe UI,sans-serif;color:#FFFFFF;letter-spacing:.3px;
+  text-shadow:0 0 2px #06121C,0 0 2px #06121C,0 0 3px #06121C,0 0 4px #06121C;pointer-events:auto}
+.hg-apt.s .c{font-size:10px;font-weight:700;color:#F1F5F9}
+.hg-apt .n{display:block;font-weight:600;font-size:10px;color:#DCE6F0;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .leaflet-tooltip.hg-apt-tip{background:#0E1A24;color:#E6EDF5;border:1px solid #1F5E7E;border-radius:8px;font:12px/1.35 system-ui,Segoe UI,sans-serif;padding:5px 9px}
 .leaflet-tooltip.hg-apt-tip:before{display:none}
 html body #trafficMapModal>.avionics-panel button#hgAptBtn,html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn{background:#1A2633!important;color:#9FB3C8!important;border:1px solid #33475A!important;opacity:1!important}
