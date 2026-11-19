@@ -1589,7 +1589,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     if (gi >= 0) {
       var g = rec.g[gi] = rec.g[gi] || {};
       if (!g.t0) g.t0 = now; g.t1 = now; g.dur = (g.dur || 0) + dt;
-      var gs = u.gs || 0, vs = f.vs, alt = u.alt || 0;
+      var gs = u.gs || 0, vs = f.vs, alt = f.ialt != null ? f.ialt : (u.alt || 0);   /* altitude de l'altimètre, comme sur le PFD */
       g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1;
       if (vs != null) { g.vsMax = Math.max(g.vsMax == null ? -99999 : g.vsMax, vs); g.vsMin = Math.min(g.vsMin == null ? 99999 : g.vsMin, vs); g.vsSum = (g.vsSum || 0) + vs; }
       g.altMax = Math.max(g.altMax || 0, alt); g.altMin = Math.min(g.altMin == null ? 99999 : g.altMin, alt);
@@ -1598,7 +1598,8 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     }
     if (P >= 3 && !rec.out) rec.out = now;
     if (P >= 13 && !rec.inT) rec.inT = now;
-    rec.maxAlt = Math.max(rec.maxAlt || 0, u.alt || 0);
+    var altI = f.ialt != null ? f.ialt : (u.alt || 0);
+    rec.maxAlt = Math.max(rec.maxAlt || 0, altI);
     if (rec.lastPos) { var dd = nm(rec.lastPos[0], rec.lastPos[1], u.lat, u.lon); if (dd > 0.02 && dd < 60) rec.dist += dd; }
     /* envol et toucher */
     if (prev) {
@@ -1607,8 +1608,8 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     }
     /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
     var tr = rec.trk, lp = tr[tr.length - 1], ts = Math.round((now - rec.t0) / 1000);
-    if (!lp || ts - lp[4] >= 15 || Math.abs((u.alt || 0) - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
-      tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(u.alt || 0), +rec.dist.toFixed(1), ts, P]);
+    if (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
+      tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(altI), +rec.dist.toFixed(1), ts, P]);
       if (tr.length > 3000) rec.trk = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; });
     }
     rec.lastPos = [u.lat, u.lon]; rec.last = now;
@@ -1802,6 +1803,9 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
 })();
 </script>"""
 JRN_ANCHORS = [
+ ('      i(\'ALTITUDE\', fmt(u.alt) + \' <span class="u">ft</span>\') +',
+  '      i(\'ALTITUDE\', fmt(f && f.ialt != null ? f.ialt : u.alt) + \' <span class="u">ft</span>\') +   /* 12.7 : altimètre */'),
+
  ("        if (P === 5 && !st.off) { /* roulage au décollage pas encore en l'air */ if (gs < 30) P = 4; }",
   "        if (P === 5 && !st.off) { /* roulage au décollage pas encore en l'air */ if (gs < 40) P = 4; }"),
  ('        if (gs >= 30) { st.out = st.out || now; P = 5; }',

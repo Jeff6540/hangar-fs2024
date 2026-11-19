@@ -16,6 +16,7 @@ Version 12.7 — nouveau look de la carte de suivi
 - Altitude de croisière conseillée (Plan de vol personnel et FMS) : selon la distance, l'avion choisi (sans dépasser son plafond) et le sens du vol (niveau impair vers l'est, pair vers l'ouest) ; un clic sur « Appliquer » la reprend.
 - Décollage : la température de poussée réduite s'affiche en clair, « SEL TEMP 46 °C » sur Boeing, « FLEX » sur Airbus, avec le réglage de poussée (D-TO2…).
 - Suivi de vol : la phase « Décollage » ne commence plus au roulage rapide, seulement à la course au décollage (50 kt).
+- Suivi et journal de vol : l'altitude est celle de l'altimètre (calage QNH ou STD), la même que sur ton PFD.
 - Menu repliable à gauche sur Avionics Dispatch, la carte des scènes et le tutoriel : retour à l'accueil ou à n'importe quelle page en un clic.
 - Bibliothèque et Community : la croix ✕ revient dans la case de recherche pour la vider d'un clic (ou touche Échap).
 - Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
@@ -85,6 +86,7 @@ Version 12.7 — new look for the tracking map
 - Advised cruise altitude (Personal flight plan and FMS): from the distance, the chosen aircraft (never above its ceiling) and the direction of flight (odd levels eastbound, even westbound); one click on "Apply" takes it.
 - Takeoff: the reduced-thrust temperature is shown clearly, "SEL TEMP 46 °C" on Boeing, "FLEX" on Airbus, with the thrust setting (D-TO2…).
 - Flight tracking: the "Takeoff" phase no longer starts during a fast taxi, only on the takeoff roll (50 kt).
+- Flight tracking and log: the altitude is the altimeter's (QNH or STD setting), the same as on your PFD.
 - Collapsible menu on the left of Avionics Dispatch, the sceneries map and the tutorial: back to the home page or any page in one click.
 - Library and Community: the ✕ cross is back in the search box to clear it in one click (or the Esc key).
 - Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.

@@ -774,7 +774,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     }
     var pct = x.rem != null && x.tot ? Math.max(0, Math.min(100, (1 - x.rem / x.tot) * 100)) : 0;
     var gsv = u.gs || 0, eta = x.rem != null && gsv > 60 ? Date.now() + x.rem / gsv * 3600000 : null;
-    var big = x.P ? PH[x.P] : 'Ready'; if (!u.ground && x.P >= 6 && x.P <= 8) big += ' · ' + altTxt(u.alt);
+    var big = x.P ? PH[x.P] : 'Ready'; if (!u.ground && x.P >= 6 && x.P <= 8) big += ' · ' + altTxt(f && f.ialt != null ? f.ialt : u.alt);
     var sub = [];
     if (route) sub.push('<span class="alf-route">' + esc(route) + '</span>');
     if (plan && plan.type) sub.push(esc(plan.type));
@@ -791,7 +791,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       '<div class="alf-oooi">' + o('OUT', zt(st.out), 'Off blocks', !st.out) + o('OFF', zt(st.off), 'Takeoff', !st.off) +
       o('ON', zt(st.on), 'Landing', !st.on) + o('IN', zt(st.in), 'On blocks', !st.in) + '</div></div>' +
       '<div class="alf-card"><div class="alf-h">INSTRUMENTS</div><div class="alf-ins">' +
-      i('ALTITUDE', fmt(u.alt) + ' <span class="u">ft</span>') +
+      i('ALTITUDE', fmt(f && f.ialt != null ? f.ialt : u.alt) + ' <span class="u">ft</span>') +   /* 12.7 : altimètre */
       i('GROUND SPEED', fmt(u.gs) + ' <span class="u">kt</span>') +
       i('VERTICAL SPEED', (vs == null ? '—' : (vs > 0 ? '+' : '') + fmt(vs) + ' <span class="u">ft/min</span>'), vsCls) +
       i('HEADING', String(Math.round(u.hdg)).padStart(3, '0') + '°') +
@@ -6224,7 +6224,7 @@ ${waypoint(arr)}
     if (gi >= 0) {
       var g = rec.g[gi] = rec.g[gi] || {};
       if (!g.t0) g.t0 = now; g.t1 = now; g.dur = (g.dur || 0) + dt;
-      var gs = u.gs || 0, vs = f.vs, alt = u.alt || 0;
+      var gs = u.gs || 0, vs = f.vs, alt = f.ialt != null ? f.ialt : (u.alt || 0);   /* altitude de l'altimètre, comme sur le PFD */
       g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1;
       if (vs != null) { g.vsMax = Math.max(g.vsMax == null ? -99999 : g.vsMax, vs); g.vsMin = Math.min(g.vsMin == null ? 99999 : g.vsMin, vs); g.vsSum = (g.vsSum || 0) + vs; }
       g.altMax = Math.max(g.altMax || 0, alt); g.altMin = Math.min(g.altMin == null ? 99999 : g.altMin, alt);
@@ -6233,7 +6233,8 @@ ${waypoint(arr)}
     }
     if (P >= 3 && !rec.out) rec.out = now;
     if (P >= 13 && !rec.inT) rec.inT = now;
-    rec.maxAlt = Math.max(rec.maxAlt || 0, u.alt || 0);
+    var altI = f.ialt != null ? f.ialt : (u.alt || 0);
+    rec.maxAlt = Math.max(rec.maxAlt || 0, altI);
     if (rec.lastPos) { var dd = nm(rec.lastPos[0], rec.lastPos[1], u.lat, u.lon); if (dd > 0.02 && dd < 60) rec.dist += dd; }
     /* envol et toucher */
     if (prev) {
@@ -6242,8 +6243,8 @@ ${waypoint(arr)}
     }
     /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
     var tr = rec.trk, lp = tr[tr.length - 1], ts = Math.round((now - rec.t0) / 1000);
-    if (!lp || ts - lp[4] >= 15 || Math.abs((u.alt || 0) - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
-      tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(u.alt || 0), +rec.dist.toFixed(1), ts, P]);
+    if (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
+      tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(altI), +rec.dist.toFixed(1), ts, P]);
       if (tr.length > 3000) rec.trk = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; });
     }
     rec.lastPos = [u.lat, u.lon]; rec.last = now;

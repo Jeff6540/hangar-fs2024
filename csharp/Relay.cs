@@ -311,15 +311,15 @@ namespace HangarFS2024
                 const int O = 40;
                 if (reqId == REQ_FLIGHT)
                 {
-                    if (buf.Length < O + 14 * 8) return "other";
-                    var v = new double[14];
-                    for (int i = 0; i < 14; i++) v[i] = D(buf, O + i * 8);
+                    if (buf.Length < O + 15 * 8) return "other";
+                    var v = new double[15];
+                    for (int i = 0; i < 15; i++) v[i] = D(buf, O + i * 8);
                     var f = new JObject
                     {
                         ["vs"] = (int)Math.Round(v[0]), ["fuel_kg"] = (int)Math.Round(v[1] * 0.45359237), ["weight_kg"] = (int)Math.Round(v[2] * 0.45359237),
                         ["flaps"] = (int)Math.Round(v[3]), ["flaps_pct"] = (int)Math.Round(v[4]), ["wind_dir"] = (((int)Math.Round(v[5]) % 360) + 360) % 360,
                         ["wind_kt"] = (int)Math.Round(v[6]), ["pbrake"] = v[7] >= 0.5, ["eng"] = v[8] >= 0.5 || v[9] >= 0.5 || v[10] >= 0.5 || v[11] >= 0.5,
-                        ["agl"] = (int)Math.Round(v[12]), ["ias"] = (int)Math.Round(v[13]),
+                        ["agl"] = (int)Math.Round(v[12]), ["ias"] = (int)Math.Round(v[13]), ["ialt"] = (int)Math.Round(v[14]),
                     };
                     lock (gate) flight = Tuple.Create(Now(), f);
                     return "flight";
@@ -431,6 +431,7 @@ namespace HangarFS2024
                 new[] { "AMBIENT WIND VELOCITY", "knots" }, new[] { "BRAKE PARKING POSITION", "bool" }, new[] { "GENERAL ENG COMBUSTION:1", "bool" },
                 new[] { "GENERAL ENG COMBUSTION:2", "bool" }, new[] { "GENERAL ENG COMBUSTION:3", "bool" }, new[] { "GENERAL ENG COMBUSTION:4", "bool" },
                 new[] { "PLANE ALT ABOVE GROUND", "feet" }, new[] { "AIRSPEED INDICATED", "knots" },
+                new[] { "INDICATED ALTITUDE", "feet" },   // altitude lue sur l'altimètre (calage QNH ou STD), comme sur le PFD
             };
             const uint RADIUS = 200 * 1000;
             while (!stop.IsCancellationRequested)
