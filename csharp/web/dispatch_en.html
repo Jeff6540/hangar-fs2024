@@ -5807,14 +5807,14 @@ ${waypoint(arr)}
     if (status && status !== r1) status.classList.add('hg-status');
     var sb = document.getElementById('sbUserInput'), sbBox = sb ? sb.parentNode : null;
     var grow = document.getElementById('hgGrow'); if (!grow) { grow = el('span', 'hg-grow'); grow.id = 'hgGrow'; }
-    place(r1, [menu, title, status, grow, document.getElementById('alFoldAll'), close]);
+    place(r1, [menu, title, gMap, grow, document.getElementById('alFoldAll'), close]);
     place(gPlan, [sbBox, byClick('fitSimbriefPlan()')], 1);
     place(gMap, [document.getElementById('trafficToggleBtn'), document.getElementById('trafficShowGroundBtn'), document.getElementById('trafficFollowBtn'),
                  document.getElementById('hgAptBtn'), document.getElementById('hgAptNamesBtn'), document.getElementById('alAerowayBtn')], 1);
     var vaItems = [document.getElementById('alFshubBtn'), document.getElementById('alFshubAllBtn'), document.getElementById('alFshubRad')];
     place(gVa, vaItems, 1);
     gVa.style.display = vaItems.some(function (x) { return x && x.style.display !== 'none'; }) ? '' : 'none';
-    place(r2, [gPlan, gMap, gVa]);
+    place(r2, [gPlan, gVa, status]);
   }
   setInterval(layout, 1000);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', layout); else layout();
