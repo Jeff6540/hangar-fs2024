@@ -2481,7 +2481,15 @@ html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],
 #tmFree input:focus{outline:none;border-color:#38BDF8}
 #tmFree .auto{font-size:9.5px;color:#8FA3B8}
 #hgPlnBtn{white-space:nowrap}
-</style><style id="hangar-126-smalllbl">.oaci-label.oaci-small{font-size:9px!important;opacity:.92}</style></head>
+</style><style id="hangar-126-smalllbl">.oaci-label.oaci-small{font-size:9px!important;opacity:.92}</style><style id="hangar-126-lay">
+html body #trafficMapModal>.avionics-panel.hg-lay{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important}
+#trafficMapModal .hg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#trafficMapModal .hg-grow{flex:1 1 auto}
+#trafficMapModal .hg-grp{display:flex;align-items:center;gap:7px;padding:4px 8px 4px 12px;border:1px solid #1E2733;border-radius:14px;background:rgba(11,15,20,.75);flex-wrap:wrap}
+#trafficMapModal .hg-gl{font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8B98A9;white-space:nowrap;margin-right:2px}
+html body #trafficMapModal .hg-grp>div[class*="border"]{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
+#trafficMapModal .hg-status{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+</style></head>
 <body class="flex flex-col">
 
     <!-- En-tête style HUD Avionique avec boutons centrés -->
@@ -5769,6 +5777,47 @@ ${waypoint(arr)}
     addPlnButton();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script><script id="hangar-126-lay-js">
+(function () {
+  var T = {"plan": "Plan de vol", "map": "Carte", "va": "VA FSHub"};
+  function q(sel) { return document.querySelector(sel); }
+  function byClick(fn, pred) {
+    var l = document.querySelectorAll('#trafficMapModal button[onclick="' + fn + '"]');
+    for (var i = 0; i < l.length; i++) if (!pred || pred(l[i])) return l[i];
+    return null;
+  }
+  function el(tag, cls, html) { var e = document.createElement(tag); e.className = cls; if (html) e.innerHTML = html; return e; }
+  function grp(id, label) { var g = document.getElementById(id); if (!g) { g = el('div', 'hg-grp'); g.id = id; g.appendChild(el('span', 'hg-gl', label)); } return g; }
+  function place(box, items, skip) {   /* range les éléments dans l'ordre voulu, sans rien toucher si c'est déjà bon */
+    items = items.filter(Boolean);
+    var cur = Array.prototype.slice.call(box.children).slice(skip || 0);
+    var same = cur.length >= items.length && items.every(function (x, i) { return cur[i] === x; });
+    if (!same) items.forEach(function (x) { box.appendChild(x); });
+  }
+  function layout() {
+    var panel = q('#trafficMapModal>.avionics-panel'); if (!panel) return;
+    var r1 = document.getElementById('hgRow1'), r2 = document.getElementById('hgRow2');
+    if (!r1) { r1 = el('div', 'hg-row'); r1.id = 'hgRow1'; r2 = el('div', 'hg-row'); r2.id = 'hgRow2'; panel.insertBefore(r2, panel.firstChild); panel.insertBefore(r1, r2); panel.classList.add('hg-lay'); }
+    var gPlan = grp('hgGrpPlan', T.plan), gMap = grp('hgGrpMap', T.map), gVa = grp('hgGrpVa', T.va);
+    var menu = byClick('closeTrafficMapModal()', function (b) { return !b.classList.contains('w-6'); });
+    var close = byClick('closeTrafficMapModal()', function (b) { return b.classList.contains('w-6'); });
+    var title = null; Array.prototype.forEach.call(panel.querySelectorAll('span'), function (s) { if (!title && s.querySelector('.fa-tower-broadcast')) title = s; });
+    var st = document.getElementById('trafficStatus'), status = st ? st.parentNode : null;
+    if (status && status !== r1) status.classList.add('hg-status');
+    var sb = document.getElementById('sbUserInput'), sbBox = sb ? sb.parentNode : null;
+    var grow = document.getElementById('hgGrow'); if (!grow) { grow = el('span', 'hg-grow'); grow.id = 'hgGrow'; }
+    place(r1, [menu, title, status, grow, document.getElementById('alFoldAll'), close]);
+    place(gPlan, [sbBox, byClick('fitSimbriefPlan()')], 1);
+    place(gMap, [document.getElementById('trafficToggleBtn'), document.getElementById('trafficShowGroundBtn'), document.getElementById('trafficFollowBtn'),
+                 document.getElementById('hgAptBtn'), document.getElementById('hgAptNamesBtn'), document.getElementById('alAerowayBtn')], 1);
+    var vaItems = [document.getElementById('alFshubBtn'), document.getElementById('alFshubAllBtn'), document.getElementById('alFshubRad')];
+    place(gVa, vaItems, 1);
+    gVa.style.display = vaItems.some(function (x) { return x && x.style.display !== 'none'; }) ? '' : 'none';
+    place(r2, [gPlan, gMap, gVa]);
+  }
+  setInterval(layout, 1000);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', layout); else layout();
 })();
 </script></body>
 </html>

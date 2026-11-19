@@ -10,6 +10,7 @@ Version 12.6 — carte de suivi plus propre, vol libre, plans .PLN
 - Sans plan de vol, la carte n'affiche plus de METAR d'aéroports pris au hasard. Une trajectoire de vol libre arrêtée depuis plus de 30 minutes n'est pas reprise au lancement.
 - Vol libre : le METAR du départ s'affiche tout seul quand ton avion est au sol sur un aéroport ; tape un aéroport d'arrivée (case ARR) pour voir son METAR.
 - Carte « Plan de vol personnel » d'Avionics Dispatch : les petits terrains sans vrai code OACI (FR-0901…) ne sont plus affichés ; les autres aérodromes (points jaunes) montrent leur code OACI quand tu zoomes. Un aérodrome dont la base ne connaît pas les pistes n'est plus refusé : il est marqué « à vérifier ». La légende montre les aérodromes en jaune, comme sur la carte.
+- Barre de la carte de suivi mieux rangée : deux lignes, avec les groupes Plan de vol, Carte et VA FSHub.
 - Nouveau bouton « .PLN » : affiche un plan de vol enregistré depuis la carte du monde de MSFS, exporté par Avionics Dispatch ou par un autre logiciel.
 
 Version 12.5 — aéroports sur la carte de suivi
@@ -63,6 +64,7 @@ Version 12.6 — cleaner tracking map, free flight, .PLN plans
 - Without a flight plan, the map no longer shows METARs of random airports. A free-flight track stopped for more than 30 minutes is not restored at launch.
 - Free flight: the departure METAR shows by itself when your aircraft is on the ground at an airport; type an arrival airport (ARR box) to see its METAR.
 - Avionics Dispatch "Personal flight plan" map: small airfields without a real ICAO code (FR-0901…) are no longer shown; the other airfields (yellow dots) show their ICAO code when you zoom in. An airfield whose runways are missing from the database is no longer refused: it is marked "to check". The legend shows airfields in yellow, as on the map.
+- Tidier tracking map bar: two rows, with Flight plan, Map and FSHub VA groups.
 - New ".PLN" button: shows a flight plan saved from the MSFS world map, exported by Avionics Dispatch or by other software.
 
 Version 12.5 — airports on the tracking map

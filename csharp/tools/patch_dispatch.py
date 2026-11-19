@@ -1058,3 +1058,75 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_rwydata126(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.6 : barre de la carte de suivi rangée en deux lignes et en groupes (comme Plan de vol personnel) ----
+LAY_TXT = {"fr": {"plan": "Plan de vol", "map": "Carte", "va": "VA FSHub"},
+           "en": {"plan": "Flight plan", "map": "Map", "va": "FSHub VA"}}
+LAY_CSS = r"""<style id="hangar-126-lay">
+html body #trafficMapModal>.avionics-panel.hg-lay{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important}
+#trafficMapModal .hg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#trafficMapModal .hg-grow{flex:1 1 auto}
+#trafficMapModal .hg-grp{display:flex;align-items:center;gap:7px;padding:4px 8px 4px 12px;border:1px solid #1E2733;border-radius:14px;background:rgba(11,15,20,.75);flex-wrap:wrap}
+#trafficMapModal .hg-gl{font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8B98A9;white-space:nowrap;margin-right:2px}
+html body #trafficMapModal .hg-grp>div[class*="border"]{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
+#trafficMapModal .hg-status{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+</style>"""
+LAY_JS = r"""<script id="hangar-126-lay-js">
+(function () {
+  var T = __TXT__;
+  function q(sel) { return document.querySelector(sel); }
+  function byClick(fn, pred) {
+    var l = document.querySelectorAll('#trafficMapModal button[onclick="' + fn + '"]');
+    for (var i = 0; i < l.length; i++) if (!pred || pred(l[i])) return l[i];
+    return null;
+  }
+  function el(tag, cls, html) { var e = document.createElement(tag); e.className = cls; if (html) e.innerHTML = html; return e; }
+  function grp(id, label) { var g = document.getElementById(id); if (!g) { g = el('div', 'hg-grp'); g.id = id; g.appendChild(el('span', 'hg-gl', label)); } return g; }
+  function place(box, items, skip) {   /* range les éléments dans l'ordre voulu, sans rien toucher si c'est déjà bon */
+    items = items.filter(Boolean);
+    var cur = Array.prototype.slice.call(box.children).slice(skip || 0);
+    var same = cur.length >= items.length && items.every(function (x, i) { return cur[i] === x; });
+    if (!same) items.forEach(function (x) { box.appendChild(x); });
+  }
+  function layout() {
+    var panel = q('#trafficMapModal>.avionics-panel'); if (!panel) return;
+    var r1 = document.getElementById('hgRow1'), r2 = document.getElementById('hgRow2');
+    if (!r1) { r1 = el('div', 'hg-row'); r1.id = 'hgRow1'; r2 = el('div', 'hg-row'); r2.id = 'hgRow2'; panel.insertBefore(r2, panel.firstChild); panel.insertBefore(r1, r2); panel.classList.add('hg-lay'); }
+    var gPlan = grp('hgGrpPlan', T.plan), gMap = grp('hgGrpMap', T.map), gVa = grp('hgGrpVa', T.va);
+    var menu = byClick('closeTrafficMapModal()', function (b) { return !b.classList.contains('w-6'); });
+    var close = byClick('closeTrafficMapModal()', function (b) { return b.classList.contains('w-6'); });
+    var title = null; Array.prototype.forEach.call(panel.querySelectorAll('span'), function (s) { if (!title && s.querySelector('.fa-tower-broadcast')) title = s; });
+    var st = document.getElementById('trafficStatus'), status = st ? st.parentNode : null;
+    if (status && status !== r1) status.classList.add('hg-status');
+    var sb = document.getElementById('sbUserInput'), sbBox = sb ? sb.parentNode : null;
+    var grow = document.getElementById('hgGrow'); if (!grow) { grow = el('span', 'hg-grow'); grow.id = 'hgGrow'; }
+    place(r1, [menu, title, status, grow, document.getElementById('alFoldAll'), close]);
+    place(gPlan, [sbBox, byClick('fitSimbriefPlan()')], 1);
+    place(gMap, [document.getElementById('trafficToggleBtn'), document.getElementById('trafficShowGroundBtn'), document.getElementById('trafficFollowBtn'),
+                 document.getElementById('hgAptBtn'), document.getElementById('hgAptNamesBtn'), document.getElementById('alAerowayBtn')], 1);
+    var vaItems = [document.getElementById('alFshubBtn'), document.getElementById('alFshubAllBtn'), document.getElementById('alFshubRad')];
+    place(gVa, vaItems, 1);
+    gVa.style.display = vaItems.some(function (x) { return x && x.style.display !== 'none'; }) ? '' : 'none';
+    place(r2, [gPlan, gMap, gVa]);
+  }
+  setInterval(layout, 1000);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', layout); else layout();
+})();
+</script>"""
+
+
+def patch_lay126(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-126-lay" in s:
+        return
+    import json
+    s = s.replace("</head>", LAY_CSS + "</head>", 1)
+    s = s.replace("</body>", LAY_JS.replace("__TXT__", json.dumps(LAY_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_lay126(os.path.join(_web, "dispatch_%s.html" % _l), _l)

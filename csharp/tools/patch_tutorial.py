@@ -260,6 +260,11 @@ R["en"] += [("(Large, Medium, Airfields, each with ON / OFF),", "(Large, Medium,
 R["fr"] += [("distance, temps de vol et compatibilité des pistes avec ton avion.</li>", "distance, temps de vol et compatibilité des pistes avec ton avion. Si la base ne connaît pas les pistes d'un aérodrome, il est marqué « à vérifier » (orange) au lieu d'être refusé.</li>")]
 R["en"] += [("distance, flight time and runway compatibility with your aircraft.</li>", "distance, flight time and runway compatibility with your aircraft. If the database doesn't know an airfield's runways, it is marked \"to check\" (orange) instead of being refused.</li>")]
 
+
+# 12.6 : barre de la fenêtre de suivi rangée en groupes
+R["fr"] += [("<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>", "<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3><p>La barre du haut tient sur deux lignes. En haut : Menu principal, le titre, l'état du relais et de SimBrief, puis <b>Tout réduire / Tout déplier</b> et la croix. En bas, trois groupes : <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan), <b>Carte</b> (Trafic IA, Au sol, Suivre mon avion, Aéroports, Noms, Taxiways) et <b>VA FSHub</b> (ta VA, toutes les VA, rayon).</p>", "trois groupes : <b>Plan de vol</b>")]
+R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>", "<h3>The tracking window (\"Open tracking\" button)</h3><p>The top bar uses two rows. Top: Main menu, the title, the relay and SimBrief status, then <b>Collapse all / Expand all</b> and the cross. Bottom, three groups: <b>Flight plan</b> (SimBrief, Import plan, .PLN, Center on plan), <b>Map</b> (AI traffic, On ground, Follow my aircraft, Airports, Names, Taxiways) and <b>FSHub VA</b> (your VA, all VAs, radius).</p>", "three groups: <b>Flight plan</b>")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",
