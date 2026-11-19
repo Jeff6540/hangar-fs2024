@@ -241,13 +241,24 @@ namespace HangarFS2024
             return a == null ? new List<string>() : a.Select(x => JsonStore.Str(x)).ToList();
         }
 
+        /// <summary>Ouvre Avionics Dispatch sur le plan de vol, le suivi de vol ou le journal.</summary>
+        async Task<JToken> OpenDispatchAt(string what)
+        {
+            if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
+            WebWindow w;
+            if (webWins.TryGetValue("dispatch", out w) && !w.IsDisposed) { w.BringUp(); w.PostJson("{\"open\":\"" + what + "\"}"); }
+            else OpenWeb("dispatch", "/dispatch" + (what == "plan" ? "" : "#" + what), JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
+            return null;
+        }
+
         /// <summary>Navigation demandée par le menu repliable d'une autre fenêtre.</summary>
         async Task Nav(string nav)
         {
             switch (nav)
             {
                 case "map": await HandleCommand("openMap", new JObject()); return;
-                case "dispatch": await HandleCommand("openDispatch", new JObject()); return;
+                case "dispatch": case "plan": await HandleCommand("openPlan", new JObject()); return;
+                case "track": await HandleCommand("openTracking", new JObject()); return;
                 case "journal": await HandleCommand("openJournal", new JObject()); return;
                 case "tuto": await HandleCommand("openTutorial", new JObject()); return;
                 case "lib": case "launch": case "vol": case "set":
@@ -361,6 +372,8 @@ namespace HangarFS2024
                     if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
                     OpenWeb("dispatch", "/dispatch", JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
                     return null;
+                case "openTracking": return await OpenDispatchAt("track");
+                case "openPlan": return await OpenDispatchAt("plan");
                 case "openJournal":
                     {
                         if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));

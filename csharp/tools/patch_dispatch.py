@@ -1653,10 +1653,19 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     };
   }
   function rail(k) { document.querySelectorAll('#hgRail .it').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); }); }   /* menu : la page affichée est allumée */
-  function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; rail('dispatch'); }
-  window.hgCloseAll = close;   /* menu repliable : « Plan & suivi de vol » revient à la page */
+  function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; syncRail(); }
+  function trackOpen() { var t = document.getElementById('trafficMapModal'); return !!(t && !t.classList.contains('hidden') && t.style.display !== 'none'); }
+  function syncRail() { rail(ui.open ? 'journal' : (trackOpen() ? 'track' : 'plan')); }
+  setInterval(syncRail, 800);
+  /* menu repliable : Plan de vol (page principale), Suivi de vol (carte de suivi), Journal de vol */
+  window.hgShow = function (k) {
+    if (k === 'journal') { window.hgOpenJournal(); return true; }
+    if (k === 'plan') { close(); try { if (trackOpen()) closeTrafficMapModal(); } catch (e) {} syncRail(); return true; }
+    if (k === 'track') { close(); try { if (!trackOpen()) openTrafficMapModal(); } catch (e) {} syncRail(); return true; }
+    return false;
+  };
   window.hgOpenJournal = function () {
-    build(); var d = document.getElementById('hgJournal'); d.classList.add('on'); ui.open = true; rail('journal');
+    build(); var d = document.getElementById('hgJournal'); d.classList.add('on'); ui.open = true; syncRail();
     loadList(true);
   };
   function loadList(reshow) {
@@ -1834,8 +1843,8 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     var b = document.createElement('button'); b.id = 'hgJBtn'; b.type = 'button'; b.className = 'hg-act'; b.innerHTML = '▤ ' + T.open; b.onclick = window.hgOpenJournal;
     close.parentNode.insertBefore(b, close);
   }, 1000);
-  try { if (bridge()) window.chrome.webview.addEventListener('message', function (e) { var d = e.data; if (d && d.open === 'journal') window.hgOpenJournal(); }); } catch (e) {}
-  function startUp() { if (location.hash === '#journal') setTimeout(window.hgOpenJournal, 800); }
+  try { if (bridge()) window.chrome.webview.addEventListener('message', function (e) { var d = e.data; if (d && d.open) window.hgShow(d.open); }); } catch (e) {}
+  function startUp() { var h = location.hash.replace('#', ''); if (h === 'journal' || h === 'track') setTimeout(function () { window.hgShow(h); }, 900); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startUp); else startUp();
 })();
 </script>"""

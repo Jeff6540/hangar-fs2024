@@ -8,7 +8,8 @@ ITEMS = [  # clé, icône (chemins SVG du menu principal), libellé FR, libellé
  ("map", '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>', "Carte addons", "Add-ons map"),
  ("launch", '<path d="M5 12h14M13 6l6 6-6 6"/>', "Démarrage auto", "Auto start"),
  ("vol", '<path d="M2 16l20-6-20-6 4 6z"/>', "Vol SimBrief", "SimBrief flight"),
- ("dispatch", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Plan & suivi de vol", "Flight plan & tracking"),
+ ("plan", '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>', "Plan de vol", "Flight plan"),
+ ("track", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Suivi de vol", "Flight tracking"),
  ("journal", '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/>', "Journal de vol", "Flight log"),
  ("set", '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>', "Réglages", "Settings"),
 ]
@@ -32,15 +33,18 @@ JS = r"""<script id="hangar-127-rail-js">
 (function () {
   var ITEMS = __ITEMS__, HERE = '__HERE__', BRAND = '__BRAND__';
   function go(k) {
-    if (k === HERE && k !== 'journal') { if (k === 'dispatch' && window.hgCloseAll) window.hgCloseAll(); return; }
-    if (k === 'journal' && window.hgOpenJournal) { window.hgOpenJournal(); return; }
+    if (HERE === 'dispatch' && window.hgShow) { window.hgShow(k === 'plan' || k === 'track' || k === 'journal' ? k : '') || post(k); return; }
+    post(k);
+  }
+  function post(k) {
     try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ nav: k }); } catch (e) {}
+    return true;
   }
   function build() {
     if (document.getElementById('hgRail') || !document.body) return;
     var r = document.createElement('nav'); r.id = 'hgRail';
     r.innerHTML = '<div class="lg"><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06202C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M7 21v-6h10v6"/></svg></i><b>' + BRAND + '</b></div>' +
-      ITEMS.map(function (it) { return '<button class="it' + (it[0] === HERE ? ' on' : '') + '" data-k="' + it[0] + '" title="' + it[2] + '"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + it[1] + '</svg><span>' + it[2] + '</span></button>'; }).join('');
+      ITEMS.map(function (it) { return '<button class="it' + (it[0] === HERE || (HERE === 'dispatch' && it[0] === 'plan') ? ' on' : '') + '" data-k="' + it[0] + '" title="' + it[2] + '"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + it[1] + '</svg><span>' + it[2] + '</span></button>'; }).join('');
     document.body.appendChild(r);
     r.addEventListener('click', function (e) { var b = e.target.closest('.it'); if (b) go(b.dataset.k); });
   }
