@@ -2558,8 +2558,8 @@ html body #trafficMetarBox,html body #tmBody,html body #sbInfo,html body #alPerf
 .hg-bp .ln .dot.e{right:0;background:#0B1520;border:2px solid #38BDF8;width:10px;height:10px;margin-top:-5px}
 #alFlightPanel .hg-bp~.alf-bar{display:none!important}
 /* finitions */
-@keyframes hgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-html body #trafficMapWrapper .al-fold:not(.al-col)>*{animation:hgIn .22s ease both}
+@keyframes hgIn{from{opacity:0}to{opacity:1}}
+html body #trafficMapWrapper .al-fold:not(.al-col){animation:hgIn .22s ease both}   /* sur l'encadré seulement (à l'ouverture), pas sur son contenu redessiné chaque seconde */
 html body #trafficMapWrapper .leaflet-tooltip:not(.hg-apt-tip){background:rgba(9,14,21,.95)!important;color:#E6EDF5!important;border:1px solid rgba(125,211,252,.25)!important;
   border-radius:10px!important;box-shadow:0 8px 24px rgba(0,0,0,.45)!important;font:12px/1.4 "Segoe UI",Inter,sans-serif!important;padding:6px 10px!important}
 html body #trafficMapWrapper .leaflet-tooltip::before{display:none!important}
