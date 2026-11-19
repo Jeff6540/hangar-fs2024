@@ -303,6 +303,11 @@ R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>",
 R["fr"] += [("<tr><td>METAR · Vol libre</td>", "<tr><td>Mon vol · plan, piste et météo</td><td>Avec un plan SimBrief, un seul encadré réunit le plan, la piste et le vent, et la météo du départ et de l'arrivée. Quand il s'ouvre, la légende se replie toute seule pour laisser la place (clique sur « Légende » pour la rouvrir)</td></tr><tr><td>METAR · Vol libre</td>", "Mon vol · plan, piste et météo")]
 R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>My flight · plan, runway and weather</td><td>With a SimBrief plan, a single panel gathers the plan, the runway and wind, and the departure and arrival weather. When it opens, the legend folds away by itself to make room (click \"Legend\" to reopen it)</td></tr><tr><td>METAR · Free flight</td>", "My flight · plan, runway and weather")]
 
+
+# 12.7 : altitude conseillée
+R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF ;", "(à côté du choix Altitude, une pastille verte « Conseillé » propose une altitude de croisière selon la distance, l'avion et le sens du vol — niveau impair vers l'est, pair vers l'ouest, +500 ft en VFR — ; « Appliquer » la prend, survole-la pour voir le calcul) (Gros, Moyens, Aérodromes, chacun avec ON / OFF ;", "pastille verte « Conseillé »")]
+R["en"] += [("(Large, Medium, Airfields, each with ON / OFF;", "(next to the Altitude choice, a green \"Advised\" pill suggests a cruise altitude from the distance, the aircraft and the direction of flight — odd levels eastbound, even westbound, +500 ft in VFR —; \"Apply\" takes it, hover it to see the calculation) (Large, Medium, Airfields, each with ON / OFF;", "green \"Advised\" pill")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

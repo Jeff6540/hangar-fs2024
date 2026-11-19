@@ -1852,3 +1852,97 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_mrg127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 : altitude de croisière conseillée (distance, avion, sens du vol) ----
+ALT_TXT = {
+ "fr": {"adv": "Conseillé", "apply": "Appliquer", "why": "{d} NM · cap {c}° ({side}) · plafond {ac} {fl}", "east": "vers l'est : niveau impair", "west": "vers l'ouest : niveau pair",
+        "vfr": "En VFR, vole à {a} ft (+500 ft)", "short": "vol court : croisière basse"},
+ "en": {"adv": "Advised", "apply": "Apply", "why": "{d} NM · track {c}° ({side}) · {ac} ceiling {fl}", "east": "eastbound: odd level", "west": "westbound: even level",
+        "vfr": "In VFR, fly at {a} ft (+500 ft)", "short": "short flight: low cruise"},
+}
+ALT_CSS = r"""<style id="hangar-127-alt">
+.hg-adv{display:inline-flex;align-items:center;gap:6px;margin-left:6px;padding:3px 4px 3px 9px;border:1px solid rgba(34,197,94,.45);border-radius:999px;background:rgba(34,197,94,.10);
+  font:700 10.5px "Segoe UI",Inter,sans-serif;color:#86EFAC;white-space:nowrap;cursor:help}
+.hg-adv b{color:#FFFFFF;font-weight:800}
+.hg-adv button{border:0;border-radius:999px;background:#22C55E;color:#04210F;font:800 10px "Segoe UI",Inter,sans-serif;padding:3px 9px;cursor:pointer}
+.hg-adv button:hover{background:#4ADE80}
+.hg-adv.same{border-color:rgba(148,163,184,.3);background:transparent;color:#8FA3B8}.hg-adv.same button{display:none}
+.hg-adv-fms{display:flex;margin:6px 0 0}
+</style>"""
+ALT_JS = r"""<script id="hangar-127-alt-js">
+(function () {
+  var T = __TXT__;
+  var FAC = { heavy: 100, jet: 100, turboprop: 75, prop: 55 }, MIN = { heavy: 10000, jet: 8000, turboprop: 6000, prop: 3000 };
+  function nm(a, b, c, d) { var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2);
+    var h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y; return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(h))); }
+  function brg(a, b, c, d) { var r = Math.PI / 180, y = Math.sin((d - b) * r) * Math.cos(c * r), x = Math.cos(a * r) * Math.sin(c * r) - Math.sin(a * r) * Math.cos(c * r) * Math.cos((d - b) * r);
+    return (Math.atan2(y, x) / r + 360) % 360; }
+  function flTxt(a) { return a >= 18000 ? 'FL' + String(Math.round(a / 100)).padStart(3, '0') : a.toLocaleString() + ' ft'; }
+  /* calcul : distance × facteur de l'avion, sans dépasser son plafond, puis niveau pair/impair selon le sens (règle semi-circulaire) */
+  window.hgAdvisedAlt = function (dep, arr, ac) {
+    if (!dep || !arr || !Number.isFinite(+dep.lat) || !Number.isFinite(+arr.lat)) return null;
+    var d = nm(+dep.lat, +dep.lon, +arr.lat, +arr.lon), c = brg(+dep.lat, +dep.lon, +arr.lat, +arr.lon);
+    var cat = FAC[ac.cat] ? ac.cat : 'jet', ceil = parseInt(String(ac.fl || '').replace(/[^0-9]/g, ''), 10) * 100 || (cat === 'prop' ? 12000 : 37000);
+    var alt = Math.max(MIN[cat], Math.min(ceil, d * FAC[cat]));
+    var k = Math.floor(alt / 1000), east = c < 180;
+    if ((k % 2 === 1) !== east) k -= 1;                    /* vers l'est : impair ; vers l'ouest : pair */
+    if (k * 1000 > ceil) k -= 2;
+    if (k * 1000 < Math.min(MIN[cat], ceil)) k += 2;
+    if (k < 1) k = east ? 1 : 2;
+    return { alt: k * 1000, d: Math.round(d), c: Math.round(c), east: east, ceil: ceil, short: d * FAC[cat] < MIN[cat] };
+  };
+  function acNow() {
+    var s = document.getElementById('aircraftSelect'); if (!s || !s.value) return null;
+    return { code: s.value, fl: s.getAttribute('data-fl'), cat: s.getAttribute('data-cat') };
+  }
+  function vfr() { try { return flightType === 'VFR'; } catch (e) { return false; } }
+  function cur() { try { return selectedCruiseAltitudeFt; } catch (e) { return null; } }
+  function pill(id, anchor, after) {
+    var p = document.getElementById(id);
+    if (!p) { if (!anchor) return null; p = document.createElement('span'); p.id = id; p.className = 'hg-adv'; after ? anchor.parentNode.insertBefore(p, anchor.nextSibling) : anchor.appendChild(p); }
+    return p;
+  }
+  function paint(p, r, ac) {
+    if (!p) return;
+    if (!r || !ac) { p.style.display = 'none'; return; }
+    p.style.display = '';
+    var key = r.alt + '|' + r.d + '|' + ac.code + '|' + vfr() + '|' + (cur() === r.alt);
+    if (p.dataset.k === key) return; p.dataset.k = key;
+    var why = T.why.replace('{d}', r.d).replace('{c}', String(r.c).padStart(3, '0')).replace('{side}', r.east ? T.east : T.west).replace('{ac}', ac.code).replace('{fl}', flTxt(r.ceil)) +
+              (r.short ? ' · ' + T.short : '') + (vfr() ? '\n' + T.vfr.replace('{a}', (r.alt + 500).toLocaleString()) : '');
+    p.title = why;
+    p.classList.toggle('same', cur() === r.alt);
+    p.innerHTML = '✓ ' + T.adv + ' <b>' + flTxt(r.alt) + (vfr() ? ' (+500)' : '') + '</b><button type="button">' + T.apply + '</button>';
+    p.querySelector('button').onclick = function (e) { e.stopPropagation(); try { setCruiseAltitude(String(r.alt), 'map'); } catch (x) {} p.dataset.k = ''; };
+  }
+  setInterval(function () {
+    var ac = acNow(), dep = null, arr = null;
+    try { dep = interactiveDep || currentDep; arr = interactiveArr || currentArr; } catch (e) {}
+    var r = ac ? window.hgAdvisedAlt(dep, arr, ac) : null;
+    var mapSel = document.getElementById('mapCruiseAltitudeSelect');
+    paint(pill('hgAdvMap', mapSel ? mapSel.parentNode : null, true), r, ac);
+    var fms = document.getElementById('cruiseAltitudeSelect');
+    var pf = document.getElementById('hgAdvFms');
+    if (!pf && fms) { pf = document.createElement('span'); pf.id = 'hgAdvFms'; pf.className = 'hg-adv hg-adv-fms'; fms.parentNode.appendChild(pf); }
+    var r2 = null; try { r2 = ac ? window.hgAdvisedAlt(currentDep, currentArr, ac) : null; } catch (e) {}
+    paint(pf, r2, ac);
+  }, 800);
+})();
+</script>"""
+
+
+def patch_alt127(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-127-alt" in s:
+        return
+    import json
+    s = s.replace("</head>", ALT_CSS + "</head>", 1)
+    s = s.replace("</body>", ALT_JS.replace("__TXT__", json.dumps(ALT_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_alt127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
