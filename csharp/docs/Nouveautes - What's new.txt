@@ -1,9 +1,14 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.6
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.7
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.7 — nouveau look de la carte de suivi
+- Boutons de la barre tous du même style : allumé = contour bleu ciel, la couleur de chaque calque devient une petite pastille.
+- Encadrés sur la carte (légende, météo, piste et vent, VA) en verre fumé, avec la même police et plus d'espace.
+- METAR en tableau de bord : vent avec flèche, visibilité, nuages, température, QNH et pastille VFR / MVFR / IFR / LIFR ; le METAR brut se déplie en dessous.
 
 Version 12.6 — carte de suivi plus propre, vol libre, plans .PLN
 - Quand tu termines le vol dans Vol SimBrief, la carte de suivi se remet à zéro : plus de plan, de trajectoire, de METAR ni de piste et vent de l'ancien vol.
@@ -58,6 +63,11 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.7 — new look for the tracking map
+- Bar buttons all share one style: on = sky-blue outline, each layer's colour becomes a small dot.
+- Map panels (legend, weather, runway and wind, VA) in smoked glass, with the same font and more space.
+- METAR as a dashboard: wind with arrow, visibility, clouds, temperature, QNH and a VFR / MVFR / IFR / LIFR badge; the raw METAR unfolds below.
 
 Version 12.6 — cleaner tracking map, free flight, .PLN plans
 - When you end the flight in SimBrief flight, the tracking map resets: no more plan, track, METAR or runway and wind from the previous flight.

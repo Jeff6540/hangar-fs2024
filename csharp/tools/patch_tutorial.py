@@ -265,6 +265,13 @@ R["en"] += [("distance, flight time and runway compatibility with your aircraft.
 R["fr"] += [("<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>", "<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3><p>La barre du haut tient sur deux lignes. En haut : Menu principal, le titre, le groupe <b>VA FSHub</b> (ta VA, toutes les VA, rayon), l'état du relais et de SimBrief, puis <b>Tout réduire / Tout déplier</b> et la croix. En bas : le groupe <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan) et, juste sous VA FSHub, le groupe <b>Carte</b> (Trafic IA, Au sol, Suivre mon avion, Aéroports, Noms, Taxiways).</p>", "juste sous VA FSHub")]
 R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>", "<h3>The tracking window (\"Open tracking\" button)</h3><p>The top bar uses two rows. Top: Main menu, the title, the <b>FSHub VA</b> group (your VA, all VAs, radius), the relay and SimBrief status, then <b>Collapse all / Expand all</b> and the cross. Bottom: the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center on plan) and, right below FSHub VA, the <b>Map</b> group (AI traffic, On ground, Follow my aircraft, Airports, Names, Taxiways).</p>", "right below FSHub VA")]
 
+
+# 12.7 : METAR en tableau de bord, boutons unifiés
+R["fr"] += [("<tr><td>METAR · Mon plan</td><td>Météo du départ et de l'arrivée, actualisée toutes les 60 s</td></tr>",
+  "<tr><td>METAR · Mon plan</td><td>Météo du départ et de l'arrivée, actualisée toutes les 60 s, en petites cases : vent (la flèche montre où il souffle), visibilité, nuages, température / rosée, QNH. La pastille de couleur donne la catégorie : <b>VFR</b> vert, <b>MVFR</b> bleu, <b>IFR</b> rouge, <b>LIFR</b> violet. « METAR brut » déplie le texte d'origine. Dans la barre, un bouton allumé a un contour bleu ciel ; sa pastille rappelle la couleur du calque sur la carte</td></tr>", "LIFR</b> violet")]
+R["en"] += [("<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s</td></tr>",
+  "<tr><td>METAR · My plan</td><td>Departure and arrival weather, refreshed every 60 s, in small boxes: wind (the arrow shows where it blows), visibility, clouds, temperature / dew point, QNH. The coloured badge gives the category: <b>VFR</b> green, <b>MVFR</b> blue, <b>IFR</b> red, <b>LIFR</b> purple. \"Raw METAR\" unfolds the original text. In the bar, a switched-on button has a sky-blue outline; its dot recalls the layer's colour on the map</td></tr>", "LIFR</b> purple")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

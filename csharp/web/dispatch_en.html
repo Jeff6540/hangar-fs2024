@@ -2489,6 +2489,52 @@ html body #trafficMapModal>.avionics-panel.hg-lay{display:flex!important;flex-di
 #trafficMapModal .hg-gl{font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8B98A9;white-space:nowrap;margin-right:2px}
 html body #trafficMapModal .hg-grp>div[class*="border"]{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
 #trafficMapModal .hg-status{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+</style><style id="hangar-127-look">
+/* --- barre : un seul style de bouton, allumé = contour bleu ciel ; la couleur du calque devient une pastille --- */
+html body #trafficMapModal #hgRow1 button.hg-tg,html body #trafficMapModal #hgRow2 button.hg-tg,
+html body #trafficMapModal #hgRow1 button.hg-act,html body #trafficMapModal #hgRow2 button.hg-act{
+  background:#121A24!important;color:#A9B6C6!important;border:1px solid #273343!important;border-radius:999px!important;box-shadow:none!important;
+  padding:6px 13px 6px 11px!important;font:650 11px/1.2 "Segoe UI Variable Text","Segoe UI",Inter,sans-serif!important;letter-spacing:.03em!important;
+  transition:background .15s,border-color .15s,color .15s!important;opacity:1!important;text-shadow:none!important}
+html body #trafficMapModal #hgRow1 button.hg-tg *,html body #trafficMapModal #hgRow2 button.hg-tg *,
+html body #trafficMapModal #hgRow1 button.hg-act *,html body #trafficMapModal #hgRow2 button.hg-act *{color:inherit!important}
+html body #trafficMapModal #hgRow1 button.hg-tg::before,html body #trafficMapModal #hgRow2 button.hg-tg::before{
+  content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dot,#64748B);margin-right:7px;vertical-align:1px;opacity:.45;transition:opacity .15s,box-shadow .15s}
+html body #trafficMapModal #hgRow1 button.hg-tg.on,html body #trafficMapModal #hgRow2 button.hg-tg.on{
+  background:linear-gradient(180deg,rgba(56,189,248,.20),rgba(56,189,248,.08))!important;border-color:rgba(56,189,248,.85)!important;color:#F1F5F9!important}
+html body #trafficMapModal #hgRow1 button.hg-tg.on::before,html body #trafficMapModal #hgRow2 button.hg-tg.on::before{opacity:1;box-shadow:0 0 8px var(--dot,#38BDF8)}
+html body #trafficMapModal #hgRow1 button.hg-tg:hover,html body #trafficMapModal #hgRow2 button.hg-tg:hover,
+html body #trafficMapModal #hgRow1 button.hg-act:hover,html body #trafficMapModal #hgRow2 button.hg-act:hover{border-color:rgba(125,211,252,.7)!important;color:#FFFFFF!important}
+html body #trafficMapModal #hgRow2 button.hg-act.pri{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+html body #trafficMapModal #hgRow2 button.hg-act.pri:hover{background:#7DD3FC!important;color:#06202C!important}
+html body #trafficMapModal #hgRow1 #alFshubRad{background:#121A24!important;color:#C9D4E0!important;border:1px solid #273343!important;border-radius:999px!important;padding:5px 10px!important;font:650 11px "Segoe UI",Inter,sans-serif!important}
+#trafficMapModal .hg-grp{border-color:#1C2633!important;background:rgba(9,13,19,.72)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+
+/* --- encadrés sur la carte : même verre fumé, même police, plus d'air --- */
+html body #trafficMapWrapper .al-fold:not(.al-col){background:rgba(9,14,21,.93)!important;border:1px solid rgba(125,211,252,.20)!important;border-radius:14px!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.45)!important;color:#DCE6F0!important;font-family:"Segoe UI Variable Text","Segoe UI",Inter,sans-serif!important;padding:10px 12px!important}
+html body #trafficMapWrapper .al-fold.al-col{background:rgba(9,14,21,.90)!important;box-shadow:0 6px 18px rgba(0,0,0,.4)!important}
+html body #trafficMetarBox,html body #tmBody,html body #sbInfo,html body #alPerfSolo,html body #alPerf{font-family:"Segoe UI Variable Text","Segoe UI",Inter,sans-serif!important;font-size:12px!important;line-height:1.45!important}
+
+/* --- METAR en tableau de bord --- */
+.hm{margin:2px 0 10px}
+.hm-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.hm-t{font:700 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.1em;color:#7DD3FC;text-transform:uppercase}
+.hm-i{font:800 14px "Segoe UI",Inter,sans-serif;color:#FFFFFF;letter-spacing:.04em}
+.hm-n{font-size:11px;color:#8FA3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.hm-c{font:800 10px "Segoe UI",Inter,sans-serif;letter-spacing:.06em;padding:2px 8px;border-radius:999px;color:#06121C}
+.hm-c.VFR{background:#22C55E}.hm-c.MVFR{background:#3B82F6;color:#fff}.hm-c.IFR{background:#EF4444;color:#fff}.hm-c.LIFR{background:#D946EF;color:#fff}
+.hm-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+.hm-k{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px 8px;min-width:0}
+.hm-l{font:700 9px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7F93A8}
+.hm-v{font:700 13px/1.25 "Segoe UI",Inter,sans-serif;color:#F1F5F9;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.hm-v small{font-size:10.5px;color:#9FB3C8;font-weight:600}
+.hm-v svg{flex:none}
+.hm-raw{margin-top:6px}
+.hm-raw summary{cursor:pointer;font-size:10.5px;color:#7F93A8;list-style:none}
+.hm-raw summary::before{content:"▸ "}.hm-raw[open] summary::before{content:"▾ "}
+.hm-raw code{display:block;margin-top:4px;font:11px/1.4 ui-monospace,Consolas,monospace;color:#C8D3DF;white-space:normal;word-break:break-word}
+.hm-wait{color:#8FA3B8;font-size:11.5px}.hm-no{color:#F5A524;font-size:11.5px}
 </style></head>
 <body class="flex flex-col">
 
@@ -5820,6 +5866,77 @@ ${waypoint(arr)}
   }
   setInterval(layout, 1000);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', layout); else layout();
+})();
+</script><script id="hangar-127-look-js">
+(function () {
+  var T = {"wind": "Wind", "vis": "Visibility", "cloud": "Clouds", "temp": "Temp / dew", "qnh": "QNH", "raw": "Raw METAR", "calm": "calm", "var": "variable", "gust": "gusts", "clear": "clear", "load": "loading…", "none": "METAR not available", "more": "≥ 10 km"};
+  /* boutons : même style partout, une pastille de la couleur du calque */
+  var TG = [['trafficToggleBtn', '#38BDF8', 'aria'], ['trafficShowGroundBtn', '#94A3B8', 'aria'], ['trafficFollowBtn', '#F59E0B', 'aria'],
+            ['hgAptBtn', '#7DD3FC', 'aria'], ['hgAptNamesBtn', '#CBD5E1', 'aria'], ['alAerowayBtn', '#FACC15', 'off'],
+            ['alFshubBtn', '#F5B731', 'off'], ['alFshubAllBtn', '#C04FCF', 'off']];
+  function skin() {
+    TG.forEach(function (d) {
+      var b = document.getElementById(d[0]); if (!b) return;
+      b.classList.add('hg-tg'); b.style.setProperty('--dot', d[1]);
+      var on = d[2] === 'aria' ? b.getAttribute('aria-pressed') === 'true' : !b.classList.contains('off');
+      b.classList.toggle('on', on);
+    });
+    var acts = [document.querySelector('#trafficMapModal button[onclick="importSimbriefPlan()"]'), document.getElementById('hgPlnBtn'),
+                document.querySelector('#trafficMapModal button[onclick="fitSimbriefPlan()"]'), document.getElementById('alFoldAll')];
+    acts.forEach(function (b, i) { if (b) { b.classList.add('hg-act'); if (i === 0) b.classList.add('pri'); } });
+    var m = document.querySelector('#hgRow1 button[onclick="closeTrafficMapModal()"]:not(.w-6)'); if (m) m.classList.add('hg-act');
+  }
+  setInterval(skin, 400);
+
+  /* METAR : vent, visibilité, nuages, température, QNH et catégorie de vol, le METAR brut à déplier */
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function parse(raw) {
+    var r = { }, s = ' ' + String(raw).split(/\s(?:TEMPO|BECMG|NOSIG|RMK|TREND)\s/)[0] + ' ';   /* partie observée seulement, sans la tendance */
+    var w = s.match(/\s(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)\s/);
+    if (w) { var k = w[4] === 'MPS' ? 1.944 : 1; r.dir = w[1]; r.spd = Math.round(parseInt(w[2], 10) * k); r.gust = w[3] ? Math.round(parseInt(w[3], 10) * k) : 0; }
+    if (/\sCAVOK\s/.test(s)) { r.vis = 10; r.cavok = true; }
+    else {
+      var v = s.match(/\s(\d{4})(?:NDV)?\s/), sm = s.match(/\s(?:(\d+)\s)?(\d+)(?:\/(\d+))?SM\s/);
+      if (v) r.vis = parseInt(v[1], 10) >= 9999 ? 10 : parseInt(v[1], 10) / 1000;
+      else if (sm) { var mi = (sm[1] ? +sm[1] : 0) + (sm[3] ? (+sm[2]) / (+sm[3]) : +sm[2]); r.vis = mi * 1.609; }
+    }
+    var cl = [], re = /\s(FEW|SCT|BKN|OVC|VV)(\d{3})/g, m;
+    while ((m = re.exec(s))) { cl.push([m[1], parseInt(m[2], 10) * 100]); re.lastIndex--; }
+    r.clouds = cl;
+    var ceil = cl.filter(function (c) { return c[0] === 'BKN' || c[0] === 'OVC' || c[0] === 'VV'; }).map(function (c) { return c[1]; });
+    r.ceil = ceil.length ? Math.min.apply(null, ceil) : null;
+    var t = s.match(/\s(M?\d{2})\/(M?\d{2})?\s/);
+    if (t) { var f = function (x) { return x ? (x[0] === 'M' ? -parseInt(x.slice(1), 10) : parseInt(x, 10)) : null; }; r.t = f(t[1]); r.dp = f(t[2]); }
+    var q = s.match(/\sQ(\d{4})\s/), a = s.match(/\sA(\d{4})\s/);
+    if (q) r.qnh = q[1] + ' hPa'; else if (a) r.qnh = (parseInt(a[1], 10) / 100).toFixed(2) + ' inHg';
+    var c = 'VFR', ce = r.ceil == null ? 99999 : r.ceil, vi = r.vis == null ? 99 : r.vis;
+    if (ce < 500 || vi < 1.6) c = 'LIFR'; else if (ce < 1000 || vi < 4.8) c = 'IFR'; else if (ce <= 3000 || vi <= 8) c = 'MVFR';
+    r.cat = (r.vis == null && r.ceil == null && !r.cavok) ? '' : c;
+    return r;
+  }
+  function arrow(dir) {   /* flèche dans le sens où souffle le vent */
+    return '<svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(' + ((+dir + 180) % 360) + 'deg)"><path d="M8 1 L12.5 13 L8 10.3 L3.5 13 Z" fill="#7DD3FC"/></svg>';
+  }
+  function tile(l, v) { return '<div class="hm-k"><div class="hm-l">' + l + '</div><div class="hm-v">' + v + '</div></div>'; }
+  tmCard = function (title, icao, raw) {
+    var ap = null; try { ap = airportsDB[icao]; } catch (e) {}
+    var name = ap ? (ap.city && ap.name.indexOf(ap.city) < 0 ? ap.city + ' · ' + ap.name : ap.name) : '';
+    var body = '', cat = '';
+    if (!icao) body = '<div class="hm-wait">—</div>';
+    else if (raw === '…') body = '<div class="hm-wait">' + T.load + '</div>';
+    else if (!raw) body = '<div class="hm-no">' + T.none + '</div>';
+    else {
+      var p = parse(raw), tiles = [];
+      if (p.dir != null) tiles.push(tile(T.wind, p.spd === 0 ? T.calm : (p.dir === 'VRB' ? T['var'] : arrow(p.dir) + p.dir + '°') + ' ' + p.spd + ' kt' + (p.gust ? ' <small>' + T.gust + ' ' + p.gust + '</small>' : '')));
+      if (p.vis != null) tiles.push(tile(T.vis, p.vis >= 10 ? T.more : (p.vis < 5 ? p.vis.toFixed(1) : Math.round(p.vis)) + ' km'));
+      tiles.push(tile(T.cloud, p.cavok ? 'CAVOK' : (p.clouds.length ? p.clouds.slice(0, 2).map(function (c) { return c[0] + ' <small>' + c[1].toLocaleString() + ' ft</small>'; }).join(' ') : T.clear)));
+      if (p.t != null) tiles.push(tile(T.temp, p.t + '° <small>/ ' + (p.dp != null ? p.dp + '°' : '—') + '</small>'));
+      if (p.qnh) tiles.push(tile(T.qnh, p.qnh));
+      cat = p.cat ? '<span class="hm-c ' + p.cat + '">' + p.cat + '</span>' : '';
+      body = '<div class="hm-g">' + tiles.join('') + '</div><details class="hm-raw"><summary>' + T.raw + '</summary><code>' + esc(raw) + '</code></details>';
+    }
+    return '<div class="hm"><div class="hm-h"><span class="hm-t">' + esc(title) + '</span><span class="hm-i">' + esc(icao || '----') + '</span><span class="hm-n">' + esc(name) + '</span>' + cat + '</div>' + body + '</div>';
+  };
 })();
 </script></body>
 </html>
