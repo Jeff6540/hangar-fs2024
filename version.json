@@ -1,6 +1,6 @@
 {
-  "version": "12.5",
+  "version": "12.6",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Aéroports sur la carte de suivi : bouton AÉROPORTS (codes OACI selon le zoom), bouton NOMS, nom au survol",
-  "notes_en": "Airports on the tracking map: AIRPORTS button (ICAO codes by zoom level), NAMES button, name on hover"
+  "notes_fr": "Carte de suivi remise à zéro en fin de vol, METAR en vol libre, import .PLN, barre rangée en groupes ; aérodromes sans code OACI masqués",
+  "notes_en": "Tracking map resets at end of flight, free-flight METAR, .PLN import, toolbar in groups; airfields without ICAO code hidden"
 }
