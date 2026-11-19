@@ -6147,17 +6147,18 @@ ${waypoint(arr)}
     var cum = 0, pl = lat0, po = lon0, prof = [[0, parseInt(o.elevation, 10) || 0]], route = [[lat0, lon0]], toc = null, tod = null;
     fx.forEach(function (f) {
       var la = parseFloat(f.pos_lat), lo = parseFloat(f.pos_long); if (!Number.isFinite(la) || !Number.isFinite(lo)) return;
-      cum += nm(pl, po, la, lo); pl = la; po = lo; route.push([+la.toFixed(4), +lo.toFixed(4)]);
+      var leg = parseFloat(f.distance); cum += Number.isFinite(leg) && leg >= 0 ? leg : nm(pl, po, la, lo); pl = la; po = lo; route.push([+la.toFixed(4), +lo.toFixed(4)]);   /* distances des étapes SimBrief (SID et STAR comprises) */
       var al = parseInt(f.altitude_feet, 10); if (Number.isFinite(al)) prof.push([+cum.toFixed(1), al]);
       if (f.ident === 'TOC') toc = +cum.toFixed(1); if (f.ident === 'TOD') tod = +cum.toFixed(1);
     });
     var la1 = parseFloat(d.pos_lat), lo1 = parseFloat(d.pos_long);
-    if (Number.isFinite(la1)) { cum += nm(pl, po, la1, lo1); route.push([la1, lo1]); prof.push([+cum.toFixed(1), parseInt(d.elevation, 10) || 0]); }
+    var lastFx = fx[fx.length - 1], endsAtDest = lastFx && String(lastFx.ident || '').toUpperCase() === String(d.icao_code || '').toUpperCase();
+    if (Number.isFinite(la1)) { if (!endsAtDest) cum += nm(pl, po, la1, lo1); route.push([la1, lo1]); prof.push([+cum.toFixed(1), parseInt(d.elevation, 10) || 0]); }
     var units = String((data.params || {}).units || 'kgs').toLowerCase(), k = /lb/.test(units) ? 0.45359237 : 1;
     var fu = data.fuel || {}, ti = data.times || {};
-    return { dep: String(o.icao_code || '').toUpperCase(), arr: String(d.icao_code || '').toUpperCase(),
+    return { pv: 2, dep: String(o.icao_code || '').toUpperCase(), arr: String(d.icao_code || '').toUpperCase(),
       fuel: fu.est_burn ? Math.round(parseFloat(fu.est_burn) * k) : null, block: ti.est_block ? Math.round(ti.est_block / 60) : null,
-      air: ti.est_time_enroute ? Math.round(ti.est_time_enroute / 60) : null, dist: +cum.toFixed(0), cruise: parseInt((data.general || {}).initial_altitude, 10) || null,
+      air: ti.est_time_enroute ? Math.round(ti.est_time_enroute / 60) : null, dist: parseInt((data.general || {}).route_distance, 10) || +cum.toFixed(0),   /* même distance que SimBrief */ cruise: parseInt((data.general || {}).initial_altitude, 10) || null,
       prof: prof, route: route.length > 400 ? route.filter(function (_, i) { return i % 2 === 0; }) : route, toc: toc, tod: tod,
       type: (data.aircraft || {}).icaocode || '', cs: (data.atc || {}).callsign || '', segs: segsOf(data, lat0, lon0) };
   }
@@ -6179,7 +6180,7 @@ ${waypoint(arr)}
   function attachPlan() {
     if (!rec) return;
     var p = planInfo(window.alPlanFull); if (!p) return;
-    if (rec.plan && rec.plan.dep === p.dep && rec.plan.arr === p.arr && (rec.plan.segs || !p.segs)) return;
+    if (rec.plan && rec.plan.dep === p.dep && rec.plan.arr === p.arr && rec.plan.pv === 2 && (rec.plan.segs || !p.segs)) return;
     if (rec.dep && p.dep && rec.dep !== p.dep && rec.tko) return;   /* le plan ne correspond pas à ce vol */
     rec.plan = p; rec.dep = p.dep || rec.dep; rec.arr = p.arr || rec.arr; rec.type = p.type || rec.type; rec.cs = p.cs || rec.cs; rec.free = false;
   }
