@@ -887,6 +887,7 @@ FLT_JS = r"""<script id="hangar-126-flt-js">
   function pollPlan() {
     fetch(RELAY + '/plan-current', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (p) {
       var has = !!(p && p.has);
+      window.hgAppHasPlan = has;
       if (hadPlan === true && !has) clearPlan(false);
       hadPlan = has;
     }).catch(function () {});
@@ -961,10 +962,12 @@ FLT_JS = r"""<script id="hangar-126-flt-js">
 
 TRACK_OLD_LOAD = "  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts) return t; } catch (e) {} return { sig: '', pts: [] }; }"
 TRACK_NEW_LOAD = ("  /* 12.6 : une trajectoire non mise à jour depuis 30 min (vol terminé, appli fermée) n'est pas reprise */\n"
-                  "  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts && (!t.t || Date.now() - t.t < 30 * 60000)) return t; } catch (e) {} return { sig: '', pts: [] }; }")
+                  "  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts && t.t && Date.now() - t.t < 30 * 60000) return t; } catch (e) {} return { sig: '', pts: [] }; }")
 TRACK_OLD_SAVE = "  function save() { try { localStorage.setItem(KEY, JSON.stringify(tr)); } catch (e) {} }"
 TRACK_NEW_SAVE = ("  function save() { tr.t = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(tr)); } catch (e) {} }\n"
                   "  window.alTrackReset = function () { tr = { sig: '', pts: [] }; save(); draw(); };")
+FETCH_OLD = "    if (plan || Date.now() - lastPlanTry < 60000) return;"
+FETCH_NEW = "    if (plan || window.hgAppHasPlan !== true || Date.now() - lastPlanTry < 60000) return;   /* 12.6 : seulement si un vol est préparé dans Hangar FS 2024 */"
 PLAN_OLD = "  function takePlan(data) {"
 PLAN_NEW = ("  window.addEventListener('al-plan-clear', function () { plan = null; });   /* 12.6 : vol terminé dans Hangar FS 2024 */\n"
             "  function takePlan(data) {")
@@ -975,7 +978,7 @@ def patch_flt126(path, lang):
     if 'hangar-126-flt' in s:
         return
     import json
-    for a, b in ((TRACK_OLD_LOAD, TRACK_NEW_LOAD), (TRACK_OLD_SAVE, TRACK_NEW_SAVE), (PLAN_OLD, PLAN_NEW)):
+    for a, b in ((TRACK_OLD_LOAD, TRACK_NEW_LOAD), (TRACK_OLD_SAVE, TRACK_NEW_SAVE), (PLAN_OLD, PLAN_NEW), (FETCH_OLD, FETCH_NEW)):
         assert s.count(a) == 1, (path, a[:50])
         s = s.replace(a, b)
     s = s.replace("</head>", FLT_CSS + "</head>", 1)

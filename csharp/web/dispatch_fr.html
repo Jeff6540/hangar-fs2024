@@ -669,7 +669,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
   }, 250);
   var lastPlanTry = 0;
   function fetchPlan() {
-    if (plan || Date.now() - lastPlanTry < 60000) return;
+    if (plan || window.hgAppHasPlan !== true || Date.now() - lastPlanTry < 60000) return;   /* 12.6 : seulement si un vol est préparé dans Hangar FS 2024 */
     lastPlanTry = Date.now();
     var u = ''; try { u = localStorage.getItem('avd_simbrief_user') || ''; } catch (e) {}
     if (!u) return;
@@ -913,7 +913,7 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
   var RELAY = 'http://localhost:8765', KEY = 'al_mytrack_v1', MAXPTS = 6000, MAXAGE_H = 12;
   var tr = load(), line = null, live = null, lastPos = null;
   /* 12.6 : une trajectoire non mise à jour depuis 30 min (vol terminé, appli fermée) n'est pas reprise */
-  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts && (!t.t || Date.now() - t.t < 30 * 60000)) return t; } catch (e) {} return { sig: '', pts: [] }; }
+  function load() { try { var t = JSON.parse(localStorage.getItem(KEY)); if (t && t.pts && t.t && Date.now() - t.t < 30 * 60000) return t; } catch (e) {} return { sig: '', pts: [] }; }
   function save() { tr.t = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(tr)); } catch (e) {} }
   window.alTrackReset = function () { tr = { sig: '', pts: [] }; save(); draw(); };
   function map() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }
@@ -5698,6 +5698,7 @@ ${waypoint(arr)}
   function pollPlan() {
     fetch(RELAY + '/plan-current', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (p) {
       var has = !!(p && p.has);
+      window.hgAppHasPlan = has;
       if (hadPlan === true && !has) clearPlan(false);
       hadPlan = has;
     }).catch(function () {});
