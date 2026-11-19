@@ -673,7 +673,8 @@ APT_CSS = r"""<style id="hangar-124-apt">
 .hg-apt .n{display:block;font-weight:500;font-size:9px;color:#B6C6D6;max-width:150px;overflow:hidden;text-overflow:ellipsis}
 .leaflet-tooltip.hg-apt-tip{background:#0E1A24;color:#E6EDF5;border:1px solid #1F5E7E;border-radius:8px;font:12px/1.35 system-ui,Segoe UI,sans-serif;padding:5px 9px}
 .leaflet-tooltip.hg-apt-tip:before{display:none}
-#hgAptBtn[aria-pressed="true"],#hgAptNamesBtn[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
+html body #trafficMapModal>.avionics-panel button#hgAptBtn,html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn{background:#1A2633!important;color:#9FB3C8!important;border:1px solid #33475A!important;opacity:1!important}
+html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],html body #trafficMapModal>.avionics-panel button#hgAptNamesBtn[aria-pressed="true"]{background:#38BDF8!important;color:#06202C!important;border-color:transparent!important}
 </style>"""
 APT_JS = r"""<script id="hangar-124-apt-js">
 (function () {
@@ -704,7 +705,9 @@ APT_JS = r"""<script id="hangar-124-apt-js">
       if (z < MINZ[order[t]]) continue;
       var L0 = lists[order[t]];
       for (var i = 0; i < L0.length && n < MAX; i++) {
-        var a = L0[i]; if (!b.contains([a.lat, a.lon])) continue;
+        var a = L0[i];
+        if (!/^[A-Z][A-Z0-9]{3}$/.test(a.icao)) continue;   /* sans vrai code OACI (ex. FR-0931 : petits terrains privés) : on n'affiche pas */
+        if (!b.contains([a.lat, a.lon])) continue;
         var html = '<span class="d"></span><span class="c">' + esc(a.icao) + (names ? '<span class="n">' + esc(a.name) + '</span>' : '') + '</span>';
         var mk = L.marker([a.lat, a.lon], { icon: L.divIcon({ className: 'hg-apt ' + CLS[order[t]], html: html, iconSize: [0, 0] }),
                                             pane: 'hgApt', keyboard: false, interactive: true, bubblingMouseEvents: true });
