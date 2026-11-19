@@ -492,6 +492,13 @@ namespace HangarFS2024
                         r.Text("ok", "text/plain");
                         return;
                     }
+                case "/journal-list": r.Text(Journal.List().ToString(Formatting.None), "application/json; charset=utf-8"); return;
+                case "/journal-get":
+                    {
+                        string jid; q.TryGetValue("id", out jid);
+                        r.Text(Journal.Get(jid), "application/json; charset=utf-8");
+                        return;
+                    }
                 case "/favicon.png": case "/favicon.ico":
                     r.ContentType = "image/png"; r.Body = WebResource("favicon.png"); return;
             }

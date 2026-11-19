@@ -11,6 +11,8 @@ Version 12.7 — nouveau look de la carte de suivi
 - METAR en tableau de bord : vent avec flèche, visibilité, nuages, température, QNH et pastille VFR / MVFR / IFR / LIFR ; le METAR brut se déplie en dessous.
 - Piste et vent en dessin : la piste orientée, la flèche du vent, et les vents de face / arrière / travers en couleur (vert, orange, rouge).
 - Vol en cours façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux.
+- Nouveau JOURNAL DE VOL : frise des phases (porte, roulage, décollage, montée, croisière, descente, approche, atterrissage, roulage, porte d'arrivée) avec temps, carburant, vitesses, vario et taux de toucher ; résumé comparé au plan SimBrief ; profil du vol sol-sol avec TOC et TOD ; carte de ta route seule ; historique de tes vols.
+- Menu repliable à gauche sur Avionics Dispatch, la carte des scènes et le tutoriel : retour à l'accueil ou à n'importe quelle page en un clic.
 - Bibliothèque et Community : la croix ✕ revient dans la case de recherche pour la vider d'un clic (ou touche Échap).
 - Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
 
@@ -74,6 +76,8 @@ Version 12.7 — new look for the tracking map
 - METAR as a dashboard: wind with arrow, visibility, clouds, temperature, QNH and a VFR / MVFR / IFR / LIFR badge; the raw METAR unfolds below.
 - Runway and wind as a drawing: the runway oriented, the wind arrow, and head / tail / cross wind in colour (green, orange, red).
 - Current flight as a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them.
+- New FLIGHT LOG: phase timeline (gate, taxi, takeoff, climb, cruise, descent, approach, landing, taxi, arrival gate) with times, fuel, speeds, vertical speed and touchdown rate; summary compared with the SimBrief plan; ground-to-ground flight profile with TOC and TOD; map of your route only; history of your flights.
+- Collapsible menu on the left of Avionics Dispatch, the sceneries map and the tutorial: back to the home page or any page in one click.
 - Library and Community: the ✕ cross is back in the search box to clear it in one click (or the Esc key).
 - Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.
 

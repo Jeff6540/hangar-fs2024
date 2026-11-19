@@ -36,6 +36,19 @@ namespace HangarFS2024
                     var cw = web.CoreWebView2;
                     cw.Settings.IsStatusBarEnabled = false;
                     cw.NewWindowRequested += (o, a) => { a.Handled = true; OpenExternal(a.Uri); };
+                    // menu repliable des pages : {nav:"lib"|"vol"|"map"|"dispatch"|"journal"|…} → fenêtre principale
+                    cw.WebMessageReceived += (o, m) =>
+                    {
+                        try
+                        {
+                            var j = Newtonsoft.Json.Linq.JObject.Parse(m.WebMessageAsJson);
+                            if (j["journalSave"] is Newtonsoft.Json.Linq.JObject) { Journal.Save((Newtonsoft.Json.Linq.JObject)j["journalSave"]); return; }
+                            if (j["journalDelete"] != null) { Journal.Delete(JsonStore.Str(j["journalDelete"])); return; }
+                            string nav = JsonStore.Str(j["nav"]);
+                            if (nav != "" && NavRequested != null) NavRequested(nav);
+                        }
+                        catch (Exception) { }
+                    };
                     cw.DocumentTitleChanged += (o, a) => { if (!string.IsNullOrEmpty(cw.DocumentTitle) && !cw.DocumentTitle.StartsWith("http")) Text = cw.DocumentTitle; };
                     // F5 recharge la page, comme dans la 11.8
                     web.KeyDown += (o, a) => { if (a.KeyCode == Keys.F5) cw.Reload(); };
@@ -47,6 +60,14 @@ namespace HangarFS2024
                     Close();
                 }
             };
+        }
+
+        public static event Action<string> NavRequested;
+
+        /// <summary>Envoie un message à la page (ex. ouvrir le journal de vol).</summary>
+        public void PostJson(string json)
+        {
+            try { if (web.CoreWebView2 != null) web.CoreWebView2.PostWebMessageAsJson(json); } catch (Exception) { }
         }
 
         public static void OpenExternal(string u)

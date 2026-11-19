@@ -277,6 +277,27 @@ R["en"] += [("<tr><td>METAR · My plan</td><td>Departure and arrival weather, re
 R["fr"] += [("<tr><td>METAR · Vol libre</td>", "<tr><td>Piste et vent</td><td>Un petit dessin montre la piste orientée et la flèche du vent. À côté, le vent de face (vert) ou arrière (orange ou rouge) et le vent de travers (rouge s'il dépasse ton seuil)</td></tr><tr><td>Mon vol</td><td>Façon carte d'embarquement : départ et arrivée en grand, l'avion avance sur la ligne entre les deux selon la distance parcourue</td></tr><tr><td>METAR · Vol libre</td>", "<tr><td>Mon vol</td>")]
 R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>Runway and wind</td><td>A small drawing shows the runway oriented and the wind arrow. Next to it, the headwind (green) or tailwind (orange or red) and the crosswind (red above your limit)</td></tr><tr><td>My flight</td><td>Like a boarding pass: departure and arrival in large letters, the aircraft moves along the line between them with the distance flown</td></tr><tr><td>METAR · Free flight</td>", "<tr><td>My flight</td>")]
 
+
+# 12.7 : journal de vol et menu repliable
+R["fr"] += [("<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>",
+  "<h3>Le journal de vol</h3><p>Ouvre-le avec <b>Journal de vol</b> dans le menu de gauche, ou le bouton <b>Journal de vol</b> de la carte de suivi. Il se remplit tout seul pendant le vol, tant que la fenêtre Plan &amp; suivi de vol est ouverte.</p><ul>"
+  "<li><b>À gauche, la frise</b> : Porte, Roulage, Décollage, Montée, Croisière, Descente, Approche, Atterrissage, Roulage, Porte d'arrivée. La phase en cours est en orange, les phases faites en bleu. Chaque phase montre son heure, sa durée, le carburant consommé, la vitesse sol, le vario et l'altitude ; au décollage la vitesse d'envol, à l'atterrissage le <b>taux de toucher</b> (Kiss, Doux, Correct, Ferme, Dur), la vitesse et les volets.</li>"
+  "<li><b>En haut, le résumé</b> : temps bloc, temps de vol, carburant, distance, altitude max et atterrissage, comparés au plan SimBrief.</li>"
+  "<li><b>Le profil du vol</b>, du sol au sol : en pointillé le profil prévu par SimBrief avec le <b>TOC</b> (fin de montée) et le <b>TOD</b> (début de descente), en couleur ton profil réel, phase par phase.</li>"
+  "<li><b>La carte</b> : seulement ta route et ta trajectoire, sans trafic ni VA.</li>"
+  "<li>Chaque vol terminé est gardé : choisis-le dans la liste en haut pour le revoir, ou supprime-le. Les vols sont rangés dans le dossier des réglages de l'appli, pas dans le dossier de l'appli.</li></ul>"
+  "<h3>Le menu repliable</h3><p>Sur Avionics Dispatch, la carte des scènes et le tutoriel, une colonne d'icônes à gauche s'ouvre quand tu passes la souris dessus : Bibliothèque, Carte addons, Démarrage auto, Vol SimBrief, Plan &amp; suivi de vol, Journal de vol, Réglages. Un clic ramène la fenêtre principale ou ouvre la page voulue.</p>"
+  "<h3>La fenêtre de suivi (bouton « Ouvrir le suivi »)</h3>", "<h3>Le journal de vol</h3>")]
+R["en"] += [("<h3>The tracking window (\"Open tracking\" button)</h3>",
+  "<h3>The flight log</h3><p>Open it with <b>Flight log</b> in the left menu, or the <b>Flight log</b> button of the tracking map. It fills in by itself during the flight, as long as the Flight plan &amp; tracking window is open.</p><ul>"
+  "<li><b>On the left, the timeline</b>: Gate, Taxi, Takeoff, Climb, Cruise, Descent, Approach, Landing, Taxi, Arrival gate. The current phase is orange, completed phases blue. Each phase shows its time, duration, fuel burned, ground speed, vertical speed and altitude; at takeoff the liftoff speed, at landing the <b>touchdown rate</b> (Butter, Soft, Good, Firm, Hard), speed and flaps.</li>"
+  "<li><b>At the top, the summary</b>: block time, flight time, fuel, distance, max altitude and landing, compared with the SimBrief plan.</li>"
+  "<li><b>The flight profile</b>, ground to ground: dashed, the profile planned by SimBrief with <b>TOC</b> (top of climb) and <b>TOD</b> (top of descent); in colour, your actual profile, phase by phase.</li>"
+  "<li><b>The map</b>: only your route and track, no traffic or VA.</li>"
+  "<li>Each finished flight is kept: pick it in the list at the top to review it, or delete it. Flights are stored in the app's settings folder, not in the app folder.</li></ul>"
+  "<h3>The collapsible menu</h3><p>On Avionics Dispatch, the sceneries map and the tutorial, a column of icons on the left opens when you hover it: Library, Add-ons map, Auto start, SimBrief flight, Flight plan &amp; tracking, Flight log, Settings. One click brings back the main window or opens the page.</p>"
+  "<h3>The tracking window (\"Open tracking\" button)</h3>", "<h3>The flight log</h3>")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

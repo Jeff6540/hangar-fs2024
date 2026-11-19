@@ -1407,3 +1407,379 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_look127b(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 : journal de vol (enregistrement phase par phase, profil sol-sol TOC/TOD, carte épurée, historique) ----
+JRN_TXT = {
+ "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
+        "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Roulage", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage", "Porte d'arrivée"],
+        "start": "début", "dur": "durée", "fuel": "carburant", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
+        "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
+        "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
+        "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
+ "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
+        "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"],
+        "start": "start", "dur": "duration", "fuel": "fuel", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
+        "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
+        "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
+        "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"},
+}
+JRN_CSS = r"""<style id="hangar-127-jrn">
+#hgJournal{position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;background:#0A0E14;color:#DCE6F0;font-family:"Segoe UI Variable Text","Segoe UI",Inter,sans-serif}
+#hgJournal.on{display:flex}
+#hgJournal .jh{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#0f1724 url(/bg_modal.svg) center 65%/cover no-repeat;border-bottom:1px solid #1E2733;flex-wrap:wrap}
+#hgJournal .jt{font:800 12.5px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;color:#E6EDF5}
+#hgJournal .jb{background:#121A24;color:#C9D4E0;border:1px solid #273343;border-radius:999px;padding:6px 13px;font:650 11px "Segoe UI",Inter,sans-serif;letter-spacing:.03em;cursor:pointer}
+#hgJournal .jb:hover{border-color:rgba(125,211,252,.7);color:#fff}
+#hgJournal select.jb{padding:5px 10px;max-width:360px}
+#hgJournal .jgrow{flex:1}
+#hgJournal .jx{width:28px;height:28px;border-radius:50%;padding:0;display:grid;place-items:center}
+#hgJournal .jm{flex:1;display:grid;grid-template-columns:380px minmax(0,1fr);gap:12px;padding:12px;min-height:0}
+#hgJournal .jc{background:rgba(9,14,21,.93);border:1px solid rgba(125,211,252,.16);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.35);min-height:0}
+#hgJournal .jl{overflow:auto;padding:12px 12px 12px 10px}
+#hgJournal .jr{display:grid;grid-template-rows:auto 270px 1fr;grid-template-columns:minmax(0,1fr);gap:12px;min-height:0;min-width:0}
+#hgJournal .jk{font:700 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7DD3FC;margin:0 0 8px 2px}
+/* frise */
+.jp{position:relative;padding:0 0 12px 26px}
+.jp::before{content:"";position:absolute;left:8px;top:16px;bottom:-2px;width:2px;background:#1F2A37}
+.jp:last-child::before{display:none}
+.jp .b{position:absolute;left:1px;top:3px;width:16px;height:16px;border-radius:50%;background:#0B1520;border:2px solid #334155}
+.jp.done .b{background:#38BDF8;border-color:#38BDF8}.jp.done::before{background:rgba(56,189,248,.45)}
+.jp.now .b{background:#F59E0B;border-color:#F59E0B;box-shadow:0 0 0 4px rgba(245,158,11,.2)}
+.jp .n{font:800 14px "Segoe UI",Inter,sans-serif;color:#F1F5F9;display:flex;gap:8px;align-items:baseline}
+.jp .n small{font-weight:600;font-size:11.5px;color:#7F93A8}
+.jp.wait .n{color:#5B6B7D}
+.jp .f{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.jp .f div{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:4px 7px;min-width:0}
+.jp .f i{display:block;font-style:normal;font:700 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7F93A8}
+.jp .f b{font:700 13.5px "Segoe UI",Inter,sans-serif;color:#E6EDF5;white-space:nowrap}
+.jp .f .w{grid-column:1/-1}
+.jrate{display:inline-block;padding:1px 8px;border-radius:999px;font:800 10px "Segoe UI",Inter,sans-serif;margin-left:4px;color:#06121C}
+.jrate.r0,.jrate.r1{background:#22C55E}.jrate.r2{background:#38BDF8}.jrate.r3{background:#F59E0B}.jrate.r4{background:#EF4444;color:#fff}
+/* résumé */
+.js{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:12px}
+.js div{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 10px}
+.js i{display:block;font-style:normal;font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#7F93A8}
+.js b{font:800 19px "Segoe UI",Inter,sans-serif;color:#FFFFFF}
+.js small{display:block;font-size:11.5px;color:#8FA3B8;margin-top:1px}
+.jrt{display:flex;align-items:baseline;gap:10px;padding:12px 12px 0;flex-wrap:wrap}
+.jrt .ic{font:800 26px "Segoe UI",Inter,sans-serif;color:#fff;letter-spacing:.04em}
+.jrt .ar{color:#38BDF8;font-size:18px}
+.jrt .meta{font-size:12.5px;color:#8FA3B8}
+/* profil */
+.jpf{padding:10px 12px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.jpf svg{display:block}
+.jpf .lg{display:flex;gap:14px;font-size:11.5px;color:#8FA3B8;margin:0 0 4px 2px;flex-wrap:wrap}
+.jpf .lg span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid #38BDF8;margin-right:6px;vertical-align:3px}
+.jpf .lg .p::before{border-top:2px dashed #94A3B8}
+#hgJMap{border-radius:14px;overflow:hidden;min-height:200px;background:#1A2430!important}
+#hgJMap .hg-jdark{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.92) saturate(.6)}
+.jempty{padding:30px;color:#8FA3B8;font-size:13px;text-align:center}
+@media (max-width:1100px){#hgJournal .jm{grid-template-columns:1fr}}
+</style>"""
+JRN_JS = r"""<script id="hangar-127-jrn-js">
+(function () {
+  var T = __TXT__;
+  var KEY = 'hg_jr_cur', HKEY = 'hg_jr_hist';
+  var GR = [[1, 2], [3, 4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];
+  function grOf(P) { for (var i = 0; i < GR.length; i++) if (GR[i].indexOf(P) >= 0) return i; return -1; }
+  function nm(a, b, c, d) { var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2);
+    var h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y; return 3440.065 * 2 * Math.asin(Math.min(1, Math.sqrt(h))); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function ld(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function sv(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function bridge() { return window.chrome && window.chrome.webview; }
+  function nearest(lat, lon) {
+    var d = null; try { d = airportsDB; } catch (e) {} if (!d) return '';
+    var best = '', bd = 5;
+    for (var k in d) { var a = d[k]; if (!a || !/^[A-Z][A-Z0-9]{3}$/.test(a.icao) || Math.abs(a.lat - lat) > 0.15) continue;
+      var x = nm(lat, lon, a.lat, a.lon); if (x < bd) { bd = x; best = a.icao; } }
+    return best;
+  }
+
+  /* ======================= enregistrement ======================= */
+  var rec = ld(KEY), prev = null;
+  function planInfo(data) {
+    if (!data || !data.navlog) return null;
+    var o = data.origin || {}, d = data.destination || {}, fx = [].concat(data.navlog.fix || []);
+    var lat0 = parseFloat(o.pos_lat), lon0 = parseFloat(o.pos_long); if (!Number.isFinite(lat0)) return null;
+    var cum = 0, pl = lat0, po = lon0, prof = [[0, parseInt(o.elevation, 10) || 0]], route = [[lat0, lon0]], toc = null, tod = null;
+    fx.forEach(function (f) {
+      var la = parseFloat(f.pos_lat), lo = parseFloat(f.pos_long); if (!Number.isFinite(la) || !Number.isFinite(lo)) return;
+      cum += nm(pl, po, la, lo); pl = la; po = lo; route.push([+la.toFixed(4), +lo.toFixed(4)]);
+      var al = parseInt(f.altitude_feet, 10); if (Number.isFinite(al)) prof.push([+cum.toFixed(1), al]);
+      if (f.ident === 'TOC') toc = +cum.toFixed(1); if (f.ident === 'TOD') tod = +cum.toFixed(1);
+    });
+    var la1 = parseFloat(d.pos_lat), lo1 = parseFloat(d.pos_long);
+    if (Number.isFinite(la1)) { cum += nm(pl, po, la1, lo1); route.push([la1, lo1]); prof.push([+cum.toFixed(1), parseInt(d.elevation, 10) || 0]); }
+    var units = String((data.params || {}).units || 'kgs').toLowerCase(), k = /lb/.test(units) ? 0.45359237 : 1;
+    var fu = data.fuel || {}, ti = data.times || {};
+    return { dep: String(o.icao_code || '').toUpperCase(), arr: String(d.icao_code || '').toUpperCase(),
+      fuel: fu.est_burn ? Math.round(parseFloat(fu.est_burn) * k) : null, block: ti.est_block ? Math.round(ti.est_block / 60) : null,
+      air: ti.est_time_enroute ? Math.round(ti.est_time_enroute / 60) : null, dist: +cum.toFixed(0), cruise: parseInt((data.general || {}).initial_altitude, 10) || null,
+      prof: prof, route: route.length > 400 ? route.filter(function (_, i) { return i % 2 === 0; }) : route, toc: toc, tod: tod,
+      type: (data.aircraft || {}).icaocode || '', cs: (data.atc || {}).callsign || '' };
+  }
+  function attachPlan() {
+    if (!rec) return;
+    var p = planInfo(window.alPlanFull); if (!p) return;
+    if (rec.plan && rec.plan.dep === p.dep && rec.plan.arr === p.arr) return;
+    if (rec.dep && p.dep && rec.dep !== p.dep && rec.tko) return;   /* le plan ne correspond pas à ce vol */
+    rec.plan = p; rec.dep = p.dep || rec.dep; rec.arr = p.arr || rec.arr; rec.type = p.type || rec.type; rec.cs = p.cs || rec.cs; rec.free = false;
+  }
+  function finish(keep) {
+    if (!rec) return;
+    if (keep && rec.tko) {
+      rec.t1 = rec.last || Date.now();
+      if (!rec.arr && rec.lastPos) rec.arr = nearest(rec.lastPos[0], rec.lastPos[1]);
+      var tr = rec.trk || []; while (tr.length > 700) tr = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; }); rec.trk = tr;
+      var copy = JSON.parse(JSON.stringify(rec)); delete copy.lastPos; delete copy.lastT;
+      if (bridge()) { try { window.chrome.webview.postMessage({ journalSave: copy }); } catch (e) {} }
+      else { var h = ld(HKEY) || []; h.unshift(copy); sv(HKEY, h.slice(0, 40)); }
+      lastSaved = copy;
+    }
+    rec = null; sv(KEY, null); prev = null;
+    if (ui.open) setTimeout(function () { loadList(true); }, 600);
+  }
+  var lastSaved = null;
+  function tick() {
+    var u = window.alUser, f = window.alFlight || {}, P = window.alFlightPhase || 0, now = Date.now();
+    if (rec && rec.last && now - rec.last > 3 * 3600000) finish(true);   /* vol abandonné (appli fermée…) */
+    if (!u || !P) return;
+    if (!rec) {
+      if (P >= 11) return;   /* pas de vol à commencer au roulage d'arrivée */
+      var pd = window.alPlanData, dep = '';
+      if (pd && pd.origin && Number.isFinite(parseFloat(pd.origin.pos_lat)) && nm(u.lat, u.lon, parseFloat(pd.origin.pos_lat), parseFloat(pd.origin.pos_long)) < 15) dep = String(pd.origin.icao_code || '').toUpperCase();
+      if (!dep && u.ground) dep = nearest(u.lat, u.lon);
+      rec = { id: String(now), v: 1, t0: now, dep: dep, arr: '', type: '', cs: u.callsign || '', free: true, partial: !u.ground, g: {}, trk: [], dist: 0,
+              fuel0: f.fuel_kg != null ? f.fuel_kg : null, fuelL: f.fuel_kg != null ? f.fuel_kg : null, maxAlt: 0, out: null, tko: null, ldg: null, inT: null };
+      attachPlan();
+    }
+    attachPlan();
+    var gi = grOf(P), dt = rec.last ? Math.min(10, (now - rec.last) / 1000) : 0;
+    /* plein de carburant au sol avant le départ : on repart du nouveau niveau */
+    if (f.fuel_kg != null) {
+      if (rec.fuelL != null && f.fuel_kg > rec.fuelL + 5 && !rec.tko) rec.fuel0 = f.fuel_kg;
+      var used = rec.fuelL != null ? rec.fuelL - f.fuel_kg : 0;
+      if (gi >= 0 && used > 0 && used < 400) { var g0 = rec.g[gi] = rec.g[gi] || {}; g0.fuel = (g0.fuel || 0) + used; }
+      rec.fuelL = f.fuel_kg; if (rec.fuel0 == null) rec.fuel0 = f.fuel_kg;
+    }
+    if (gi >= 0) {
+      var g = rec.g[gi] = rec.g[gi] || {};
+      if (!g.t0) g.t0 = now; g.t1 = now; g.dur = (g.dur || 0) + dt;
+      var gs = u.gs || 0, vs = f.vs, alt = u.alt || 0;
+      g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1;
+      if (vs != null) { g.vsMax = Math.max(g.vsMax == null ? -99999 : g.vsMax, vs); g.vsMin = Math.min(g.vsMin == null ? 99999 : g.vsMin, vs); g.vsSum = (g.vsSum || 0) + vs; }
+      g.altMax = Math.max(g.altMax || 0, alt); g.altMin = Math.min(g.altMin == null ? 99999 : g.altMin, alt);
+      if (f.ias != null) g.iasMax = Math.max(g.iasMax || 0, f.ias);
+      rec.cur = gi;
+    }
+    if (P >= 3 && !rec.out) rec.out = now;
+    if (P >= 13 && !rec.inT) rec.inT = now;
+    rec.maxAlt = Math.max(rec.maxAlt || 0, u.alt || 0);
+    if (rec.lastPos) { var dd = nm(rec.lastPos[0], rec.lastPos[1], u.lat, u.lon); if (dd > 0.02 && dd < 60) rec.dist += dd; }
+    /* envol et toucher */
+    if (prev) {
+      if (prev.ground && !u.ground && !rec.tko) rec.tko = { t: now, ias: f.ias != null ? f.ias : prev.ias, gs: Math.round(u.gs || 0) };
+      if (!prev.ground && u.ground && rec.tko && P >= 9) rec.ldg = { t: now, vs: prev.vs != null ? Math.round(prev.vs) : null, ias: prev.ias, gs: Math.round(u.gs || 0), flaps: f.flaps != null ? f.flaps : prev.flaps };
+    }
+    /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
+    var tr = rec.trk, lp = tr[tr.length - 1], ts = Math.round((now - rec.t0) / 1000);
+    if (!lp || ts - lp[4] >= 15 || Math.abs((u.alt || 0) - lp[2]) > 400 || (prev && prev.ground !== !!u.ground)) {
+      tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(u.alt || 0), +rec.dist.toFixed(1), ts, P]);
+      if (tr.length > 3000) rec.trk = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; });
+    }
+    rec.lastPos = [u.lat, u.lon]; rec.last = now;
+    prev = { ground: !!u.ground, vs: f.vs, ias: f.ias, flaps: f.flaps };
+    /* fin du vol : débarquement, ou un nouveau vol commence après l'atterrissage */
+    if (P === 14 && rec.ldg) { sv(KEY, rec); finish(true); return; }
+    if (P <= 2 && rec.ldg) { finish(true); return; }
+    sv(KEY, rec);
+    if (ui.open && ui.sel === 'cur') renderSoon();
+  }
+  window.addEventListener('al-tick', tick);
+  window.addEventListener('resize', function () { if (ui.open) renderSoon(); });
+  window.addEventListener('al-plan-clear', function () { finish(true); });
+
+  /* ======================= page ======================= */
+  var ui = { open: false, sel: 'cur', list: [], data: null, map: null, layers: null, rt: null };
+  function fmtDur(s) { s = Math.round(s || 0); var h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); if (m === 60) { h++; m = 0; } return h ? h + ' h ' + String(m).padStart(2, '0') : m + ' min'; }
+  function hm(t) { if (!t) return '—'; var d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function kg(v) { return v == null ? '—' : Math.round(v).toLocaleString() + ' kg'; }
+  function ftx(v) { return v == null ? '—' : (v >= 18000 ? 'FL' + String(Math.round(v / 100)).padStart(3, '0') : Math.round(v).toLocaleString() + ' ft'); }
+  function rate(vs) { var a = Math.abs(vs); return a < 120 ? 0 : a < 250 ? 1 : a < 400 ? 2 : a < 600 ? 3 : 4; }
+  function build() {
+    if (document.getElementById('hgJournal')) return;
+    var d = document.createElement('div'); d.id = 'hgJournal';
+    d.innerHTML = '<div class="jh"><button class="jb" id="hgJBack">← ' + T.menu + '</button><span class="jt">▤ ' + T.title + '</span>' +
+      '<select class="jb" id="hgJSel"></select><span class="jgrow"></span><button class="jb" id="hgJDel">' + T.del + '</button><button class="jb jx" id="hgJClose">✕</button></div>' +
+      '<div class="jm"><div class="jc jl" id="hgJLeft"></div><div class="jr"><div class="jc" id="hgJSum"></div><div class="jc jpf" id="hgJProf"></div><div class="jc" id="hgJMap"></div></div></div>';
+    document.body.appendChild(d);
+    document.getElementById('hgJBack').onclick = close; document.getElementById('hgJClose').onclick = close;
+    document.getElementById('hgJSel').onchange = function () { ui.sel = this.value; show(); };
+    document.getElementById('hgJDel').onclick = function () {
+      if (ui.sel === 'cur' || !confirm(T.delQ)) return;
+      if (bridge()) { try { window.chrome.webview.postMessage({ journalDelete: ui.sel }); } catch (e) {} }
+      else sv(HKEY, (ld(HKEY) || []).filter(function (r) { return r.id !== ui.sel; }));
+      ui.sel = 'cur'; setTimeout(function () { loadList(true); }, 400);
+    };
+  }
+  function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; }
+  window.hgCloseAll = close;   /* menu repliable : « Plan & suivi de vol » revient à la page */
+  window.hgOpenJournal = function () {
+    build(); var d = document.getElementById('hgJournal'); d.classList.add('on'); ui.open = true;
+    loadList(true);
+  };
+  function loadList(reshow) {
+    var done = function (arr) {
+      ui.list = arr || [];
+      var s = document.getElementById('hgJSel'); if (!s) return;
+      var o = '<option value="cur">● ' + T.live + (rec ? ' · ' + esc((rec.dep || '????') + ' → ' + (rec.arr || '????')) : '') + '</option>';
+      ui.list.forEach(function (r) { var dt = new Date(r.t0); o += '<option value="' + esc(r.id) + '">' + dt.toLocaleDateString() + ' ' + hm(r.t0) + ' · ' + esc((r.dep || '????') + ' → ' + (r.arr || '????')) + (r.type ? ' · ' + esc(r.type) : '') + '</option>'; });
+      s.innerHTML = o;
+      if (!rec && ui.sel === 'cur' && ui.list.length) ui.sel = ui.list[0].id;
+      s.value = ui.sel; if (s.value !== ui.sel) { ui.sel = 'cur'; s.value = 'cur'; }
+      if (reshow) show();
+    };
+    if (bridge()) fetch('/journal-list', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(done).catch(function () { done([]); });
+    else done((ld(HKEY) || []).map(function (r) { return { id: r.id, t0: r.t0, dep: r.dep, arr: r.arr, type: r.type }; }));
+  }
+  function show() {
+    document.getElementById('hgJDel').style.display = ui.sel === 'cur' ? 'none' : '';
+    if (ui.sel === 'cur') { ui.data = rec; render(); return; }
+    var hit = (ld(HKEY) || []).filter(function (r) { return r.id === ui.sel; })[0];
+    if (hit || !bridge()) { ui.data = hit || null; render(); return; }
+    fetch('/journal-get?id=' + encodeURIComponent(ui.sel), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { ui.data = j; render(); }).catch(function () { ui.data = null; render(); });
+  }
+  var rsT = null; function renderSoon() { clearTimeout(rsT); rsT = setTimeout(render, 300); }
+  function render() {
+    var r = ui.data, L = document.getElementById('hgJLeft'), S = document.getElementById('hgJSum'), Pf = document.getElementById('hgJProf');
+    if (!L) return;
+    if (!r) { L.innerHTML = '<div class="jempty">' + T.none + '</div>'; S.innerHTML = ''; Pf.innerHTML = ''; drawMap(null); return; }
+    /* frise des phases */
+    var h = '<div class="jk">' + (r.partial ? T.partial : '') + '</div>';
+    T.groups.forEach(function (name, i) {
+      var g = r.g && r.g[i], cls = !g ? 'wait' : (ui.sel === 'cur' && r.cur === i && !r.t1 ? 'now' : 'done');
+      h += '<div class="jp ' + cls + '"><span class="b"></span><div class="n">' + esc(name) + (g ? ' <small>' + hm(g.t0) + ' · ' + fmtDur(g.dur) + '</small>' : ' <small>' + T.wait + '</small>') + '</div>';
+      if (g) {
+        var cells = [];
+        if (g.fuel) cells.push(['' + T.fuel, kg(g.fuel)]);
+        if (i >= 1 && i <= 8) cells.push([T.gs + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']);
+        if (i === 3 || i === 5 || i === 6) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
+        if (i === 3) cells.push([T.alt, ftx(g.altMax)]);
+        if (i === 4) cells.push([T.alt, ftx(g.altMax)]);
+        if (i === 2 && r.tko) cells.push([T.rot, (r.tko.ias != null ? r.tko.ias : r.tko.gs) + ' kt']);
+        if (i === 7 && r.ldg) {
+          if (r.ldg.vs != null) cells.push([T.td, '<span>' + r.ldg.vs + ' ft/min</span><span class="jrate r' + rate(r.ldg.vs) + '">' + T.rate[rate(r.ldg.vs)] + '</span>', 'w']);
+          if (r.ldg.ias != null) cells.push([T.ias, r.ldg.ias + ' kt']);
+          if (r.ldg.flaps != null) cells.push([T.flaps, String(r.ldg.flaps)]);
+        }
+        if (cells.length) h += '<div class="f">' + cells.map(function (c) { return '<div' + (c[2] ? ' class="' + c[2] + '"' : '') + '><i>' + c[0] + '</i><b>' + c[1] + '</b></div>'; }).join('') + '</div>';
+      }
+      h += '</div>';
+    });
+    L.innerHTML = h;
+    /* résumé */
+    var p = r.plan, end = r.t1 || r.last || Date.now();
+    var block = r.out ? ((r.inT || end) - r.out) / 1000 : null, air = r.tko ? (((r.ldg && r.ldg.t) || end) - r.tko.t) / 1000 : null;
+    var fuelT = r.fuel0 != null && r.fuelL != null ? r.fuel0 - r.fuelL : null;
+    function cell(k, v, sub) { return '<div><i>' + k + '</i><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; }
+    S.innerHTML = '<div class="jrt"><span class="ic">' + esc(r.dep || '????') + '</span><span class="ar">✈ ⟶</span><span class="ic">' + esc(r.arr || '????') + '</span>' +
+      '<span class="meta">' + [new Date(r.t0).toLocaleDateString(), r.type, r.cs, r.free ? T.free : ''].filter(Boolean).map(esc).join(' · ') + '</span></div>' +
+      '<div class="js">' + cell(T.block, block == null ? '—' : fmtDur(block), p && p.block ? T.planned + ' ' + fmtDur(p.block * 60) : '') +
+      cell(T.air, air == null ? '—' : fmtDur(air), p && p.air ? T.planned + ' ' + fmtDur(p.air * 60) : '') +
+      cell(T.fuelT, kg(fuelT), p && p.fuel ? T.planned + ' ' + kg(p.fuel) : '') +
+      cell(T.dist, Math.round(r.dist || 0) + ' NM', p && p.dist ? T.planned + ' ' + p.dist + ' NM' : '') +
+      cell(T.maxAlt, ftx(r.maxAlt), p && p.cruise ? T.planned + ' ' + ftx(p.cruise) : '') +
+      cell(T.ldg, r.ldg && r.ldg.vs != null ? r.ldg.vs + ' ft/min' : '—', r.ldg && r.ldg.vs != null ? T.rate[rate(r.ldg.vs)] : '') + '</div>';
+    /* profil du vol */
+    Pf.innerHTML = '<div class="jk">' + T.profile + '</div><div class="lg"><span>' + T.realProf + '</span>' + (p ? '<span class="p">' + T.planProf + '</span>' : '<em>' + T.noPlan + '</em>') + '</div>' + profSvg(r, Pf.clientWidth - 24, Pf.clientHeight - 52);
+    drawMap(r);
+  }
+  function profSvg(r, W, H) {
+    W = Math.max(300, Math.round(W || 1000)); H = Math.max(120, Math.round(H || 190)); var ml = 46, mr = 12, mt = 10, mb = 22, p = r.plan, tr = r.trk || [];
+    var xMax = Math.max(p && p.dist || 0, r.dist || 0, 10), yMax = 1000;
+    tr.forEach(function (q) { yMax = Math.max(yMax, q[2]); }); if (p) p.prof.forEach(function (q) { yMax = Math.max(yMax, q[1]); });
+    yMax = Math.ceil(yMax * 1.1 / 5000) * 5000;
+    var X = function (v) { return ml + (W - ml - mr) * v / xMax; }, Y = function (v) { return mt + (H - mt - mb) * (1 - v / yMax); };
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+    for (var a = 0; a <= yMax; a += yMax / 4) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (ml - 6) + '" y="' + (Y(a) + 3) + '" text-anchor="end" font-size="10" fill="#7F93A8">' + (a >= 18000 ? 'FL' + Math.round(a / 100) : Math.round(a / 1000) + 'k') + '</text>';
+    var step = xMax > 1500 ? 500 : xMax > 600 ? 200 : xMax > 200 ? 50 : 20;
+    for (var x = 0; x <= xMax; x += step) s += '<text x="' + X(x) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="#7F93A8">' + x + '</text>';
+    if (p && p.prof.length > 1) {
+      s += '<polyline fill="none" stroke="#94A3B8" stroke-width="1.6" stroke-dasharray="6 5" points="' + p.prof.map(function (q) { return X(q[0]).toFixed(1) + ',' + Y(q[1]).toFixed(1); }).join(' ') + '"/>';
+      [['TOC', p.toc], ['TOD', p.tod]].forEach(function (m) {
+        if (m[1] == null) return;
+        s += '<line x1="' + X(m[1]) + '" x2="' + X(m[1]) + '" y1="' + mt + '" y2="' + (H - mb) + '" stroke="rgba(125,211,252,.35)" stroke-dasharray="3 4"/>' +
+             '<text x="' + X(m[1]) + '" y="' + (mt + 10) + '" text-anchor="middle" font-size="10.5" font-weight="800" fill="#7DD3FC">' + m[0] + '</text>';
+      });
+    }
+    if (tr.length > 1) {
+      var COL = { 1: '#64748B', 2: '#64748B', 3: '#94A3B8', 4: '#94A3B8', 5: '#F59E0B', 6: '#38BDF8', 7: '#22C55E', 8: '#A78BFA', 9: '#F472B6', 10: '#F472B6', 11: '#F59E0B', 12: '#94A3B8', 13: '#64748B', 14: '#64748B' };
+      for (var i = 1; i < tr.length; i++) {
+        var a0 = tr[i - 1], a1 = tr[i];
+        s += '<line x1="' + X(a0[3]).toFixed(1) + '" y1="' + Y(a0[2]).toFixed(1) + '" x2="' + X(a1[3]).toFixed(1) + '" y2="' + Y(a1[2]).toFixed(1) + '" stroke="' + (COL[a1[5]] || '#38BDF8') + '" stroke-width="2.6" stroke-linecap="round"/>';
+      }
+      var lt = tr[tr.length - 1];
+      if (!r.t1) s += '<circle cx="' + X(lt[3]) + '" cy="' + Y(lt[2]) + '" r="5" fill="#F59E0B" stroke="#0B121A" stroke-width="2"/>';
+    }
+    return s + '</svg>';
+  }
+  function drawMap(r) {
+    var el = document.getElementById('hgJMap'); if (!el || typeof L === 'undefined' || !L.map) return;
+    if (!ui.map) {
+      ui.map = L.map(el, { zoomControl: true, attributionControl: false, worldCopyJump: true }).setView([46.5, 2.5], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, className: 'hg-jdark' }).addTo(ui.map);
+      ui.layers = L.layerGroup().addTo(ui.map);
+    }
+    setTimeout(function () { try { ui.map.invalidateSize(); } catch (e) {} }, 60);
+    ui.layers.clearLayers(); if (!r) return;
+    var b = [];
+    if (r.plan && r.plan.route && r.plan.route.length > 1) { L.polyline(r.plan.route, { color: '#94A3B8', weight: 2, dashArray: '6 6', opacity: .9 }).addTo(ui.layers); b = b.concat(r.plan.route); }
+    var tr = (r.trk || []).map(function (q) { return [q[0], q[1]]; });
+    if (tr.length > 1) { L.polyline(tr, { color: '#38BDF8', weight: 3.5, opacity: .95 }).addTo(ui.layers); b = b.concat(tr); }
+    function apt(code, ll) { if (!ll) return; L.circleMarker(ll, { radius: 6, color: '#06121C', weight: 2, fillColor: '#38BDF8', fillOpacity: 1 }).bindTooltip(code, { permanent: true, direction: 'right', className: 'hg-apt-tip' }).addTo(ui.layers); }
+    if (r.plan && r.plan.route) { apt(r.plan.dep, r.plan.route[0]); apt(r.plan.arr, r.plan.route[r.plan.route.length - 1]); }
+    else if (tr.length) { apt(r.dep || '', tr[0]); if (r.t1) apt(r.arr || '', tr[tr.length - 1]); }
+    if (!r.t1 && tr.length) L.circleMarker(tr[tr.length - 1], { radius: 7, color: '#0B121A', weight: 2, fillColor: '#F59E0B', fillOpacity: 1 }).addTo(ui.layers);
+    if (b.length > 1 && !ui.fitted) { try { ui.map.fitBounds(L.latLngBounds(b).pad(0.15)); } catch (e) {} }
+  }
+  /* bouton dans la barre de la carte de suivi, ouverture depuis l'appli */
+  setInterval(function () {
+    if (document.getElementById('hgJBtn')) return;
+    var close = document.getElementById('alFoldAll'); if (!close) return;
+    var b = document.createElement('button'); b.id = 'hgJBtn'; b.type = 'button'; b.className = 'hg-act'; b.innerHTML = '▤ ' + T.open; b.onclick = window.hgOpenJournal;
+    close.parentNode.insertBefore(b, close);
+  }, 1000);
+  try { if (bridge()) window.chrome.webview.addEventListener('message', function (e) { var d = e.data; if (d && d.open === 'journal') window.hgOpenJournal(); }); } catch (e) {}
+  function startUp() { if (location.hash === '#journal') setTimeout(window.hgOpenJournal, 800); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startUp); else startUp();
+})();
+</script>"""
+JRN_ANCHORS = [
+ ("      window.alFlightPhase = live.user ? (st.phase || 0) : 0; window.alUser = live.user;",
+  "      window.alFlightPhase = live.user ? (st.phase || 0) : 0; window.alUser = live.user; window.alFlight = live.flight;\n"
+  "      try { window.dispatchEvent(new Event('al-tick')); } catch (e) {}   /* 12.7 : journal de vol */"),
+ ("        plan = p;\n        window.alPlanData =", "        plan = p; window.alPlanFull = data;   /* 12.7 : plan complet pour le journal de vol */\n        window.alPlanData ="),
+]
+
+
+def patch_jrn127(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-127-jrn" in s:
+        return
+    import json
+    for a, b in JRN_ANCHORS:
+        assert s.count(a) == 1, (path, a[:50])
+        s = s.replace(a, b)
+    s = s.replace("</head>", JRN_CSS + "</head>", 1)
+    s = s.replace("</body>", JRN_JS.replace("__TXT__", json.dumps(JRN_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_jrn127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
