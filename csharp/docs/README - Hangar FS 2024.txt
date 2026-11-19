@@ -30,8 +30,9 @@ Features:
 A complete illustrated tutorial is built into the app:
 "? Tutorial" button at the top right.
 
-Feedback, ideas, bugs: "Les Fous Volants Discord" button next to
+Feedback, ideas, bugs: "Hangar FS 2024 Discord" button next to
 the Tutorial, or directly https://discord.gg/h68MzUjkkH
+Les Fous Volants Discord (come and fly with us): https://discord.gg/NWWqSE3rmU
 
 Made by a pilot of LES FOUS VOLANTS, a French-speaking virtual
 airline on FSHub. Want to fly with us?

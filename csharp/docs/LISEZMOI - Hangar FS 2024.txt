@@ -21,8 +21,9 @@ Il propose aussi :
 Un tutoriel illustre complet est dans l'appli : bouton "? Tutoriel"
 en haut a droite.
 
-Remarques, idees, bugs : bouton "Discord des Fous Volants" a cote
+Remarques, idees, bugs : bouton "Discord Hangar FS 2024" a cote
 du Tutoriel, ou directement https://discord.gg/h68MzUjkkH
+Discord des Fous Volants (pour voler avec nous) : https://discord.gg/NWWqSE3rmU
 
 Fait par un pilote des FOUS VOLANTS, compagnie virtuelle francophone
 sur FSHub. Envie de voler avec nous ?
