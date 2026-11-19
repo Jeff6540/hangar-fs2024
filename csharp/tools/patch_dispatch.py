@@ -1732,10 +1732,10 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     W = Math.max(300, Math.round(W || 1000)); H = Math.max(120, Math.round(H || 190)); var ml = 46, mr = 12, mt = 10, mb = 22, p = r.plan, tr = r.trk || [];
     var xMax = Math.max(p && p.dist || 0, r.dist || 0, 10), yMax = 1000;
     tr.forEach(function (q) { yMax = Math.max(yMax, q[2]); }); if (p) p.prof.forEach(function (q) { yMax = Math.max(yMax, q[1]); });
-    var st = [1000, 2000, 5000, 10000].filter(function (v) { return yMax * 1.1 / v <= 5; })[0] || 10000; yMax = Math.ceil(yMax * 1.1 / st) * st;
+    var st = [1000, 2000, 5000, 10000].filter(function (v) { return yMax * 1.1 / v <= 8; })[0] || 10000; yMax = Math.ceil(yMax * 1.1 / st) * st;
     var X = function (v) { return ml + (W - ml - mr) * v / xMax; }, Y = function (v) { return mt + (H - mt - mb) * (1 - v / yMax); };
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
-    for (var a = 0; a <= yMax; a += st) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (ml - 6) + '" y="' + (Y(a) + 3) + '" text-anchor="end" font-size="10" fill="#7F93A8">' + (a >= 18000 ? 'FL' + Math.round(a / 100) : Math.round(a / 1000) + 'k') + '</text>';
+    for (var a = 0; a <= yMax; a += st) s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="rgba(148,163,184,.12)"/><text x="' + (ml - 6) + '" y="' + (Y(a) + 3) + '" text-anchor="end" font-size="10" fill="#7F93A8">' + (a === 0 ? '0' : a >= 10000 ? 'FL' + String(Math.round(a / 100)).padStart(3, '0') : a.toLocaleString() + ' ft') + '</text>';
     var step = xMax > 1500 ? 500 : xMax > 600 ? 200 : xMax > 200 ? 50 : 20;
     for (var x = 0; x <= xMax; x += step) s += '<text x="' + X(x) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="#7F93A8">' + x + '</text>';
     if (p && p.prof.length > 1) {
