@@ -1,6 +1,6 @@
 {
-  "version": "12.4",
+  "version": "12.5",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Mise à jour en un clic : bandeau bleu quand une nouvelle version sort, installation et redémarrage automatiques (seulement quand Flight Simulator est fermé)",
-  "notes_en": "One-click update: blue banner when a new version is out, automatic install and restart (only when Flight Simulator is closed)"
+  "notes_fr": "Aéroports sur la carte de suivi : bouton AÉROPORTS (codes OACI selon le zoom), bouton NOMS, nom au survol",
+  "notes_en": "Airports on the tracking map: AIRPORTS button (ICAO codes by zoom level), NAMES button, name on hover"
 }
