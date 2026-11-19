@@ -1177,7 +1177,8 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   }
   function tLine(t, full) {
     var head = '<span class="alp-t">▲ ' + (full ? 'TAKEOFF · ' + esc(t.icao) + ' ' : '') + esc(t.rwy) + '</span>';
-    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\d/i.test(t.thrust) ? ' · reduced thrust <span class="alp-m">(' + t.flex + ' °C)</span>' : (t.thrust ? ' · ' + esc(t.thrust) : '');
+    var acc = String(((window.alPlanData || {}).aircraft || {}).icaocode || '').toUpperCase(), tl = /^B/.test(acc) ? 'SEL TEMP' : (/^A/.test(acc) ? 'FLEX' : 'assumed temp');   /* 12.7 */
+    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\d/i.test(t.thrust) ? ' · reduced thrust ' + esc(t.thrust) + ' · <b class="alp-y">' + tl + ' ' + t.flex + ' °C</b>' : (t.thrust ? ' · ' + esc(t.thrust) : '');
     if (!full) return head + ' V1 ' + esc(t.v1) + ' · VR ' + esc(t.vr) + ' · V2 ' + esc(t.v2) + ' · flaps ' + esc(t.flaps);
     var s = (window.hgRwy ? window.hgRwy(t.rwy, t.mt, t.c) : '') + head + (t.len ? ' <span class="alp-m">· ' + ft(t.len) + '</span>' : '') + '<br>Flaps ' + esc(t.flaps) + ' · V1 ' + esc(t.v1) +
             ' · VR ' + esc(t.vr) + ' · V2 ' + esc(t.v2) + ' kt' + thr;

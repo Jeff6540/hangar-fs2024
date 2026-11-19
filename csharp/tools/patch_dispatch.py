@@ -1946,3 +1946,29 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_alt127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.7 : SEL TEMP / FLEX bien visible au décollage ----
+SELT = {
+ "fr": ("    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\\d/i.test(t.thrust) ? ' · poussée réduite <span class=\"alp-m\">(' + t.flex + ' °C)</span>' : (t.thrust ? ' · ' + esc(t.thrust) : '');",
+        "    var acc = String(((window.alPlanData || {}).aircraft || {}).icaocode || '').toUpperCase(), tl = /^B/.test(acc) ? 'SEL TEMP' : (/^A/.test(acc) ? 'FLEX' : 'temp. supposée');   /* 12.7 */\n"
+        "    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\\d/i.test(t.thrust) ? ' · poussée réduite ' + esc(t.thrust) + ' · <b class=\"alp-y\">' + tl + ' ' + t.flex + ' °C</b>' : (t.thrust ? ' · ' + esc(t.thrust) : '');"),
+ "en": ("    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\\d/i.test(t.thrust) ? ' · reduced thrust <span class=\"alp-m\">(' + t.flex + ' °C)</span>' : (t.thrust ? ' · ' + esc(t.thrust) : '');",
+        "    var acc = String(((window.alPlanData || {}).aircraft || {}).icaocode || '').toUpperCase(), tl = /^B/.test(acc) ? 'SEL TEMP' : (/^A/.test(acc) ? 'FLEX' : 'assumed temp');   /* 12.7 */\n"
+        "    var thr = t.flex && /D-?TO|FLEX|ATM|DERATE|TO-?\\d/i.test(t.thrust) ? ' · reduced thrust ' + esc(t.thrust) + ' · <b class=\"alp-y\">' + tl + ' ' + t.flex + ' °C</b>' : (t.thrust ? ' · ' + esc(t.thrust) : '');"),
+}
+
+
+def patch_selt127(path, lang):
+    s = open(path, encoding="utf-8").read()
+    a, b = SELT[lang]
+    if b in s:
+        return
+    assert s.count(a) == 1, path
+    open(path, "w", encoding="utf-8").write(s.replace(a, b))
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_selt127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
