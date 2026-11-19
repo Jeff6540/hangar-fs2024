@@ -255,6 +255,11 @@ R["en"] += [
 R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF),", "(Gros, Moyens, Aérodromes, chacun avec ON / OFF ; seuls les terrains avec un vrai code OACI à 4 lettres sont affichés, pas les « FR-0901 » ; leur code OACI s'affiche quand tu zoomes),")]
 R["en"] += [("(Large, Medium, Airfields, each with ON / OFF),", "(Large, Medium, Airfields, each with ON / OFF; only fields with a real 4-letter ICAO code are shown, not \"FR-0901\" ones; their ICAO code shows when you zoom in),")]
 
+
+# 12.6 : pistes inconnues = à vérifier
+R["fr"] += [("distance, temps de vol et compatibilité des pistes avec ton avion.</li>", "distance, temps de vol et compatibilité des pistes avec ton avion. Si la base ne connaît pas les pistes d'un aérodrome, il est marqué « à vérifier » (orange) au lieu d'être refusé.</li>")]
+R["en"] += [("distance, flight time and runway compatibility with your aircraft.</li>", "distance, flight time and runway compatibility with your aircraft. If the database doesn't know an airfield's runways, it is marked \"to check\" (orange) instead of being refused.</li>")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

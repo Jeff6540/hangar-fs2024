@@ -2372,7 +2372,7 @@ html body #mapToolbar .al-grp > div[class*="relative"]{width:200px!important}
     var wrap = document.getElementById('fullMapWrapper');
     if (wrap && !document.getElementById('alPlanLegend')) {
       var lg = el('div', '', '<div><span class="d" style="background:#38BDF8"></span>' + T.l1 + ' &nbsp; <span class="d" style="background:#F5B544"></span>' + T.l2 +
-        ' &nbsp; <span class="d" style="background:#c084fc"></span>' + T.l3 + '</div><div><b style="color:#38BDF8">▲</b> ' + T.dep + ' &nbsp; <b style="color:#F5A524">■</b> ' + T.arr +
+        ' &nbsp; <span class="d" style="background:#F0E442"></span>' + T.l3 + '</div><div><b style="color:#38BDF8">▲</b> ' + T.dep + ' &nbsp; <b style="color:#F5A524">■</b> ' + T.arr +
         ' &nbsp; <span style="color:#38BDF8">┅</span> ' + T.route + '</div><div class="m">' + T.hint + '</div>');
       lg.id = 'alPlanLegend'; wrap.appendChild(lg);
     }
@@ -3528,7 +3528,7 @@ html body #trafficMapModal>.avionics-panel button#hgAptBtn[aria-pressed="true"],
             let out;
             if (!runways.length) {
                 out = runwayDataReady
-                    ? { status: 'blocked', reasons: [`${icao}: insufficient runway data, validation refused`], detail: null }
+                    ? { status: 'conditional', reasons: [`${icao}: runway data missing from the database, check length and surface`], detail: null }   /* 12.6 */
                     : { status: 'conditional', reasons: [`${icao}: runway database not loaded, validation impossible`], detail: null };
             } else {
                 const best = runways.map(r => evaluateRunwayForAircraft(r, ac, role, airportElevationFt(icao)))

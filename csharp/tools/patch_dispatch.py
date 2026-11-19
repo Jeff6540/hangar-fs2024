@@ -497,7 +497,7 @@ PLAN_JS = r"""<script>
     var wrap = document.getElementById('fullMapWrapper');
     if (wrap && !document.getElementById('alPlanLegend')) {
       var lg = el('div', '', '<div><span class="d" style="background:#38BDF8"></span>' + T.l1 + ' &nbsp; <span class="d" style="background:#F5B544"></span>' + T.l2 +
-        ' &nbsp; <span class="d" style="background:#c084fc"></span>' + T.l3 + '</div><div><b style="color:#38BDF8">▲</b> ' + T.dep + ' &nbsp; <b style="color:#F5A524">■</b> ' + T.arr +
+        ' &nbsp; <span class="d" style="background:#F0E442"></span>' + T.l3 + '</div><div><b style="color:#38BDF8">▲</b> ' + T.dep + ' &nbsp; <b style="color:#F5A524">■</b> ' + T.arr +
         ' &nbsp; <span style="color:#38BDF8">┅</span> ' + T.route + '</div><div class="m">' + T.hint + '</div>');
       lg.id = 'alPlanLegend'; wrap.appendChild(lg);
     }
@@ -1033,3 +1033,28 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_smalllbl126(os.path.join(_web, "dispatch_%s.html" % _l))
+
+
+# ---- 12.6 : aérodrome sans données de piste = « à vérifier » (et non refusé) ; légende des aérodromes en jaune ----
+RWYDATA = {
+ "fr": ("? { status: 'blocked', reasons: [`${icao} : données de piste insuffisantes, validation refusée`], detail: null }",
+        "? { status: 'conditional', reasons: [`${icao} : données de piste absentes de la base, longueur et revêtement à vérifier`], detail: null }   /* 12.6 */"),
+ "en": ("? { status: 'blocked', reasons: [`${icao}: insufficient runway data, validation refused`], detail: null }",
+        "? { status: 'conditional', reasons: [`${icao}: runway data missing from the database, check length and surface`], detail: null }   /* 12.6 */"),
+}
+
+
+def patch_rwydata126(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "/* 12.6 */" not in s:
+        a, b = RWYDATA[lang]
+        assert s.count(a) == 1, path
+        s = s.replace(a, b)
+    s = s.replace("<span class=\"d\" style=\"background:#c084fc\"></span>' + T.l3", "<span class=\"d\" style=\"background:#F0E442\"></span>' + T.l3")
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_rwydata126(os.path.join(_web, "dispatch_%s.html" % _l), _l)
