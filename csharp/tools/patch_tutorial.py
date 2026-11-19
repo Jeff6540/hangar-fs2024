@@ -308,6 +308,11 @@ R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>My flight · plan, ru
 R["fr"] += [("(Gros, Moyens, Aérodromes, chacun avec ON / OFF ;", "(à côté du choix Altitude, une pastille verte « Conseillé » propose une altitude de croisière selon la distance, l'avion et le sens du vol — niveau impair vers l'est, pair vers l'ouest, +500 ft en VFR — ; « Appliquer » la prend, survole-la pour voir le calcul) (Gros, Moyens, Aérodromes, chacun avec ON / OFF ;", "pastille verte « Conseillé »")]
 R["en"] += [("(Large, Medium, Airfields, each with ON / OFF;", "(next to the Altitude choice, a green \"Advised\" pill suggests a cruise altitude from the distance, the aircraft and the direction of flight — odd levels eastbound, even westbound, +500 ft in VFR —; \"Apply\" takes it, hover it to see the calculation) (Large, Medium, Airfields, each with ON / OFF;", "green \"Advised\" pill")]
 
+
+# 12.7 : SEL TEMP / FLEX
+R["fr"] += [("<b>▲ décollage</b> au sol et en montée (piste, V1, VR, V2, volets)", "<b>▲ décollage</b> au sol et en montée (piste, V1, VR, V2, volets, et en jaune la température de poussée réduite : <b>SEL TEMP</b> sur Boeing, <b>FLEX</b> sur Airbus)", "<b>SEL TEMP</b> sur Boeing")]
+R["en"] += [("<b>▲ takeoff</b> on the ground and in the climb (runway, V1, VR, V2, flaps)", "<b>▲ takeoff</b> on the ground and in the climb (runway, V1, VR, V2, flaps, and in yellow the reduced-thrust temperature: <b>SEL TEMP</b> on Boeing, <b>FLEX</b> on Airbus)", "<b>SEL TEMP</b> on Boeing")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",
