@@ -17,6 +17,7 @@ Version 12.7 — nouveau look de la carte de suivi
 - Décollage : la température de poussée réduite s'affiche en clair, « SEL TEMP 46 °C » sur Boeing, « FLEX » sur Airbus, avec le réglage de poussée (D-TO2…).
 - Suivi de vol : la phase « Décollage » ne commence plus au roulage rapide, seulement à la course au décollage (50 kt).
 - Suivi et journal de vol : l'altitude est celle de l'altimètre (calage QNH ou STD), la même que sur ton PFD.
+- Barre de titre Windows en sombre sur toutes les fenêtres (mêmes boutons réduire, agrandir, fermer).
 - Menu repliable à gauche sur Avionics Dispatch, la carte des scènes et le tutoriel : retour à l'accueil ou à n'importe quelle page en un clic.
 - Bibliothèque et Community : la croix ✕ revient dans la case de recherche pour la vider d'un clic (ou touche Échap).
 - Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
@@ -87,6 +88,7 @@ Version 12.7 — new look for the tracking map
 - Takeoff: the reduced-thrust temperature is shown clearly, "SEL TEMP 46 °C" on Boeing, "FLEX" on Airbus, with the thrust setting (D-TO2…).
 - Flight tracking: the "Takeoff" phase no longer starts during a fast taxi, only on the takeoff roll (50 kt).
 - Flight tracking and log: the altitude is the altimeter's (QNH or STD setting), the same as on your PFD.
+- Dark Windows title bar on all windows (same minimize, maximize, close buttons).
 - Collapsible menu on the left of Avionics Dispatch, the sceneries map and the tutorial: back to the home page or any page in one click.
 - Library and Community: the ✕ cross is back in the search box to clear it in one click (or the Esc key).
 - Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.

@@ -18,6 +18,8 @@ namespace HangarFS2024
 {
     class MainForm : Form
     {
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); DarkTitle.Apply(this); }   // barre de titre sombre
+
         readonly WebView2 web = new WebView2();
         readonly Hangar hangar = new Hangar();
         readonly Timer monitor = new Timer();

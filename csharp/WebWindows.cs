@@ -13,6 +13,8 @@ namespace HangarFS2024
 {
     class WebWindow : Form
     {
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); DarkTitle.Apply(this); }   // barre de titre sombre
+
         readonly WebView2 web = new WebView2();
         readonly string url;
 
