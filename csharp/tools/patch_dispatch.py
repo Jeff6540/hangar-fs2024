@@ -1415,14 +1415,14 @@ if __name__ == "__main__":
 JRN_TXT = {
  "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
         "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage", "Porte d'arrivée"],
-        "start": "début", "dur": "durée", "fuel": "carburant", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trafficTip": "Afficher les avions IA en vol autour de toi (vol en cours seulement)", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
         "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
         "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
         "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
         "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
  "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
         "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi", "Arrival gate"],
-        "start": "start", "dur": "duration", "fuel": "fuel", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
         "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
         "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
         "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
@@ -1477,6 +1477,11 @@ JRN_CSS = r"""<style id="hangar-127-jrn">
 .jpf .lg span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid #38BDF8;margin-right:6px;vertical-align:3px}
 .jpf .lg .p::before{border-top:2px dashed #94A3B8}
 #hgJMap .hg-jplane{background:none!important;border:0!important;filter:drop-shadow(0 0 6px rgba(245,158,11,.7))}
+#hgJMap .hg-jtr{background:#121A24;color:#A9B6C6;border:1px solid #273343;border-radius:999px;padding:6px 13px 6px 11px;font:650 11px "Segoe UI",Inter,sans-serif;letter-spacing:.03em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+#hgJMap .hg-jtr i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#38BDF8;opacity:.45;margin-right:7px;vertical-align:1px}
+#hgJMap .hg-jtr.on{background:linear-gradient(180deg,rgba(56,189,248,.20),rgba(56,189,248,.08));border-color:rgba(56,189,248,.85);color:#F1F5F9}
+#hgJMap .hg-jtr.on i{opacity:1;box-shadow:0 0 8px #38BDF8}
+#hgJMap .hg-jai{background:none!important;border:0!important;filter:drop-shadow(0 0 2px #000)}
 #hgJMap{border-radius:14px;overflow:hidden;min-height:200px;background:#1A2430!important}
 #hgJMap .hg-jdark{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.92) saturate(.6)}
 .jempty{padding:30px;color:#8FA3B8;font-size:13px;text-align:center}
@@ -1790,6 +1795,38 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     }
     if (b.length > 1 && ui.fitId !== r.id) { ui.fitId = r.id; try { ui.map.fitBounds(L.latLngBounds(b).pad(0.15)); } catch (e) {} }   /* recadre une fois par vol, pas à chaque mise à jour */
   }
+  /* trafic IA sur la carte du journal (vol en cours seulement), bouton éteint par défaut */
+  var trOn = false; try { trOn = localStorage.getItem('hg_jr_traffic') === '1'; } catch (e) {}
+  var trLayer = null, trTimer = null;
+  function trBtn() {
+    if (!ui.map || ui.trCtl) return;
+    var C = L.Control.extend({ options: { position: 'topright' }, onAdd: function () {
+      var b = L.DomUtil.create('button', 'hg-jtr'); b.type = 'button'; b.innerHTML = '<i></i>' + T.traffic; b.title = T.trafficTip;
+      L.DomEvent.disableClickPropagation(b);
+      b.onclick = function () { trOn = !trOn; try { localStorage.setItem('hg_jr_traffic', trOn ? '1' : '0'); } catch (e) {} paintTr(); trPoll(); };
+      return b; } });
+    ui.trCtl = new C(); ui.map.addControl(ui.trCtl); paintTr();
+  }
+  function paintTr() { var b = document.querySelector('#hgJMap .hg-jtr'); if (b) b.classList.toggle('on', trOn); }
+  function trPoll() {
+    if (!ui.map) return;
+    if (!trLayer) trLayer = L.layerGroup().addTo(ui.map);
+    var live = ui.open && trOn && ui.sel === 'cur' && rec && !rec.t1;
+    if (!live) { trLayer.clearLayers(); return; }
+    fetch('http://localhost:8765/traffic', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      trLayer.clearLayers();
+      (d.aircraft || []).forEach(function (a) {
+        if (a.lat == null || (a.ground && !document.querySelector('#hgJMap .hg-jtr.on'))) return;
+        if (a.ground) return;   /* avions en vol seulement : la carte reste lisible */
+        L.marker([a.lat, a.lon], { interactive: true, icon: L.divIcon({ className: 'hg-jai', iconSize: [20, 20], iconAnchor: [10, 10],
+          html: '<svg width="20" height="20" viewBox="0 0 24 24" style="transform:rotate(' + (a.hdg || 0) + 'deg)"><path fill="#38BDF8" stroke="#06121C" stroke-width="1" d="' + PLANE_D + '"/></svg>' }) })
+          .bindTooltip('<b>' + esc(a.callsign || a.flight || '') + '</b> ' + esc(a.model || '') + '<br>' + (a.alt >= 18000 ? 'FL' + String(Math.round(a.alt / 100)).padStart(3, '0') : Math.round(a.alt).toLocaleString() + ' ft') + ' · ' + Math.round(a.gs || 0) + ' kt' + (a.from || a.to ? '<br>' + esc((a.from || '?') + ' → ' + (a.to || '?')) : ''), { direction: 'top' })
+          .addTo(trLayer);
+      });
+    }).catch(function () {});
+  }
+  setInterval(function () { if (ui.map) { trBtn(); var b = document.querySelector('#hgJMap .hg-jtr'); if (b) b.style.display = ui.sel === 'cur' ? '' : 'none'; } if (ui.open && trOn) trPoll(); else if (trLayer) trLayer.clearLayers(); }, 4000);
+
   /* bouton dans la barre de la carte de suivi, ouverture depuis l'appli */
   setInterval(function () {
     if (document.getElementById('hgJBtn')) return;
