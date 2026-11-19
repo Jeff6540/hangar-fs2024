@@ -19,6 +19,7 @@ Version 12.7 — nouveau look de la carte de suivi
 - Suivi et journal de vol : l'altitude est celle de l'altimètre (calage QNH ou STD), la même que sur ton PFD.
 - Barre de titre Windows en sombre sur toutes les fenêtres (mêmes boutons réduire, agrandir, fermer).
 - Carte de suivi : au sol, une étiquette près de ton avion indique « Roulage vers la piste / vers la porte » et ta vitesse de roulage ; la carte du journal montre aussi les taxiways en zoomant.
+- Changer de langue (drapeaux) passe aussi tout de suite Avionics Dispatch, le journal de vol, la carte des scènes et le tutoriel dans la nouvelle langue.
 - Menu repliable à gauche sur Avionics Dispatch, la carte des scènes et le tutoriel : retour à l'accueil ou à n'importe quelle page en un clic.
 - Bibliothèque et Community : la croix ✕ revient dans la case de recherche pour la vider d'un clic (ou touche Échap).
 - Finitions : apparition douce des encadrés, bulles d'aide et boutons de zoom assortis, barres de défilement discrètes.
@@ -91,6 +92,7 @@ Version 12.7 — new look for the tracking map
 - Flight tracking and log: the altitude is the altimeter's (QNH or STD setting), the same as on your PFD.
 - Dark Windows title bar on all windows (same minimize, maximize, close buttons).
 - Tracking map: on the ground, a label next to your aircraft shows "Taxi to runway / to gate" and your taxi speed; the log map also shows taxiways when zoomed in.
+- Switching language (flags) now also switches Avionics Dispatch, the flight log, the sceneries map and the tutorial right away.
 - Collapsible menu on the left of Avionics Dispatch, the sceneries map and the tutorial: back to the home page or any page in one click.
 - Library and Community: the ✕ cross is back in the search box to clear it in one click (or the Esc key).
 - Finishing touches: panels fade in smoothly, matching tooltips and zoom buttons, discreet scrollbars.

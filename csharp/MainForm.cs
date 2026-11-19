@@ -560,6 +560,8 @@ namespace HangarFS2024
                     }
                 case "setLang":
                     hangar.SetLang(JsonStore.Str(a["lang"]));
+                    // les autres fenêtres (Avionics Dispatch, journal de vol, carte, tutoriel) passent aussi dans la nouvelle langue
+                    foreach (var w in webWins.Values.ToList()) if (!w.IsDisposed) w.ReloadPage();
                     return null;
                 case "reload":
                     web.NavigateToString(BuildPage());
