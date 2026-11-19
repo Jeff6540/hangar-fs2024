@@ -5951,11 +5951,13 @@ ${waypoint(arr)}
   }
   function el(tag, cls, html) { var e = document.createElement(tag); e.className = cls; if (html) e.innerHTML = html; return e; }
   function grp(id, label) { var g = document.getElementById(id); if (!g) { g = el('div', 'hg-grp'); g.id = id; g.appendChild(el('span', 'hg-gl', label)); } return g; }
-  function place(box, items, skip) {   /* range les éléments dans l'ordre voulu, sans rien toucher si c'est déjà bon */
-    items = items.filter(Boolean);
-    var cur = Array.prototype.slice.call(box.children).slice(skip || 0);
-    var same = cur.length >= items.length && items.every(function (x, i) { return cur[i] === x; });
-    if (!same) items.forEach(function (x) { box.appendChild(x); });
+  function place(box, items, skip) {   /* range les éléments dans l'ordre voulu en ne déplaçant que ceux mal placés
+                                           (déplacer une liste ouverte, comme Rayon, la refermerait) */
+    items = items.filter(Boolean); skip = skip || 0;
+    items.forEach(function (x, i) {
+      var at = box.children[skip + i];
+      if (at !== x) box.insertBefore(x, at || null);
+    });
   }
   function layout() {
     var panel = q('#trafficMapModal>.avionics-panel'); if (!panel) return;
@@ -5969,7 +5971,7 @@ ${waypoint(arr)}
     if (status && status !== r1) status.classList.add('hg-status');
     var sb = document.getElementById('sbUserInput'), sbBox = sb ? sb.parentNode : null;
     var grow = document.getElementById('hgGrow'); if (!grow) { grow = el('span', 'hg-grow'); grow.id = 'hgGrow'; }
-    place(r1, [menu, title, gVa, status, grow, document.getElementById('alFoldAll'), close]);
+    place(r1, [menu, title, gVa, status, grow, document.getElementById('hgJBtn'), document.getElementById('alFoldAll'), close]);
     place(gPlan, [sbBox, byClick('fitSimbriefPlan()')], 1);
     place(gMap, [document.getElementById('trafficToggleBtn'), document.getElementById('trafficShowGroundBtn'), document.getElementById('trafficFollowBtn'),
                  document.getElementById('hgAptBtn'), document.getElementById('hgAptNamesBtn'), document.getElementById('alAerowayBtn')], 1);
