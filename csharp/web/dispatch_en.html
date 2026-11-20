@@ -6410,7 +6410,7 @@ ${waypoint(arr)}
   function rail(k) { document.querySelectorAll('#hgRail .it').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); }); }   /* menu : la page affichée est allumée */
   function close() { var d = document.getElementById('hgJournal'); if (d) d.classList.remove('on'); ui.open = false; syncRail(); }
   function trackOpen() { var t = document.getElementById('trafficMapModal'); return !!(t && !t.classList.contains('hidden') && t.style.display !== 'none'); }
-  function syncRail() { rail(ui.open ? 'journal' : (trackOpen() ? 'track' : 'plan')); }
+  function syncRail() { rail(ui.open ? 'journal' : (trackOpen() ? 'track' : (window.hgRailPage ? window.hgRailPage() : 'plan'))); }
   setInterval(syncRail, 800);
   /* menu repliable : Plan de vol (page principale), Suivi de vol (carte de suivi), Journal de vol */
   window.hgShow = function (k) {
@@ -7299,11 +7299,11 @@ ${waypoint(arr)}
   }
   var prev = window.hgShow;
   function persoOpen() { var m = $('interactiveMapModal'); return !!(m && !m.classList.contains('hidden')); }
+  window.hgRailPage = function () { var v = $('hgVfr'); return v && v.classList.contains('on') ? 'vfr' : (persoOpen() ? 'perso' : 'plan'); };
   function closeVfr() { var v = $('hgVfr'); if (v) v.classList.remove('on'); }
   /* menu : la carte Plan de vol personnel ouverte allume son entrée */
   setInterval(function () {
-    var v = $('hgVfr'), vo = !!(v && v.classList.contains('on')), k = vo ? 'vfr' : (persoOpen() ? 'perso' : '');
-    if (k) document.querySelectorAll('#hgRail .it').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
+    /* 12.9 : la surbrillance du menu est faite par une seule horloge (celle du journal), qui demande ici la page affichée */
     /* 12.9 : la carte Plan de vol personnel n'affiche plus les petits aérodromes (ils sont dans la page Plan VFR) */
     try { if (typeof airportFilters !== 'undefined' && airportFilters.small) toggleAirportFilter('small'); } catch (e) {}
   }, 400);
