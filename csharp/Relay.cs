@@ -530,7 +530,20 @@ namespace HangarFS2024
         }
 
         // SimConnect.dll : à côté de l'appli, dans les réglages, l'ancien relais, le SDK ou l'ancienne version Python
+        static string foundDll, foundKey;
+        static readonly object findGate = new object();
         public static string FindSimConnectDll(string extraDir, string launchTarget)
+        {
+            // la recherche parcourt plusieurs disques : faite une fois par lancement de l'appli (refaite si le réglage change ou si la DLL a disparu)
+            string key = (extraDir ?? "") + "|" + (launchTarget ?? "");
+            lock (findGate)
+            {
+                if (foundDll != null && foundKey == key && File.Exists(foundDll)) return foundDll;
+                foundDll = FindSimConnectDllNow(extraDir, launchTarget); foundKey = key;
+                return foundDll;
+            }
+        }
+        static string FindSimConnectDllNow(string extraDir, string launchTarget)
         {
             var c = new List<string>();
             string here = AppDomain.CurrentDomain.BaseDirectory;

@@ -201,7 +201,7 @@ namespace HangarFS2024
             var list = apts.Where(a => System.Text.RegularExpressions.Regex.IsMatch((string)a[0], "^[A-Z0-9]{3,4}$")).ToList();
             var outRes = new JObject();
             var pending = new Dictionary<uint, string>();
-            var objs = new Dictionary<uint, JObject>();           // identifiant unique -> approche / transition
+            var objs = new Dictionary<ulong, JObject>();          // (requête, identifiant unique) -> approche / transition
             var byReq = new Dictionary<uint, JArray>();           // requête -> approches de l'aéroport
             int next = 0, done = 0, total = list.Count;
             uint req = REQ_BASE;
@@ -222,7 +222,7 @@ namespace HangarFS2024
                 catch (TimeoutException)
                 {
                     // MSFS ne répond plus pour ces aéroports : on les passe
-                    done += pending.Count; foreach (var k in pending.Keys) byReq.Remove(k); pending.Clear(); last = DateTime.UtcNow; continue;
+                    done += pending.Count; foreach (var k in pending.Keys) { byReq.Remove(k); Forget(objs, k); } pending.Clear(); last = DateTime.UtcNow; continue;
                 }
                 if (b == null || b.Length < 16) continue;
                 uint id = BitConverter.ToUInt32(b, 8);
@@ -233,7 +233,7 @@ namespace HangarFS2024
                     if (pending.TryGetValue(r, out icao))
                     {
                         pending.Remove(r); done++;
-                        var arr = byReq[r]; byReq.Remove(r);
+                        var arr = byReq[r]; byReq.Remove(r); Forget(objs, r);
                         var clean = new JArray(arr.OfType<JObject>().Where(a => ((JArray)a["f"]).Count > 0).Select(a => { a.Remove("u"); foreach (var t in (JArray)a["tr"]) ((JObject)t).Remove("u"); a["tr"] = new JArray(((JArray)a["tr"]).Where(t => ((JArray)t["l"]).Count > 0)); return a; }));
                         if (clean.Count > 0) outRes[icao] = clean;
                         if (done % 50 == 0) Set("run", "approaches", done, total);
@@ -255,12 +255,12 @@ namespace HangarFS2024
                     string rwy = rn >= 1 && rn <= 36 ? rn.ToString("00") + (rd >= 0 && rd < Desig.Length ? Desig[rd] : "") : "";
                     var a = new JObject { ["u"] = uid, ["t"] = t >= 0 && t < ApprType.Length ? ApprType[t] : "?", ["r"] = rwy,
                         ["s"] = sfx > 48 && sfx < 127 ? ((char)sfx).ToString() : "", ["f"] = new JArray(), ["tr"] = new JArray() };
-                    objs[uid] = a; apList.Add(a);
+                    objs[K(ureq, uid)] = a; apList.Add(a);
                 }
                 else if (dtype == 6)                         // transition
                 {
                     JObject a;
-                    if (objs.TryGetValue(parent, out a)) { var t = new JObject { ["u"] = uid, ["l"] = new JArray() }; objs[uid] = t; ((JArray)a["tr"]).Add(t); }
+                    if (objs.TryGetValue(K(ureq, parent), out a)) { var t = new JObject { ["u"] = uid, ["l"] = new JArray() }; objs[K(ureq, uid)] = t; ((JArray)a["tr"]).Add(t); }
                 }
                 else if ((dtype == 7 || dtype == 8) && b.Length >= D + 36)   // branche de transition / branche finale
                 {
@@ -270,7 +270,7 @@ namespace HangarFS2024
                     if (fix == "" || (lat == 0 && lon == 0) || Math.Abs(lat) > 90 || Math.Abs(lon) > 180) continue;
                     var leg = new JArray(fix, Math.Round(lat, 5), Math.Round(lon, 5), lt);
                     JObject o;
-                    if (!objs.TryGetValue(parent, out o)) continue;
+                    if (!objs.TryGetValue(K(ureq, parent), out o)) continue;
                     if (dtype == 8 && o["f"] != null) ((JArray)o["f"]).Add(leg);
                     else if (dtype == 7 && o["l"] != null) ((JArray)o["l"]).Add(leg);
                 }
@@ -295,7 +295,7 @@ namespace HangarFS2024
 
             var res = new JObject();
             var pending = new Dictionary<uint, string>();
-            var objs = new Dictionary<uint, JObject>();
+            var objs = new Dictionary<ulong, JObject>();          // (requête, identifiant unique) -> procédure / transition
             var byReq = new Dictionary<uint, JObject>();
             int next = 0, done = 0, total = icaos.Count, fails = 0;
             uint req = REQ_PROC;
@@ -314,7 +314,7 @@ namespace HangarFS2024
                 try { b = Wait(c, ref last, 20); }
                 catch (TimeoutException)
                 {
-                    done += pending.Count; foreach (var k in pending.Keys) byReq.Remove(k); pending.Clear(); last = DateTime.UtcNow;
+                    done += pending.Count; foreach (var k in pending.Keys) { byReq.Remove(k); Forget(objs, k); } pending.Clear(); last = DateTime.UtcNow;
                     if (++fails >= 3 && res.Count == 0) return res;    // MSFS ne sait pas répondre à cette demande : on n'insiste pas
                     continue;
                 }
@@ -327,7 +327,7 @@ namespace HangarFS2024
                     if (pending.TryGetValue(r, out icao))
                     {
                         pending.Remove(r); done++;
-                        var o = byReq[r]; byReq.Remove(r);
+                        var o = byReq[r]; byReq.Remove(r); Forget(objs, r);
                         Func<JToken, JToken> clean = list => new JArray(((JArray)list).OfType<JObject>().Select(pr =>
                         {
                             pr.Remove("u");
@@ -348,22 +348,22 @@ namespace HangarFS2024
                 if ((dtype == 10 || dtype == 11) && b.Length >= D + 8)            // départ / arrivée
                 {
                     var pr = new JObject { ["u"] = uid, ["n"] = Txt(b, D, 8), ["rw"] = new JArray(), ["en"] = new JArray(), ["c"] = new JArray() };
-                    objs[uid] = pr; ((JArray)ap[dtype == 10 ? "d" : "a"]).Add(pr);
+                    objs[K(ureq, uid)] = pr; ((JArray)ap[dtype == 10 ? "d" : "a"]).Add(pr);
                 }
                 else if (dtype == 12 && b.Length >= D + 8)                         // transition de piste
                 {
                     JObject pr;
-                    if (!objs.TryGetValue(parent, out pr) || pr["rw"] == null) continue;
+                    if (!objs.TryGetValue(K(ureq, parent), out pr) || pr["rw"] == null) continue;
                     int rn = BitConverter.ToInt32(b, D), rd = BitConverter.ToInt32(b, D + 4);
                     var t = new JObject { ["u"] = uid, ["r"] = rn >= 1 && rn <= 36 ? rn.ToString("00") + (rd >= 0 && rd < Desig.Length ? Desig[rd] : "") : "ALL", ["l"] = new JArray() };
-                    objs[uid] = t; ((JArray)pr["rw"]).Add(t);
+                    objs[K(ureq, uid)] = t; ((JArray)pr["rw"]).Add(t);
                 }
                 else if (dtype == 13 && b.Length >= D + 8)                         // transition en route
                 {
                     JObject pr;
-                    if (!objs.TryGetValue(parent, out pr) || pr["en"] == null) continue;
+                    if (!objs.TryGetValue(K(ureq, parent), out pr) || pr["en"] == null) continue;
                     var t = new JObject { ["u"] = uid, ["n"] = Txt(b, D, 8), ["l"] = new JArray() };
-                    objs[uid] = t; ((JArray)pr["en"]).Add(t);
+                    objs[K(ureq, uid)] = t; ((JArray)pr["en"]).Add(t);
                 }
                 else if (dtype == 7 && b.Length >= D + 36)                         // branche
                 {
@@ -371,12 +371,18 @@ namespace HangarFS2024
                     double lat = BitConverter.ToDouble(b, D + 20), lon = BitConverter.ToDouble(b, D + 28);
                     if (fix == "" || (lat == 0 && lon == 0) || Math.Abs(lat) > 90 || Math.Abs(lon) > 180) continue;
                     JObject o;
-                    if (!objs.TryGetValue(parent, out o)) continue;
+                    if (!objs.TryGetValue(K(ureq, parent), out o)) continue;
                     var leg = new JArray(fix, Math.Round(lat, 5), Math.Round(lon, 5), BitConverter.ToInt32(b, D));
                     if (o["l"] != null) ((JArray)o["l"]).Add(leg); else if (o["c"] != null) ((JArray)o["c"]).Add(leg);
                 }
             }
             return res;
+        }
+
+        static ulong K(uint req, uint uid) { return ((ulong)req << 32) | uid; }
+        static void Forget(Dictionary<ulong, JObject> objs, uint req)
+        {
+            foreach (var key in objs.Keys.Where(x => (uint)(x >> 32) == req).ToList()) objs.Remove(key);
         }
 
         static void Write(string path, List<object[]> rows)
