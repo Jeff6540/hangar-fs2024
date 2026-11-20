@@ -2788,7 +2788,7 @@ VFR_TXT = {
            "appr": "APPROCHE", "apDirect": "Aucune (arrivée directe)", "apNoTr": "Sans transition", "apVia": "Transition par", "apNone": "Pas d'approche dans les données MSFS pour cet aéroport.",
            "apNeed": "Importe d'abord les données de MSFS (en bas de la colonne de droite) pour avoir les points RNAV, les ILS, les SID, les STAR et les approches.",
            "apInfo": "Clic droit sur un aéroport (ou son ILS) pour voir et choisir SID, STAR et approche. Les tracés choisis sont ajoutés à ta route et au fichier .PLN ; dans SimBrief, choisis-les dans ses options.",
-           "msfs": "DONNÉES MSFS (RNAV, ILS, APPROCHES)", "impWhy": "Une seule fois, MSFS 2024 ouvert (au menu principal) : l'appli lit les points RNAV, les ILS et les approches de ton simulateur et les garde sur ton PC. Ensuite, tout marche simulateur éteint. À refaire après une grosse mise à jour de MSFS.",
+           "msfs": "DONNÉES MSFS (RNAV, ILS, SID, STAR, APPROCHES)", "impWhy": "Une seule fois, MSFS 2024 ouvert (au menu principal) : l'appli lit les points RNAV, les ILS et les approches de ton simulateur et les garde sur ton PC. Ensuite, tout marche simulateur éteint. À refaire après une grosse mise à jour de MSFS.",
            "impGo": "Importer depuis MSFS", "impUpd": "Mettre à jour depuis MSFS", "impStop": "Arrêter", "impDate": "Données importées le", "impOk": "Import terminé.",
            "cWpt": "points RNAV", "cAppr": "approches", "steps": {"open": "Connexion à MSFS", "airports": "Liste des aéroports", "waypoints": "Points RNAV", "vors": "VOR et ILS", "ndbs": "NDB", "approaches": "Approches", "procs": "Départs et arrivées"}},
     "en": {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point",
@@ -2807,7 +2807,7 @@ VFR_TXT = {
            "appr": "APPROACH", "apDirect": "None (direct arrival)", "apNoTr": "No transition", "apVia": "Transition via", "apNone": "No approach in the MSFS data for this airport.",
            "apNeed": "First import the MSFS data (at the bottom of the right column) to get RNAV points, ILS, SIDs, STARs and approaches.",
            "apInfo": "Right-click an airport (or its ILS) to see and choose SID, STAR and approach. The chosen paths are added to your route and to the .PLN file; in SimBrief, choose them in its options.",
-           "msfs": "MSFS DATA (RNAV, ILS, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.",
+           "msfs": "MSFS DATA (RNAV, ILS, SID, STAR, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.",
            "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.",
            "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches", "procs": "Departures and arrivals"}},
 }
@@ -2981,19 +2981,20 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   function sidLegs(d, s) { var p = d && d.d[s.sid]; if (!p) return []; return [].concat(s.rw >= 0 && p.rw[s.rw] ? p.rw[s.rw].l : [], p.c, s.en >= 0 && p.en[s.en] ? p.en[s.en].l : []); }
   function starLegs(d, s) { var p = d && d.a[s.star]; if (!p) return []; return [].concat(s.en >= 0 && p.en[s.en] ? p.en[s.en].l : [], p.c, s.rw >= 0 && p.rw[s.rw] ? p.rw[s.rw].l : []); }
   function apLegs(d, s) { var a = d && d.ap[s.ap]; if (!a) return []; return [].concat(s.tr >= 0 && a.tr && a.tr[s.tr] ? a.tr[s.tr].l : [], a.f); }
-  function ends2() { var f = pts.length > 1 ? pts[0] : null, l = pts.length > 1 ? pts[pts.length - 1] : null; return [f && f.kind === 'apt' ? f.name : '', l && l.kind === 'apt' ? l.name : '']; }
+  function ends2() { var f = pts.length ? pts[0] : null, l = pts.length > 1 ? pts[pts.length - 1] : null;   /* un aéroport seul en premier point est déjà le départ */ return [f && f.kind === 'apt' ? f.name : '', l && l.kind === 'apt' ? l.name : '']; }
   function full() {
     var e = ends2(), out = [], add2 = function (p) { if (!out.length || out[out.length - 1].name !== p.name || p.kind === 'apt') out.push(p); };
-    if (pts.length < 2) return pts.slice();
+    if (!pts.length) return [];
     var dd = e[0] && e[0] === pr.dep.icao ? data(e[0]) : null, da = e[1] && e[1] === pr.arr.icao ? data(e[1]) : null;
     add2(pts[0]);
     if (dd) legsTo(sidLegs(dd, pr.dep), 'sid').forEach(add2);
+    if (pts.length < 2) return out;
     pts.slice(1, -1).forEach(add2);
     if (da) { legsTo(starLegs(da, pr.arr), 'star').forEach(add2); legsTo(apLegs(da, pr.arr), 'ap').forEach(add2); }
     out.push(pts[pts.length - 1]);
     return out;
   }
-  function apLabel(a) { return a.t + (a.r ? ' ' + a.r : '') + (a.s ? ' ' + a.s : ''); }
+  function apLabel(a) { return a.t + (a.r ? ' ' + a.r : '') + (a.s && a.s !== '0' ? ' ' + a.s : ''); }
   function syncAppr() {
     var e = ends2();
     if (e[0] !== pr.dep.icao) { pr.dep = { icao: e[0], sid: -1, rw: -1, en: -1 }; save(); }
@@ -3133,7 +3134,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
         (st.total ? '<div style="height:6px;background:#1e3a5f;border-radius:4px;margin:6px 0"><div style="height:6px;border-radius:4px;background:#38bdf8;width:' + Math.round(100 * (st.done || 0) / st.total) + '%"></div></div>' : '') +
         '<button type="button" class="b" data-a="impstop">' + T.impStop + '</button>';
     } else {
-      if (navMeta) h += '<div style="font-size:12px;line-height:1.6">' + T.impDate + ' ' + fmtDate(navMeta.date) + '<br>' + (navMeta.waypoints || 0).toLocaleString() + ' ' + T.cWpt + ' · ' + (navMeta.ils || 0).toLocaleString() + ' ILS · ' + (navMeta.approaches || 0).toLocaleString() + ' ' + T.cAppr + '</div>';
+      if (navMeta) h += '<div style="font-size:12px;line-height:1.6">' + T.impDate + ' ' + fmtDate(navMeta.date) + '<br>' + (navMeta.waypoints || 0).toLocaleString() + ' ' + T.cWpt + ' · ' + (navMeta.ils || 0).toLocaleString() + ' ILS · ' + (navMeta.approaches || 0).toLocaleString() + ' ' + T.cAppr + (navMeta.sids != null ? ' · ' + navMeta.sids.toLocaleString() + ' SID · ' + (navMeta.stars || 0).toLocaleString() + ' STAR' : '') + '</div>';
       else h += '<div style="font-size:12px;color:#94a3b8;line-height:1.5">' + T.impWhy + '</div>';
       if (st.state === 'error' && st.msg) h += '<div style="font-size:12px;color:#f87171;margin-top:6px">⚠ ' + esc(st.msg) + '</div>';
       if (st.state === 'done') h += '<div style="font-size:12px;color:#4ade80;margin-top:6px">✓ ' + T.impOk + '</div>';
@@ -3224,7 +3225,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     if (tb) tb.innerHTML = h || '<tr><td colspan="5" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
-    if (sm) sm.textContent = pts.length ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM') : T.title;
+    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM') : (pts.length ? pts[0].name : T.title);
   }
   /* ---------- export ---------- */
   function ends() {

@@ -254,7 +254,7 @@ namespace HangarFS2024
                     int t = BitConverter.ToInt32(b, D), sfx = BitConverter.ToInt32(b, D + 4), rn = BitConverter.ToInt32(b, D + 8), rd = BitConverter.ToInt32(b, D + 12);
                     string rwy = rn >= 1 && rn <= 36 ? rn.ToString("00") + (rd >= 0 && rd < Desig.Length ? Desig[rd] : "") : "";
                     var a = new JObject { ["u"] = uid, ["t"] = t >= 0 && t < ApprType.Length ? ApprType[t] : "?", ["r"] = rwy,
-                        ["s"] = sfx > 32 && sfx < 127 ? ((char)sfx).ToString() : "", ["f"] = new JArray(), ["tr"] = new JArray() };
+                        ["s"] = sfx > 48 && sfx < 127 ? ((char)sfx).ToString() : "", ["f"] = new JArray(), ["tr"] = new JArray() };
                     objs[uid] = a; apList.Add(a);
                 }
                 else if (dtype == 6)                         // transition
