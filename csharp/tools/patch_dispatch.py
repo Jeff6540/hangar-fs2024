@@ -2242,7 +2242,7 @@ TOD_JS = r"""<script id="hangar-128-tod-js">
   }
   function bind(root) {
     root.querySelectorAll('button[data-m]').forEach(function (b) {
-      b.onclick = function () { mode = b.dataset.m; try { localStorage.setItem(KEY, mode); } catch (e) {} paint(); };
+      b.onclick = function () { mode = b.dataset.m; try { localStorage.setItem(KEY, mode); } catch (e) {} paint(); try { if (typeof generationMode !== 'undefined' && generationMode === 'RANDOM') triggerSearch(); } catch (x) {} };
     });
   }
   function depMain() { try { return currentDep; } catch (e) { return null; } }
@@ -2309,13 +2309,13 @@ NOW_TXT = {
  "fr": {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure",
         "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant",
         "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil",
-        "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.",
-        "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit", "nowInfo": "En ce moment :", "dep": "Départ", "arr": "Arrivée", "depLabel": "DÉPART : OACI, VILLE OU AÉROPORT", "rnd": "Départ maintenant : l'appli ne propose que les vols où c'est le bon moment.", "dayC": "Jour", "nightC": "Nuit", "line": "lever / coucher du soleil"},
+        "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec cette durée de vol. Essaie une autre durée ou un autre moment.",
+        "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit", "nowInfo": "En ce moment :", "dep": "Départ", "arr": "Arrivée", "depLabel": "DÉPART : OACI, VILLE OU AÉROPORT", "rnd": "Départ maintenant depuis ton aéroport : l'appli ne propose que les destinations où ce sera le bon moment à l'atterrissage.", "dayC": "Jour", "nightC": "Nuit", "line": "lever / coucher du soleil"},
  "en": {"when": "MSFS time", "now": "⏰ Now (real time)", "set": "🕑 I set the time",
         "nowTo": "Takeoff", "nowLdg": "Landing", "ok": "fits", "ko": "doesn't fit right now",
         "night": "night", "dawn": "dawn", "dusk": "dusk", "day": "day", "morning": "morning", "sunset": "sunset",
-        "pick": "🎲 Find a departure where it's the right time", "none": "No destination fits right now from this departure. Try \"Find a departure\" or another duration.",
-        "noArr": "pick departure and arrival", "nightLayer": "Day / night", "nowInfo": "Right now:", "dep": "Departure", "arr": "Arrival", "depLabel": "DEPARTURE: ICAO, CITY OR AIRPORT", "rnd": "Departing now: the app only offers flights where it's the right time.", "dayC": "Day", "nightC": "Night", "line": "sunrise / sunset"},
+        "pick": "🎲 Find a departure where it's the right time", "none": "No destination fits right now with this flight duration. Try another duration or another time of day.",
+        "noArr": "pick departure and arrival", "nightLayer": "Day / night", "nowInfo": "Right now:", "dep": "Departure", "arr": "Arrival", "depLabel": "DEPARTURE: ICAO, CITY OR AIRPORT", "rnd": "Departing now from your airport: the app only offers destinations where it will be the right time on landing.", "dayC": "Day", "nightC": "Night", "line": "sunrise / sunset"},
 }
 NOW_CSS = r"""<style id="hangar-128-now">
 .hg-when{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
@@ -2360,6 +2360,16 @@ NOW_JS = r"""<script id="hangar-128-now-js">
     return true;
   }
   window.hgTodFits = fits;
+  /* Aléatoire / durée : l'aéroport choisi reste fixe ; c'est l'autre bout du vol qui doit être au bon moment
+     (destination à l'atterrissage, ou départ au décollage si on cherche des départs vers une arrivée fixe) */
+  function sideFits(m, apt, t) {
+    var a = sunAlt(+apt.lat, +apt.lon, t);
+    if (m === 'm') return a.am && a.alt > 0 && sunAlt(+apt.lat, +apt.lon, t - 3 * 3600e3).alt < 0;
+    if (m === 'd') return a.alt > 0;
+    if (m === 'c') return !a.am && a.alt < 5 && a.alt > -6;
+    if (m === 'n') return a.alt < -6;
+    return true;
+  }
   window.hgSunAlt = sunAlt;
   window.hgLabelAt = function (lat, lon, ms) { return NAME[label(lat, lon, ms)]; };
   function mins() { var t = (document.getElementById('summaryFlightTime') || {}).textContent || '', x = t.match(/(\d+)\s*h\s*(\d+)/); return x ? (+x[1]) * 60 + (+x[2]) : 0; }
@@ -2368,8 +2378,7 @@ NOW_JS = r"""<script id="hangar-128-now-js">
     var m = mode(); if (!m || genMode() !== 'RANDOM' || !primaryApt) { window.hgTodEmpty = false; return results; }
     var out = results.filter(function (r) {
       var tTo = Date.now() + P(r.flightTimeMin || 0) * 60000;
-      var dep = sm === 'DEPARTURE' ? primaryApt : r, arr = sm === 'DEPARTURE' ? r : primaryApt;
-      return fits(m, dep, arr, tTo, tTo + (r.flightTimeMin || 0) * 60000);
+      return sm === 'DEPARTURE' ? sideFits(m, r, tTo + (r.flightTimeMin || 0) * 60000) : sideFits(m, r, tTo);
     });
     window.hgTodEmpty = out.length === 0 && results.length > 0;
     return out;
@@ -2415,8 +2424,6 @@ NOW_JS = r"""<script id="hangar-128-now-js">
     var box = document.getElementById('hgTodMainBox'); if (!box) return;
     if (!document.getElementById('hgNowLine')) {
       var h = document.createElement('div'); h.id = 'hgRndHint'; h.className = 'hg-todr'; h.textContent = T.rnd; box.appendChild(h);
-      var p = document.createElement('button'); p.type = 'button'; p.id = 'hgPick'; p.className = 'hg-pick'; p.textContent = T.pick; p.onclick = pick;
-      box.appendChild(p);
       var n = document.createElement('div'); n.id = 'hgNowLine'; n.className = 'hg-todr'; box.appendChild(n);
     }
   }
@@ -2426,7 +2433,6 @@ NOW_JS = r"""<script id="hangar-128-now-js">
     when = rnd ? 'now' : 'set';
     var r = document.getElementById('hgTodMainR'); if (r) r.style.display = rnd ? 'none' : '';
     var h = document.getElementById('hgRndHint'); if (h) h.style.display = (m && rnd) ? '' : 'none';
-    var p = document.getElementById('hgPick'); if (p) p.style.display = (m && rnd) ? '' : 'none';
     var dep = null, arr = null; try { dep = currentDep; arr = currentArr; } catch (e) {}
     var n = document.getElementById('hgNowLine');
     if (n) n.innerHTML = rnd ? (m ? plain(dep, arr) + (window.hgTodEmpty ? '<br><span class="hg-ko">' + T.none + '</span>' : '') : '') : info(dep, arr);
