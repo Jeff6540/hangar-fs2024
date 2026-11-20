@@ -16,6 +16,7 @@ Version 12.9 — page Plan de vol plus claire
 - Nouvelle page « Plan VFR » (bouton ✈ PLAN VFR sur la carte Plan de vol personnel) : clique où tu veux pour tracer ta route, ou sur un aéroport, un VOR / DME ou un NDB ; axes de piste prolongés ; cap magnétique et distance de chaque branche ; export SimBrief (VFR) ou fichier .PLN pour MSFS 2024. Pas d'altitude ni d'avion à régler.
 - Plan VFR : RNAV, ILS et approches. Un bouton « Importer depuis MSFS » lit une seule fois, simulateur ouvert, les points RNAV, VOR, ILS, NDB et les approches de tous les aéroports ; ensuite tout marche simulateur éteint. Choix de l'approche et de sa transition sur l'aéroport d'arrivée, tracé ajouté à la route et au fichier .PLN.
 - Plan VFR : départs (SID) et arrivées (STAR) en plus des approches. Clic droit sur un aéroport ou un ILS : sa fiche (pistes, ILS, SID, STAR, approches), aperçu sur la carte, puis « Choisir ». Retirer un point : ✕ dans la liste ou « Retirer » dans sa fiche. Refaire l'import une fois pour avoir les SID et STAR.
+- Journal de vol : les vitesses impossibles envoyées par MSFS (sauts brusques) sont ignorées ; la descente est mieux reconnue sur les vols courts ; en approche, nouvelle case « en finale (500 ft sol) » avec la vitesse et le vario ; le bouton « ✈ Trafic IA » est plus visible (en haut à gauche de la carte).
 - En haut de la page d'accueil, un bouton avec le logo des Fous Volants ouvre le site de la VA (lesfousvolants.fr).
 - Entrée « Plan VFR » dans le menu (rubrique Préparer) ; la carte Plan de vol personnel n'affiche plus les petits aérodromes (ils sont dans la page Plan VFR).
 
@@ -121,6 +122,7 @@ Version 12.9 — clearer Flight plan page
 - New "VFR plan" page (✈ VFR PLAN button on the Personal flight plan map): click anywhere to draw your route, or on an airport, a VOR / DME or an NDB; extended runway centrelines; magnetic heading and distance of each leg; SimBrief (VFR) or .PLN file export for MSFS 2024. No altitude or aircraft to set.
 - VFR plan: RNAV, ILS and approaches. An "Import from MSFS" button reads once, with the simulator open, the RNAV points, VORs, ILSs, NDBs and the approaches of every airport; then everything works with the simulator off. Choose the approach and its transition at the arrival airport, the path is added to the route and the .PLN file.
 - VFR plan: departures (SID) and arrivals (STAR) as well as approaches. Right-click an airport or an ILS: its card (runways, ILS, SID, STAR, approaches), map preview, then "Choose". Remove a point: ✕ in the list or "Remove" in its card. Run the import once more to get SIDs and STARs.
+- Flight log: impossible speeds sent by MSFS (sudden jumps) are ignored; descent is better detected on short flights; on approach, new "on final (500 ft AGL)" box with speed and vertical speed; the "✈ AI traffic" button is easier to see (top left of the map).
 - At the top of the home page, a button with the Les Fous Volants logo opens the VA website (lesfousvolants.fr).
 - "VFR plan" entry in the menu (Prepare section); the Personal flight plan map no longer shows small airfields (they are in the VFR plan page).
 

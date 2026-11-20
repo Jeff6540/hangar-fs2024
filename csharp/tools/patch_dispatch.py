@@ -1415,14 +1415,14 @@ if __name__ == "__main__":
 JRN_TXT = {
  "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
         "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage vers la piste", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage vers la porte", "Porte d'arrivée"],
-        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trOn": "Trafic IA : affiché", "trOff": "Trafic IA : masqué", "trafficTip": "Afficher ou masquer les avions IA en vol autour de toi (vol en cours seulement)", "taxi": "vitesse de roulage", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trOn": "Trafic IA : affiché", "trOff": "Trafic IA : masqué", "trafficTip": "Afficher ou masquer les avions IA en vol autour de toi (vol en cours seulement)", "taxi": "vitesse de roulage", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "finSpd": "en finale (500 ft sol)", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
         "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
         "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
         "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
         "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
  "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
         "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"],
-        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trOn": "AI traffic: shown", "trOff": "AI traffic: hidden", "trafficTip": "Show or hide the AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trOn": "AI traffic: shown", "trOff": "AI traffic: hidden", "trafficTip": "Show or hide the AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "finSpd": "on final (500 ft AGL)", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
         "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
         "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
         "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
@@ -1601,7 +1601,11 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
       if (!taxiG || (onGnd && gs < 60)) { g.gsMax = Math.max(g.gsMax || 0, gs); g.gsSum = (g.gsSum || 0) + gs; g.n = (g.n || 0) + 1; }   /* roulage : seulement la vraie vitesse de roulage */
       if (vs != null) { g.vsMax = Math.max(g.vsMax == null ? -99999 : g.vsMax, vs); g.vsMin = Math.min(g.vsMin == null ? 99999 : g.vsMin, vs); g.vsSum = (g.vsSum || 0) + vs; }
       g.altMax = Math.max(g.altMax || 0, alt); g.altMin = Math.min(g.altMin == null ? 99999 : g.altMin, alt);
-      if (f.ias != null) g.iasMax = Math.max(g.iasMax || 0, f.ias);
+      /* 12.9 : on ignore les valeurs impossibles envoyées par MSFS (saut de plus de 60 kt d'un coup, ou bien plus vite que la vitesse sol) */
+      var iasOk = f.ias != null && !(prev && prev.ias != null && dt <= 5 && Math.abs(f.ias - prev.ias) > 60) && !(f.ias > (u.gs || 0) + 150);
+      if (iasOk) g.iasMax = Math.max(g.iasMax || 0, f.ias);
+      /* 12.9 : vitesse et vario en finale, au passage de 500 ft sol */
+      if (gi === 7 && !g.fin && iasOk && f.agl != null && f.agl <= 500 && f.agl > 50 && (f.vs == null || f.vs < 0)) { g.fin = Math.round(f.ias); g.finVs = f.vs != null ? Math.round(f.vs) : null; }
       rec.cur = gi;
     }
     if (P >= 3 && !rec.out) rec.out = now;
@@ -1612,7 +1616,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
     /* envol et toucher */
     var gnd = !!u.ground && !(f.agl != null && f.agl > 50);
     if (prev) {
-      if (prev.ground && !gnd && !rec.tko) rec.tko = { t: now, ias: f.ias != null ? f.ias : prev.ias, gs: Math.round(u.gs || 0) };
+      if (prev.ground && !gnd && !rec.tko) rec.tko = { t: now, ias: f.ias != null && !(f.ias > (u.gs || 0) + 150) ? f.ias : prev.ias, gs: Math.round(u.gs || 0) };
       if (!prev.ground && gnd && rec.tko && P >= 9) rec.ldg = { t: now, vs: prev.vs != null ? Math.round(prev.vs) : null, ias: prev.ias, gs: Math.round(u.gs || 0), flaps: f.flaps != null ? f.flaps : prev.flaps };
     }
     /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
@@ -1716,6 +1720,7 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
         else if (g.fuel) cells.push([T.fuel, kg(g.fuel)]);
         if (i === 2 || i === 9) { cells.push([T.taxi + ' ' + T.avg, Math.round(g.n ? g.gsSum / g.n : 0) + ' kt']); cells.push([T.taxi + ' ' + T.max, Math.round(g.gsMax || 0) + ' kt']); }   /* au sol : vitesse de roulage */
         if (i >= 3 && i <= 8 && g.iasMax) cells.push([T.iasMax, Math.round(g.iasMax) + ' kt']);   /* en l'air : vitesse indiquée, comme sur le PFD */
+        if (i === 7 && g.fin) cells.push([T.finSpd, g.fin + ' kt' + (g.finVs != null ? ' <small style="color:#8FA3B8;font-weight:600">' + g.finVs + ' ft/min</small>' : '')]);
         if (i === 4 || i === 6 || i === 7) { var av = g.n ? Math.round(g.vsSum / g.n) : null; cells.push([T.vs + ' ' + T.avg, av == null ? '—' : (av > 0 ? '+' : '') + av + ' ft/min']); }
         if (i === 4 || i === 5) cells.push([T.alt, ftx(g.altMax)]);
         if (i === 3 && r.tko) cells.push([T.rot, (r.tko.ias != null ? r.tko.ias : r.tko.gs) + ' kt']);
