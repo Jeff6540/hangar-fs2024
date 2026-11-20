@@ -20,7 +20,7 @@ body{display:flex;flex-direction:row}
 #bRail{align-self:flex-start;margin-left:4px;height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;white-space:nowrap}
 #bRail:hover{color:var(--fg);background:var(--hover)}
 #tabs{display:flex;flex-direction:column;gap:3px}
-#tabs > button{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:0;background:transparent;color:#B4C0CF;font-weight:500;cursor:pointer;text-align:left;white-space:nowrap}
+#tabs > button{display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:10px;border:0;background:transparent;color:#B4C0CF;font-weight:500;cursor:pointer;text-align:left;white-space:nowrap}
 #tabs > button svg{flex:none;width:18px;height:18px;stroke:currentColor}
 #tabs > button:hover{background:var(--hover);color:var(--fg)}
 #tabs > button.on{background:#1A2430;color:var(--fg);font-weight:600}
@@ -51,7 +51,10 @@ body.rail #side{width:70px;padding:16px 10px}
 body.rail #side .btext,body.rail #tabs > button .lbl,body.rail #tabs > button .ext,body.rail .sstat .t,body.rail #bRelay,body.rail #bQuit .lbl{display:none}
 body.rail #side .brand{justify-content:center;padding:0}
 body.rail #bRail{align-self:center;margin:0}
-body.rail #tabs > button{justify-content:center;padding:11px 0}
+body.rail #tabs > button{justify-content:center;padding:8px 0}
+#tabs .tsec{font:700 10px "Segoe UI",Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#4B5768;padding:8px 12px 1px;min-height:4px}
+body.rail #tabs .tsec{font-size:0;padding:4px 0;border-top:1px solid #1E2733;margin:4px 8px 0;min-height:0}
+body.novA #tabs .va-only{display:none}
 body.rail .sstat{align-items:center;padding:10px 0}
 #content{flex:1;min-width:0;display:flex;flex-direction:column}
 #topbar{flex:none;display:flex;align-items:center;gap:12px;padding:16px 22px 10px}
@@ -262,13 +265,22 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     <div class="btext"><div class="bname">Hangar FS 2024</div><div class="bver">Addon Manager · {{VERSION}}</div></div></div>
   <button id="bRail" type="button"></button>
   <nav id="tabs">
+    <div class="tsec" data-t="secAddons"></div>
     <button data-tab="lib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg><span class="lbl" data-t="tabLib"></span></button>
     <button data-open="openMap"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg><span class="lbl" data-t="tabMap"></span><span class="ext">↗</span></button>
     <button data-tab="launch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="lbl" data-t="tabLaunch"></span></button>
+    <div class="tsec" data-t="secPrep"></div>
     <button data-tab="vol"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16l20-6-20-6 4 6z"/></svg><span class="lbl" data-t="tabVol"></span></button>
     <button data-open="openDispatch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span class="lbl" data-t="tabDispatchSide"></span><span class="ext">↗</span></button>
+    <button data-open="openPerso"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><circle cx="15" cy="11" r="2.5"/></svg><span class="lbl" data-t="tabPerso"></span><span class="ext">↗</span></button>
+    <div class="tsec" data-t="secFly"></div>
     <button data-open="openTracking"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg><span class="lbl" data-t="tabTracking"></span><span class="ext">↗</span></button>
     <button data-open="openJournal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/></svg><span class="lbl" data-t="tabJournal"></span><span class="ext">↗</span></button>
+    <div class="tsec" data-t="secRadars"></div>
+    <button data-radar="rglobal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span class="lbl" data-t="tabRGlobal"></span><span class="ext">↗</span></button>
+    <button data-radar="rva" class="va-only"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.8"/></svg><span class="lbl" data-t="tabRVa"></span><span class="ext">↗</span></button>
+    <button data-radar="rvradar" class="va-only"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="lbl" data-t="tabRVaRadar"></span><span class="ext">↗</span></button>
+    <div class="tsec"></div>
     <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="lbl" data-t="tabSet"></span></button>
   </nav>
   <div class="sidefoot">
@@ -538,7 +550,7 @@ const TXT = {
  stnone:["—","—"], stflight:["Lié (vol)","Linked (flight)"], stlinked:["Lié","Linked"], stext:["Lien externe","External link"], streal:["Copie réelle","Real copy"], "st?":["?","?"],
  noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
  statCom:["Dans Community","In Community"], statApt:["Scènes d'aéroport","Airport sceneries"], statReal:["Dossiers réels","Real folders"], statBroken:["Liens cassés","Broken links"],
- railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan de vol","Flight plan"], tabTracking:["Suivi de vol","Flight tracking"], tabJournal:["Journal de vol","Flight log"],
+ railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan de vol","Flight plan"], tabPerso:["Plan de vol personnel","Personal flight plan"], tabRGlobal:["Radar FSHub global","FSHub global radar"], tabRVa:["Ma VA FSHub","My VA on FSHub"], tabRVaRadar:["Radar de ma VA","My VA radar"], secAddons:["Add-ons","Add-ons"], secPrep:["Préparer","Prepare"], secFly:["Voler","Fly"], secRadars:["Radars","Radars"], tabTracking:["Suivi de vol","Flight tracking"], tabJournal:["Journal de vol","Flight log"],
  cardPaths:["Dossiers et chemins","Folders and paths"], cardStart:["Démarrage","Startup"], cardAccess:["Accessibilité","Accessibility"], cardScreens:["Écrans","Screens"],
  tUpd:["Vérifier les mises à jour au démarrage","Check for updates at startup"],
  updCheck:["Vérifier maintenant","Check now"], updGo:["Mettre à jour","Update"], updNews:["Nouveautés","What's new"], updLater:["Plus tard","Later"],
@@ -1639,7 +1651,7 @@ function fillSettings(s){
   if (s.flight_only !== undefined) $("optOnly").checked = !!s.flight_only;
   $("sStartup").checked = !!s.startup; $("sStartupAdmin").checked = !!s.startup_admin;
   $("adminMode").textContent = t(s.is_admin ? "modeAdmin" : "modeNormal"); $("bRestartAdmin").style.display = s.is_admin ? "none" : "";
-  $("sVa").value = s.fshub_va || ""; $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind; $("sUpd").checked = s.update_check !== false;
+  $("sVa").value = s.fshub_va || ""; document.body.classList.toggle("novA", !s.fshub_va); $("sKey").value = s.fshub_token || ""; $("sCb").checked = !!s.colorblind; $("sUpd").checked = s.update_check !== false;
   if (!window.__wnDone && s.whatsnew_seen !== "{{VERSION}}") { window.__wnDone = true; setTimeout(showWhatsNew, 1200); }   /* une fois après chaque mise à jour */
   document.body.classList.toggle("cb", !!s.colorblind);
   document.querySelectorAll("[data-scr]").forEach(c => c.checked = s[c.dataset.scr] !== false);
@@ -1718,6 +1730,7 @@ $("bImport").onclick = async () => {
 
 // ---------------------------------------------------------------- divers
 document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+document.querySelectorAll("#tabs button[data-radar]").forEach(b => b.onclick = () => run("openRadar", {k: b.dataset.radar}));
 document.querySelectorAll("#tabs button[data-open]").forEach(b => b.onclick = () => { $("status").textContent = t(b.dataset.open === "openMap" ? "opening_map" : "opening_disp"); run(b.dataset.open); });
 $("bTuto").onclick = () => run("openTutorial");
 document.querySelectorAll("[data-url]").forEach(b => b.onclick = () => run("openUrl", {url: b.dataset.url}));
@@ -1735,7 +1748,7 @@ document.addEventListener("contextmenu", e => { if (!e.target.closest("input")) 
 
 let UPD = null;
 /* « Quoi de neuf » : écrit pour chaque version, dans le ton de l'annonce Discord (une ligne = un paragraphe) */
-const WHATSNEW = { fr: "✈️ <b>Bienvenue dans la version {{VERSION}} !</b>\n🔔 <b>Quoi de neuf, ici même</b> : à chaque mise à jour, cette fenêtre te résume les nouveautés. Et avant de mettre à jour, le bouton « Nouveautés » du bandeau bleu les affiche directement dans l'appli.\n📒 <b>Journal de vol</b> : ton vol raconté phase par phase, de la porte à la porte, avec ton profil comparé au plan SimBrief (TOC / TOD), ton taux de toucher et l'historique de tes vols.\n🗺️ <b>Suivi de vol relooké</b> : météo lisible en un coup d'œil, piste et vent en dessin, aéroports sur la carte, plans .PLN.\n🌅 <b>Moment du vol</b> : Matin, Journée, Crépuscule ou Nuit, avec l'heure à régler dans MSFS en UTC, calculée pour ton départ et ton arrivée. En aléatoire, tu pars maintenant et l'appli te propose des destinations où ce sera le bon moment à l'atterrissage, adaptées à ton avion. Et le jour / la nuit en direct sur la carte Plan de vol personnel.\n🧭 <b>Navigation plus simple</b> : un menu sur toutes les pages, une barre de titre sombre.\n⛽ Et plein de petites améliorations : SEL TEMP / FLEX, carburant à bord, deux boutons Discord…", en: "✈️ <b>Welcome to version {{VERSION}}!</b>\n🔔 <b>What's new, right here</b>: after each update, this window sums up what's new. And before updating, the \"What's new\" button of the blue banner shows it right in the app.\n📒 <b>Flight log</b>: your flight told phase by phase, gate to gate, with your profile compared with the SimBrief plan (TOC / TOD), your touchdown rate and the history of your flights.\n🗺️ <b>Tracking map makeover</b>: weather readable at a glance, runway and wind drawing, airports on the map, .PLN plans.\n🌅 <b>Time of flight</b>: Morning, Day, Dusk or Night, with the time to set in MSFS in UTC, computed for your departure and arrival. In random mode you depart now and the app offers destinations where it will be the right time on landing, suited to your aircraft. And live day / night on the Personal flight plan map.\n🧭 <b>Easier navigation</b>: a menu on every page, a dark title bar.\n⛽ And plenty of small improvements: SEL TEMP / FLEX, fuel on board, two Discord buttons…" };
+const WHATSNEW = { fr: "✈️ <b>Bienvenue dans la version {{VERSION}} !</b>\n🧭 <b>Page Plan de vol plus claire</b> : deux colonnes, le FMS en trois étapes (avion, départ, arrivée ou durée) et les options repliées avec un résumé de tes choix.\n🗺️ <b>Destination choisie</b> : aperçu du trajet, distance, temps de vol et export SimBrief / .PLN, juste sous la liste.\n📂 <b>Menu en rubriques</b> sur toutes les pages : Add-ons, Préparer, Voler, Radars, avec la carte Plan de vol personnel et les radars FSHub.\n🌅 Et toujours le <b>moment du vol</b> (matin, journée, crépuscule, nuit) et le jour / la nuit en direct, arrivés avec la 12.8.", en: "✈️ <b>Welcome to version {{VERSION}}!</b>\n🧭 <b>Clearer Flight plan page</b>: two columns, the FMS in three steps (aircraft, departure, arrival or duration) and folded options with a summary of your choices.\n🗺️ <b>Chosen destination</b>: route preview, distance, flight time and SimBrief / .PLN export, right under the list.\n📂 <b>Menu in sections</b> on every page: Add-ons, Prepare, Fly, Radars, with the Personal flight plan map and the FSHub radars.\n🌅 And still the <b>time of flight</b> (morning, day, dusk, night) and live day / night, which came with 12.8." };
 function wnNode(html){
   const d = document.createElement("div"); d.className = "wn";
   html.split("\n").filter(x => x.trim()).forEach((l, i) => { const p = document.createElement("p"); if (i === 0) p.className = "wn-h"; p.innerHTML = l; d.appendChild(p); });

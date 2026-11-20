@@ -261,6 +261,9 @@ namespace HangarFS2024
                 case "track": await HandleCommand("openTracking", new JObject()); return;
                 case "journal": await HandleCommand("openJournal", new JObject()); return;
                 case "tuto": await HandleCommand("openTutorial", new JObject()); return;
+                // 12.9 : carte « Plan de vol personnel » et radars FSHub depuis les menus
+                case "perso": case "rva": case "rvradar": await OpenDispatchAt(nav); return;
+                case "rglobal": OpenUrl("https://fshub.io/radar"); return;
                 case "lib": case "launch": case "vol": case "set":
                     if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
                     Show(); Activate(); BringToFront();
@@ -381,6 +384,14 @@ namespace HangarFS2024
                     }
                 case "openTracking": return await OpenDispatchAt("track");
                 case "openPlan": return await OpenDispatchAt("plan");
+                case "openPerso": return await OpenDispatchAt("perso");
+                case "openRadar":
+                    {
+                        var radarKey = JsonStore.Str(a["k"]);
+                        if (radarKey == "rglobal") { OpenUrl("https://fshub.io/radar"); return null; }
+                        if (radarKey == "rva" || radarKey == "rvradar") return await OpenDispatchAt(radarKey);
+                        return null;
+                    }
                 case "openJournal":
                     {
                         if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));

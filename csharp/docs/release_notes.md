@@ -1,25 +1,23 @@
-## Hangar FS 2024 — Addon Manager 12.8
+## Hangar FS 2024 — Addon Manager 12.9
 
-🇫🇷 **Quoi de neuf, directement dans l'appli.**
+🇫🇷 **Une page Plan de vol plus claire.**
 
-- Après chaque mise à jour, une petite fenêtre **« Quoi de neuf »** résume les nouveautés au premier lancement.
-- Avant de mettre à jour, le bouton **Nouveautés** du bandeau bleu affiche ce résumé dans l'appli.
-- **Moment du vol** : Matin, Journée, Crépuscule ou Nuit, avec les heures en UTC (heure à régler dans MSFS, décollage, arrivée), calculées pour ton départ et ton arrivée, et envoyées à SimBrief. En **aléatoire**, tu pars maintenant : l'appli propose des destinations où ce sera le bon moment à l'atterrissage, adaptées à ton avion.
-- **Jour / nuit en direct** sur la carte Plan de vol personnel.
-- Un bouton **Remarque ou bug ?** en bas du menu ouvre le Discord de l'appli.
-- Et pour ceux qui arrivent de la 12.6 ou avant : le **journal de vol**, le nouveau **suivi de vol** et les menus sur toutes les pages, arrivés avec la 12.7.
+- La page **Plan de vol** passe en deux colonnes : le FMS à gauche, les destinations à droite.
+- Le FMS tient en **trois étapes** (avion, départ, arrivée ou durée) ; le reste est rangé dans **Options**, replié, avec un résumé de tes choix.
+- Un clic sur une destination affiche l'**aperçu du trajet** et l'**export SimBrief / .PLN** (toujours deux boutons séparés).
+- Le **menu** est rangé en rubriques sur toutes les pages (Add-ons, Préparer, Voler, Radars), avec la carte **Plan de vol personnel** et les **radars FSHub**.
+- Et pour ceux qui arrivent de la 12.7 ou avant : le **moment du vol** (matin, journée, crépuscule, nuit) et le jour / la nuit en direct, arrivés avec la 12.8.
 
 **Installation** : depuis la 12.4, l'appli se met à jour toute seule en un clic (bandeau bleu à l'ouverture, Flight Simulator fermé). Sinon, télécharge le zip ci-dessous, dézippe-le et remplace ton dossier : tes réglages sont conservés.
 
 ---
 
-🇬🇧 **What's new, right in the app.**
+🇬🇧 **A clearer Flight plan page.**
 
-- After each update, a small **"What's new"** window sums up the changes at first launch.
-- Before updating, the **What's new** button of the blue banner shows this summary in the app.
-- **Time of flight**: Morning, Day, Dusk or Night, with times in UTC (time to set in MSFS, takeoff, arrival), computed for your departure and arrival, and sent to SimBrief. In **random** mode you depart now: the app offers destinations where it will be the right time on landing, suited to your aircraft.
-- **Live day / night** on the Personal flight plan map.
-- A **Feedback or bug?** button at the bottom of the menu opens the app's Discord.
-- And for those coming from 12.6 or earlier: the **flight log**, the new **flight tracking** and menus on every page, which came with 12.7.
+- The **Flight plan** page now uses two columns: the FMS on the left, the destinations on the right.
+- The FMS fits in **three steps** (aircraft, departure, arrival or duration); the rest is in a folded **Options** box, with a summary of your choices.
+- Clicking a destination shows the **route preview** and the **SimBrief / .PLN export** (still two separate buttons).
+- The **menu** is arranged in sections on every page (Add-ons, Prepare, Fly, Radars), with the **Personal flight plan** map and the **FSHub radars**.
+- And for those coming from 12.7 or earlier: the **time of flight** (morning, day, dusk, night) and live day / night, which came with 12.8.
 
 **Install**: since 12.4 the app updates itself in one click (blue banner at startup, Flight Simulator closed). Otherwise download the zip below, unzip it and replace your folder: your settings are kept.

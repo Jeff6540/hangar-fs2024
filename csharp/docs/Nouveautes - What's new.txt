@@ -1,9 +1,18 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.8
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.9
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.9 — page Plan de vol plus claire
+- La page Plan de vol passe en deux colonnes : le FMS à gauche, les destinations à droite.
+- Le FMS tient en trois étapes numérotées : 1 l'avion, 2 le départ, 3 l'arrivée (ou la durée en aléatoire). Le reste (Départs / Arrivées, IFR / VFR, moment du vol, altitude) est rangé dans « Options », replié, avec un résumé de tes choix.
+- Plus de petits « ON / OFF » sur les boutons : le bouton allumé suffit.
+- Un clic sur une destination affiche l'aperçu du trajet, la distance, le temps de vol et le cadre Export (SimBrief et Fichier .PLN restent deux boutons séparés).
+- Le menu de gauche est rangé en rubriques, sur toutes les pages : Add-ons, Préparer, Voler, Radars.
+- La carte « Plan de vol personnel » a son entrée dans le menu (rubrique Préparer).
+- Les radars FSHub (radar global, ma VA, radar de ma VA) passent du haut de la page Plan de vol au menu de gauche.
 
 Version 12.8 — quoi de neuf
 - Après chaque mise à jour, une fenêtre « Quoi de neuf » résume les nouveautés au premier lancement (une seule fois).
@@ -95,6 +104,15 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.9 — clearer Flight plan page
+- The Flight plan page now uses two columns: the FMS on the left, the destinations on the right.
+- The FMS fits in three numbered steps: 1 the aircraft, 2 the departure, 3 the arrival (or the duration in random mode). The rest (Departures / Arrivals, IFR / VFR, time of flight, altitude) is in a folded "Options" box, with a summary of your choices.
+- No more small "ON / OFF" labels on buttons: the lit button is enough.
+- Clicking a destination shows the route preview, distance, flight time and the Export box (SimBrief and .PLN file stay two separate buttons).
+- The left menu is arranged in sections on every page: Add-ons, Prepare, Fly, Radars.
+- The "Personal flight plan" map has its own menu entry (Prepare section).
+- The FSHub radars (global radar, my VA, my VA radar) move from the top of the Flight plan page to the left menu.
 
 Version 12.8 — what's new
 - After each update, a "What's new" window sums up the changes at first launch (only once).

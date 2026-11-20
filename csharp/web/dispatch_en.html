@@ -2638,21 +2638,6 @@ html body #sbInfo:not(.al-col){max-height:calc(100% - 80px)!important;overflow:a
 .hg-taxi span{position:absolute;left:18px;top:-30px;white-space:nowrap;background:rgba(9,14,21,.92);border:1px solid rgba(245,158,11,.7);border-radius:8px;
   padding:3px 8px;font:650 11.5px "Segoe UI",Inter,sans-serif;color:#E6EDF5;box-shadow:0 6px 16px rgba(0,0,0,.45)}
 .hg-taxi b{color:#F59E0B}
-</style><style id="hangar-127-rail">
-#hgRail{position:fixed;left:0;top:0;bottom:0;width:52px;z-index:2147483000;background:#0D1219;border-right:1px solid #1E2733;display:flex;flex-direction:column;gap:4px;
-  padding:10px 6px;box-sizing:border-box;transition:width .18s ease,box-shadow .18s ease;overflow:hidden;font-family:"Segoe UI Variable Text","Segoe UI",Inter,sans-serif}
-#hgRail:hover{width:224px;box-shadow:12px 0 32px rgba(0,0,0,.45)}
-#hgRail .lg{display:flex;align-items:center;gap:10px;height:40px;margin:0 0 8px 2px;white-space:nowrap}
-#hgRail .lg i{flex:none;width:36px;height:36px;border-radius:10px;background:#38BDF8;display:grid;place-items:center}
-#hgRail .lg b{font:800 13px "Segoe UI",Inter,sans-serif;color:#F1F5F9;opacity:0;transition:opacity .15s}
-#hgRail:hover .lg b,#hgRail:hover .it span{opacity:1}
-#hgRail .it{display:flex;align-items:center;gap:12px;height:38px;padding:0 9px;border-radius:10px;border:0;background:transparent;color:#A9B6C6;cursor:pointer;white-space:nowrap;text-align:left;font:600 13px "Segoe UI",Inter,sans-serif}
-#hgRail .it svg{flex:none;width:20px;height:20px;stroke:currentColor}
-#hgRail .it span{opacity:0;transition:opacity .15s}
-#hgRail .it:hover{background:rgba(56,189,248,.12);color:#FFFFFF}
-#hgRail .it.on{background:rgba(56,189,248,.18);color:#7DD3FC;box-shadow:inset 3px 0 0 #38BDF8}
-html body{padding-left:52px!important;box-sizing:border-box}
-html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,html body #aircraftDropdownModal{left:52px!important}
 </style><style id="hangar-128-tod">
 .hg-tod{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
 .hg-tod button{padding:6px 2px;border-radius:6px;border:1px solid transparent;background:#121A24;color:#94A3B8;font:700 10px "Segoe UI",Inter,sans-serif;cursor:pointer;white-space:nowrap}
@@ -2672,6 +2657,61 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
 .hg-pick:hover{background:rgba(56,189,248,.2);color:#fff}
 .hg-ok{color:#4ADE80}.hg-ko{color:#F87171}
 .hg-nightimg{pointer-events:none}
+</style><style id="hangar-129-lay">
+/* plus de petits ON / OFF : le bouton allumé suffit */
+html body #btnGenModeManual::after,html body #btnGenModeRandom::after,html body #btnModeDep::after,html body #btnModeArr::after,html body #btnTypeIfr::after,html body #btnTypeVfr::after,
+html body #mapToolbar #btnChangeDep::after,html body #mapToolbar #btnChangeArr::after,html body #mapToolbar #filterBtnLarge::after,html body #mapToolbar #filterBtnMedium::after,html body #mapToolbar #filterBtnSmall::after{content:none!important}
+html body #btnGenModeManual,html body #btnGenModeRandom,html body #btnModeDep,html body #btnModeArr,html body #btnTypeIfr,html body #btnTypeVfr{min-height:40px;padding-right:20px!important}
+/* en-tête : les radars passent dans le menu de gauche */
+html body header.hg129 > div:nth-child(2){visibility:hidden}
+/* deux colonnes */
+html body main.hg129{grid-template-columns:minmax(380px,5fr) 7fr!important}
+html body main.hg129 > section{grid-column:auto!important}
+html body main.hg129 > section.hg129-gone{display:none!important}
+/* étapes */
+.hg-step{display:flex;gap:12px;align-items:flex-start}
+.hg-step > .hg-num{flex:none;width:26px;height:26px;margin-top:18px;border-radius:50%;border:1px solid #38BDF8;background:rgba(56,189,248,.12);color:#7DD3FC;
+  font:800 12px "Segoe UI",Inter,sans-serif;display:grid;place-items:center}
+.hg-step > .hg-sb{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+/* options repliées */
+#hgOpt{border:1px solid #1E2733;border-radius:12px;background:rgba(11,15,20,.55)}
+#hgOpt > .hd{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;user-select:none;font:700 13px "Segoe UI",Inter,sans-serif;color:#E6EDF5}
+#hgOpt > .hd .sm{margin-left:auto;color:#8B98A9;font-weight:600;font-size:12px;text-align:right}
+#hgOpt > .hd .ch{color:#7DD3FC;transition:transform .15s}
+#hgOpt.open > .hd .ch{transform:rotate(180deg)}
+#hgOpt > .bd{display:none;padding:2px 13px 13px;flex-direction:column;gap:12px}
+#hgOpt.open > .bd{display:flex}
+#hgOpt #hgTodMainBox{margin-top:0!important}
+#hgTodInfo:empty{display:none}
+/* détail de la destination choisie : aperçu + export */
+#hgDetail{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+#hgDetail .hg-prev #mapMiniContainer{height:250px!important;cursor:default!important}
+#hgDetail .hg-prev #mapMiniContainer > div.absolute{display:none!important}
+#hgDetail .hg-side{display:flex;flex-direction:column;gap:12px}
+#hgDetail .hg-side > .avionics-panel{margin:0!important}
+html body.hg129 #alFlightCard{display:none!important}
+html body main.hg129 > section > .avionics-panel{flex:0 0 auto!important}
+html body.hg129 #resultsList{max-height:min(46vh,460px)!important}
+#hgPickHint{border:1px dashed #1E3A5F;border-radius:12px;padding:14px;color:#64748B;text-align:center;font-size:12px}
+@media (max-width:1100px){#hgDetail{grid-template-columns:1fr}}
+</style><style id="hangar-127-rail">
+#hgRail{position:fixed;left:0;top:0;bottom:0;width:52px;z-index:2147483000;background:#0D1219;border-right:1px solid #1E2733;display:flex;flex-direction:column;gap:4px;
+  padding:10px 6px;box-sizing:border-box;transition:width .18s ease,box-shadow .18s ease;overflow:hidden;font-family:"Segoe UI Variable Text","Segoe UI",Inter,sans-serif}
+#hgRail:hover{width:224px;box-shadow:12px 0 32px rgba(0,0,0,.45)}
+#hgRail .lg{display:flex;align-items:center;gap:10px;height:40px;margin:0 0 8px 2px;white-space:nowrap}
+#hgRail .lg i{flex:none;width:36px;height:36px;border-radius:10px;background:#38BDF8;display:grid;place-items:center}
+#hgRail .lg b{font:800 13px "Segoe UI",Inter,sans-serif;color:#F1F5F9;opacity:0;transition:opacity .15s}
+#hgRail:hover .lg b,#hgRail:hover .it span{opacity:1}
+#hgRail .it{display:flex;align-items:center;gap:12px;height:38px;padding:0 9px;border-radius:10px;border:0;background:transparent;color:#A9B6C6;cursor:pointer;white-space:nowrap;text-align:left;font:600 13px "Segoe UI",Inter,sans-serif}
+#hgRail .it svg{flex:none;width:20px;height:20px;stroke:currentColor}
+#hgRail .it span{opacity:0;transition:opacity .15s}
+#hgRail .it:hover{background:rgba(56,189,248,.12);color:#FFFFFF}
+#hgRail .sec{height:14px;margin:6px 0 0;padding:0 11px;font:700 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#4B5768;white-space:nowrap;opacity:0;transition:opacity .15s;border-top:1px solid #1E2733;padding-top:6px;box-sizing:content-box}
+#hgRail:hover .sec{opacity:1;border-top-color:transparent}
+#hgRail .it{height:34px!important}
+#hgRail .it.on{background:rgba(56,189,248,.18);color:#7DD3FC;box-shadow:inset 3px 0 0 #38BDF8}
+html body{padding-left:52px!important;box-sizing:border-box}
+html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,html body #aircraftDropdownModal{left:52px!important}
 </style></head>
 <body class="flex flex-col">
 
@@ -6790,27 +6830,6 @@ ${waypoint(arr)}
     else { mk.setLatLng([u.lat, u.lon]); var el = mk.getElement(); if (el && el.innerHTML !== html) el.innerHTML = html; }
   }, 1000);
 })();
-</script><script id="hangar-127-rail-js">
-(function () {
-  var ITEMS = [["lib", "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 9h18M8 4v16\"/>", "Library"], ["map", "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z\"/><path d=\"M9 4v14M15 6v14\"/>", "Add-ons map"], ["launch", "<path d=\"M5 12h14M13 6l6 6-6 6\"/>", "Auto start"], ["vol", "<path d=\"M2 16l20-6-20-6 4 6z\"/>", "SimBrief flight"], ["plan", "<path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M14 7h7v7\"/>", "Flight plan"], ["track", "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3v4M12 17v4M3 12h4M17 12h4\"/>", "Flight tracking"], ["journal", "<path d=\"M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\"/><path d=\"M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11\"/>", "Flight log"], ["set", "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2\"/>", "Settings"]], HERE = 'dispatch', BRAND = 'Hangar FS 2024';
-  function go(k) {
-    if (HERE === 'dispatch' && window.hgShow) { window.hgShow(k === 'plan' || k === 'track' || k === 'journal' ? k : '') || post(k); return; }
-    post(k);
-  }
-  function post(k) {
-    try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ nav: k }); } catch (e) {}
-    return true;
-  }
-  function build() {
-    if (document.getElementById('hgRail') || !document.body) return;
-    var r = document.createElement('nav'); r.id = 'hgRail';
-    r.innerHTML = '<div class="lg"><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06202C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M7 21v-6h10v6"/></svg></i><b>' + BRAND + '</b></div>' +
-      ITEMS.map(function (it) { return '<button class="it' + (it[0] === HERE || (HERE === 'dispatch' && it[0] === 'plan') ? ' on' : '') + '" data-k="' + it[0] + '" title="' + it[2] + '"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + it[1] + '</svg><span>' + it[2] + '</span></button>'; }).join('');
-    document.body.appendChild(r);
-    r.addEventListener('click', function (e) { var b = e.target.closest('.it'); if (b) go(b.dataset.k); });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
-})();
 </script><script id="hangar-128-tod-js">
 (function () {
   var T = {"label": "TIME OF FLIGHT", "short": "TIME", "none": "Any", "m": "Morning", "d": "Day", "c": "Dusk", "n": "Night", "set": "Set MSFS to", "to": "Takeoff", "ldg": "Arrival", "noBoth": "this time can't fit both departure and arrival on this flight: time based on departure only", "prep": "including preparation, pushback and taxi: 30 min for short and medium haul, 1 h for wide-bodies", "prepL": "prep", "tip": "Computed from sunrise and sunset at the departure airport. Set the MSFS time to \"Set MSFS to\" so you have time to get ready.", "noDep": "pick a departure airport", "tomorrow": "tomorrow"}, KEY = 'hg_tod';
@@ -7132,6 +7151,126 @@ ${waypoint(arr)}
     var ok = real.filter(function (r) { return r.compat && r.compat.status === 'ok'; });
     return ok.length ? ok : real;
   };
+})();
+</script><script id="hangar-129-lay-js">
+(function () {
+  var T = {"opt": "Options", "dep": "Departures", "arr": "Arrivals", "free": "any time", "m": "morning", "d": "day", "c": "dusk", "n": "night", "prev": "ROUTE PREVIEW", "exp": "EXPORT", "pick": "Click a destination to see the route and export it to SimBrief or MSFS (.PLN)."};
+  function $(id) { return document.getElementById(id); }
+  function panelOf(el) { return el ? el.closest('.avionics-panel') : null; }
+  function step(n, nodes, before) {
+    var w = document.createElement('div'); w.className = 'hg-step';
+    w.innerHTML = '<div class="hg-num">' + n + '</div><div class="hg-sb"></div>';
+    before.parentNode.insertBefore(w, before);
+    nodes.forEach(function (x) { if (x) w.lastChild.appendChild(x); });
+    return w;
+  }
+  function build() {
+    if (document.body.classList.contains('hg129')) return true;
+    var main = document.querySelector('main'), hdr = document.querySelector('header');
+    var ac = $('aircraftSearchInput'), prim = $('primaryAirportInput'), arrC = $('manualArrivalContainer'), dur = $('durationPickerContainer');
+    var fts = $('flightTypeSection'), alt = $('cruiseAltitudeSelect'), tod = $('hgTodMainBox'), mini = $('mapMiniContainer'), sbb = $('simbriefDirectBtn');
+    if (!main || !ac || !prim || !fts || !alt || !tod || !mini || !sbb || main.children.length < 3) return false;
+    var secs = Array.prototype.slice.call(main.children, 0, 3);
+    /* ---- FMS : 1 avion, 2 départ, 3 arrivée ou durée, puis Options ---- */
+    var acBlock = ac.closest('.relative.z-50') || ac.parentNode.parentNode;
+    var primBlock = prim.closest('#dispatchForm > div') || prim.parentNode.parentNode;
+    var altBlock = alt.parentNode;
+    step(1, [acBlock], acBlock.nextSibling ? acBlock : acBlock);
+    var s2 = step(2, [primBlock], arrC || dur);
+    step(3, [arrC, dur], s2.nextSibling || s2);
+    var opt = document.createElement('div'); opt.id = 'hgOpt';
+    opt.innerHTML = '<div class="hd">⚙ <span>' + T.opt + '</span><span class="sm"></span><span class="ch">▾</span></div><div class="bd"></div>';
+    var form = $('dispatchForm'); form.parentNode.insertBefore(opt, form.nextSibling);
+    var info = document.createElement('div'); info.id = 'hgTodInfo'; info.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+    opt.parentNode.insertBefore(info, opt.nextSibling);
+    var bd = opt.querySelector('.bd');
+    [fts, tod, altBlock].forEach(function (x) { bd.appendChild(x); });
+    opt.querySelector('.hd').onclick = function () { opt.classList.toggle('open'); };
+    /* les lignes de résultat du moment restent visibles sous les options */
+    ['hgTodMainR', 'hgRndHint', 'hgNowLine'].forEach(function (id) { var e = $(id); if (e) info.appendChild(e); });
+    /* ---- colonne de droite : aperçu du trajet + export sous les destinations ---- */
+    var stats = secs[1].querySelector('.avionics-panel'), results = $('resultsList') ? panelOf($('resultsList')) : null;
+    var mapPanel = panelOf(mini), expPanel = panelOf(sbb), fcard = $('alFlightCard');
+    var det = document.createElement('div'); det.id = 'hgDetail'; det.style.display = 'none';
+    det.innerHTML = '<div class="hg-prev"></div><div class="hg-side"></div>';
+    var hint = document.createElement('div'); hint.id = 'hgPickHint'; hint.textContent = T.pick;
+    secs[1].appendChild(det); secs[1].appendChild(hint);
+    if (mapPanel) {
+      det.firstChild.appendChild(mapPanel);
+      Array.prototype.forEach.call(mapPanel.querySelectorAll('button'), function (b) { if (!b.closest('#mapMiniContainer')) b.style.display = 'none'; });
+      var w = document.createTreeWalker(mapPanel, NodeFilter.SHOW_TEXT), n;
+      while ((n = w.nextNode())) if (/PLAN DE VOL PERSONNEL|PERSONAL FLIGHT PLAN|CARTE INTERACTIVE|INTERACTIVE MAP/i.test(n.nodeValue)) n.nodeValue = ' ' + T.prev;
+      mini.removeAttribute('onclick'); mini.onclick = null;
+      mini.addEventListener('click', function (e) { e.stopPropagation(); }, true);
+    }
+    if (stats) det.lastChild.appendChild(stats);
+    if (expPanel) det.lastChild.appendChild(expPanel);
+    if (fcard) fcard.style.display = 'none';
+    secs[2].classList.add('hg129-gone');
+    main.classList.add('hg129'); if (hdr) hdr.classList.add('hg129');
+    document.body.classList.add('hg129');
+    return true;
+  }
+  var shown = false;
+  function tick() {
+    if (!document.body.classList.contains('hg129')) return;
+    var sub = $('routePairSubtitle'), det = $('hgDetail'), hint = $('hgPickHint');
+    var on = !!(sub && sub.textContent.indexOf('➔') >= 0);
+    if (det) det.style.display = on ? '' : 'none';
+    if (hint) hint.style.display = on ? 'none' : '';
+    if (on && !shown) { setTimeout(function () { try { miniMap.invalidateSize(); updateMiniMapRoute(); } catch (e) {} }, 60); }
+    shown = on;
+    /* résumé des options */
+    var sm = document.querySelector('#hgOpt .sm'); if (!sm) return;
+    var parts = [], rnd = false; try { rnd = generationMode === 'RANDOM'; } catch (e) {}
+    if (rnd) { var dp = $('btnModeDep'); parts.push(dp && /bg-cockpit-(cyan|amber)/.test(dp.className) ? T.dep : T.arr); }
+    var ifr = $('btnTypeIfr'); parts.push(ifr && /bg-cockpit-(cyan|amber)/.test(ifr.className) ? 'IFR' : 'VFR');
+    var a = $('cruiseAltitudeSelect'); if (a && a.selectedOptions[0]) { var mm = a.selectedOptions[0].text.match(/FL\d+/); if (mm) parts.push(mm[0]); }
+    var m = ''; try { m = localStorage.getItem('hg_tod') || ''; } catch (e) {}
+    parts.push(m ? T[m] : T.free);
+    var txt = parts.join(' · '); if (sm.textContent !== txt) sm.textContent = txt;
+  }
+  var tries = 0;
+  (function wait() { if (build() || ++tries > 60) { setInterval(tick, 700); tick(); return; } setTimeout(wait, 250); })();
+  /* menu : « Plan de vol personnel » et radars */
+  function radar(id, url) {
+    var n = 0; (function t() {
+      var a = id ? $(id) : document.querySelector('header a[href*="fshub.io"]');
+      if (a && a.style.display !== 'none') { a.click(); return; }
+      if (++n < 40) setTimeout(t, 250); else if (url) window.open(url, '_blank');
+    })();
+  }
+  var prev = window.hgShow;
+  window.hgShow = function (k) {
+    if (k === 'perso') { try { if (prev) prev('plan'); } catch (e) {} try { openInteractiveMapModal(); } catch (e) {} return true; }
+    if (k === 'rglobal') { radar(null, 'https://fshub.io/radar'); return true; }
+    if (k === 'rva') { radar('alVaSite'); return true; }
+    if (k === 'rvradar') { radar('alVaRadar'); return true; }
+    return prev ? prev(k) : false;
+  };
+  var h = location.hash.replace('#', '');
+  if (/^(perso|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h); }, 1200);
+})();
+</script><script id="hangar-127-rail-js">
+(function () {
+  var ITEMS = [["#", "", "Add-ons"], ["lib", "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 9h18M8 4v16\"/>", "Library"], ["map", "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z\"/><path d=\"M9 4v14M15 6v14\"/>", "Add-ons map"], ["launch", "<path d=\"M5 12h14M13 6l6 6-6 6\"/>", "Auto start"], ["#", "", "Prepare"], ["vol", "<path d=\"M2 16l20-6-20-6 4 6z\"/>", "SimBrief flight"], ["plan", "<path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M14 7h7v7\"/>", "Flight plan"], ["perso", "<path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z\"/><circle cx=\"15\" cy=\"11\" r=\"2.5\"/>", "Personal flight plan"], ["#", "", "Fly"], ["track", "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3v4M12 17v4M3 12h4M17 12h4\"/>", "Flight tracking"], ["journal", "<path d=\"M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\"/><path d=\"M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11\"/>", "Flight log"], ["#", "", "Radars"], ["rglobal", "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18\"/>", "FSHub global radar"], ["rva", "<circle cx=\"9\" cy=\"8\" r=\"3\"/><circle cx=\"17\" cy=\"9\" r=\"2.5\"/><path d=\"M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.8\"/>", "My VA on FSHub"], ["rvradar", "<path d=\"M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z\"/><circle cx=\"12\" cy=\"9\" r=\"2.5\"/>", "My VA radar"], ["#", "", ""], ["set", "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2\"/>", "Settings"]], HERE = 'dispatch', BRAND = 'Hangar FS 2024';
+  function go(k) {
+    if (HERE === 'dispatch' && window.hgShow) { window.hgShow(/^(plan|track|journal|perso|rglobal|rva|rvradar)$/.test(k) ? k : '') || post(k); return; }
+    post(k);
+  }
+  function post(k) {
+    try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ nav: k }); } catch (e) {}
+    return true;
+  }
+  function build() {
+    if (document.getElementById('hgRail') || !document.body) return;
+    var r = document.createElement('nav'); r.id = 'hgRail';
+    r.innerHTML = '<div class="lg"><i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06202C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M7 21v-6h10v6"/></svg></i><b>' + BRAND + '</b></div>' +
+      ITEMS.map(function (it) { if (it[0] === '#') return '<div class="sec">' + it[2] + '</div>'; return '<button class="it' + (it[0] === HERE || (HERE === 'dispatch' && it[0] === 'plan') ? ' on' : '') + '" data-k="' + it[0] + '" title="' + it[2] + '"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + it[1] + '</svg><span>' + it[2] + '</span></button>'; }).join('');
+    document.body.appendChild(r);
+    r.addEventListener('click', function (e) { var b = e.target.closest('.it'); if (b) go(b.dataset.k); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();
 </script></body>
 </html>

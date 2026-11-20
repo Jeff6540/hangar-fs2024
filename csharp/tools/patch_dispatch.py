@@ -2579,3 +2579,169 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_acfit128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# 12.9 : page Plan de vol plus claire — deux colonnes, FMS en 3 étapes, options repliées, plus de ON / OFF,
+# aperçu du trajet + export sous la destination choisie, radars et carte « Plan de vol personnel » dans le menu
+LAY129_TXT = {
+    "fr": {"opt": "Options", "dep": "Départs", "arr": "Arrivées", "free": "moment libre", "m": "matin", "d": "journée", "c": "crépuscule", "n": "nuit",
+           "prev": "APERÇU DU TRAJET", "exp": "EXPORT", "pick": "Clique sur une destination pour voir le trajet et l'exporter vers SimBrief ou MSFS (.PLN)."},
+    "en": {"opt": "Options", "dep": "Departures", "arr": "Arrivals", "free": "any time", "m": "morning", "d": "day", "c": "dusk", "n": "night",
+           "prev": "ROUTE PREVIEW", "exp": "EXPORT", "pick": "Click a destination to see the route and export it to SimBrief or MSFS (.PLN)."},
+}
+LAY129_CSS = r"""<style id="hangar-129-lay">
+/* plus de petits ON / OFF : le bouton allumé suffit */
+html body #btnGenModeManual::after,html body #btnGenModeRandom::after,html body #btnModeDep::after,html body #btnModeArr::after,html body #btnTypeIfr::after,html body #btnTypeVfr::after,
+html body #mapToolbar #btnChangeDep::after,html body #mapToolbar #btnChangeArr::after,html body #mapToolbar #filterBtnLarge::after,html body #mapToolbar #filterBtnMedium::after,html body #mapToolbar #filterBtnSmall::after{content:none!important}
+html body #btnGenModeManual,html body #btnGenModeRandom,html body #btnModeDep,html body #btnModeArr,html body #btnTypeIfr,html body #btnTypeVfr{min-height:40px;padding-right:20px!important}
+/* en-tête : les radars passent dans le menu de gauche */
+html body header.hg129 > div:nth-child(2){visibility:hidden}
+/* deux colonnes */
+html body main.hg129{grid-template-columns:minmax(380px,5fr) 7fr!important}
+html body main.hg129 > section{grid-column:auto!important}
+html body main.hg129 > section.hg129-gone{display:none!important}
+/* étapes */
+.hg-step{display:flex;gap:12px;align-items:flex-start}
+.hg-step > .hg-num{flex:none;width:26px;height:26px;margin-top:18px;border-radius:50%;border:1px solid #38BDF8;background:rgba(56,189,248,.12);color:#7DD3FC;
+  font:800 12px "Segoe UI",Inter,sans-serif;display:grid;place-items:center}
+.hg-step > .hg-sb{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+/* options repliées */
+#hgOpt{border:1px solid #1E2733;border-radius:12px;background:rgba(11,15,20,.55)}
+#hgOpt > .hd{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;user-select:none;font:700 13px "Segoe UI",Inter,sans-serif;color:#E6EDF5}
+#hgOpt > .hd .sm{margin-left:auto;color:#8B98A9;font-weight:600;font-size:12px;text-align:right}
+#hgOpt > .hd .ch{color:#7DD3FC;transition:transform .15s}
+#hgOpt.open > .hd .ch{transform:rotate(180deg)}
+#hgOpt > .bd{display:none;padding:2px 13px 13px;flex-direction:column;gap:12px}
+#hgOpt.open > .bd{display:flex}
+#hgOpt #hgTodMainBox{margin-top:0!important}
+#hgTodInfo:empty{display:none}
+/* détail de la destination choisie : aperçu + export */
+#hgDetail{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+#hgDetail .hg-prev #mapMiniContainer{height:250px!important;cursor:default!important}
+#hgDetail .hg-prev #mapMiniContainer > div.absolute{display:none!important}
+#hgDetail .hg-side{display:flex;flex-direction:column;gap:12px}
+#hgDetail .hg-side > .avionics-panel{margin:0!important}
+html body.hg129 #alFlightCard{display:none!important}
+html body main.hg129 > section > .avionics-panel{flex:0 0 auto!important}
+html body.hg129 #resultsList{max-height:min(46vh,460px)!important}
+#hgPickHint{border:1px dashed #1E3A5F;border-radius:12px;padding:14px;color:#64748B;text-align:center;font-size:12px}
+@media (max-width:1100px){#hgDetail{grid-template-columns:1fr}}
+</style>"""
+LAY129_JS = r"""<script id="hangar-129-lay-js">
+(function () {
+  var T = __TXT__;
+  function $(id) { return document.getElementById(id); }
+  function panelOf(el) { return el ? el.closest('.avionics-panel') : null; }
+  function step(n, nodes, before) {
+    var w = document.createElement('div'); w.className = 'hg-step';
+    w.innerHTML = '<div class="hg-num">' + n + '</div><div class="hg-sb"></div>';
+    before.parentNode.insertBefore(w, before);
+    nodes.forEach(function (x) { if (x) w.lastChild.appendChild(x); });
+    return w;
+  }
+  function build() {
+    if (document.body.classList.contains('hg129')) return true;
+    var main = document.querySelector('main'), hdr = document.querySelector('header');
+    var ac = $('aircraftSearchInput'), prim = $('primaryAirportInput'), arrC = $('manualArrivalContainer'), dur = $('durationPickerContainer');
+    var fts = $('flightTypeSection'), alt = $('cruiseAltitudeSelect'), tod = $('hgTodMainBox'), mini = $('mapMiniContainer'), sbb = $('simbriefDirectBtn');
+    if (!main || !ac || !prim || !fts || !alt || !tod || !mini || !sbb || main.children.length < 3) return false;
+    var secs = Array.prototype.slice.call(main.children, 0, 3);
+    /* ---- FMS : 1 avion, 2 départ, 3 arrivée ou durée, puis Options ---- */
+    var acBlock = ac.closest('.relative.z-50') || ac.parentNode.parentNode;
+    var primBlock = prim.closest('#dispatchForm > div') || prim.parentNode.parentNode;
+    var altBlock = alt.parentNode;
+    step(1, [acBlock], acBlock.nextSibling ? acBlock : acBlock);
+    var s2 = step(2, [primBlock], arrC || dur);
+    step(3, [arrC, dur], s2.nextSibling || s2);
+    var opt = document.createElement('div'); opt.id = 'hgOpt';
+    opt.innerHTML = '<div class="hd">⚙ <span>' + T.opt + '</span><span class="sm"></span><span class="ch">▾</span></div><div class="bd"></div>';
+    var form = $('dispatchForm'); form.parentNode.insertBefore(opt, form.nextSibling);
+    var info = document.createElement('div'); info.id = 'hgTodInfo'; info.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+    opt.parentNode.insertBefore(info, opt.nextSibling);
+    var bd = opt.querySelector('.bd');
+    [fts, tod, altBlock].forEach(function (x) { bd.appendChild(x); });
+    opt.querySelector('.hd').onclick = function () { opt.classList.toggle('open'); };
+    /* les lignes de résultat du moment restent visibles sous les options */
+    ['hgTodMainR', 'hgRndHint', 'hgNowLine'].forEach(function (id) { var e = $(id); if (e) info.appendChild(e); });
+    /* ---- colonne de droite : aperçu du trajet + export sous les destinations ---- */
+    var stats = secs[1].querySelector('.avionics-panel'), results = $('resultsList') ? panelOf($('resultsList')) : null;
+    var mapPanel = panelOf(mini), expPanel = panelOf(sbb), fcard = $('alFlightCard');
+    var det = document.createElement('div'); det.id = 'hgDetail'; det.style.display = 'none';
+    det.innerHTML = '<div class="hg-prev"></div><div class="hg-side"></div>';
+    var hint = document.createElement('div'); hint.id = 'hgPickHint'; hint.textContent = T.pick;
+    secs[1].appendChild(det); secs[1].appendChild(hint);
+    if (mapPanel) {
+      det.firstChild.appendChild(mapPanel);
+      Array.prototype.forEach.call(mapPanel.querySelectorAll('button'), function (b) { if (!b.closest('#mapMiniContainer')) b.style.display = 'none'; });
+      var w = document.createTreeWalker(mapPanel, NodeFilter.SHOW_TEXT), n;
+      while ((n = w.nextNode())) if (/PLAN DE VOL PERSONNEL|PERSONAL FLIGHT PLAN|CARTE INTERACTIVE|INTERACTIVE MAP/i.test(n.nodeValue)) n.nodeValue = ' ' + T.prev;
+      mini.removeAttribute('onclick'); mini.onclick = null;
+      mini.addEventListener('click', function (e) { e.stopPropagation(); }, true);
+    }
+    if (stats) det.lastChild.appendChild(stats);
+    if (expPanel) det.lastChild.appendChild(expPanel);
+    if (fcard) fcard.style.display = 'none';
+    secs[2].classList.add('hg129-gone');
+    main.classList.add('hg129'); if (hdr) hdr.classList.add('hg129');
+    document.body.classList.add('hg129');
+    return true;
+  }
+  var shown = false;
+  function tick() {
+    if (!document.body.classList.contains('hg129')) return;
+    var sub = $('routePairSubtitle'), det = $('hgDetail'), hint = $('hgPickHint');
+    var on = !!(sub && sub.textContent.indexOf('➔') >= 0);
+    if (det) det.style.display = on ? '' : 'none';
+    if (hint) hint.style.display = on ? 'none' : '';
+    if (on && !shown) { setTimeout(function () { try { miniMap.invalidateSize(); updateMiniMapRoute(); } catch (e) {} }, 60); }
+    shown = on;
+    /* résumé des options */
+    var sm = document.querySelector('#hgOpt .sm'); if (!sm) return;
+    var parts = [], rnd = false; try { rnd = generationMode === 'RANDOM'; } catch (e) {}
+    if (rnd) { var dp = $('btnModeDep'); parts.push(dp && /bg-cockpit-(cyan|amber)/.test(dp.className) ? T.dep : T.arr); }
+    var ifr = $('btnTypeIfr'); parts.push(ifr && /bg-cockpit-(cyan|amber)/.test(ifr.className) ? 'IFR' : 'VFR');
+    var a = $('cruiseAltitudeSelect'); if (a && a.selectedOptions[0]) { var mm = a.selectedOptions[0].text.match(/FL\d+/); if (mm) parts.push(mm[0]); }
+    var m = ''; try { m = localStorage.getItem('hg_tod') || ''; } catch (e) {}
+    parts.push(m ? T[m] : T.free);
+    var txt = parts.join(' · '); if (sm.textContent !== txt) sm.textContent = txt;
+  }
+  var tries = 0;
+  (function wait() { if (build() || ++tries > 60) { setInterval(tick, 700); tick(); return; } setTimeout(wait, 250); })();
+  /* menu : « Plan de vol personnel » et radars */
+  function radar(id, url) {
+    var n = 0; (function t() {
+      var a = id ? $(id) : document.querySelector('header a[href*="fshub.io"]');
+      if (a && a.style.display !== 'none') { a.click(); return; }
+      if (++n < 40) setTimeout(t, 250); else if (url) window.open(url, '_blank');
+    })();
+  }
+  var prev = window.hgShow;
+  window.hgShow = function (k) {
+    if (k === 'perso') { try { if (prev) prev('plan'); } catch (e) {} try { openInteractiveMapModal(); } catch (e) {} return true; }
+    if (k === 'rglobal') { radar(null, 'https://fshub.io/radar'); return true; }
+    if (k === 'rva') { radar('alVaSite'); return true; }
+    if (k === 'rvradar') { radar('alVaRadar'); return true; }
+    return prev ? prev(k) : false;
+  };
+  var h = location.hash.replace('#', '');
+  if (/^(perso|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h); }, 1200);
+})();
+</script>"""
+
+
+import json  # noqa
+
+
+def patch_lay129(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-129-lay" in s:
+        return
+    js = LAY129_JS.replace("__TXT__", json.dumps(LAY129_TXT[lang], ensure_ascii=False))
+    s = s.replace("</head>", LAY129_CSS + "</head>", 1).replace("</body>", js + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_lay129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
