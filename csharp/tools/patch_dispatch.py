@@ -2762,7 +2762,7 @@ if __name__ == "__main__":
 VFR_TXT = {
     "fr": {"btn": "PLAN VFR", "title": "PLAN VFR", "menu": "Menu principal", "back": "Plan de vol personnel", "undo": "Annuler le dernier point",
            "swap": "Inverser", "clear": "Effacer", "show": "AFFICHER", "apt": "Aéroports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Axes de piste",
-           "names": "Noms", "bg": "Fond de carte", "bgs": ["Relief", "Plan", "Plan sombre", "Satellite"], "route": "MA ROUTE VFR", "from": "DE → VERS",
+           "names": "Noms", "bg": "Fond de carte", "bgs": ["Relief", "Topo", "Plan", "Plan sombre", "Satellite"], "route": "MA ROUTE VFR", "from": "DE → VERS",
            "hdg": "CAP", "dist": "DIST.", "total": "Distance totale", "legs": "branches", "leg1": "branche", "empty": "Clique sur la carte pour poser ton premier point (de préférence sur ton aéroport de départ).",
            "tip": "Clique n'importe où pour ajouter un point · glisse un point pour le déplacer · clic droit sur un point pour le retirer",
            "help": "Un point posé sur une balise prend son nom (ex. TOU). Un point libre s'appelle WP1, WP2… Le premier et le dernier point posés sur un aéroport deviennent le départ et l'arrivée. Les caps sont magnétiques (déclinaison de la balise la plus proche).",
@@ -2770,7 +2770,7 @@ VFR_TXT = {
            "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : retirer", "del": "Retirer ce point", "pt": "POINT"},
     "en": {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point",
            "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes",
-           "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO",
+           "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO",
            "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).",
            "tip": "Click anywhere to add a point · drag a point to move it · right-click a point to remove it",
            "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).",
@@ -2822,8 +2822,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   var T = __TXT__, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
   var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
   var show = { apt: true, vor: true, ndb: true, rwy: true, names: false }, bgIdx = 0;
-  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null) bgIdx = sv.bg; } catch (e) {}
-  function save() { try { localStorage.setItem(KEY, JSON.stringify({ pts: pts, wpN: wpN, show: show, bg: bgIdx })); } catch (e) {} }
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null && sv.v === 2) bgIdx = sv.bg; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ v: 2, pts: pts, wpN: wpN, show: show, bg: bgIdx })); } catch (e) {} }
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function csv(line) { var r = [], s = '', q = false; for (var i = 0; i < line.length; i++) { var c = line[i]; if (q) { if (c === '"') { if (line[i + 1] === '"') { s += '"'; i++; } else q = false; } else s += c; } else if (c === '"') q = true; else if (c === ',') { r.push(s); s = ''; } else s += c; } r.push(s); return r; }
@@ -2983,6 +2983,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   }
   /* ---------- fenêtre ---------- */
   var BG = [
+    function () { return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, subdomains: 'abc', attribution: '© OpenStreetMap · © OpenTopoMap (CC-BY-SA)' }); },
     function () { return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' }); },
     function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }); },
     function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'hg-dark', attribution: '© OpenStreetMap' }); },
