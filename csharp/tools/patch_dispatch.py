@@ -1415,14 +1415,14 @@ if __name__ == "__main__":
 JRN_TXT = {
  "fr": {"title": "JOURNAL DE VOL", "menu": "MENU PRINCIPAL", "open": "JOURNAL DE VOL", "live": "Vol en cours", "none": "Aucun vol enregistré pour l'instant. Le journal se remplit tout seul pendant ton vol (la fenêtre Plan & suivi de vol doit être ouverte).",
         "del": "Supprimer ce vol", "delQ": "Supprimer ce vol du journal ?", "groups": ["Porte", "Repoussage", "Roulage vers la piste", "Décollage", "Montée", "Croisière", "Descente", "Approche", "Atterrissage", "Roulage vers la porte", "Porte d'arrivée"],
-        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trafficTip": "Afficher les avions IA en vol autour de toi (vol en cours seulement)", "taxi": "vitesse de roulage", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
+        "start": "début", "dur": "durée", "fuel": "carburant", "traffic": "TRAFIC IA", "trOn": "Trafic IA : affiché", "trOff": "Trafic IA : masqué", "trafficTip": "Afficher ou masquer les avions IA en vol autour de toi (vol en cours seulement)", "taxi": "vitesse de roulage", "fob": "carburant à bord", "used": "consommé", "iasMax": "vitesse (IAS) max", "gs": "vitesse sol", "vs": "vario", "alt": "altitude", "ias": "vitesse", "max": "max", "avg": "moy.",
         "rot": "envol à", "td": "toucher", "flaps": "volets", "rate": ["Kiss", "Doux", "Correct", "Ferme", "Dur"],
         "sum": "Résumé", "block": "Temps bloc", "air": "Temps de vol", "fuelT": "Carburant", "dist": "Distance", "maxAlt": "Altitude max", "ldg": "Atterrissage",
         "planned": "prévu", "profile": "Profil du vol", "planProf": "prévu (SimBrief)", "realProf": "réel", "nm": "NM", "ft": "ft", "noPlan": "pas de plan SimBrief : profil réel seulement",
         "wait": "à venir", "now": "en cours", "partial": "enregistrement commencé en vol", "free": "vol libre"},
  "en": {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).",
         "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"],
-        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
+        "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trOn": "AI traffic: shown", "trOff": "AI traffic: hidden", "trafficTip": "Show or hide the AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg",
         "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"],
         "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing",
         "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only",
@@ -1477,7 +1477,8 @@ JRN_CSS = r"""<style id="hangar-127-jrn">
 .jpf .lg span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid #38BDF8;margin-right:6px;vertical-align:3px}
 .jpf .lg .p::before{border-top:2px dashed #94A3B8}
 #hgJMap .hg-jplane{background:none!important;border:0!important;filter:drop-shadow(0 0 6px rgba(245,158,11,.7))}
-#hgJMap .hg-jtr{background:#121A24;color:#A9B6C6;border:1px solid #273343;border-radius:999px;padding:6px 13px 6px 11px;font:650 11px "Segoe UI",Inter,sans-serif;letter-spacing:.03em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+#hgJMap .hg-jtr{background:#0F1A2A;color:#E2E8F0;border:1.5px solid #38BDF8;border-radius:10px;padding:8px 14px 8px 12px;font:700 13px "Segoe UI",Inter,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.45);margin-top:8px!important;white-space:nowrap}
+#hgJMap .hg-jtr:hover{background:#13253b}
 #hgJMap .hg-jtr i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#38BDF8;opacity:.45;margin-right:7px;vertical-align:1px}
 #hgJMap .hg-jtr.on{background:linear-gradient(180deg,rgba(56,189,248,.20),rgba(56,189,248,.08));border-color:rgba(56,189,248,.85);color:#F1F5F9}
 #hgJMap .hg-jtr.on i{opacity:1;box-shadow:0 0 8px #38BDF8}
@@ -1812,14 +1813,14 @@ JRN_JS = r"""<script id="hangar-127-jrn-js">
   var trLayer = null, trTimer = null;
   function trBtn() {
     if (!ui.map || ui.trCtl) return;
-    var C = L.Control.extend({ options: { position: 'topright' }, onAdd: function () {
-      var b = L.DomUtil.create('button', 'hg-jtr'); b.type = 'button'; b.innerHTML = '<i></i>' + T.traffic; b.title = T.trafficTip;
+    var C = L.Control.extend({ options: { position: 'topleft' }, onAdd: function () {
+      var b = L.DomUtil.create('button', 'hg-jtr'); b.type = 'button'; b.innerHTML = '<i></i><span class="t"></span>'; b.title = T.trafficTip;
       L.DomEvent.disableClickPropagation(b);
       b.onclick = function () { trOn = !trOn; try { localStorage.setItem('hg_jr_traffic', trOn ? '1' : '0'); } catch (e) {} paintTr(); trPoll(); };
       return b; } });
     ui.trCtl = new C(); ui.map.addControl(ui.trCtl); paintTr();
   }
-  function paintTr() { var b = document.querySelector('#hgJMap .hg-jtr'); if (b) b.classList.toggle('on', trOn); }
+  function paintTr() { var b = document.querySelector('#hgJMap .hg-jtr'); if (b) { b.classList.toggle('on', trOn); var t = b.querySelector('.t'); if (t) t.textContent = '✈ ' + (trOn ? T.trOn : T.trOff); } }
   function trPoll() {
     if (!ui.map) return;
     if (!trLayer) trLayer = L.layerGroup().addTo(ui.map);

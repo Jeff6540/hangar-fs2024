@@ -2620,7 +2620,8 @@ html body #trafficMapWrapper .leaflet-control-zoom{border:1px solid rgba(125,211
 .jpf .lg span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid #38BDF8;margin-right:6px;vertical-align:3px}
 .jpf .lg .p::before{border-top:2px dashed #94A3B8}
 #hgJMap .hg-jplane{background:none!important;border:0!important;filter:drop-shadow(0 0 6px rgba(245,158,11,.7))}
-#hgJMap .hg-jtr{background:#121A24;color:#A9B6C6;border:1px solid #273343;border-radius:999px;padding:6px 13px 6px 11px;font:650 11px "Segoe UI",Inter,sans-serif;letter-spacing:.03em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+#hgJMap .hg-jtr{background:#0F1A2A;color:#E2E8F0;border:1.5px solid #38BDF8;border-radius:10px;padding:8px 14px 8px 12px;font:700 13px "Segoe UI",Inter,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.45);margin-top:8px!important;white-space:nowrap}
+#hgJMap .hg-jtr:hover{background:#13253b}
 #hgJMap .hg-jtr i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#38BDF8;opacity:.45;margin-right:7px;vertical-align:1px}
 #hgJMap .hg-jtr.on{background:linear-gradient(180deg,rgba(56,189,248,.20),rgba(56,189,248,.08));border-color:rgba(56,189,248,.85);color:#F1F5F9}
 #hgJMap .hg-jtr.on i{opacity:1;box-shadow:0 0 8px #38BDF8}
@@ -6241,7 +6242,7 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-127-jrn-js">
 (function () {
-  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trafficTip": "Show AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
+  var T = {"title": "FLIGHT LOG", "menu": "MAIN MENU", "open": "FLIGHT LOG", "live": "Current flight", "none": "No flight recorded yet. The log fills in by itself during your flight (the Flight plan & tracking window must be open).", "del": "Delete this flight", "delQ": "Delete this flight from the log?", "groups": ["Gate", "Pushback", "Taxi to runway", "Takeoff", "Climb", "Cruise", "Descent", "Approach", "Landing", "Taxi to gate", "Arrival gate"], "start": "start", "dur": "duration", "fuel": "fuel", "traffic": "AI TRAFFIC", "trOn": "AI traffic: shown", "trOff": "AI traffic: hidden", "trafficTip": "Show or hide the AI aircraft flying around you (current flight only)", "taxi": "taxi speed", "fob": "fuel on board", "used": "burned", "iasMax": "speed (IAS) max", "gs": "ground speed", "vs": "vertical speed", "alt": "altitude", "ias": "speed", "max": "max", "avg": "avg", "rot": "liftoff at", "td": "touchdown", "flaps": "flaps", "rate": ["Butter", "Soft", "Good", "Firm", "Hard"], "sum": "Summary", "block": "Block time", "air": "Flight time", "fuelT": "Fuel", "dist": "Distance", "maxAlt": "Max altitude", "ldg": "Landing", "planned": "planned", "profile": "Flight profile", "planProf": "planned (SimBrief)", "realProf": "actual", "nm": "NM", "ft": "ft", "noPlan": "no SimBrief plan: actual profile only", "wait": "to come", "now": "now", "partial": "recording started in flight", "free": "free flight"};
   var KEY = 'hg_jr_cur', HKEY = 'hg_jr_hist';
   var PLANE_D = 'M12 2c.8 0 1.4.7 1.4 1.5V9l7.6 4.4v2l-7.6-2.3v4.6l2 1.5V21l-3.4-1-3.4 1v-1.8l2-1.5v-4.6L3 15.4v-2L10.6 9V3.5C10.6 2.7 11.2 2 12 2z';
   var GR = [[1, 2], [3], [4], [5], [6], [7], [8], [9, 10], [11], [12], [13, 14]];   /* 12.7 : le repoussage a sa propre phase */
@@ -6564,14 +6565,14 @@ ${waypoint(arr)}
   var trLayer = null, trTimer = null;
   function trBtn() {
     if (!ui.map || ui.trCtl) return;
-    var C = L.Control.extend({ options: { position: 'topright' }, onAdd: function () {
-      var b = L.DomUtil.create('button', 'hg-jtr'); b.type = 'button'; b.innerHTML = '<i></i>' + T.traffic; b.title = T.trafficTip;
+    var C = L.Control.extend({ options: { position: 'topleft' }, onAdd: function () {
+      var b = L.DomUtil.create('button', 'hg-jtr'); b.type = 'button'; b.innerHTML = '<i></i><span class="t"></span>'; b.title = T.trafficTip;
       L.DomEvent.disableClickPropagation(b);
       b.onclick = function () { trOn = !trOn; try { localStorage.setItem('hg_jr_traffic', trOn ? '1' : '0'); } catch (e) {} paintTr(); trPoll(); };
       return b; } });
     ui.trCtl = new C(); ui.map.addControl(ui.trCtl); paintTr();
   }
-  function paintTr() { var b = document.querySelector('#hgJMap .hg-jtr'); if (b) b.classList.toggle('on', trOn); }
+  function paintTr() { var b = document.querySelector('#hgJMap .hg-jtr'); if (b) { b.classList.toggle('on', trOn); var t = b.querySelector('.t'); if (t) t.textContent = '✈ ' + (trOn ? T.trOn : T.trOff); } }
   function trPoll() {
     if (!ui.map) return;
     if (!trLayer) trLayer = L.layerGroup().addTo(ui.map);
