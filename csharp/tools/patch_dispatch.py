@@ -2784,10 +2784,10 @@ VFR_TXT = {
            "kinds": {"wp": "point libre", "apt": "aéroport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "point RNAV", "ils": "ILS"},
            "rmPt": "Retirer de la route", "addRoute": "Ajouter à la route", "isDep": "Départ de ta route", "isArr": "Arrivée de ta route", "inRoute": "Dans ta route", "notIn": "Pas dans ta route",
            "setDep": "Départ ici", "setArr": "Arrivée ici", "rwys": "Pistes", "sids": "Départs (SID)", "stars": "Arrivées (STAR)", "apprs": "Approches",
-           "rwAny": "Toutes pistes", "rwy1": "Piste", "enNone": "Sans transition", "enVia": "Transition", "choose": "Choisir", "needDep": "Mets d'abord cet aéroport en départ de ta route.", "needArr": "Mets d'abord cet aéroport en arrivée de ta route.",
+           "rwAny": "Toutes pistes", "rwPick": "Choisis la piste…", "pickRw": "Choisis d'abord la piste.", "onMap": "voir sur la carte", "rwy1": "Piste", "enNone": "Sans transition", "enVia": "Transition", "choose": "Choisir", "needDep": "Mets d'abord cet aéroport en départ de ta route.", "needArr": "Mets d'abord cet aéroport en arrivée de ta route.",
            "appr": "APPROCHE", "apDirect": "Aucune (arrivée directe)", "apNoTr": "Sans transition", "apVia": "Transition par", "apNone": "Pas d'approche dans les données MSFS pour cet aéroport.",
            "apNeed": "Importe d'abord les données de MSFS (en bas de la colonne de droite) pour avoir les points RNAV, les ILS, les SID, les STAR et les approches.",
-           "apInfo": "Clic droit sur un aéroport (ou son ILS) pour voir et choisir SID, STAR et approche. Les tracés choisis sont ajoutés à ta route et au fichier .PLN ; dans SimBrief, choisis-les dans ses options.",
+           "apInfo": "Clic droit sur un aéroport (ou son ILS) pour voir et choisir SID, STAR et approche. Les tracés choisis sont ajoutés à ta route, au fichier .PLN et à SimBrief (SID, STAR et pistes).",
            "msfs": "DONNÉES MSFS (RNAV, ILS, SID, STAR, APPROCHES)", "impWhy": "Une seule fois, MSFS 2024 ouvert (au menu principal) : l'appli lit les points RNAV, les ILS et les approches de ton simulateur et les garde sur ton PC. Ensuite, tout marche simulateur éteint. À refaire après une grosse mise à jour de MSFS.",
            "impGo": "Importer depuis MSFS", "impUpd": "Mettre à jour depuis MSFS", "impStop": "Arrêter", "impDate": "Données importées le", "impOk": "Import terminé.",
            "cWpt": "points RNAV", "cAppr": "approches", "steps": {"open": "Connexion à MSFS", "airports": "Liste des aéroports", "waypoints": "Points RNAV", "vors": "VOR et ILS", "ndbs": "NDB", "approaches": "Approches", "procs": "Départs et arrivées"}},
@@ -2803,10 +2803,10 @@ VFR_TXT = {
            "kinds": {"wp": "free point", "apt": "airport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "RNAV point", "ils": "ILS"},
            "rmPt": "Remove from route", "addRoute": "Add to route", "isDep": "Departure of your route", "isArr": "Arrival of your route", "inRoute": "In your route", "notIn": "Not in your route",
            "setDep": "Depart here", "setArr": "Arrive here", "rwys": "Runways", "sids": "Departures (SID)", "stars": "Arrivals (STAR)", "apprs": "Approaches",
-           "rwAny": "All runways", "rwy1": "Runway", "enNone": "No transition", "enVia": "Transition", "choose": "Choose", "needDep": "First set this airport as your route's departure.", "needArr": "First set this airport as your route's arrival.",
+           "rwAny": "All runways", "rwPick": "Choose the runway…", "pickRw": "Choose the runway first.", "onMap": "show on map", "rwy1": "Runway", "enNone": "No transition", "enVia": "Transition", "choose": "Choose", "needDep": "First set this airport as your route's departure.", "needArr": "First set this airport as your route's arrival.",
            "appr": "APPROACH", "apDirect": "None (direct arrival)", "apNoTr": "No transition", "apVia": "Transition via", "apNone": "No approach in the MSFS data for this airport.",
            "apNeed": "First import the MSFS data (at the bottom of the right column) to get RNAV points, ILS, SIDs, STARs and approaches.",
-           "apInfo": "Right-click an airport (or its ILS) to see and choose SID, STAR and approach. The chosen paths are added to your route and to the .PLN file; in SimBrief, choose them in its options.",
+           "apInfo": "Right-click an airport (or its ILS) to see and choose SID, STAR and approach. The chosen paths are added to your route, the .PLN file and SimBrief (SID, STAR and runways).",
            "msfs": "MSFS DATA (RNAV, ILS, SID, STAR, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.",
            "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.",
            "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches", "procs": "Departures and arrivals"}},
@@ -3036,6 +3036,51 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     L.polyline(list.map(function (l) { return [l[1], l[2]]; }), { color: KC[kind], weight: 3, dashArray: '6 6', interactive: false }).addTo(lyr.prev);
     list.forEach(function (l) { L.circleMarker([l[1], l[2]], { radius: 3, color: KC[kind], weight: 2, fillColor: '#fff', fillOpacity: 1, interactive: false }).bindTooltip(esc(l[0]), { permanent: true, className: 'hgv-lab', direction: 'right', offset: [4, 0] }).addTo(lyr.prev); });
   }
+  /* toutes les variantes d'une procédure (pistes x transitions) */
+  function variants(kind, p) {
+    if (kind === 'ap') { var f = p.f || []; return (p.tr && p.tr.length ? p.tr.map(function (t) { return t.l.concat(f); }) : [f]); }
+    var rws = p.rw.length ? p.rw.map(function (r) { return r.l; }) : [[]], ens = p.en.length ? p.en.map(function (e) { return e.l; }) : [[]], out = [];
+    rws.forEach(function (r) { ens.forEach(function (e) { out.push(kind === 'sid' ? r.concat(p.c, e) : e.concat(p.c, r)); }); });
+    return out;
+  }
+  function overview(d, show, sel, fit) {
+    if (!lyr.prev) lyr.prev = L.layerGroup().addTo(map);
+    lyr.prev.clearLayers();
+    var all = [], lab = function (ll, txt, kind) { L.marker(ll, { icon: L.divIcon({ className: 'hgv-ic', html: '', iconSize: [1, 1] }), interactive: false })
+      .bindTooltip(esc(txt), { permanent: true, direction: 'right', offset: [4, 0], className: 'hgv-lab hgv-pl-' + kind }).addTo(lyr.prev); };
+    [['sid', d.d], ['star', d.a], ['ap', d.ap]].forEach(function (kp) {
+      var kind = kp[0]; if (!show[kind]) return;
+      kp[1].forEach(function (p, i) {
+        var mine = sel && sel.kind === kind && sel.i === i;
+        if (mine) return;
+        variants(kind, p).forEach(function (v) {
+          if (v.length < 2) return;
+          var ll = v.map(function (l) { return [l[1], l[2]]; }); all = all.concat(ll);
+          L.polyline(ll, { color: KC[kind], weight: 2, opacity: .55, interactive: false }).addTo(lyr.prev);
+        });
+        var v0 = variants(kind, p).filter(function (v) { return v.length; })[0];
+        if (v0) { var end = kind === 'sid' ? v0[v0.length - 1] : v0[0]; lab([end[1], end[2]], kind === 'ap' ? apLabel(p) : p.n, kind); }
+      });
+    });
+    if (sel && sel.kind) {
+      var arr = sel.kind === 'sid' ? d.d : sel.kind === 'star' ? d.a : d.ap, x = arr[sel.i];
+      if (x) {
+        var vs = sel.kind === 'ap' ? [apLegs(d, { ap: sel.i, tr: sel.tr == null ? -1 : sel.tr })]
+          : sel.kind === 'sid' ? (sel.rw >= 0 || sel.en >= 0 ? [sidLegs(d, { sid: sel.i, rw: sel.rw, en: sel.en })] : variants('sid', x))
+          : (sel.rw >= 0 || sel.en >= 0 ? [starLegs(d, { star: sel.i, rw: sel.rw, en: sel.en })] : variants('star', x));
+        var seen = {};
+        vs.forEach(function (v) {
+          if (v.length < 2) return;
+          var ll = v.map(function (l) { return [l[1], l[2]]; }); all = all.concat(ll);
+          L.polyline(ll, { color: '#fff', weight: 7, opacity: .8, interactive: false }).addTo(lyr.prev);
+          L.polyline(ll, { color: KC[sel.kind], weight: 4, dashArray: '8 6', interactive: false }).addTo(lyr.prev);
+          v.forEach(function (l) { if (seen[l[0]]) return; seen[l[0]] = 1; L.circleMarker([l[1], l[2]], { radius: 3.5, color: KC[sel.kind], weight: 2, fillColor: '#fff', fillOpacity: 1, interactive: false })
+            .bindTooltip(esc(l[0]), { permanent: true, className: 'hgv-lab', direction: 'right', offset: [4, 0] }).addTo(lyr.prev); });
+        });
+      }
+    }
+    if (fit && all.length > 1) map.fitBounds(L.latLngBounds(all).pad(0.08), { paddingTopLeft: [380, 20], maxZoom: 11 });
+  }
   function showCard(t) {
     var c = document.getElementById('hgVfrCard'); if (!c) return;
     c.style.display = '';
@@ -3066,27 +3111,26 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     if (!d) { h += '<div class="tx">' + T.load + '</div></div>'; c.innerHTML = h; ilsNear(apt); return; }
     var sel = t.sel || {};
     var list = function (kind, arr, lab, title) {
-      var o = '<div class="sec" style="color:' + KC[kind] + '">' + title + ' (' + arr.length + ')</div>';
+      var shw = t.show ? t.show[kind] : true;
+      var o = '<div class="sec" style="color:' + KC[kind] + ';display:flex;align-items:center;gap:6px">' + title + ' (' + arr.length + ')' + (arr.length ? '<label style="margin-left:auto;font:600 10.5px Segoe UI;color:#94a3b8;letter-spacing:0;text-transform:none;cursor:pointer"><input type="checkbox" data-c="vis" data-k="' + kind + '"' + (shw !== false ? ' checked' : '') + '> ' + T.onMap + '</label>' : '') + '</div>';
       if (!arr.length) return o + '<div class="tx">' + T.none + '</div>';
       o += '<div class="pl">' + arr.map(function (x, i) { return '<button type="button" class="pi' + (sel.kind === kind && sel.i === i ? ' on' : '') + '" data-c="pick" data-k="' + kind + '" data-i="' + i + '">' + esc(lab(x)) + '</button>'; }).join('') + '</div>';
       if (sel.kind === kind && arr[sel.i]) {
         var x = arr[sel.i], s1 = '', s2 = '';
         if (kind === 'ap') { if (x.tr && x.tr.length) s1 = '<select data-c="tr">' + '<option value="-1">' + T.apNoTr + '</option>' + x.tr.map(function (q, k) { return '<option value="' + k + '"' + (sel.tr === k ? ' selected' : '') + '>' + T.apVia + ' ' + esc(q.l[0] ? q.l[0][0] : '?') + '</option>'; }).join('') + '</select>'; }
         else {
-          if (x.rw.length) s1 = '<select data-c="rw"><option value="-1">' + T.rwAny + '</option>' + x.rw.map(function (q, k) { return '<option value="' + k + '"' + (sel.rw === k ? ' selected' : '') + '>' + T.rwy1 + ' ' + esc(q.r) + '</option>'; }).join('') + '</select>';
+          if (x.rw.length) s1 = '<select data-c="rw"><option value="-1">' + T.rwPick + '</option>' + x.rw.map(function (q, k) { return '<option value="' + k + '"' + (sel.rw === k ? ' selected' : '') + '>' + T.rwy1 + ' ' + esc(q.r) + '</option>'; }).join('') + '</select>';
           if (x.en.length) s2 = '<select data-c="en"><option value="-1">' + T.enNone + '</option>' + x.en.map(function (q, k) { return '<option value="' + k + '"' + (sel.en === k ? ' selected' : '') + '>' + T.enVia + ' ' + esc(q.n) + '</option>'; }).join('') + '</select>';
         }
-        var ok = kind === 'sid' ? isDep : isArr;
-        o += '<div class="ps">' + s1 + s2 + (ok ? '<button type="button" class="b go" data-c="choose">✓ ' + T.choose + '</button>' : '<div class="tx" style="color:#fbbf24">' + (kind === 'sid' ? T.needDep : T.needArr) + '</div>') + '</div>';
+        var ok = kind === 'sid' ? isDep : isArr, needRw = kind !== 'ap' && x.rw.length && !(sel.rw >= 0);
+        o += '<div class="ps">' + s1 + s2 + (ok ? (needRw ? '<div class="tx" style="color:#94a3b8">' + T.pickRw + '</div>' : '<button type="button" class="b go" data-c="choose">✓ ' + T.choose + '</button>') : '<div class="tx" style="color:#fbbf24">' + (kind === 'sid' ? T.needDep : T.needArr) + '</div>') + '</div>';
       }
       return o;
     };
     h += list('sid', d.d, function (x) { return x.n; }, T.sids) + list('star', d.a, function (x) { return x.n; }, T.stars) + list('ap', d.ap, apLabel, T.apprs) + '</div>';
     c.innerHTML = h; ilsNear(apt);
-    if (sel.kind) {
-      var arr = sel.kind === 'sid' ? d.d : sel.kind === 'star' ? d.a : d.ap, x = arr[sel.i];
-      if (x) preview(sel.kind === 'sid' ? sidLegs(d, { sid: sel.i, rw: sel.rw == null ? -1 : sel.rw, en: sel.en == null ? -1 : sel.en }) : sel.kind === 'star' ? starLegs(d, { star: sel.i, rw: sel.rw == null ? -1 : sel.rw, en: sel.en == null ? -1 : sel.en }) : apLegs(d, { ap: sel.i, tr: sel.tr == null ? -1 : sel.tr }), sel.kind);
-    } else if (lyr.prev) lyr.prev.clearLayers();
+    t.show = t.show || { sid: isDep || (!isDep && !isArr), star: isArr || (!isDep && !isArr), ap: isArr || (!isDep && !isArr) };
+    overview(d, t.show, sel, !t.fitted); t.fitted = true;
   }
   function ilsNear(apt) {
     var el = document.getElementById('hgCardIls'); if (!el) return;
@@ -3097,7 +3141,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     }).catch(function () {});
   }
   function cardClick(e) {
-    var b = e.target.closest('[data-c]'); if (!b || b.tagName === 'SELECT') return;
+    var b = e.target.closest('[data-c]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return;
     var a = b.dataset.c, t = card; if (!t) return;
     if (a === 'close') { closeCard(); return; }
     if (a === 'rm') { pts.splice(+b.dataset.i, 1); save(); closeCard(); drawRoute(); return; }
@@ -3108,7 +3152,12 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       if (a === 'setdep') pts.unshift(np); else pts.push(np);
       save(); drawRoute(); showCard(t); return;
     }
-    if (a === 'pick') { t.sel = { kind: b.dataset.k, i: +b.dataset.i, rw: -1, en: -1, tr: -1 }; showCard(t); return; }
+    if (a === 'pick') {
+      var dd0 = PD[t.icao], arr0 = dd0 ? (b.dataset.k === 'sid' ? dd0.d : b.dataset.k === 'star' ? dd0.a : dd0.ap) : [], x0 = arr0[+b.dataset.i];
+      var same = t.sel && t.sel.kind === b.dataset.k && t.sel.i === +b.dataset.i;
+      t.sel = same ? null : { kind: b.dataset.k, i: +b.dataset.i, rw: -1, en: -1, tr: -1 };
+      showCard(t); return;
+    }
     if (a === 'choose') {
       var sl = t.sel;
       if (sl.kind === 'sid') pr.dep = { icao: t.icao, sid: sl.i, rw: sl.rw, en: sl.en };
@@ -3118,7 +3167,9 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     }
   }
   function cardChange(e) {
-    var s = e.target; if (!card || !card.sel || !s.dataset.c) return;
+    var s = e.target;
+    if (card && s.dataset.c === 'vis') { card.show = card.show || {}; card.show[s.dataset.k] = s.checked; showCard(card); return; }
+    if (!card || !card.sel || !s.dataset.c) return;
     card.sel[s.dataset.c] = +s.value; showCard(card);
   }
   /* ---------- import des données de MSFS ---------- */
@@ -3251,10 +3302,25 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     return String(d1).padStart(2, '0') + String(m1).padStart(2, '0') + (p.lat < 0 ? 'S' : 'N') + String(d2).padStart(3, '0') + String(m2).padStart(2, '0') + (p.lon < 0 ? 'W' : 'E'); }
   function simbrief() {
     var e = ends(); if (!e) return;
-    var route = pts.slice(1, -1).map(function (p) { return p.kind === 'wp' ? sbCoord(p) : p.name; }).join(' ');   /* l'approche se choisit dans SimBrief */
+    var tok = [], push = function (x) { if (x && tok[tok.length - 1] !== x) tok.push(x); }, fix = function (l) { return l && !/^RW\d/.test(l[0]) ? l[0] : ''; };
+    var dd = PD[e[0].icao], da = PD[e[1].icao], origrwy = '', destrwy = '';
+    if (dd && dd.ok && pr.dep.icao === e[0].icao && dd.d[pr.dep.sid]) {
+      var sp = dd.d[pr.dep.sid], sl = sidLegs(dd, pr.dep);
+      push(sp.n); push(fix(sl[sl.length - 1]));
+      if (pr.dep.rw >= 0 && sp.rw[pr.dep.rw]) origrwy = sp.rw[pr.dep.rw].r;
+    }
+    pts.slice(1, -1).forEach(function (p) { push(p.kind === 'wp' ? sbCoord(p) : p.name); });
+    if (da && da.ok && pr.arr.icao === e[1].icao) {
+      var st = da.a[pr.arr.star], ap2 = da.ap[pr.arr.ap];
+      if (st) { var tl = starLegs(da, pr.arr); push(fix(tl[0])); push(st.n); if (pr.arr.rw >= 0 && st.rw[pr.arr.rw]) destrwy = st.rw[pr.arr.rw].r; }
+      else if (ap2) { var al = apLegs(da, pr.arr); push(fix(al[0])); }
+      if (ap2 && ap2.r) destrwy = ap2.r;
+    }
     var ac = 'C172'; try { ac = document.getElementById('aircraftSelect').value || ac; } catch (x) {}
-    var url = 'https://dispatch.simbrief.com/options/custom?' + new URLSearchParams({ orig: e[0].icao, dest: e[1].icao, type: ac, route: route, fltrules: 'V' }).toString();
-    window.open(url, '_blank');
+    var q = { orig: e[0].icao, dest: e[1].icao, type: ac, route: tok.join(' ') };
+    if (origrwy && origrwy !== 'ALL') q.origrwy = origrwy;
+    if (destrwy && destrwy !== 'ALL') q.destrwy = destrwy;
+    window.open('https://dispatch.simbrief.com/options/custom?' + new URLSearchParams(q).toString(), '_blank');
   }
   function pln() {
     /* même forme que les plans de Little Navmap pour MSFS 2024 : en-tête minimal, seulement les points intermédiaires,
