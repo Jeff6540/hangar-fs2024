@@ -7278,8 +7278,18 @@ ${waypoint(arr)}
     })();
   }
   var prev = window.hgShow;
+  function persoOpen() { var m = $('interactiveMapModal'); return !!(m && !m.classList.contains('hidden')); }
+  function closeVfr() { var v = $('hgVfr'); if (v) v.classList.remove('on'); }
+  /* menu : la carte Plan de vol personnel ouverte allume son entrée */
+  setInterval(function () { var v = $('hgVfr'); if (persoOpen() || (v && v.classList.contains('on'))) document.querySelectorAll('#hgRail .it').forEach(function (b) { b.classList.toggle('on', b.dataset.k === 'perso'); }); }, 400);
   window.hgShow = function (k) {
-    if (k === 'perso') { try { if (prev) prev('plan'); } catch (e) {} try { openInteractiveMapModal(); } catch (e) {} return true; }
+    if (/^(plan|track|journal|perso)$/.test(k)) closeVfr();
+    if (k === 'plan' || k === 'track' || k === 'journal') { try { if (persoOpen()) closeInteractiveMapModal(); } catch (e) {} }
+    if (k === 'perso') {
+      try { if (prev) prev('plan'); } catch (e) {}
+      var n = 0; (function t() { try { openInteractiveMapModal(); } catch (e) {} if (!persoOpen() && ++n < 20) setTimeout(t, 400); })();
+      return true;
+    }
     if (k === 'rglobal') { radar(null, 'https://fshub.io/radar'); return true; }
     if (k === 'rva') { radar('alVaSite'); return true; }
     if (k === 'rvradar') { radar('alVaRadar'); return true; }
@@ -7346,8 +7356,9 @@ ${waypoint(arr)}
   }
   function status(s) { var e = document.getElementById('hgVfrSt'); if (e) e.textContent = s; }
   /* ---------- couches ---------- */
-  function svgVor(dme) { return '<svg width="26" height="26" viewBox="-13 -13 26 26"><polygon points="-10,0 -5,-8.7 5,-8.7 10,0 5,8.7 -5,8.7" fill="rgba(10,20,40,.55)" stroke="#60a5fa" stroke-width="2.2"/>' + (dme ? '<rect x="-10" y="-8.7" width="20" height="17.4" fill="none" stroke="#60a5fa" stroke-width="1.3"/>' : '') + '<circle r="2.2" fill="#60a5fa"/></svg>'; }
-  function svgNdb() { return '<svg width="22" height="22" viewBox="-11 -11 22 22"><circle r="8" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="2 2.6"/><circle r="2.3" fill="#c084fc"/></svg>'; }
+  function svgDme() { return '<svg width="16" height="16" viewBox="-9 -9 18 18"><rect x="-6" y="-6" width="12" height="12" fill="rgba(10,20,40,.55)" stroke="#60a5fa" stroke-width="1.8"/><circle r="1.8" fill="#60a5fa"/></svg>'; }
+  function svgVor(dme) { return '<svg width="20" height="20" viewBox="-13 -13 26 26"><polygon points="-10,0 -5,-8.7 5,-8.7 10,0 5,8.7 -5,8.7" fill="rgba(10,20,40,.55)" stroke="#60a5fa" stroke-width="2.2"/>' + (dme ? '<rect x="-10" y="-8.7" width="20" height="17.4" fill="none" stroke="#60a5fa" stroke-width="1.3"/>' : '') + '<circle r="2.2" fill="#60a5fa"/></svg>'; }
+  function svgNdb() { return '<svg width="17" height="17" viewBox="-11 -11 22 22"><circle r="8" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="2 2.6"/><circle r="2.3" fill="#c084fc"/></svg>'; }
   function svgApt(big) { var c = big ? '#38bdf8' : '#f59e0b'; return '<svg width="18" height="18" viewBox="-9 -9 18 18"><circle r="6" fill="#0f172a" stroke="' + c + '" stroke-width="2.6"/></svg>'; }
   function addPtFrom(o) { add({ lat: o.lat, lon: o.lon, name: o.name, kind: o.kind }); }
   function mk(o, html, size, tip) {
@@ -7378,17 +7389,17 @@ ${waypoint(arr)}
       Object.keys(airportsDB).forEach(function (k) {
         var ap = airportsDB[k]; if (cnt > 700 || !/^[A-Z0-9]{4}$/.test(ap.icao) || !bb.contains([ap.lat, ap.lon])) return;
         var big = ap.type === 'large_airport', med = ap.type === 'medium_airport';
-        if (!(big ? z >= 5 : med ? z >= 7 : z >= 9)) return;
+        if (!(big ? z >= 6 : med ? z >= 8 : z >= 10)) return;
         cnt++;
         mk({ lat: ap.lat, lon: ap.lon, name: ap.icao, kind: 'apt' }, svgApt(big || med), 18, '<b>' + esc(ap.icao) + '</b> ' + esc(ap.name)).addTo(lyr.apt);
       });
     }
-    if (loaded && (show.vor || show.ndb) && z >= 6) {
-      for (var i = 0; i < nav.length && n < 600; i++) {
+    if (loaded && (show.vor || show.ndb) && z >= 7) {
+      for (var i = 0; i < nav.length && n < 350; i++) {
         var v = nav[i], isN = v.t.indexOf('NDB') === 0;
-        if (isN ? !(show.ndb && z >= 7) : !show.vor) continue;
+        if (isN ? !(show.ndb && z >= 8) : !show.vor) continue; if (v.t === 'DME' && z < 9) continue;
         if (!bb.contains([v.lat, v.lon])) continue; n++;
-        mk({ lat: v.lat, lon: v.lon, name: v.id, kind: isN ? 'ndb' : 'vor' }, isN ? svgNdb() : svgVor(/DME|VORTAC/.test(v.t)), isN ? 22 : 26,
+        mk({ lat: v.lat, lon: v.lon, name: v.id, kind: isN ? 'ndb' : 'vor' }, isN ? svgNdb() : (v.t === 'DME' ? svgDme() : svgVor(/DME|VORTAC/.test(v.t))), isN ? 17 : (v.t === 'DME' ? 16 : 20),
            '<b>' + esc(v.id) + '</b> ' + esc(freq(v)) + ' · ' + esc(v.t) + '<br><span style="opacity:.75">' + esc(v.nm) + '</span>').addTo(lyr.nav);
       }
     }
