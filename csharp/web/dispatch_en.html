@@ -7782,7 +7782,7 @@ ${waypoint(arr)}
     if (da && da.ok && pr.arr.icao === e[1].icao) {
       var st = da.a[pr.arr.star], ap2 = da.ap[pr.arr.ap];
       if (st) { var tl = starLegs(da, pr.arr); push(fix(tl[0])); push(st.n); if (pr.arr.rw >= 0 && st.rw[pr.arr.rw]) destrwy = st.rw[pr.arr.rw].r; }
-      if (ap2) apLegs(da, pr.arr).forEach(function (l) { if (fix(l) && isFinite(l[1]) && isFinite(l[2])) push(sbCoord({ lat: l[1], lon: l[2] })); });   /* tous les points de l'approche (sauf la piste) en coordonnées : même tracé que la carte */
+      else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbCoord({ lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche en coordonnées */
       if (ap2 && ap2.r) destrwy = ap2.r;
     }
     var q = { orig: e[0].icao, dest: e[1].icao, type: acV || 'C172', route: tok.join(' ') };   /* l'avion choisi dans la page VFR */
