@@ -7323,11 +7323,12 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-129-vfr-js">
 (function () {
-  var T = {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point", "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes", "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO", "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).", "tip": "Click anywhere to add a point · drag a point to move it · right-click a point to remove it", "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).", "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).", "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: remove", "del": "Remove this point", "pt": "POINT"}, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
+  var T = {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point", "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes", "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO", "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).", "tip": "Click anywhere to add a point · drag a point to move it · right-click a point to remove it", "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).", "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).", "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: remove", "del": "Remove this point", "pt": "POINT", "appr": "APPROACH", "apDirect": "None (direct arrival)", "apNoTr": "No transition", "apVia": "Transition via", "apNone": "No approach in the MSFS data for this airport.", "apNeed": "First import the MSFS data (at the bottom of this column) to get RNAV points, ILS and approaches.", "apInfo": "The green path is added to your route and to the .PLN file. In SimBrief, choose the approach in the options.", "msfs": "MSFS DATA (RNAV, ILS, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.", "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.", "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches"}}, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
   var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
-  var show = { apt: true, vor: true, ndb: true, rwy: true, names: false }, bgIdx = 0;
-  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null && sv.v === 2) bgIdx = sv.bg; } catch (e) {}
-  function save() { try { localStorage.setItem(KEY, JSON.stringify({ v: 2, pts: pts, wpN: wpN, show: show, bg: bgIdx })); } catch (e) {} }
+  var show = { apt: true, vor: true, ndb: true, rwy: true, names: false, rnav: false, ils: false }, bgIdx = 0;
+  var navOk = false, navMeta = null, ap = { icao: '', list: [], sel: -1, tr: -1, loaded: '' }, msfsTok = 0, impTimer = null;
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null && sv.v === 2) bgIdx = sv.bg; if (sv && sv.ap) { ap.icao = sv.ap.icao || ''; ap.sel = sv.ap.sel; ap.tr = sv.ap.tr; } } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ v: 2, pts: pts, wpN: wpN, show: show, bg: bgIdx, ap: { icao: ap.icao, sel: ap.sel, tr: ap.tr } })); } catch (e) {} }
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function csv(line) { var r = [], s = '', q = false; for (var i = 0; i < line.length; i++) { var c = line[i]; if (q) { if (c === '"') { if (line[i + 1] === '"') { s += '"'; i++; } else q = false; } else s += c; } else if (c === '"') q = true; else if (c === ',') { r.push(s); s = ''; } else s += c; } r.push(s); return r; }
@@ -7396,6 +7397,7 @@ ${waypoint(arr)}
         mk({ lat: ap.lat, lon: ap.lon, name: ap.icao, kind: 'apt' }, svgApt(big || med), 18, '<b>' + esc(ap.icao) + '</b> ' + esc(ap.name)).addTo(lyr.apt);
       });
     }
+    msfs(z);
     if (loaded && (show.vor || show.ndb) && z >= 7) {
       for (var i = 0; i < nav.length && n < 350; i++) {
         var v = nav[i], isN = v.t.indexOf('NDB') === 0;
@@ -7406,20 +7408,121 @@ ${waypoint(arr)}
       }
     }
   }
+  /* ---------- approche choisie (données importées de MSFS) ---------- */
+  function apPath() {
+    if (pts.length < 2) return [];
+    var last = pts[pts.length - 1];
+    if (last.kind !== 'apt' || last.name !== ap.icao || ap.sel < 0 || !ap.list[ap.sel]) return [];
+    var a = ap.list[ap.sel], legs = [];
+    if (ap.tr >= 0 && a.tr && a.tr[ap.tr]) legs = legs.concat(a.tr[ap.tr].l);
+    legs = legs.concat(a.f);
+    var out = [];
+    legs.forEach(function (l) { if (!out.length || out[out.length - 1].name !== l[0]) out.push({ name: l[0], lat: l[1], lon: l[2], kind: 'ap' }); });
+    return out;
+  }
+  function full() { var p = apPath(); return p.length ? pts.slice(0, -1).concat(p).concat([pts[pts.length - 1]]) : pts.slice(); }
+  function apLabel(a) { return a.t + (a.r ? ' ' + a.r : '') + (a.s ? ' ' + a.s : ''); }
+  function syncAppr() {
+    var last = pts.length > 1 ? pts[pts.length - 1] : null;
+    var icao = last && last.kind === 'apt' ? last.name : '';
+    if (icao !== ap.icao) { ap.icao = icao; ap.sel = -1; ap.tr = -1; ap.list = []; ap.loaded = ''; save(); }
+    if (!icao || !navOk || ap.loaded === icao) { apUI(); return; }
+    ap.loaded = icao;
+    fetch('/approaches?icao=' + encodeURIComponent(icao)).then(function (r) { return r.json(); }).then(function (l) {
+      if (ap.icao !== icao) return;
+      ap.list = Array.isArray(l) ? l : [];
+      if (ap.sel >= ap.list.length) { ap.sel = -1; ap.tr = -1; }
+      apUI(); drawRoute(true);
+    }).catch(function () { apUI(); });
+  }
+  function apUI() {
+    var box = document.getElementById('hgVfrAp'); if (!box) return;
+    if (!ap.icao) { box.innerHTML = ''; return; }
+    if (!navOk) { box.innerHTML = '<div class="h">' + T.appr + ' ' + esc(ap.icao) + '</div><div class="hint" style="margin:0">' + T.apNeed + '</div>'; return; }
+    if (!ap.list.length) { box.innerHTML = '<div class="h">' + T.appr + ' ' + esc(ap.icao) + '</div><div class="hint" style="margin:0">' + (ap.loaded === ap.icao ? T.apNone : T.load) + '</div>'; return; }
+    var o = '<option value="-1">' + T.apDirect + '</option>' + ap.list.map(function (a, i) { return '<option value="' + i + '"' + (i === ap.sel ? ' selected' : '') + '>' + esc(apLabel(a)) + '</option>'; }).join('');
+    var h = '<div class="h">' + T.appr + ' ' + esc(ap.icao) + '</div><select id="hgVfrApSel" style="width:100%">' + o + '</select>';
+    var a = ap.list[ap.sel];
+    if (a && a.tr && a.tr.length) h += '<select id="hgVfrApTr" style="width:100%;margin-top:6px"><option value="-1">' + T.apNoTr + '</option>' +
+      a.tr.map(function (t, i) { return '<option value="' + i + '"' + (i === ap.tr ? ' selected' : '') + '>' + T.apVia + ' ' + esc(t.l[0] ? t.l[0][0] : '?') + '</option>'; }).join('') + '</select>';
+    if (a) h += '<div class="hint" style="margin-top:6px">' + T.apInfo + '</div>';
+    box.innerHTML = h;
+    var s1 = document.getElementById('hgVfrApSel'), s2 = document.getElementById('hgVfrApTr');
+    if (s1) s1.onchange = function () { ap.sel = +s1.value; ap.tr = -1; save(); apUI(); drawRoute(true); };
+    if (s2) s2.onchange = function () { ap.tr = +s2.value; save(); drawRoute(true); };
+  }
+  /* ---------- import des données de MSFS ---------- */
+  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString(); } catch (e) { return ''; } }
+  function impUI(st) {
+    var box = document.getElementById('hgVfrImp'); if (!box || !st) return;
+    navMeta = st.meta || null; var was = navOk; navOk = !!navMeta;
+    document.querySelectorAll('#hgVfr button.tg[data-k=rnav],#hgVfr button.tg[data-k=ils]').forEach(function (b) { b.disabled = !navOk; b.style.opacity = navOk ? '' : '.45'; b.title = navOk ? '' : T.apNeed; });
+    var h = '<div class="h">' + T.msfs + '</div>';
+    if (st.state === 'run') {
+      var stepTxt = T.steps[st.step] || st.step || '';
+      h += '<div style="font-size:12px;color:#cbd5e1">⏳ ' + esc(stepTxt) + (st.total ? ' : ' + (st.done || 0).toLocaleString() + ' / ' + st.total.toLocaleString() : (st.done ? ' : ' + st.done.toLocaleString() : '')) + '</div>' +
+        (st.total ? '<div style="height:6px;background:#1e3a5f;border-radius:4px;margin:6px 0"><div style="height:6px;border-radius:4px;background:#38bdf8;width:' + Math.round(100 * (st.done || 0) / st.total) + '%"></div></div>' : '') +
+        '<button type="button" class="b" data-a="impstop">' + T.impStop + '</button>';
+    } else {
+      if (navMeta) h += '<div style="font-size:12px;line-height:1.6">' + T.impDate + ' ' + fmtDate(navMeta.date) + '<br>' + (navMeta.waypoints || 0).toLocaleString() + ' ' + T.cWpt + ' · ' + (navMeta.ils || 0).toLocaleString() + ' ILS · ' + (navMeta.approaches || 0).toLocaleString() + ' ' + T.cAppr + '</div>';
+      else h += '<div style="font-size:12px;color:#94a3b8;line-height:1.5">' + T.impWhy + '</div>';
+      if (st.state === 'error' && st.msg) h += '<div style="font-size:12px;color:#f87171;margin-top:6px">⚠ ' + esc(st.msg) + '</div>';
+      if (st.state === 'done') h += '<div style="font-size:12px;color:#4ade80;margin-top:6px">✓ ' + T.impOk + '</div>';
+      h += '<button type="button" class="b" data-a="imp" style="margin-top:8px">' + (navMeta ? T.impUpd : T.impGo) + '</button>';
+    }
+    box.innerHTML = h;
+    if (navOk && !was) { ap.loaded = ''; syncAppr(); draw(); }
+    clearTimeout(impTimer);
+    if (st.state === 'run') impTimer = setTimeout(impPoll, 1000);
+  }
+  function impPoll(q) { fetch('/navimport' + (q || '')).then(function (r) { return r.json(); }).then(impUI).catch(function () {}); }
+  function msfs(z) {
+    if (!lyr.msfs) lyr.msfs = L.layerGroup().addTo(map);
+    var tok = ++msfsTok, want = [];
+    if (navOk && show.rnav && z >= 9) want.push('wpt');
+    if (navOk && show.ils && z >= 8) want.push('ils');
+    if (!want.length) { lyr.msfs.clearLayers(); return; }
+    var b = map.getBounds().pad(0.1), q = '&s=' + b.getSouth().toFixed(3) + '&w=' + b.getWest().toFixed(3) + '&n=' + b.getNorth().toFixed(3) + '&e=' + b.getEast().toFixed(3);
+    Promise.all(want.map(function (k) { return fetch('/nav?k=' + k + q).then(function (r) { return r.json(); }).then(function (a) { return [k, a]; }).catch(function () { return [k, []]; }); })).then(function (res) {
+      if (tok !== msfsTok) return;
+      lyr.msfs.clearLayers();
+      res.forEach(function (kr) {
+        kr[1].forEach(function (r) {
+          var o = { lat: r[2], lon: r[3], name: r[0], kind: kr[0] };
+          if (kr[0] === 'wpt') {
+            mk(o, '<svg width="12" height="12" viewBox="-6 -6 12 12"><polygon points="0,-5 4.5,3.5 -4.5,3.5" fill="rgba(8,47,73,.7)" stroke="#22d3ee" stroke-width="1.6"/></svg>', 12, '<b>' + esc(r[0]) + '</b> · RNAV').addTo(lyr.msfs);
+          } else {
+            var crs = (+r[7] || 0), back = (crs + 180) % 360, p0 = { lat: r[2], lon: r[3] }, a1 = dest(p0, back - 2.5, 9), a2 = dest(p0, back + 2.5, 9), mid = dest(p0, back, 8);
+            L.polygon([[p0.lat, p0.lon], [a1.lat, a1.lon], [mid.lat, mid.lon], [a2.lat, a2.lon]], { color: '#4ade80', weight: 1.4, fillColor: '#4ade80', fillOpacity: .12, interactive: false }).addTo(lyr.msfs);
+            mk(o, '<svg width="12" height="12" viewBox="-6 -6 12 12"><circle r="4" fill="#052e16" stroke="#4ade80" stroke-width="1.8"/></svg>', 12,
+               '<b>' + esc(r[0]) + '</b> ILS ' + (r[5] ? (r[5] / 1e6).toFixed(2) : '') + ' · ' + String(Math.round(crs)).padStart(3, '0') + '°').addTo(lyr.msfs);
+          }
+        });
+      });
+    });
+  }
   /* ---------- route ---------- */
   function add(p) {
     if (p.kind === 'wp' || !p.name) { wpN++; p.name = 'WP' + wpN; p.kind = 'wp'; }
     pts.push(p); save(); drawRoute();
   }
-  function drawRoute() {
+  function drawRoute(noSync) {
     /* points libres renumérotés dans l'ordre : WP1, WP2, WP3… */
     var k = 0; pts.forEach(function (p) { if (p.kind === 'wp') p.name = 'WP' + (++k); }); wpN = k; save();
-    if (!map) return;
+    if (!noSync) syncAppr();
+    if (!map) { side(); return; }
     if (!lyr.route) lyr.route = L.layerGroup().addTo(map);
     lyr.route.clearLayers();
-    if (pts.length > 1) L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
-    for (var i = 1; i < pts.length; i++) {
-      var a = pts[i - 1], b = pts[i];
+    var F = full(), path = apPath();
+    if (path.length) {
+      L.polyline(pts.slice(0, -1).concat([path[0]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
+      L.polyline(path.concat([pts[pts.length - 1]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#4ade80', weight: 4, opacity: .95, dashArray: '10 6', interactive: false }).addTo(lyr.route);
+      path.forEach(function (p) { L.circleMarker([p.lat, p.lon], { radius: 4, color: '#4ade80', weight: 2, fillColor: '#052e16', fillOpacity: 1, interactive: true, bubblingMouseEvents: false })
+        .bindTooltip('<b>' + esc(p.name) + '</b>', { className: 'hgv-lab', direction: 'right', offset: [6, 0], permanent: true }).addTo(lyr.route); });
+    } else if (pts.length > 1) L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
+    for (var i = 1; i < F.length; i++) {
+      var a = F[i - 1], b = F[i];
+      if (dist(a, b) < 2.5) continue;
       L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], { icon: L.divIcon({ className: 'hgv-ic', html: '', iconSize: [1, 1] }), interactive: false })
         .bindTooltip(hdg(a, b) + ' · ' + Math.round(dist(a, b)) + ' NM', { permanent: true, direction: 'center', className: 'hgv-leg' }).addTo(lyr.route);
     }
@@ -7437,11 +7540,13 @@ ${waypoint(arr)}
   function side() {
     /* une ligne par point : cap et distance de la branche qui y mène, ✕ pour le retirer */
     var tb = document.getElementById('hgVfrLegs'), tot = 0, h = '';
-    pts.forEach(function (p, i) {
-      var a = i ? pts[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
-      var c = i === 0 ? '#22d3ee' : (i === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9');
-      h += '<tr><td><span style="color:' + c + '">●</span> ' + (i + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') +
-        '</td><td style="text-align:right"><button type="button" class="hgv-del" data-i="' + i + '" title="' + T.del + '">✕</button></td></tr>';
+    var F = full(), ui = 0;
+    F.forEach(function (p, i) {
+      var a = i ? F[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
+      var isAp = p.kind === 'ap', pi = isAp ? -1 : ui++;
+      var c = isAp ? '#4ade80' : (pi === 0 ? '#22d3ee' : (pi === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9'));
+      h += '<tr' + (isAp ? ' style="color:#86efac"' : '') + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') +
+        '</td><td style="text-align:right">' + (isAp ? '' : '<button type="button" class="hgv-del" data-i="' + pi + '" title="' + T.del + '">✕</button>') + '</td></tr>';
     });
     if (tb) tb.innerHTML = h || '<tr><td colspan="5" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
@@ -7460,7 +7565,7 @@ ${waypoint(arr)}
     return String(d1).padStart(2, '0') + String(m1).padStart(2, '0') + (p.lat < 0 ? 'S' : 'N') + String(d2).padStart(3, '0') + String(m2).padStart(2, '0') + (p.lon < 0 ? 'W' : 'E'); }
   function simbrief() {
     var e = ends(); if (!e) return;
-    var route = pts.slice(1, -1).map(function (p) { return p.kind === 'wp' ? sbCoord(p) : p.name; }).join(' ');
+    var route = pts.slice(1, -1).map(function (p) { return p.kind === 'wp' ? sbCoord(p) : p.name; }).join(' ');   /* l'approche se choisit dans SimBrief */
     var ac = 'C172'; try { ac = document.getElementById('aircraftSelect').value || ac; } catch (x) {}
     var url = 'https://dispatch.simbrief.com/options/custom?' + new URLSearchParams({ orig: e[0].icao, dest: e[1].icao, type: ac, route: route, fltrules: 'V' }).toString();
     window.open(url, '_blank');
@@ -7472,7 +7577,7 @@ ${waypoint(arr)}
     var dms = function (v, isLat) { var a = Math.abs(v), t = Math.round(a * 360000), d = Math.floor(t / 360000), m = Math.floor((t % 360000) / 6000), s = (t % 6000) / 100;
       return (isLat ? (v < 0 ? 'S' : 'N') : (v < 0 ? 'W' : 'E')) + d + '° ' + m + "' " + s.toFixed(2) + '"'; };
     var alt = 3500, asc = function (t) { return String(t).replace(/[^\x20-\x7E]/g, ''); };
-    var body = pts.slice(1, -1).map(function (p) {
+    var body = full().slice(1, -1).map(function (p) {
       var id = xmlEscape(asc(p.name));
       return '        <ATCWaypoint id="' + id + '">\n            <ATCWaypointType>User</ATCWaypointType>\n            <WorldPosition>' + dms(p.lat, true) + ',' + dms(p.lon, false) + ',+' + String(alt).padStart(6, '0') + '.00</WorldPosition>\n' +
         '            <ICAO>\n                <ICAOIdent>' + id + '</ICAOIdent>\n            </ICAO>\n        </ATCWaypoint>';
@@ -7501,11 +7606,11 @@ ${waypoint(arr)}
       '<span class="t">✈ ' + T.title + '</span><span class="sum" id="hgVfrSum"></span><span class="grow"></span>' +
       '<button type="button" class="b" data-a="undo">↶ ' + T.undo + '</button><button type="button" class="b" data-a="swap">⇄ ' + T.swap + '</button><button type="button" class="b" data-a="clear">⟲ ' + T.clear + '</button>' +
       '<button type="button" class="b sb" data-a="sb">➤ SIMBRIEF</button><button type="button" class="b pln" data-a="pln">⬇ FICHIER .PLN</button><button type="button" class="b" data-a="back">✕</button></div>' +
-      '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('names', '#94a3b8', T.names) +
+      '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('rnav', '#22d3ee', 'RNAV') + tg('ils', '#4ade80', 'ILS') + tg('names', '#94a3b8', T.names) +
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
-      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="hint">' + T.help + '</div></div></div>';
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) {
@@ -7519,6 +7624,8 @@ ${waypoint(arr)}
       else if (a === 'swap') { pts.reverse(); save(); drawRoute(); }
       else if (a === 'clear') { pts = []; wpN = 0; save(); drawRoute(); }
       else if (a === 'sb') simbrief();
+      else if (a === 'imp') impPoll('?go=1');
+      else if (a === 'impstop') impPoll('?stop=1');
       else if (a === 'pln') pln();
     });
     var sel = d.querySelector('#hgVfrBg'); sel.value = String(bgIdx); sel.onchange = function () { setBg(+sel.value); };
@@ -7537,6 +7644,7 @@ ${waypoint(arr)}
     }
     setTimeout(function () { map.invalidateSize(); if (pts.length > 1) map.fitBounds(L.latLngBounds(pts.map(function (p) { return [p.lat, p.lon]; })).pad(0.2)); draw(); drawRoute(); }, 60);
     loadData();
+    impPoll();
   }
   function close() { var d = document.getElementById('hgVfr'); if (d) d.classList.remove('on'); }
   window.hgOpenVfr = open;

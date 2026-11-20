@@ -492,6 +492,31 @@ namespace HangarFS2024
                         r.Text("ok", "text/plain");
                         return;
                     }
+                // 12.9 : données de navigation importées de MSFS (page Plan VFR)
+                case "/navimport":
+                    {
+                        string go, stop; q.TryGetValue("go", out go); q.TryGetValue("stop", out stop);
+                        if (go == "1") NavData.Start(RelayState.FindSimConnectDll(CfgS("simconnect_dir"), CfgS("launch_target")), SimOn || SimRunning());
+                        if (stop == "1") NavData.Stop();
+                        r.Text(NavData.Status().ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
+                case "/nav":
+                    {
+                        string k, s0, w0, n0, e0;
+                        q.TryGetValue("k", out k); q.TryGetValue("s", out s0); q.TryGetValue("w", out w0); q.TryGetValue("n", out n0); q.TryGetValue("e", out e0);
+                        double s1, w1, n1, e1; var ci = System.Globalization.CultureInfo.InvariantCulture; var ns = System.Globalization.NumberStyles.Float;
+                        if (!double.TryParse(s0, ns, ci, out s1) || !double.TryParse(w0, ns, ci, out w1) || !double.TryParse(n0, ns, ci, out n1) || !double.TryParse(e0, ns, ci, out e1)
+                            || (k != "wpt" && k != "vor" && k != "ils" && k != "ndb")) { r.Status = 400; r.Text("bad", "text/plain"); return; }
+                        r.Text(NavData.Query(k, s1, w1, n1, e1, 1500).ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
+                case "/approaches":
+                    {
+                        string icao; q.TryGetValue("icao", out icao);
+                        r.Text(NavData.Approaches(icao).ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
                 case "/journal-list": r.Text(Journal.List().ToString(Formatting.None), "application/json; charset=utf-8"); return;
                 case "/journal-get":
                     {

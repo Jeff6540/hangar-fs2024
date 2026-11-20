@@ -255,6 +255,34 @@ namespace HangarFS2024
             try { if (handle != IntPtr.Zero) close(handle); } catch (Exception) { }
             handle = IntPtr.Zero;
         }
+
+        // ---- 12.9 : données de navigation (import des points RNAV, VOR, ILS, NDB et approches de MSFS)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AddFacFn(IntPtr h, uint def, [MarshalAs(UnmanagedType.LPStr)] string field);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        delegate int ReqFacFn(IntPtr h, uint def, uint req, [MarshalAs(UnmanagedType.LPStr)] string icao, [MarshalAs(UnmanagedType.LPStr)] string region);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int ReqListFn(IntPtr h, int type, uint req);
+        static AddFacFn addFac; static ReqFacFn reqFac; static ReqListFn reqAll, reqList;
+
+        /// <summary>Fonctions de données d'installations ; false si la SimConnect.dll est trop ancienne.</summary>
+        public static bool LoadNav()
+        {
+            if (module == IntPtr.Zero) return false;
+            if (addFac == null) addFac = Get<AddFacFn>("SimConnect_AddToFacilityDefinition");
+            if (reqFac == null) reqFac = Get<ReqFacFn>("SimConnect_RequestFacilityData");
+            if (reqAll == null) reqAll = Get<ReqListFn>("SimConnect_RequestAllFacilities") ?? Get<ReqListFn>("SimConnect_RequestAllFacilites");
+            if (reqList == null) reqList = Get<ReqListFn>("SimConnect_RequestFacilitiesList") ?? Get<ReqListFn>("SimConnect_RequestFacilitesList");
+            return addFac != null && reqFac != null && (reqAll != null || reqList != null);
+        }
+        public static bool HasAll { get { return reqAll != null; } }
+        public int AddFac(uint def, string field) { return addFac(handle, def, field); }
+        public int ReqFac(uint def, uint req, string icao, string region) { return reqFac(handle, def, req, icao, region ?? ""); }
+        /// <summary>Liste mondiale (type 0 aéroports, 1 points, 2 NDB, 3 VOR) ; -1 si impossible.</summary>
+        public int ReqAll(int type, uint req)
+        {
+            if (reqAll != null) return reqAll(handle, type, req);
+            if (type == 0 && reqList != null) return reqList(handle, type, req);   // ancienne DLL : la liste des aéroports est déjà mondiale
+            return -1;
+        }
     }
 
     // ------------------------------------------------------------------ données partagées du relais
