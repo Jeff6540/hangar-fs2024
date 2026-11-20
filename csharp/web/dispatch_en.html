@@ -7466,19 +7466,22 @@ ${waypoint(arr)}
     window.open(url, '_blank');
   }
   function pln() {
+    /* même forme que les plans de Little Navmap pour MSFS 2024 : en-tête minimal, seulement les points intermédiaires,
+       départ et arrivée donnés par leur code OACI, texte en ASCII, degrés sans zéros devant */
     var e = ends(); if (!e) return;
     var dms = function (v, isLat) { var a = Math.abs(v), t = Math.round(a * 360000), d = Math.floor(t / 360000), m = Math.floor((t % 360000) / 6000), s = (t % 6000) / 100;
-      return (isLat ? (v < 0 ? 'S' : 'N') : (v < 0 ? 'W' : 'E')) + String(d).padStart(isLat ? 2 : 3, '0') + '° ' + String(m).padStart(2, '0') + "' " + s.toFixed(2).padStart(5, '0') + '"'; };
-    var alt = 3500, pos = function (p, el) { return dms(p.lat, true) + ',' + dms(p.lon, false) + ',+' + String(Math.max(0, Math.round(el || 0))).padStart(6, '0') + '.00'; };
-    var wp = function (id, type, p, el, icao) { return '        <ATCWaypoint id="' + xmlEscape(id) + '">\n            <ATCWaypointType>' + type + '</ATCWaypointType>\n            <WorldPosition>' + pos(p, el) + '</WorldPosition>\n' +
-      (icao ? '            <ICAO>\n                <ICAOIdent>' + xmlEscape(icao) + '</ICAOIdent>\n            </ICAO>\n' : '') + '        </ATCWaypoint>'; };
-    var body = [wp(e[0].icao, 'Airport', e[0], e[0].elevation_ft, e[0].icao)];
-    pts.slice(1, -1).forEach(function (p) { body.push(wp(p.name, 'User', p, alt, p.name)); });
-    body.push(wp(e[1].icao, 'Airport', e[1], e[1].elevation_ft, e[1].icao));
-    var title = e[0].icao + ' → ' + e[1].icao + ' (VFR)';
-    var x = '<?xml version="1.0" encoding="UTF-8"?>\n<SimBase.Document Type="AceXML" version="1,0" id="FlightPlan">\n    <Descr>' + xmlEscape(title) + '</Descr>\n    <FlightPlan.FlightPlan>\n        <Title>' + xmlEscape(title) + '</Title>\n        <FPType>VFR</FPType>\n        <RouteType>VFR</RouteType>\n        <CruisingAlt>' + alt + '</CruisingAlt>\n' +
-      '        <DepartureID>' + xmlEscape(e[0].icao) + '</DepartureID>\n        <DepartureLLA>' + pos(e[0], e[0].elevation_ft) + '</DepartureLLA>\n        <DestinationID>' + xmlEscape(e[1].icao) + '</DestinationID>\n        <DestinationLLA>' + pos(e[1], e[1].elevation_ft) + '</DestinationLLA>\n' +
-      body.join('\n') + '\n    </FlightPlan.FlightPlan>\n</SimBase.Document>';
+      return (isLat ? (v < 0 ? 'S' : 'N') : (v < 0 ? 'W' : 'E')) + d + '° ' + m + "' " + s.toFixed(2) + '"'; };
+    var alt = 3500, asc = function (t) { return String(t).replace(/[^\x20-\x7E]/g, ''); };
+    var body = pts.slice(1, -1).map(function (p) {
+      var id = xmlEscape(asc(p.name));
+      return '        <ATCWaypoint id="' + id + '">\n            <ATCWaypointType>User</ATCWaypointType>\n            <WorldPosition>' + dms(p.lat, true) + ',' + dms(p.lon, false) + ',+' + String(alt).padStart(6, '0') + '.00</WorldPosition>\n' +
+        '            <ICAO>\n                <ICAOIdent>' + id + '</ICAOIdent>\n            </ICAO>\n        </ATCWaypoint>';
+    });
+    var a1 = xmlEscape(e[0].icao), a2 = xmlEscape(e[1].icao);
+    var x = '<?xml version="1.0" encoding="UTF-8"?>\n<SimBase.Document>\n    <FlightPlan.FlightPlan>\n        <DepartureID>' + a1 + '</DepartureID>\n        <DestinationID>' + a2 + '</DestinationID>\n' +
+      '        <Title>' + a1 + ' - ' + a2 + '</Title>\n        <Descr>VFR flight from ' + a1 + ' to ' + a2 + ' created by Hangar FS 2024</Descr>\n        <FPType>VFR</FPType>\n        <CruisingAlt>' + alt + '.000</CruisingAlt>\n' +
+      '        <AppVersion>\n            <AppVersionMajor>12</AppVersionMajor>\n            <AppVersionMinor>1</AppVersionMinor>\n            <AppVersionBuild>282174</AppVersionBuild>\n        </AppVersion>\n' +
+      (body.length ? body.join('\n') + '\n' : '') + '    </FlightPlan.FlightPlan>\n</SimBase.Document>\n';
     var url = URL.createObjectURL(new Blob([x], { type: 'application/xml;charset=utf-8' })), a = document.createElement('a');
     a.href = url; a.download = e[0].icao + '_' + e[1].icao + '_VFR.pln'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
