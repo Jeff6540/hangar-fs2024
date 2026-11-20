@@ -1,6 +1,6 @@
 {
-  "version": "12.8",
+  "version": "12.7",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Fenêtre Quoi de neuf, moment du vol (matin, journée, crépuscule, nuit) en UTC, jour/nuit en direct sur la carte, destinations adaptées à l'avion, boutons Discord",
-  "notes_en": "What's new window, time of flight (morning, day, dusk, night) in UTC, live day/night on the map, destinations suited to the aircraft, Discord buttons"
+  "notes_fr": "Journal de vol (phases, profil TOC/TOD, historique), nouveau look de la carte de suivi, altitude conseillée, menus sur toutes les pages",
+  "notes_en": "Flight log (phases, TOC/TOD profile, history), new tracking map look, advised altitude, menus on every page"
 }
