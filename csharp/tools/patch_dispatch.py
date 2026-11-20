@@ -2038,7 +2038,7 @@ def patch_alt127(path, lang):
 if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
-        patch_alt127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+        pass   # 12.8 : altitude conseillée retirée à la demande
 
 
 # ---- 12.7 : SEL TEMP / FLEX bien visible au décollage ----
