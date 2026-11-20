@@ -64,8 +64,8 @@ namespace HangarFS2024
             try
             {
                 if (!SimConnectClient.Load(dll) || !SimConnectClient.LoadNav())
-                    throw new Exception(Hangar.L("La SimConnect.dll trouvée est trop ancienne pour lire les données de navigation. Installe le SDK de MSFS 2024, ou copie la SimConnect.dll du SDK 2024 à côté de l'appli.",
-                                                 "The SimConnect.dll found is too old to read navigation data. Install the MSFS 2024 SDK, or copy the 2024 SDK SimConnect.dll next to the app."));
+                    throw new Exception(Hangar.L("La SimConnect.dll utilisée est trop ancienne pour lire les données de navigation. Si tu viens d'installer la nouvelle version de l'appli, ferme-la complètement et rouvre-la : elle cherche alors une SimConnect.dll récente (Little Navmap 3, SDK de MSFS 2024). Sinon, copie la SimConnect.dll de Little Navmap 3 ou du SDK de MSFS 2024 dans le dossier de l'appli, puis rouvre l'appli.",
+                                                 "The SimConnect.dll in use is too old to read navigation data. If you just installed the new app version, close it completely and reopen it: it then looks for a recent SimConnect.dll (Little Navmap 3, MSFS 2024 SDK). Otherwise, copy the SimConnect.dll from Little Navmap 3 or the MSFS 2024 SDK into the app folder, then reopen the app."));
                 c.Open("Hangar FS 2024 navdata");
                 Directory.CreateDirectory(Dir);
                 var tmp = Path.Combine(Dir, "tmp"); Directory.CreateDirectory(tmp);

@@ -557,19 +557,65 @@ namespace HangarFS2024
                 }
                 catch (Exception) { }
             }
-            foreach (var p in c)
+            // 12.9 : Little Navmap 3 et autres outils récents livrent une SimConnect.dll de MSFS 2024
+            foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                                          Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs"), home, Path.Combine(home, "Documents"), @"C:\", @"D:\" })
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(root) || !Directory.Exists(root)) continue;
+                    foreach (var d in Directory.GetDirectories(root))
+                    {
+                        string n = Path.GetFileName(d).ToLowerInvariant();
+                        if (!(n.Contains("little nav") || n.Contains("littlenav") || n.Contains("msfs 2024 sdk") || n.Contains("msfs sdk"))) continue;
+                        try { foreach (var f in Directory.EnumerateFiles(d, "SimConnect.dll", SearchOption.AllDirectories).Take(12)) c.Add(f); } catch (Exception) { }
+                    }
+                }
+                catch (Exception) { }
+            }
+            // on préfère une DLL qui sait lire les données de navigation (MSFS 2024), puis une qui sait au moins lire les approches
+            string best = null; int bestScore = -1;
+            foreach (var p in c.Distinct(StringComparer.OrdinalIgnoreCase))
             {
                 try
                 {
                     if (!File.Exists(p)) continue;
-                    // copie gardée dans le dossier des réglages pour les prochaines fois
-                    string keep = Path.Combine(AppInfo.BaseDir, "SimConnect.dll");
-                    if (!File.Exists(keep)) { try { File.Copy(p, keep); } catch (Exception) { } }
-                    return p;
+                    int sc = DllScore(p);
+                    if (sc > bestScore) { best = p; bestScore = sc; }
+                    if (sc >= 3) break;
                 }
                 catch (Exception) { }
             }
-            return null;
+            if (best == null) return null;
+            // copie gardée dans le dossier des réglages pour les prochaines fois (remplacée si on a trouvé mieux)
+            try
+            {
+                string keep = Path.Combine(AppInfo.BaseDir, "SimConnect.dll");
+                if (!string.Equals(Path.GetFullPath(best), Path.GetFullPath(keep), StringComparison.OrdinalIgnoreCase) && (!File.Exists(keep) || DllScore(keep) < bestScore))
+                    File.Copy(best, keep, true);
+            }
+            catch (Exception) { }
+            return best;
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr LoadLibraryEx(string path, IntPtr file, uint flags);
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi)] static extern IntPtr GetProcAddress(IntPtr mod, string name);
+        [DllImport("kernel32.dll")] static extern bool FreeLibrary(IntPtr mod);
+
+        /// <summary>0 : SimConnect seul ; 2 : lit les approches ; 3 : lit aussi les listes mondiales (MSFS 2024).</summary>
+        public static int DllScore(string path)
+        {
+            IntPtr m = IntPtr.Zero;
+            try
+            {
+                m = LoadLibraryEx(path, IntPtr.Zero, 0x00000001 /* DONT_RESOLVE_DLL_REFERENCES : on lit seulement la liste des fonctions */);
+                if (m == IntPtr.Zero) return 0;
+                bool fac = GetProcAddress(m, "SimConnect_AddToFacilityDefinition") != IntPtr.Zero && GetProcAddress(m, "SimConnect_RequestFacilityData") != IntPtr.Zero;
+                bool all = GetProcAddress(m, "SimConnect_RequestAllFacilities") != IntPtr.Zero || GetProcAddress(m, "SimConnect_RequestAllFacilites") != IntPtr.Zero;
+                return fac ? (all ? 3 : 2) : 0;
+            }
+            catch (Exception) { return 0; }
+            finally { if (m != IntPtr.Zero) FreeLibrary(m); }
         }
     }
 
