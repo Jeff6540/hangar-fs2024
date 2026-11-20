@@ -2780,7 +2780,7 @@ if __name__ == "__main__":
 VFR_TXT = {
     "fr": {"btn": "PLAN VFR", "title": "PLAN VFR", "menu": "Menu principal", "back": "Plan de vol personnel", "undo": "Annuler le dernier point",
            "swap": "Inverser", "clear": "Effacer", "show": "AFFICHER", "apt": "Aéroports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Axes de piste",
-           "names": "Noms", "bg": "Fond de carte", "bgs": ["Relief", "Topo", "Plan", "Plan sombre", "Satellite"], "route": "MA ROUTE VFR", "from": "DE → VERS",
+           "names": "Noms", "acft": "AVION", "acTip": "Avion envoyé à SimBrief : choisis dans la liste ou tape un code OACI (ex. C414)", "bg": "Fond de carte", "bgs": ["Relief", "Topo", "Plan", "Plan sombre", "Satellite"], "route": "MA ROUTE VFR", "from": "DE → VERS",
            "hdg": "CAP", "dist": "DIST.", "total": "Distance totale", "legs": "branches", "leg1": "branche", "empty": "Clique sur la carte pour poser ton premier point (de préférence sur ton aéroport de départ).",
            "tip": "Clic : ajouter un point · glisser : déplacer · clic droit sur un aéroport, un ILS ou un point : sa fiche (SID, STAR, approches)",
            "help": "Un point posé sur une balise prend son nom (ex. TOU). Un point libre s'appelle WP1, WP2… Le premier et le dernier point posés sur un aéroport deviennent le départ et l'arrivée. Les caps sont magnétiques (déclinaison de la balise la plus proche).",
@@ -2799,7 +2799,7 @@ VFR_TXT = {
            "cWpt": "points RNAV", "cAppr": "approches", "steps": {"open": "Connexion à MSFS", "airports": "Liste des aéroports", "waypoints": "Points RNAV", "vors": "VOR et ILS", "ndbs": "NDB", "approaches": "Approches", "procs": "Départs et arrivées"}},
     "en": {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point",
            "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes",
-           "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO",
+           "names": "Names", "acft": "AIRCRAFT", "acTip": "Aircraft sent to SimBrief: pick from the list or type an ICAO code (e.g. C414)", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO",
            "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).",
            "tip": "Click: add a point · drag: move · right-click an airport, an ILS or a point: its card (SID, STAR, approaches)",
            "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).",
@@ -2879,6 +2879,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   var T = __TXT__, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
   var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
   var show = { apt: true, vor: true, ndb: true, rwy: true, names: false, rnav: false, ils: false }, bgIdx = 0;
+  var acV = 'C172'; try { acV = localStorage.getItem('hg_vfr_ac') || 'C172'; } catch (e) {}
   var navOk = false, navMeta = null, PD = {}, msfsTok = 0, impTimer = null, card = null;
   var pr = { dep: { icao: '', sid: -1, rw: -1, en: -1 }, arr: { icao: '', star: -1, rw: -1, en: -1, ap: -1, tr: -1 } };
   try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null && sv.v === 2) bgIdx = sv.bg; if (sv && sv.pr && sv.pr.dep && sv.pr.arr) pr = sv.pr; } catch (e) {}
@@ -3323,8 +3324,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbCoord({ lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche en coordonnées */
       if (ap2 && ap2.r) destrwy = ap2.r;
     }
-    var ac = 'C172'; try { ac = document.getElementById('aircraftSelect').value || ac; } catch (x) {}
-    var q = { orig: e[0].icao, dest: e[1].icao, type: ac, route: tok.join(' ') };
+    var q = { orig: e[0].icao, dest: e[1].icao, type: acV || 'C172', route: tok.join(' ') };   /* l'avion choisi dans la page VFR */
     if (origrwy && origrwy !== 'ALL') q.origrwy = origrwy;
     if (destrwy && destrwy !== 'ALL') q.destrwy = destrwy;
     window.open('https://dispatch.simbrief.com/options/custom?' + new URLSearchParams(q).toString(), '_blank');
@@ -3366,6 +3366,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       '<button type="button" class="b" data-a="undo">↶ ' + T.undo + '</button><button type="button" class="b" data-a="swap">⇄ ' + T.swap + '</button><button type="button" class="b" data-a="clear">⟲ ' + T.clear + '</button>' +
       '<button type="button" class="b sb" data-a="sb">➤ SIMBRIEF</button><button type="button" class="b pln" data-a="pln">⬇ FICHIER .PLN</button><button type="button" class="b" data-a="back">✕</button></div>' +
       '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('rnav', '#0e7490', 'RNAV') + tg('ils', '#22c55e', 'ILS') + tg('names', '#94a3b8', T.names) +
+      '<span class="gl" style="margin-left:10px">' + T.acft + '</span><input id="hgVfrAc" list="hgVfrAcL" spellcheck="false" autocomplete="off" title="' + T.acTip + '" style="width:92px;text-transform:uppercase;border:1px solid #1e3a5f;background:#0c1729;color:#e2e8f0;border-radius:9px;padding:6px 9px;font:700 12px Segoe UI,Inter,sans-serif">' +
+      '<datalist id="hgVfrAcL"><option value="C152">C152 — Cessna 152</option><option value="C172">C172 — Cessna 172 Skyhawk</option><option value="C182">C182 — Cessna 182 Skylane</option><option value="C206">C206 — Cessna 206 Stationair</option><option value="C210">C210 — Cessna 210 Centurion</option><option value="P28A">P28A — Piper PA-28 Warrior / Archer</option><option value="PA32">PA32 — Piper PA-32 Saratoga</option><option value="BE36">BE36 — Beechcraft Bonanza G36</option><option value="SR22">SR22 — Cirrus SR22</option><option value="DA40">DA40 — Diamond DA40</option><option value="DHC2">DHC2 — DHC-2 Beaver</option><option value="CUB">CUB — Piper Cub</option><option value="PA34">PA34 — Piper PA-34 Seneca</option><option value="PA44">PA44 — Piper PA-44 Seminole</option><option value="BE58">BE58 — Beechcraft Baron 58</option><option value="DA42">DA42 — Diamond DA42</option><option value="DA62">DA62 — Diamond DA62</option><option value="C310">C310 — Cessna 310</option><option value="C340">C340 — Cessna 340</option><option value="C414">C414 — Cessna 414 Chancellor</option><option value="C421">C421 — Cessna 421 Golden Eagle</option><option value="C208">C208 — Cessna 208 Caravan</option><option value="TBM9">TBM9 — Daher TBM 930 / 940</option><option value="PC12">PC12 — Pilatus PC-12</option><option value="P46T">P46T — Piper M500 / M600</option><option value="KODI">KODI — Kodiak 100</option><option value="BE9L">BE9L — King Air C90</option><option value="BE20">BE20 — King Air 200 / 250</option><option value="BE35">BE35 — King Air 350</option><option value="DHC6">DHC6 — DHC-6 Twin Otter</option></datalist><span id="hgVfrAcN" style="color:#94a3b8;font-size:11.5px"></span>' +
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div id="hgVfrCard" style="display:none"></div><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
@@ -3395,6 +3397,11 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     cd.addEventListener('click', function (e) { e.stopPropagation(); cardClick(e); });
     cd.addEventListener('change', cardChange);
     ['mousedown', 'dblclick', 'wheel', 'contextmenu'].forEach(function (ev) { cd.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+    var acI = d.querySelector('#hgVfrAc'), acN = d.querySelector('#hgVfrAcN'), acL = d.querySelector('#hgVfrAcL');
+    var acName = function () { var o = acL.querySelector('option[value="' + acI.value + '"]'); acN.textContent = o ? o.textContent.split(' — ')[1] : ''; };
+    acI.value = acV; acName();
+    acI.oninput = function () { acI.value = acI.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); acName(); };
+    acI.onchange = function () { if (!/^[A-Z0-9]{2,4}$/.test(acI.value)) acI.value = acV; acV = acI.value; try { localStorage.setItem('hg_vfr_ac', acV); } catch (e) {} acName(); };
     var sel = d.querySelector('#hgVfrBg'); sel.value = String(bgIdx); sel.onchange = function () { setBg(+sel.value); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && d.classList.contains('on')) { if (card) closeCard(); else close(); } });
   }
