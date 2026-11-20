@@ -2767,7 +2767,7 @@ VFR_TXT = {
            "tip": "Clique n'importe où pour ajouter un point · glisse un point pour le déplacer · clic droit sur un point pour le retirer",
            "help": "Un point posé sur une balise prend son nom (ex. TOU). Un point libre s'appelle WP1, WP2… Le premier et le dernier point posés sur un aéroport deviennent le départ et l'arrivée. Les caps sont magnétiques (déclinaison de la balise la plus proche).",
            "load": "Chargement des balises et des pistes…", "loaded": "balises", "needApt": "Pour exporter, le premier et le dernier point doivent être des aéroports (clique sur un aéroport).",
-           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : retirer"},
+           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : retirer", "del": "Retirer ce point", "pt": "POINT"},
     "en": {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point",
            "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes",
            "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO",
@@ -2775,7 +2775,7 @@ VFR_TXT = {
            "tip": "Click anywhere to add a point · drag a point to move it · right-click a point to remove it",
            "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).",
            "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).",
-           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: remove"},
+           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: remove", "del": "Remove this point", "pt": "POINT"},
 }
 VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr{position:fixed;left:52px;right:0;top:0;bottom:0;z-index:3000;display:none;flex-direction:column;background:#070d18;color:#cbd5e1;font:13px "Segoe UI",Inter,sans-serif}
@@ -2802,6 +2802,8 @@ VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr th{color:#64748b;font-weight:700;text-align:left;padding:5px 4px;border-bottom:1px solid #1e3a5f;font-size:10.5px;letter-spacing:.05em}
 #hgVfr td{padding:7px 4px;border-bottom:1px solid #132339}
 #hgVfr td b{color:#f1f5f9}
+#hgVfr button.hgv-del{border:1px solid #3b1d2a;background:transparent;color:#f87171;border-radius:6px;width:22px;height:22px;line-height:18px;cursor:pointer;font-size:11px;padding:0}
+#hgVfr button.hgv-del:hover{background:#f87171;color:#1a0505}
 #hgVfr .tot{display:flex;justify-content:space-between;align-items:center;background:#0e1f36;border:1px solid #1e3a5f;border-radius:10px;padding:9px 12px;font-weight:700}
 #hgVfr .tot b{color:#38bdf8;font:800 18px Consolas,monospace}
 #hgVfr .hint{color:#64748b;font-size:11.5px;line-height:1.5;border:1px dashed #1e3a5f;border-radius:10px;padding:10px}
@@ -2929,10 +2931,15 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     side();
   }
   function side() {
+    /* une ligne par point : cap et distance de la branche qui y mène, ✕ pour le retirer */
     var tb = document.getElementById('hgVfrLegs'), tot = 0, h = '';
-    for (var i = 1; i < pts.length; i++) { var a = pts[i - 1], b = pts[i], d = dist(a, b); tot += d;
-      h += '<tr><td>' + i + '</td><td>' + (a.kind === 'apt' ? '<b>' + esc(a.name) + '</b>' : esc(a.name)) + ' → ' + (b.kind === 'apt' ? '<b>' + esc(b.name) + '</b>' : esc(b.name)) + '</td><td>' + hdg(a, b) + '</td><td>' + Math.round(d) + ' NM</td></tr>'; }
-    if (tb) tb.innerHTML = h || '<tr><td colspan="4" style="color:#64748b">' + T.empty + '</td></tr>';
+    pts.forEach(function (p, i) {
+      var a = i ? pts[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
+      var c = i === 0 ? '#22d3ee' : (i === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9');
+      h += '<tr><td><span style="color:' + c + '">●</span> ' + (i + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') +
+        '</td><td style="text-align:right"><button type="button" class="hgv-del" data-i="' + i + '" title="' + T.del + '">✕</button></td></tr>';
+    });
+    if (tb) tb.innerHTML = h || '<tr><td colspan="5" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
     if (sm) sm.textContent = pts.length ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM') : T.title;
@@ -2989,12 +2996,13 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('names', '#94a3b8', T.names) +
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
-      '<table><thead><tr><th>#</th><th>' + T.from + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
+      '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
       '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="hint">' + T.help + '</div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.i != null) { pts.splice(+b.dataset.i, 1); save(); drawRoute(); return; }
       if (b.dataset.k) { show[b.dataset.k] = !show[b.dataset.k]; b.classList.toggle('on', show[b.dataset.k]); save(); draw(); return; }
       var a = b.dataset.a;
       if (a === 'back') close();
