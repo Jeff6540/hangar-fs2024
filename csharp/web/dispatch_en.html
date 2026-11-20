@@ -2744,6 +2744,7 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
 #hgVfr .hint{color:#64748b;font-size:11.5px;line-height:1.5;border:1px dashed #1e3a5f;border-radius:10px;padding:10px}
 #hgVfr .tip{position:absolute;left:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid rgba(56,189,248,.35);border-radius:9px;padding:6px 10px;font-size:12px;pointer-events:none}
 #hgVfr .st{position:absolute;right:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid #1e3a5f;border-radius:9px;padding:5px 9px;font-size:11px;color:#94a3b8;pointer-events:none}
+#hgVfrMap .hg-soft{filter:saturate(.6) contrast(.9) brightness(1.04)}
 #hgVfrMap .hg-dark{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.92) saturate(.6)}
 .hgv-ic{background:none;border:0}
 .hgv-lab{background:rgba(8,14,24,.82)!important;border:1px solid #1e3a5f!important;color:#e2e8f0!important;font:700 11px "Segoe UI",Inter,sans-serif!important;box-shadow:none!important;padding:1px 5px!important}
@@ -7490,11 +7491,13 @@ ${waypoint(arr)}
         kr[1].forEach(function (r) {
           var o = { lat: r[2], lon: r[3], name: r[0], kind: kr[0] };
           if (kr[0] === 'wpt') {
-            mk(o, '<svg width="12" height="12" viewBox="-6 -6 12 12"><polygon points="0,-5 4.5,3.5 -4.5,3.5" fill="rgba(8,47,73,.7)" stroke="#22d3ee" stroke-width="1.6"/></svg>', 12, '<b>' + esc(r[0]) + '</b> · RNAV').addTo(lyr.msfs);
+            mk(o, '<svg width="13" height="13" viewBox="-6.5 -6.5 13 13"><polygon points="0,-5.2 4.8,3.6 -4.8,3.6" fill="#0e7490" stroke="#fff" stroke-width="1.4"/></svg>', 13, '<b>' + esc(r[0]) + '</b> · RNAV').addTo(lyr.msfs);
           } else {
             var crs = (+r[7] || 0), back = (crs + 180) % 360, p0 = { lat: r[2], lon: r[3] }, a1 = dest(p0, back - 2.5, 9), a2 = dest(p0, back + 2.5, 9), mid = dest(p0, back, 8);
-            L.polygon([[p0.lat, p0.lon], [a1.lat, a1.lon], [mid.lat, mid.lon], [a2.lat, a2.lon]], { color: '#4ade80', weight: 1.4, fillColor: '#4ade80', fillOpacity: .12, interactive: false }).addTo(lyr.msfs);
-            mk(o, '<svg width="12" height="12" viewBox="-6 -6 12 12"><circle r="4" fill="#052e16" stroke="#4ade80" stroke-width="1.8"/></svg>', 12,
+            L.polygon([[p0.lat, p0.lon], [a1.lat, a1.lon], [mid.lat, mid.lon], [a2.lat, a2.lon]], { color: '#15803d', weight: 1.8, fillColor: '#22c55e', fillOpacity: .28, interactive: false }).addTo(lyr.msfs);
+            var far = dest(p0, back, 9);
+            L.polyline([[p0.lat, p0.lon], [far.lat, far.lon]], { color: '#14532d', weight: 1.4, dashArray: '6 5', interactive: false }).addTo(lyr.msfs);
+            mk(o, '<svg width="13" height="13" viewBox="-6.5 -6.5 13 13"><circle r="4.5" fill="#15803d" stroke="#fff" stroke-width="1.6"/></svg>', 13,
                '<b>' + esc(r[0]) + '</b> ILS ' + (r[5] ? (r[5] / 1e6).toFixed(2) : '') + ' · ' + String(Math.round(crs)).padStart(3, '0') + '°').addTo(lyr.msfs);
           }
         });
@@ -7515,11 +7518,15 @@ ${waypoint(arr)}
     lyr.route.clearLayers();
     var F = full(), path = apPath();
     if (path.length) {
-      L.polyline(pts.slice(0, -1).concat([path[0]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
-      L.polyline(path.concat([pts[pts.length - 1]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#4ade80', weight: 4, opacity: .95, dashArray: '10 6', interactive: false }).addTo(lyr.route);
+      L.polyline(pts.slice(0, -1).concat([path[0]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#3b0764', weight: 7, opacity: .55, interactive: false }).addTo(lyr.route);
+      L.polyline(pts.slice(0, -1).concat([path[0]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#d946ef', weight: 4, opacity: 1, interactive: false }).addTo(lyr.route);
+      L.polyline(path.concat([pts[pts.length - 1]]).map(function (p) { return [p.lat, p.lon]; }), { color: '#16a34a', weight: 4, opacity: 1, dashArray: '10 6', interactive: false }).addTo(lyr.route);
       path.forEach(function (p) { L.circleMarker([p.lat, p.lon], { radius: 4, color: '#4ade80', weight: 2, fillColor: '#052e16', fillOpacity: 1, interactive: true, bubblingMouseEvents: false })
         .bindTooltip('<b>' + esc(p.name) + '</b>', { className: 'hgv-lab', direction: 'right', offset: [6, 0], permanent: true }).addTo(lyr.route); });
-    } else if (pts.length > 1) L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
+    } else if (pts.length > 1) {
+      L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#3b0764', weight: 7, opacity: .55, interactive: false }).addTo(lyr.route);
+      L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#d946ef', weight: 4, opacity: 1, interactive: false }).addTo(lyr.route);
+    }
     for (var i = 1; i < F.length; i++) {
       var a = F[i - 1], b = F[i];
       if (dist(a, b) < 2.5) continue;
@@ -7592,7 +7599,7 @@ ${waypoint(arr)}
   }
   /* ---------- fenêtre ---------- */
   var BG = [
-    function () { return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, subdomains: 'abc', attribution: '© OpenStreetMap · © OpenTopoMap (CC-BY-SA)' }); },
+    function () { return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, subdomains: 'abc', className: 'hg-soft', attribution: '© OpenStreetMap · © OpenTopoMap (CC-BY-SA)' }); },
     function () { return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' }); },
     function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }); },
     function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'hg-dark', attribution: '© OpenStreetMap' }); },
@@ -7606,7 +7613,7 @@ ${waypoint(arr)}
       '<span class="t">✈ ' + T.title + '</span><span class="sum" id="hgVfrSum"></span><span class="grow"></span>' +
       '<button type="button" class="b" data-a="undo">↶ ' + T.undo + '</button><button type="button" class="b" data-a="swap">⇄ ' + T.swap + '</button><button type="button" class="b" data-a="clear">⟲ ' + T.clear + '</button>' +
       '<button type="button" class="b sb" data-a="sb">➤ SIMBRIEF</button><button type="button" class="b pln" data-a="pln">⬇ FICHIER .PLN</button><button type="button" class="b" data-a="back">✕</button></div>' +
-      '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('rnav', '#22d3ee', 'RNAV') + tg('ils', '#4ade80', 'ILS') + tg('names', '#94a3b8', T.names) +
+      '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('rnav', '#0e7490', 'RNAV') + tg('ils', '#22c55e', 'ILS') + tg('names', '#94a3b8', T.names) +
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
