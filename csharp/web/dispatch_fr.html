@@ -6899,6 +6899,10 @@ ${waypoint(arr)}
     buildSimbriefUrl = function (origin) {
       var url = orig.apply(this, arguments), dep = null;
       try { var d = airportsDB[String(origin || '').toUpperCase()]; if (d) dep = { lat: d.lat, lon: d.lon }; } catch (e) {}
+      if (window.hgTodIsNow && window.hgTodIsNow()) {
+        var nt = new Date(Date.now() + (window.hgPrep() - 15) * 60000), MO = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        return url + '&date=' + String(nt.getUTCDate()).padStart(2, '0') + MO[nt.getUTCMonth()] + String(nt.getUTCFullYear()).slice(2) + '&deph=' + nt.getUTCHours() + '&depm=' + nt.getUTCMinutes();
+      }
       var p = plan(dep || depMain()); if (!p) return url;
       var off = p.to - 15, day = new Date(p.day.getTime() + Math.floor(off / 1440) * 864e5), mm = ((Math.round(off) % 1440) + 1440) % 1440;
       var MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -6909,9 +6913,10 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-128-now-js">
 (function () {
-  var T = {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure", "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant", "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil", "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.", "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit", "dayC": "Jour", "nightC": "Nuit", "line": "lever / coucher du soleil"}, KEYW = 'hg_tod_when';
+  var T = {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure", "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant", "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil", "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.", "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit", "nowInfo": "En ce moment :", "dep": "Départ", "arr": "Arrivée", "depLabel": "DÉPART : OACI, VILLE OU AÉROPORT", "rnd": "Départ maintenant : l'appli ne propose que les vols où c'est le bon moment.", "dayC": "Jour", "nightC": "Nuit", "line": "lever / coucher du soleil"}, KEYW = 'hg_tod_when';
   function P(fm) { return window.hgPrep ? window.hgPrep(fm) : 60; }
-  var when = 'set'; try { when = localStorage.getItem(KEYW) || 'set'; } catch (e) {}
+  /* Départ → Arrivée : on programme son vol (l'appli donne l'heure à régler) ; Aléatoire / durée : départ maintenant, l'appli choisit */
+  var when = 'set';
   function mode() { try { return localStorage.getItem('hg_tod') || ''; } catch (e) { return ''; } }
   /* hauteur du soleil (degrés) à un endroit et un instant */
   function sunAlt(lat, lon, ms) {
@@ -6943,7 +6948,7 @@ ${waypoint(arr)}
   function mins() { var t = (document.getElementById('summaryFlightTime') || {}).textContent || '', x = t.match(/(\d+)\s*h\s*(\d+)/); return x ? (+x[1]) * 60 + (+x[2]) : 0; }
   /* filtre de la recherche (aléatoire / durée) quand on vole maintenant */
   window.hgTodFilter = function (results, primaryApt, sm) {
-    var m = mode(); if (!m || when !== 'now' || !primaryApt) return results;
+    var m = mode(); if (!m || genMode() !== 'RANDOM' || !primaryApt) { window.hgTodEmpty = false; return results; }
     var out = results.filter(function (r) {
       var tTo = Date.now() + P(r.flightTimeMin || 0) * 60000;
       var dep = sm === 'DEPARTURE' ? primaryApt : r, arr = sm === 'DEPARTURE' ? r : primaryApt;
@@ -6976,13 +6981,22 @@ ${waypoint(arr)}
            ' — <b class="' + (ok ? 'hg-ok">✓ ' + T.ok : 'hg-ko">✗ ' + T.ko) + '</b>';
   }
   function genMode() { try { return generationMode; } catch (e) { return 'MANUAL'; } }
+  function info(dep, arr) {
+    /* ce qu'il fait en ce moment au départ et à l'arrivée */
+    var t = Date.now(), out = [];
+    if (dep && Number.isFinite(+dep.lat)) out.push((dep.icao || T.dep) + ' ' + NAME[label(+dep.lat, +dep.lon, t)]);
+    if (arr && Number.isFinite(+arr.lat)) out.push((arr.icao || T.arr) + ' ' + NAME[label(+arr.lat, +arr.lon, t)]);
+    return out.length ? '<span class="k">' + T.nowInfo + '</span> ' + out.join(' · ') : '';
+  }
+  function plain(dep, arr) {
+    if (!dep || !arr || !Number.isFinite(+dep.lat) || !Number.isFinite(+arr.lat)) return '';
+    var tTo = Date.now() + P(mins()) * 60000, tL = tTo + mins() * 60000;
+    return T.nowTo + ' ' + NAME[label(+dep.lat, +dep.lon, tTo)] + ' · ' + T.nowLdg + ' ' + NAME[label(+arr.lat, +arr.lon, tL)];
+  }
   function ui() {
     var box = document.getElementById('hgTodMainBox'); if (!box) return;
-    if (!document.getElementById('hgWhen')) {
-      var w = document.createElement('div'); w.className = 'hg-when'; w.id = 'hgWhen';
-      w.innerHTML = '<button type="button" data-w="now">' + T.now + '</button><button type="button" data-w="set">' + T.set + '</button>';
-      box.insertBefore(w, document.getElementById('hgTodMainR'));
-      w.querySelectorAll('button').forEach(function (b) { b.onclick = function () { when = b.dataset.w; try { localStorage.setItem(KEYW, when); } catch (e) {} try { triggerSearch(); } catch (x) {} paint(); }; });
+    if (!document.getElementById('hgNowLine')) {
+      var h = document.createElement('div'); h.id = 'hgRndHint'; h.className = 'hg-todr'; h.textContent = T.rnd; box.appendChild(h);
       var p = document.createElement('button'); p.type = 'button'; p.id = 'hgPick'; p.className = 'hg-pick'; p.textContent = T.pick; p.onclick = pick;
       box.appendChild(p);
       var n = document.createElement('div'); n.id = 'hgNowLine'; n.className = 'hg-todr'; box.appendChild(n);
@@ -6990,16 +7004,18 @@ ${waypoint(arr)}
   }
   function paint() {
     ui();
-    var m = mode();
-    document.querySelectorAll('#hgWhen button').forEach(function (b) { b.classList.toggle('on', b.dataset.w === when); });
-    var w = document.getElementById('hgWhen'); if (w) w.style.display = m ? '' : 'none';
-    var r = document.getElementById('hgTodMainR'); if (r) r.style.display = (m && when === 'now') ? 'none' : '';
-    var p = document.getElementById('hgPick'); if (p) p.style.display = (m && when === 'now' && genMode() === 'RANDOM') ? '' : 'none';
+    var m = mode(), rnd = genMode() === 'RANDOM';
+    when = rnd ? 'now' : 'set';
+    var r = document.getElementById('hgTodMainR'); if (r) r.style.display = rnd ? 'none' : '';
+    var h = document.getElementById('hgRndHint'); if (h) h.style.display = (m && rnd) ? '' : 'none';
+    var p = document.getElementById('hgPick'); if (p) p.style.display = (m && rnd) ? '' : 'none';
     var dep = null, arr = null; try { dep = currentDep; arr = currentArr; } catch (e) {}
-    var n = document.getElementById('hgNowLine'); if (n) n.innerHTML = nowLine(dep, arr) + (window.hgTodEmpty && when === 'now' && m ? '<br><span class="hg-ko">' + T.none + '</span>' : '');
-    var mr = document.getElementById('hgTodMapR');
-    if (mr && m && when === 'now') { var d2 = null, a2 = null; try { d2 = interactiveDep || currentDep; a2 = interactiveArr || currentArr; } catch (e) {} mr.innerHTML = nowLine(d2, a2); }
+    var n = document.getElementById('hgNowLine');
+    if (n) n.innerHTML = rnd ? (m ? plain(dep, arr) + (window.hgTodEmpty ? '<br><span class="hg-ko">' + T.none + '</span>' : '') : '') : info(dep, arr);
+    /* en Départ → Arrivée, le premier champ est toujours le départ */
+    if (!rnd) { var lb = document.getElementById('primaryAirportLabel'); if (lb && /arriv/i.test(lb.textContent)) lb.innerHTML = '<i class="fa-solid fa-plane-departure"></i> ' + T.depLabel; }
   }
+  window.hgTodIsNow = function () { return !!mode() && genMode() === 'RANDOM'; };
   setInterval(paint, 1500);
 
   /* zone de nuit en direct sur la carte Plan de vol personnel (nuit foncée, aube et crépuscule plus doux) */
