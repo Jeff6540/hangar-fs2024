@@ -3315,11 +3315,12 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       push(sp.n); push(fix(sl[sl.length - 1]));
       if (pr.dep.rw >= 0 && sp.rw[pr.dep.rw]) origrwy = sp.rw[pr.dep.rw].r;
     }
-    pts.slice(1, -1).forEach(function (p) { push(p.kind === 'wp' ? sbCoord(p) : p.name); });
+    /* points libres et points RNAV (souvent des points d'approche que SimBrief ne connaît pas en route) : envoyés en coordonnées */
+    pts.slice(1, -1).forEach(function (p) { push(p.kind === 'wp' || p.kind === 'wpt' ? sbCoord(p) : p.name); });
     if (da && da.ok && pr.arr.icao === e[1].icao) {
       var st = da.a[pr.arr.star], ap2 = da.ap[pr.arr.ap];
       if (st) { var tl = starLegs(da, pr.arr); push(fix(tl[0])); push(st.n); if (pr.arr.rw >= 0 && st.rw[pr.arr.rw]) destrwy = st.rw[pr.arr.rw].r; }
-      else if (ap2) { var al = apLegs(da, pr.arr); push(fix(al[0])); }
+      else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbCoord({ lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche en coordonnées */
       if (ap2 && ap2.r) destrwy = ap2.r;
     }
     var ac = 'C172'; try { ac = document.getElementById('aircraftSelect').value || ac; } catch (x) {}
