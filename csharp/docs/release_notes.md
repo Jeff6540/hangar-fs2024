@@ -4,7 +4,7 @@
 
 - Après chaque mise à jour, une petite fenêtre **« Quoi de neuf »** résume les nouveautés au premier lancement.
 - Avant de mettre à jour, le bouton **Nouveautés** du bandeau bleu affiche ce résumé dans l'appli.
-- **Moment du vol** : Matin, Journée, Crépuscule ou Nuit, avec les heures en UTC (heure à régler dans MSFS, décollage, arrivée), envoyé à SimBrief. Ou vole **maintenant** : l'appli te propose un départ et une arrivée où c'est le bon moment.
+- **Moment du vol** : Matin, Journée, Crépuscule ou Nuit, avec les heures en UTC (heure à régler dans MSFS, décollage, arrivée), calculées pour ton départ et ton arrivée, et envoyées à SimBrief. En **aléatoire**, tu pars maintenant : l'appli propose des destinations où ce sera le bon moment à l'atterrissage, adaptées à ton avion.
 - **Jour / nuit en direct** sur la carte Plan de vol personnel.
 - Un bouton **Remarque ou bug ?** en bas du menu ouvre le Discord de l'appli.
 - Et pour ceux qui arrivent de la 12.6 ou avant : le **journal de vol**, le nouveau **suivi de vol** et les menus sur toutes les pages, arrivés avec la 12.7.
@@ -17,7 +17,7 @@
 
 - After each update, a small **"What's new"** window sums up the changes at first launch.
 - Before updating, the **What's new** button of the blue banner shows this summary in the app.
-- **Time of flight**: Morning, Day, Dusk or Night, with times in UTC (time to set in MSFS, takeoff, arrival), sent to SimBrief. Or fly **now**: the app suggests a departure and arrival where it's the right time.
+- **Time of flight**: Morning, Day, Dusk or Night, with times in UTC (time to set in MSFS, takeoff, arrival), computed for your departure and arrival, and sent to SimBrief. In **random** mode you depart now: the app offers destinations where it will be the right time on landing, suited to your aircraft.
 - **Live day / night** on the Personal flight plan map.
 - A **Feedback or bug?** button at the bottom of the menu opens the app's Discord.
 - And for those coming from 12.6 or earlier: the **flight log**, the new **flight tracking** and menus on every page, which came with 12.7.
