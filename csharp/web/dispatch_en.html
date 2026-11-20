@@ -7410,6 +7410,8 @@ ${waypoint(arr)}
     pts.push(p); save(); drawRoute();
   }
   function drawRoute() {
+    /* points libres renumérotés dans l'ordre : WP1, WP2, WP3… */
+    var k = 0; pts.forEach(function (p) { if (p.kind === 'wp') p.name = 'WP' + (++k); }); wpN = k; save();
     if (!map) return;
     if (!lyr.route) lyr.route = L.layerGroup().addTo(map);
     lyr.route.clearLayers();
@@ -7464,7 +7466,7 @@ ${waypoint(arr)}
     var wp = function (id, type, p, el, icao) { return '        <ATCWaypoint id="' + xmlEscape(id) + '">\n            <ATCWaypointType>' + type + '</ATCWaypointType>\n            <WorldPosition>' + pos(p, el) + '</WorldPosition>\n' +
       (icao ? '            <ICAO>\n                <ICAOIdent>' + xmlEscape(icao) + '</ICAOIdent>\n            </ICAO>\n' : '') + '        </ATCWaypoint>'; };
     var body = [wp(e[0].icao, 'Airport', e[0], e[0].elevation_ft, e[0].icao)];
-    pts.slice(1, -1).forEach(function (p) { body.push(wp(p.name, 'User', p, alt)); });
+    pts.slice(1, -1).forEach(function (p) { body.push(wp(p.name, 'User', p, alt, p.name)); });
     body.push(wp(e[1].icao, 'Airport', e[1], e[1].elevation_ft, e[1].icao));
     var title = e[0].icao + ' → ' + e[1].icao + ' (VFR)';
     var x = '<?xml version="1.0" encoding="UTF-8"?>\n<SimBase.Document Type="AceXML" version="1,0" id="FlightPlan">\n    <Descr>' + xmlEscape(title) + '</Descr>\n    <FlightPlan.FlightPlan>\n        <Title>' + xmlEscape(title) + '</Title>\n        <FPType>VFR</FPType>\n        <RouteType>VFR</RouteType>\n        <CruisingAlt>' + alt + '</CruisingAlt>\n' +
