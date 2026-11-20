@@ -357,6 +357,39 @@ R["en"] += [("SimBrief gets your route with the SID, the STAR and the departure 
   "SimBrief gets your route with the SID, the STAR and the departure and arrival runways. If you chose an approach, it gets its starting point: SimBrief and Navigraph then add the approach themselves (on the SimBrief map the line goes straight from that point to the runway, that is normal).",
   "it gets its starting point: SimBrief and Navigraph")]
 
+
+# 12.9 : temps de vol VFR, Mes routes, ouvrir un .PLN ; carte Plan de vol personnel ouverte depuis Plan de vol ; « Page de ma VA » ;
+# plus de nom « Avionics Dispatch » ni de reste de l'ancienne version Python
+R["fr"] += [
+ ("La page Avionics Dispatch V2.40 est intégrée à l'appli.", "La page Plan de vol est intégrée à l'appli.", "La page Plan de vol est intégrée"),
+ ("Plan &amp; suivi de vol ouvre la page Avionics Dispatch V2.40 (intégrée à l'appli) dans sa propre fenêtre", "Plan &amp; suivi de vol ouvre la page Plan de vol (intégrée à l'appli) dans sa propre fenêtre", "ouvre la page Plan de vol (intégrée"),
+ ("<p>Sur Avionics Dispatch, la carte des scènes et le tutoriel,", "<p>Sur les pages Plan de vol et Suivi de vol, la carte des scènes et le tutoriel,", "<p>Sur les pages Plan de vol et Suivi de vol,"),
+ ("celui exporté par Avionics Dispatch, ou un autre logiciel", "celui exporté par les pages Plan de vol et Plan VFR, ou un autre logiciel", "exporté par les pages Plan de vol et Plan VFR"),
+ ("<td>Un ancien relais tourne encore : clique sur « ⏻ Fermer l'ancien relais »</td>", "<td>Un autre programme utilise ce port : ferme-le, puis clique sur « ⏻ Réessayer le relais » en bas du menu</td>", "Un autre programme utilise ce port"),
+ ("<b>Préparer</b> (Vol SimBrief, Plan de vol, Plan de vol personnel, Plan VFR)", "<b>Préparer</b> (Vol SimBrief, Plan de vol, Plan VFR)", "<b>Préparer</b> (Vol SimBrief, Plan de vol, Plan VFR)"),
+ ("<b>Radars</b> (Radar FSHub global, Ma VA FSHub, Radar de ma VA)", "<b>Radars</b> (Radar FSHub global, Page de ma VA, Radar de ma VA)", "(Radar FSHub global, Page de ma VA,"),
+ ("la page <b>Ma VA FSHub</b> et le <b>Radar de ma VA</b>", "la <b>Page de ma VA</b> (sa présentation sur FSHub : pilotes, vols, classement) et le <b>Radar de ma VA</b> (sa carte radar)", "la <b>Page de ma VA</b> (sa présentation"),
+ ("Les radars FSHub et la carte <b>Plan de vol personnel</b> sont dans le menu de gauche.", "Les radars FSHub sont dans le menu de gauche. Sous les trois étapes, le bouton <b>🗺 Choisir départ et arrivée sur la carte</b> ouvre la carte <b>Plan de vol personnel</b>.", "le bouton <b>🗺 Choisir départ et arrivée sur la carte</b>"),
+ ("<b>La carte Plan de vol personnel</b> (menu de gauche, rubrique Préparer)", "<b>La carte Plan de vol personnel</b> (bouton <b>🗺 Choisir départ et arrivée sur la carte</b> de la page Plan de vol)", "(bouton <b>🗺 Choisir départ et arrivée sur la carte</b> de la page Plan de vol)"),
+ ("<b>Plan VFR</b> (entrée <b>Plan VFR</b> du menu, rubrique Préparer, ou bouton <b>✈ PLAN VFR</b> dans la barre de la carte Plan de vol personnel)", "<b>Plan VFR</b> (entrée <b>Plan VFR</b> du menu, rubrique Préparer)", "<b>Plan VFR</b> (entrée <b>Plan VFR</b> du menu, rubrique Préparer) :"),
+ ("par exemple C414) sert seulement pour SimBrief.", "par exemple C414) sert pour SimBrief et pour le <b>temps de vol</b> : à côté du nom de l'avion, sa <b>vitesse de croisière</b> en nœuds (valeur de croisière normale à basse altitude, par exemple 115 kt pour un C172, 195 kt pour un C414). Change-la si tu voles plus vite ou plus lentement : elle est gardée pour cet avion. La liste de droite affiche alors le <b>temps</b> de chaque branche et le <b>temps de vol</b> total, sans le roulage ni le vent. <b>Mes routes</b> (colonne de droite) : donne un nom à ta route puis <b>💾 Enregistrer</b> ; la liste en dessous permet de la rouvrir (<b>Ouvrir</b>) ou de la supprimer (✕). Elles sont gardées dans le dossier des réglages de l'appli et restent après une mise à jour. <b>📂 Ouvrir un .PLN</b> (barre du haut) reprend un plan existant (le tien, celui de Little Navmap ou de la carte du monde de MSFS) pour le modifier : les SID, STAR et approches du fichier reviennent comme de simples points, à rechoisir dans la fiche de l'aéroport si tu veux.", "<b>📂 Ouvrir un .PLN</b> (barre du haut)"),
+]
+R["en"] += [
+ ("The Avionics Dispatch V2.40 page is built into the app.", "The Flight plan page is built into the app.", "The Flight plan page is built into the app."),
+ ("Flight plan &amp; tracking opens the Avionics Dispatch V2.40 page (built into the app) in its own full-screen window", "Flight plan &amp; tracking opens the Flight plan page (built into the app) in its own full-screen window", "opens the Flight plan page (built into the app)"),
+ ("<p>On Avionics Dispatch, the sceneries map and the tutorial,", "<p>On the Flight plan and Flight tracking pages, the sceneries map and the tutorial,", "<p>On the Flight plan and Flight tracking pages,"),
+ ("the one exported by Avionics Dispatch, or from other software", "the one exported by the Flight plan and VFR plan pages, or from other software", "exported by the Flight plan and VFR plan pages"),
+ ('<td>An old relay is still running: click "⏻ Close the old relay"</td>', '<td>Another program uses this port: close it, then click "⏻ Retry the relay" at the bottom of the menu</td>', "Another program uses this port"),
+ ("<b>Prepare</b> (SimBrief flight, Flight plan, Personal flight plan, VFR plan)", "<b>Prepare</b> (SimBrief flight, Flight plan, VFR plan)", "<b>Prepare</b> (SimBrief flight, Flight plan, VFR plan)"),
+ ("<b>Radars</b> (FSHub global radar, My VA on FSHub, My VA radar)", "<b>Radars</b> (FSHub global radar, My VA page, My VA radar)", "(FSHub global radar, My VA page,"),
+ ("the <b>My VA on FSHub</b> page and the <b>My VA radar</b>", "<b>My VA page</b> (its FSHub overview: pilots, flights, ranking) and the <b>My VA radar</b> (its radar map)", "<b>My VA page</b> (its FSHub overview"),
+ ("The FSHub radars and the <b>Personal flight plan</b> map are in the left menu.", "The FSHub radars are in the left menu. Below the three steps, the <b>🗺 Pick departure and arrival on the map</b> button opens the <b>Personal flight plan</b> map.", "the <b>🗺 Pick departure and arrival on the map</b> button opens"),
+ ("<b>The Personal flight plan map</b> (left menu, Prepare section)", "<b>The Personal flight plan map</b> (<b>🗺 Pick departure and arrival on the map</b> button of the Flight plan page)", "(<b>🗺 Pick departure and arrival on the map</b> button of the Flight plan page)"),
+ ("<b>VFR plan</b> (<b>VFR plan</b> menu entry, Prepare section, or <b>✈ VFR PLAN</b> button in the Personal flight plan map bar)", "<b>VFR plan</b> (<b>VFR plan</b> menu entry, Prepare section)", "<b>VFR plan</b> (<b>VFR plan</b> menu entry, Prepare section):"),
+ ("e.g. C414) is only used for SimBrief.", "e.g. C414) is used for SimBrief and for the <b>flight time</b>: next to the aircraft name, its <b>cruise speed</b> in knots (normal cruise at low altitude, e.g. 115 kt for a C172, 195 kt for a C414). Change it if you fly faster or slower: it is kept for this aircraft. The right list then shows the <b>time</b> of each leg and the total <b>flight time</b>, without taxi or wind. <b>My routes</b> (right column): give your route a name, then <b>💾 Save</b>; the list below lets you open it again (<b>Open</b>) or delete it (✕). They are kept in the app's settings folder and stay after an update. <b>📂 Open a .PLN</b> (top bar) loads an existing plan (yours, Little Navmap's or one from the MSFS world map) so you can change it: the SID, STAR and approaches in the file come back as plain points, to choose again in the airport card if you want.", "<b>📂 Open a .PLN</b> (top bar)"),
+]
+
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

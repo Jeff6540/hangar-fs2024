@@ -1,4 +1,4 @@
-// Relais Avionics Dispatch (port 8765) : trafic IA de MSFS par SimConnect, SimBrief, METAR, plans d'aéroport
+// Relais de la page Plan de vol (port 8765) : trafic IA de MSFS par SimConnect, SimBrief, METAR, plans d'aéroport
 // OpenStreetMap et FSHub — mêmes réponses que la 11.8, pour que la page Plan & suivi de vol fonctionne à l'identique.
 using System;
 using System.Collections.Generic;
@@ -474,7 +474,7 @@ namespace HangarFS2024
                 try
                 {
                     client = new SimConnectClient();
-                    client.Open("Hangar FS 2024 - relais Avionics Dispatch");
+                    client.Open("Hangar FS 2024 - relais");
                     foreach (var f in fields)
                     {
                         int hr = client.Add(DEFINE_ID, (string)f[0], (string)f[1], (int)f[2]);
@@ -486,7 +486,7 @@ namespace HangarFS2024
                     foreach (var f in flightFields)
                         if (client.Add(DEFINE_FLIGHT, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { flightOk = false; break; }
                     SetConnected(true);
-                    Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé à Avionics Dispatch.", "connected to MSFS: AI traffic is sent to Avionics Dispatch."));
+                    Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé au suivi de vol.", "connected to MSFS: AI traffic is sent to flight tracking."));
                     double nextAi = 0, nextUser = 0, nextRoute = 0;
                     while (!stop.IsCancellationRequested)
                     {
@@ -529,7 +529,7 @@ namespace HangarFS2024
             SetConnected(false);
         }
 
-        // SimConnect.dll : à côté de l'appli, dans les réglages, l'ancien relais, le SDK ou l'ancienne version Python
+        // SimConnect.dll : à côté de l'appli, dans les réglages, le dossier choisi dans Réglages, le SDK, Little Navmap
         static string foundDll, foundKey;
         static readonly object findGate = new object();
         public static string FindSimConnectDll(string extraDir, string launchTarget)
@@ -550,26 +550,8 @@ namespace HangarFS2024
             foreach (var d in new[] { here, AppInfo.BaseDir, extraDir })
                 if (!string.IsNullOrEmpty(d)) c.Add(Path.Combine(d, "SimConnect.dll"));
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            foreach (var desk in new[] { Path.Combine(home, "OneDrive", "Desktop"), Path.Combine(home, "Desktop"), Path.Combine(home, "OneDrive", "Bureau"), Path.Combine(home, "Bureau") })
-                c.Add(Path.Combine(desk, "relais_trafic_ia", "SimConnect.dll"));
             c.Add(@"C:\MSFS SDK\SimConnect SDK\lib\SimConnect.dll");
             c.Add(@"C:\MSFS 2024 SDK\SimConnect SDK\lib\SimConnect.dll");
-            // version Python (portable) : paquet pip « SimConnect »
-            foreach (Match m in Regex.Matches(launchTarget ?? "", "\"([^\"]+)\""))
-            {
-                try
-                {
-                    string dir = Path.GetDirectoryName(m.Groups[1].Value);
-                    for (int up = 0; up < 3 && !string.IsNullOrEmpty(dir); up++)
-                    {
-                        c.Add(Path.Combine(dir, "SimConnect.dll"));
-                        foreach (var py in new[] { "python", "Python", "" })
-                            c.Add(Path.Combine(dir, py, "Lib", "site-packages", "SimConnect", "SimConnect.dll"));
-                        dir = Path.GetDirectoryName(dir);
-                    }
-                }
-                catch (Exception) { }
-            }
             // 12.9 : Little Navmap 3 et autres outils récents livrent une SimConnect.dll de MSFS 2024
             foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
                                           Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs"), home, Path.Combine(home, "Documents"), @"C:\", @"D:\" })

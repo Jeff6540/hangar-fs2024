@@ -12,6 +12,56 @@ using Newtonsoft.Json.Linq;
 
 namespace HangarFS2024
 {
+    /// <summary>12.9 : routes de la page Plan VFR enregistrées sous un nom (fichier vfr_routes.json du dossier des réglages).</summary>
+    static class VfrRoutes
+    {
+        static string FilePath { get { return Path.Combine(AppInfo.BaseDir, "vfr_routes.json"); } }
+        static readonly object Gate = new object();
+
+        static JObject Read()
+        {
+            try { return File.Exists(FilePath) ? JObject.Parse(File.ReadAllText(FilePath, Encoding.UTF8)) : new JObject(); } catch (Exception) { return new JObject(); }
+        }
+
+        public static JObject Handle(string op, string name, string data)
+        {
+            lock (Gate)
+            {
+                var all = Read();
+                name = new string((name ?? "").Where(ch => !char.IsControl(ch)).ToArray()).Trim();
+                if (name.Length > 60) name = name.Substring(0, 60);
+                if (op == "save" && name != "" && !string.IsNullOrEmpty(data) && data.Length < 200000)
+                {
+                    try
+                    {
+                        var o = JObject.Parse(data);
+                        var pts = o["pts"] as JArray;
+                        if (pts != null && pts.Count >= 2 && pts.Count <= 300 && (all[name] != null || all.Count < 300))
+                        {
+                            all[name] = o;
+                            Save(all);
+                        }
+                    }
+                    catch (Exception) { }
+                }
+                else if (op == "del" && name != "" && all.Remove(name)) Save(all);
+                return all;
+            }
+        }
+
+        static void Save(JObject all)
+        {
+            try
+            {
+                Directory.CreateDirectory(AppInfo.BaseDir);
+                string tmp = FilePath + ".tmp";
+                File.WriteAllText(tmp, all.ToString(Formatting.None), new UTF8Encoding(false));
+                if (File.Exists(FilePath)) File.Replace(tmp, FilePath, null); else File.Move(tmp, FilePath);
+            }
+            catch (Exception) { }
+        }
+    }
+
     static class NavData
     {
         public static string Dir { get { return Path.Combine(AppInfo.BaseDir, "navdata"); } }

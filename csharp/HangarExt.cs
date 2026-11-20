@@ -293,8 +293,8 @@ namespace HangarFS2024
             if (!srv.Start(8765))
             {
                 if (!RelayPortBusy && !silentBusy)
-                    Log(L("Relais : le port 8765 est déjà pris, sans doute par l'ancien relais (ou la version Python de Hangar FS 2024). Clique sur « ⏻ Fermer l'ancien relais » en bas à droite.",
-                          "Relay: port 8765 is already taken, probably by the old relay (or the Python version of Hangar FS 2024). Click \"⏻ Close the old relay\" at the bottom right."));
+                    Log(L("Relais : le port 8765 est déjà pris par un autre programme. Ferme ce programme, puis clique sur « ⏻ Réessayer le relais » en bas à gauche.",
+                          "Relay: port 8765 is already taken by another program. Close that program, then click \"⏻ Retry the relay\" at the bottom left."));
                 RelayPortBusy = true;
                 LauncherChanged();
                 return false;
@@ -334,55 +334,12 @@ namespace HangarFS2024
         public void RelayToggle()
         {
             if (RelayRunning) { RelayManualOff = true; RelayStopNow(L(" (à ta demande)", " (at your request)")); }
-            else if (RelayPortBusy) KillOldRelay();
-            else { RelayManualOff = false; RelayStart(false, false); }
-        }
-
-        // programme qui occupe le port 8765 (ancien relais) : fermé puis relais redémarré
-        public string KillOldRelay()
-        {
-            int pid = PidOnPort(8765);
-            if (pid <= 0 || pid == Process.GetCurrentProcess().Id)
-            {
-                if (RelayStart(false, false)) return "";
-                return L("Impossible de trouver le programme qui occupe le port 8765.", "Unable to find the program using port 8765.");
-            }
-            string name = "?";
-            try { using (var p = Process.GetProcessById(pid)) name = p.ProcessName; } catch (Exception) { }
-            try { using (var p = Process.GetProcessById(pid)) { p.Kill(); p.WaitForExit(5000); } }
-            catch (Exception e) { Log(L("Relais : impossible de fermer l'ancien relais (", "Relay: unable to close the old relay (") + e.Message + ")."); return e.Message; }
-            Log(L("Relais : ancien relais fermé (", "Relay: old relay closed (") + name + ").");
-            RelayManualOff = false;
-            Thread.Sleep(1200);
-            RelayStart(false, false);
-            return "";
-        }
-
-        static int PidOnPort(int port)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo("netstat.exe", "-ano -p TCP") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true };
-                using (var p = Process.Start(psi))
-                {
-                    string o = p.StandardOutput.ReadToEnd();
-                    p.WaitForExit(10000);
-                    foreach (var line in o.Split('\n'))
-                    {
-                        var parts = line.Split(new[] { ' ', '\t', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                        int pid;
-                        if (parts.Length >= 5 && parts[1].EndsWith(":" + port) && (parts[2] == "0.0.0.0:0" || parts[2] == "[::]:0") && int.TryParse(parts[parts.Length - 1], out pid))
-                            return pid;
-                    }
-                }
-            }
-            catch (Exception) { }
-            return 0;
+            else { RelayManualOff = false; RelayPortBusy = false; RelayStart(false, false); }
         }
 
         public string RelayText()
         {
-            if (!RelayRunning) return RelayPortBusy ? L("Relais : port 8765 pris par l'ancien relais", "Relay: port 8765 taken by the old relay") : L("Relais : arrêté", "Relay: stopped");
+            if (!RelayRunning) return RelayPortBusy ? L("Relais : port 8765 pris par un autre programme", "Relay: port 8765 taken by another program") : L("Relais : arrêté", "Relay: stopped");
             if (RelayDllMissing) return L("Relais : actif · trafic IA indisponible (SimConnect.dll)", "Relay: active · AI traffic unavailable (SimConnect.dll)");
             if (Relay.Connected)
             {
@@ -394,7 +351,7 @@ namespace HangarFS2024
 
         public string RelayButton()
         {
-            return RelayRunning ? L("⏻  Arrêter le relais", "⏻  Stop the relay") : RelayPortBusy ? L("⏻  Fermer l'ancien relais", "⏻  Close the old relay") : L("⏻  Démarrer le relais", "⏻  Start the relay");
+            return RelayRunning ? L("⏻  Arrêter le relais", "⏻  Stop the relay") : RelayPortBusy ? L("⏻  Réessayer le relais", "⏻  Retry the relay") : L("⏻  Démarrer le relais", "⏻  Start the relay");
         }
 
         void RelayHandle(string path, string query, MiniHttp.Response r)
@@ -412,7 +369,7 @@ namespace HangarFS2024
                 case "/plan-current": RelayApi.PlanCurrent(Plan, r); break;
                 case "/fshub": r.Json(200, Relay.Fshub != null ? Relay.Fshub.Snapshot() : new JObject { ["enabled"] = false, ["pilots"] = new JArray() }); break;
                 default:
-                    r.Text("Relais Avionics Dispatch (Hangar FS 2024) actif : /traffic, /simbrief, /metar, /aeroway, /fshub, /fshub-all, /fshub-flight", "text/plain; charset=utf-8");
+                    r.Text("Relais Hangar FS 2024 actif : /traffic, /simbrief, /metar, /aeroway, /fshub, /fshub-all, /fshub-flight", "text/plain; charset=utf-8");
                     break;
             }
         }
@@ -521,6 +478,12 @@ namespace HangarFS2024
                     {
                         string icao; q.TryGetValue("icao", out icao);
                         r.Text(NavData.Approaches(icao).ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
+                case "/vfrroutes":
+                    {
+                        string op, name, data; q.TryGetValue("op", out op); q.TryGetValue("name", out name); q.TryGetValue("data", out data);
+                        r.Text(VfrRoutes.Handle(op, name, data).ToString(Formatting.None), "application/json; charset=utf-8");
                         return;
                     }
                 case "/journal-list": r.Text(Journal.List().ToString(Formatting.None), "application/json; charset=utf-8"); return;

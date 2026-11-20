@@ -784,13 +784,13 @@ FLT_TXT = {
  "fr": {"free": "METAR · VOL LIBRE", "dep": "DÉP", "arr": "ARR", "refresh": "Actualiser les METAR",
         "hint": "Pas de plan de vol : le METAR du départ s'affiche quand ton avion est au sol sur un aéroport (ou tape son code). Tape un aéroport d'arrivée pour voir son METAR.",
         "depAuto": "trouvé automatiquement d'après la position de ton avion", "phDep": "auto", "phArr": "OACI",
-        "pln": ".PLN", "plnTip": "Afficher un plan de vol .PLN (enregistré depuis la carte du monde de MSFS, ou exporté par Avionics Dispatch)",
+        "pln": ".PLN", "plnTip": "Afficher un plan de vol .PLN (enregistré depuis la carte du monde de MSFS, ou exporté par les pages Plan de vol et Plan VFR)",
         "plnOk": "Plan .PLN chargé", "plnBad": "Fichier .PLN illisible ou sans points de route", "noPlan": "SimBrief : aucun plan importé",
         "ended": "Vol terminé dans Hangar FS 2024 : la carte est remise à zéro."},
  "en": {"free": "METAR · FREE FLIGHT", "dep": "DEP", "arr": "ARR", "refresh": "Refresh METAR",
         "hint": "No flight plan: the departure METAR shows when your aircraft is on the ground at an airport (or type its code). Type an arrival airport to see its METAR.",
         "depAuto": "found automatically from your aircraft's position", "phDep": "auto", "phArr": "ICAO",
-        "pln": ".PLN", "plnTip": "Show a .PLN flight plan (saved from the MSFS world map, or exported by Avionics Dispatch)",
+        "pln": ".PLN", "plnTip": "Show a .PLN flight plan (saved from the MSFS world map, or exported by the Flight plan and VFR plan pages)",
         "plnOk": ".PLN plan loaded", "plnBad": "Unreadable .PLN file or no waypoints", "noPlan": "SimBrief: no plan imported",
         "ended": "Flight ended in Hangar FS 2024: the map has been reset."},
 }
@@ -893,7 +893,7 @@ FLT_JS = r"""<script id="hangar-126-flt-js">
     }).catch(function () {});
   }
 
-  /* ---------- plan .PLN (carte du monde de MSFS, Avionics Dispatch, Little Navmap…) ---------- */
+  /* ---------- plan .PLN (carte du monde de MSFS, pages Plan de vol / Plan VFR, Little Navmap…) ---------- */
   function dms(s) {
     var m = String(s).trim().match(/^([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+([\d.]+)/i);
     if (!m) { var f = parseFloat(s); return Number.isFinite(f) ? f : NaN; }
@@ -2591,9 +2591,11 @@ if __name__ == "__main__":
 # aperçu du trajet + export sous la destination choisie, radars et carte « Plan de vol personnel » dans le menu
 LAY129_TXT = {
     "fr": {"opt": "Options", "dep": "Départs", "arr": "Arrivées", "free": "moment libre", "m": "matin", "d": "journée", "c": "crépuscule", "n": "nuit",
-           "prev": "APERÇU DU TRAJET", "exp": "EXPORT", "pick": "Clique sur une destination pour voir le trajet et l'exporter vers SimBrief ou MSFS (.PLN)."},
+           "prev": "APERÇU DU TRAJET", "exp": "EXPORT", "pick": "Clique sur une destination pour voir le trajet et l'exporter vers SimBrief ou MSFS (.PLN).",
+           "mapBtn": "🗺 Choisir départ et arrivée sur la carte", "mapTip": "Ouvre la carte Plan de vol personnel : clique un départ puis une arrivée"},
     "en": {"opt": "Options", "dep": "Departures", "arr": "Arrivals", "free": "any time", "m": "morning", "d": "day", "c": "dusk", "n": "night",
-           "prev": "ROUTE PREVIEW", "exp": "EXPORT", "pick": "Click a destination to see the route and export it to SimBrief or MSFS (.PLN)."},
+           "prev": "ROUTE PREVIEW", "exp": "EXPORT", "pick": "Click a destination to see the route and export it to SimBrief or MSFS (.PLN).",
+           "mapBtn": "🗺 Pick departure and arrival on the map", "mapTip": "Opens the Personal flight plan map: click a departure, then an arrival"},
 }
 LAY129_CSS = r"""<style id="hangar-129-lay">
 /* plus de petits ON / OFF : le bouton allumé suffit */
@@ -2608,6 +2610,8 @@ html body main.hg129 > section{grid-column:auto!important}
 html body main.hg129 > section.hg129-gone{display:none!important}
 /* étapes */
 .hg-step{display:flex;gap:12px;align-items:flex-start}
+#hgMapPick{display:block;width:calc(100% - 38px);margin:2px 0 4px 38px;padding:9px 12px;border-radius:10px;border:1px dashed #38BDF8;background:rgba(56,189,248,.08);color:#7DD3FC;font:700 12.5px "Segoe UI",Inter,sans-serif;cursor:pointer;text-align:center}
+#hgMapPick:hover{background:rgba(56,189,248,.18);color:#fff}
 .hg-step > .hg-num{flex:none;width:26px;height:26px;margin-top:18px;border-radius:50%;border:1px solid #38BDF8;background:rgba(56,189,248,.12);color:#7DD3FC;
   font:800 12px "Segoe UI",Inter,sans-serif;display:grid;place-items:center}
 .hg-step > .hg-sb{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
@@ -2659,7 +2663,11 @@ LAY129_JS = r"""<script id="hangar-129-lay-js">
     var altBlock = alt.parentNode;
     step(1, [acBlock], acBlock.nextSibling ? acBlock : acBlock);
     var s2 = step(2, [primBlock], arrC || dur);
-    step(3, [arrC, dur], s2.nextSibling || s2);
+    var s3 = step(3, [arrC, dur], s2.nextSibling || s2);
+    /* 12.9 : la carte « Plan de vol personnel » s'ouvre d'ici (elle n'a plus d'entrée dans le menu) */
+    var mb = document.createElement('button'); mb.type = 'button'; mb.id = 'hgMapPick'; mb.textContent = T.mapBtn; mb.title = T.mapTip;
+    mb.onclick = function () { window.hgShow('perso'); };
+    s3.parentNode.insertBefore(mb, s3.nextSibling);
     var opt = document.createElement('div'); opt.id = 'hgOpt';
     opt.innerHTML = '<div class="hd">⚙ <span>' + T.opt + '</span><span class="sm"></span><span class="ch">▾</span></div><div class="bd"></div>';
     var form = $('dispatchForm'); form.parentNode.insertBefore(opt, form.nextSibling);
@@ -2724,7 +2732,7 @@ LAY129_JS = r"""<script id="hangar-129-lay-js">
   }
   var prev = window.hgShow;
   function persoOpen() { var m = $('interactiveMapModal'); return !!(m && !m.classList.contains('hidden')); }
-  window.hgRailPage = function () { var v = $('hgVfr'); return v && v.classList.contains('on') ? 'vfr' : (persoOpen() ? 'perso' : 'plan'); };
+  window.hgRailPage = function () { var v = $('hgVfr'); return v && v.classList.contains('on') ? 'vfr' : 'plan'; };   /* la carte Plan de vol personnel fait partie de « Plan de vol » */
   function closeVfr() { var v = $('hgVfr'); if (v) v.classList.remove('on'); }
   /* menu : la carte Plan de vol personnel ouverte allume son entrée */
   setInterval(function () {
@@ -2817,6 +2825,21 @@ VFR_TXT = {
            "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.",
            "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches", "procs": "Departures and arrivals"}},
 }
+VFR_TXT["fr"].update({"kt": "kt", "ktTip": "Vitesse de croisière en nœuds : change-la si tu voles plus vite ou plus lentement, elle est gardée pour cet avion",
+    "time": "TEMPS", "ttot": "Temps de vol", "my": "MES ROUTES", "save": "💾 Enregistrer", "namePh": "Nom de la route (ex. Tour des Pyrénées)",
+    "noRoutes": "Aucune route enregistrée pour l'instant.", "openRt": "Ouvrir", "plnOpen": "📂 OUVRIR UN .PLN", "plnBad": "Ce fichier .PLN n'a pas pu être lu.",
+    "saved": "Route enregistrée.", "needName": "Donne d'abord un nom à ta route.", "needPts": "Pose au moins deux points avant d'enregistrer.",
+    "delQ": "Supprimer la route « %s » ?", "repQ": "Une route « %s » existe déjà. La remplacer ?",
+    "plnNote": "Plan ouvert. Les SID, STAR et approches du fichier sont devenus de simples points : rechoisis-les dans la fiche de l'aéroport si tu veux.",
+    "saveErr": "Impossible d'enregistrer la route (appli fermée ?).", "tooLong": "Route trop longue pour être enregistrée : retire quelques points."})
+VFR_TXT["en"].update({"kt": "kt", "ktTip": "Cruise speed in knots: change it if you fly faster or slower, it is kept for this aircraft",
+    "time": "TIME", "ttot": "Flight time", "my": "MY ROUTES", "save": "💾 Save", "namePh": "Route name (e.g. Pyrenees tour)",
+    "noRoutes": "No saved route yet.", "openRt": "Open", "plnOpen": "📂 OPEN A .PLN", "plnBad": "This .PLN file could not be read.",
+    "saved": "Route saved.", "needName": "Give your route a name first.", "needPts": "Place at least two points before saving.",
+    "delQ": "Delete the route \"%s\"?", "repQ": "A route \"%s\" already exists. Replace it?",
+    "plnNote": "Plan opened. The SID, STAR and approaches in the file became plain points: choose them again in the airport card if you want.",
+    "saveErr": "Unable to save the route (app closed?).", "tooLong": "Route too long to be saved: remove a few points."})
+
 VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr{position:fixed;left:52px;right:0;top:0;bottom:0;z-index:3000;display:none;flex-direction:column;background:#070d18;color:#cbd5e1;font:13px "Segoe UI",Inter,sans-serif}
 #hgVfr.on{display:flex}
@@ -2846,6 +2869,13 @@ VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr button.hgv-del:hover{background:#f87171;color:#1a0505}
 #hgVfr .tot{display:flex;justify-content:space-between;align-items:center;background:#0e1f36;border:1px solid #1e3a5f;border-radius:10px;padding:9px 12px;font-weight:700}
 #hgVfr .tot b{color:#38bdf8;font:800 18px Consolas,monospace}
+#hgVfr .tot + .tot{margin-top:6px}
+#hgVfr .myr{display:flex;gap:6px;margin:6px 0}
+#hgVfr .myr input{flex:1;min-width:0;border:1px solid #1e3a5f;background:#0c1729;color:#e2e8f0;border-radius:9px;padding:6px 9px;font:600 12px Segoe UI,Inter,sans-serif}
+#hgVfr .myl{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
+#hgVfr .myl div{display:flex;align-items:center;gap:6px;background:#0c1729;border:1px solid #1e3a5f;border-radius:9px;padding:5px 8px;font-size:12px}
+#hgVfr .myl div span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1}
+#hgVfr .myl div small{color:#64748b}
 #hgVfr .hint{color:#64748b;font-size:11.5px;line-height:1.5;border:1px dashed #1e3a5f;border-radius:10px;padding:10px}
 #hgVfr .tip{position:absolute;left:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid rgba(56,189,248,.35);border-radius:9px;padding:6px 10px;font-size:12px;pointer-events:none}
 #hgVfr .st{position:absolute;right:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid #1e3a5f;border-radius:9px;padding:5px 9px;font-size:11px;color:#94a3b8;pointer-events:none}
@@ -2880,6 +2910,13 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
   var show = { apt: true, vor: true, ndb: true, rwy: true, names: false, rnav: false, ils: false }, bgIdx = 0;
   var acV = 'C172'; try { acV = localStorage.getItem('hg_vfr_ac') || 'C172'; } catch (e) {}
+  if (acV === 'CUB') acV = 'J3'; if (acV === 'BE35') acV = 'B350';   /* anciens codes de la liste remplacés par les vrais codes OACI */
+  /* avions légers proposés : code OACI, nom, vitesse de croisière VFR en nœuds (basse altitude, 65-75 % de puissance ; turbopropulseurs : limités par leur vitesse maxi à basse altitude) */
+  var AC = [["C152", "Cessna 152", 100], ["C172", "Cessna 172 Skyhawk", 115], ["C182", "Cessna 182 Skylane", 140], ["C206", "Cessna 206 Stationair", 140], ["C210", "Cessna 210 Centurion", 165], ["P28A", "Piper PA-28 Warrior / Archer", 120], ["PA32", "Piper PA-32 Saratoga", 150], ["BE36", "Beechcraft Bonanza G36", 170], ["SR22", "Cirrus SR22", 170], ["DA40", "Diamond DA40", 135], ["DHC2", "DHC-2 Beaver", 115], ["J3", "Piper J-3 Cub", 65], ["PA34", "Piper PA-34 Seneca", 175], ["PA44", "Piper PA-44 Seminole", 160], ["BE58", "Beechcraft Baron 58", 190], ["DA42", "Diamond DA42", 165], ["DA62", "Diamond DA62", 175], ["C310", "Cessna 310", 190], ["C340", "Cessna 340", 190], ["C414", "Cessna 414 Chancellor", 195], ["C421", "Cessna 421 Golden Eagle", 200], ["C208", "Cessna 208 Caravan", 175], ["TBM9", "Daher TBM 930 / 940", 270], ["PC12", "Pilatus PC-12", 250], ["P46T", "Piper M500 / M600", 230], ["KODI", "Kodiak 100", 170], ["BE9L", "King Air C90", 230], ["BE20", "King Air 200 / 250", 260], ["B350", "King Air 350", 270], ["DHC6", "DHC-6 Twin Otter", 160]];
+  var ktMap = {}; try { ktMap = JSON.parse(localStorage.getItem('hg_vfr_kt') || '{}') || {}; } catch (e) {}
+  function acRow(c) { for (var i = 0; i < AC.length; i++) if (AC[i][0] === c) return AC[i]; return null; }
+  function ktOf() { var v = +ktMap[acV]; if (v >= 40 && v <= 450) return v; var r = acRow(acV); return r ? r[2] : 120; }
+  function fmtT(min) { min = Math.round(min); return min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0'); }
   var navOk = false, navMeta = null, PD = {}, msfsTok = 0, impTimer = null, card = null;
   var pr = { dep: { icao: '', sid: -1, rw: -1, en: -1 }, arr: { icao: '', star: -1, rw: -1, en: -1, ap: -1, tr: -1 } };
   try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null && sv.v === 2) bgIdx = sv.bg; if (sv && sv.pr && sv.pr.dep && sv.pr.arr) pr = sv.pr; } catch (e) {}
@@ -3289,13 +3326,15 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       var a = i ? F[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
       var isAp = p.kind in KC, pi = isAp ? -1 : ui++;
       var c = isAp ? KC[p.kind] : (pi === 0 ? '#22d3ee' : (pi === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9'));
-      h += '<tr' + (isAp ? ' style="color:' + KC[p.kind] + '"' : '') + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') +
+      h += '<tr' + (isAp ? ' style="color:' + KC[p.kind] + '"' : '') + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') + '</td><td>' + (a ? fmtT(d / ktOf() * 60) : '') +
         '</td><td style="text-align:right">' + (isAp ? '' : '<button type="button" class="hgv-del" data-i="' + pi + '" title="' + T.del + '">✕</button>') + '</td></tr>';
     });
-    if (tb) tb.innerHTML = h || '<tr><td colspan="5" style="color:#64748b">' + T.empty + '</td></tr>';
+    if (tb) tb.innerHTML = h || '<tr><td colspan="6" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
+    var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(tot / ktOf() * 60) : '—';
+    var kl = document.getElementById('hgVfrKtL'); if (kl) kl.textContent = '(' + acV + ' · ' + ktOf() + ' kt)';
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
-    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM') : (pts.length ? pts[0].name : T.title);
+    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(tot / ktOf() * 60)) : (pts.length ? pts[0].name : T.title);
   }
   /* ---------- export ---------- */
   function ends() {
@@ -3349,6 +3388,72 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     var url = URL.createObjectURL(new Blob([x], { type: 'application/xml;charset=utf-8' })), a = document.createElement('a');
     a.href = url; a.download = e[0].icao + '_' + e[1].icao + '_VFR.pln'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
+  /* ---------- mes routes (gardées dans le dossier des réglages de l'appli) ---------- */
+  var MY = {};
+  function myLoad() {
+    fetch('/vfrroutes').then(function (r) { return r.json(); }).then(function (o) { MY = o && typeof o === 'object' ? o : {}; myUI(); }).catch(function () { MY = {}; myUI(); });
+  }
+  function myUI() {
+    var box = document.getElementById('hgVfrMy'); if (!box) return;
+    var ks = Object.keys(MY).sort(function (a, b) { return (MY[b].d || 0) - (MY[a].d || 0); });
+    box.innerHTML = ks.length ? ks.map(function (k) {
+      var r = MY[k], p = (r && r.pts) || [], tot = 0; for (var i = 1; i < p.length; i++) tot += dist(p[i - 1], p[i]);
+      return '<div><span title="' + esc(k) + '"><b>' + esc(k) + '</b> <small>' + (p.length ? esc(p[0].name) + ' → ' + esc(p[p.length - 1].name) + ' · ' + Math.round(tot) + ' NM' : '') + '</small></span>' +
+        '<button type="button" class="b" data-load="' + esc(k) + '" style="padding:3px 8px">' + T.openRt + '</button><button type="button" class="hgv-del" data-delr="' + esc(k) + '" title="' + T.del + '">✕</button></div>';
+    }).join('') : '<small style="color:#64748b">' + T.noRoutes + '</small>';
+  }
+  function mySave() {
+    var inp = document.getElementById('hgVfrName'), nm = (inp.value || '').trim().slice(0, 60);
+    if (pts.length < 2) { alert(T.needPts); return; }
+    if (!nm) { alert(T.needName); inp.focus(); return; }
+    if (MY[nm] && !confirm(T.repQ.replace('%s', nm))) return;
+    var data = JSON.stringify({ pts: pts.map(function (p) { return { lat: +p.lat.toFixed(5), lon: +p.lon.toFixed(5), name: p.name, kind: p.kind }; }), pr: pr, ac: acV, d: Date.now() });
+    var url = '/vfrroutes?op=save&name=' + encodeURIComponent(nm) + '&data=' + encodeURIComponent(data);
+    if (url.length > 15000) { alert(T.tooLong); return; }
+    fetch(url).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (o) { MY = o || {}; myUI(); status(T.saved); inp.value = ''; }).catch(function () { alert(T.saveErr); });
+  }
+  function myDel(nm) {
+    if (!confirm(T.delQ.replace('%s', nm))) return;
+    fetch('/vfrroutes?op=del&name=' + encodeURIComponent(nm)).then(function (r) { return r.json(); }).then(function (o) { MY = o || {}; myUI(); }).catch(function () {});
+  }
+  function setRoute(list, prIn, ac) {
+    pts = list; wpN = 0;
+    pr = prIn && prIn.dep && prIn.arr ? prIn : { dep: { icao: '', sid: -1, rw: -1, en: -1 }, arr: { icao: '', star: -1, rw: -1, en: -1, ap: -1, tr: -1 } };
+    if (ac && window.hgVfrSetAc && /^[A-Z0-9]{2,4}$/.test(ac)) window.hgVfrSetAc(ac);
+    save(); drawRoute();
+    if (map && pts.length > 1) map.fitBounds(L.latLngBounds(pts.map(function (p) { return [p.lat, p.lon]; })).pad(0.2));
+  }
+  function myOpen(nm) {
+    var r = MY[nm]; if (!r || !Array.isArray(r.pts)) return;
+    var ok = r.pts.filter(function (p) { return p && isFinite(p.lat) && isFinite(p.lon) && p.name; });
+    setRoute(ok.map(function (p) { return { lat: +p.lat, lon: +p.lon, name: String(p.name), kind: String(p.kind || 'wp') }; }), r.pr, r.ac);
+  }
+  /* ---------- ouvrir un .PLN (le nôtre, Little Navmap, MSFS) ---------- */
+  function dmsVal(t) {
+    var m = /([NSEW])\s*(\d+)\s*°\s*(\d+)\s*'\s*([\d.]+)/.exec(t || ''); if (!m) return NaN;
+    var v = +m[2] + +m[3] / 60 + +m[4] / 3600; return (m[1] === 'S' || m[1] === 'W') ? -v : v;
+  }
+  function plnRead(txt) {
+    try {
+      var x = new DOMParser().parseFromString(txt, 'application/xml'); if (x.getElementsByTagName('parsererror').length) throw 0;
+      var tx = function (n, tag) { var e = n.getElementsByTagName(tag)[0]; return e ? (e.textContent || '').trim() : ''; };
+      var dep = tx(x, 'DepartureID').toUpperCase(), arr = tx(x, 'DestinationID').toUpperCase(), list = [];
+      Array.prototype.forEach.call(x.getElementsByTagName('ATCWaypoint'), function (w) {
+        var pos = tx(w, 'WorldPosition').split(','), lat = dmsVal(pos[0]), lon = dmsVal(pos[1]);
+        if (!isFinite(lat) || !isFinite(lon)) return;
+        var ty = tx(w, 'ATCWaypointType'), id = (tx(w, 'ICAOIdent') || w.getAttribute('id') || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 12);
+        var kind = ty === 'Airport' ? 'apt' : ty === 'VOR' ? 'vor' : ty === 'NDB' ? 'ndb' : (ty === 'User' && (!id || /^WP\d+$/.test(id))) ? 'wp' : 'wpt';
+        list.push({ lat: lat, lon: lon, name: id || 'WP', kind: kind });
+      });
+      var aptPt = function (ic) { var a = airportsDB[ic]; return a ? { lat: a.lat, lon: a.lon, name: ic, kind: 'apt' } : null; };
+      if (dep && !(list[0] && list[0].kind === 'apt' && list[0].name === dep)) { var a1 = aptPt(dep); if (a1) list.unshift(a1); }
+      if (arr && !(list.length && list[list.length - 1].kind === 'apt' && list[list.length - 1].name === arr)) { var a2 = aptPt(arr); if (a2) list.push(a2); }
+      if (list.length < 2) throw 0;
+      setRoute(list, null, null);
+      status(T.plnNote);
+    } catch (e) { alert(T.plnBad); }
+  }
   /* ---------- fenêtre ---------- */
   var BG = [
     function () { return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, subdomains: 'abc', className: 'hg-soft', attribution: '© OpenStreetMap · © OpenTopoMap (CC-BY-SA)' }); },
@@ -3364,19 +3469,23 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     d.innerHTML = '<div class="vb"><button type="button" class="b" data-a="menu">← ' + T.menu + '</button><button type="button" class="b" data-a="perso">↩ ' + T.back + '</button>' +
       '<span class="t">✈ ' + T.title + '</span><span class="sum" id="hgVfrSum"></span><span class="grow"></span>' +
       '<button type="button" class="b" data-a="undo">↶ ' + T.undo + '</button><button type="button" class="b" data-a="swap">⇄ ' + T.swap + '</button><button type="button" class="b" data-a="clear">⟲ ' + T.clear + '</button>' +
+      '<button type="button" class="b" data-a="plnopen">' + T.plnOpen + '</button><input type="file" id="hgVfrFile" accept=".pln,.PLN,.xml" style="display:none">' +
       '<button type="button" class="b sb" data-a="sb">➤ SIMBRIEF</button><button type="button" class="b pln" data-a="pln">⬇ FICHIER .PLN</button><button type="button" class="b" data-a="back">✕</button></div>' +
       '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('rnav', '#0e7490', 'RNAV') + tg('ils', '#22c55e', 'ILS') + tg('names', '#94a3b8', T.names) +
       '<span class="gl" style="margin-left:10px">' + T.acft + '</span><input id="hgVfrAc" list="hgVfrAcL" spellcheck="false" autocomplete="off" title="' + T.acTip + '" style="width:92px;text-transform:uppercase;border:1px solid #1e3a5f;background:#0c1729;color:#e2e8f0;border-radius:9px;padding:6px 9px;font:700 12px Segoe UI,Inter,sans-serif">' +
-      '<datalist id="hgVfrAcL"><option value="C152">C152 — Cessna 152</option><option value="C172">C172 — Cessna 172 Skyhawk</option><option value="C182">C182 — Cessna 182 Skylane</option><option value="C206">C206 — Cessna 206 Stationair</option><option value="C210">C210 — Cessna 210 Centurion</option><option value="P28A">P28A — Piper PA-28 Warrior / Archer</option><option value="PA32">PA32 — Piper PA-32 Saratoga</option><option value="BE36">BE36 — Beechcraft Bonanza G36</option><option value="SR22">SR22 — Cirrus SR22</option><option value="DA40">DA40 — Diamond DA40</option><option value="DHC2">DHC2 — DHC-2 Beaver</option><option value="CUB">CUB — Piper Cub</option><option value="PA34">PA34 — Piper PA-34 Seneca</option><option value="PA44">PA44 — Piper PA-44 Seminole</option><option value="BE58">BE58 — Beechcraft Baron 58</option><option value="DA42">DA42 — Diamond DA42</option><option value="DA62">DA62 — Diamond DA62</option><option value="C310">C310 — Cessna 310</option><option value="C340">C340 — Cessna 340</option><option value="C414">C414 — Cessna 414 Chancellor</option><option value="C421">C421 — Cessna 421 Golden Eagle</option><option value="C208">C208 — Cessna 208 Caravan</option><option value="TBM9">TBM9 — Daher TBM 930 / 940</option><option value="PC12">PC12 — Pilatus PC-12</option><option value="P46T">P46T — Piper M500 / M600</option><option value="KODI">KODI — Kodiak 100</option><option value="BE9L">BE9L — King Air C90</option><option value="BE20">BE20 — King Air 200 / 250</option><option value="BE35">BE35 — King Air 350</option><option value="DHC6">DHC6 — DHC-6 Twin Otter</option></datalist><span id="hgVfrAcN" style="color:#94a3b8;font-size:11.5px"></span>' +
+      '<datalist id="hgVfrAcL">' + AC.map(function (a) { return '<option value="' + a[0] + '">' + a[0] + ' — ' + a[1] + '</option>'; }).join('') + '</datalist><span id="hgVfrAcN" style="color:#94a3b8;font-size:11.5px"></span><input id="hgVfrKt" type="number" min="40" max="450" step="5" title="' + T.ktTip + '" style="width:64px;margin-left:6px;border:1px solid #1e3a5f;background:#0c1729;color:#e2e8f0;border-radius:9px;padding:6px 6px;font:700 12px Segoe UI,Inter,sans-serif"><span class="gl" style="margin-left:2px">' + T.kt + '</span>' +
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div id="hgVfrCard" style="display:none"></div><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
-      '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
-      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
+      '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th>' + T.time + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small></span><b id="hgVfrTime">—</b></div>' +
+      '<div class="h" style="margin-top:14px">' + T.my + '</div><div class="myr"><input id="hgVfrName" maxlength="60" placeholder="' + T.namePh + '"><button type="button" class="b" data-a="save">' + T.save + '</button></div><div class="myl" id="hgVfrMy"></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       if (b.closest('#hgVfrCard')) return;
+      if (b.dataset.load != null) { myOpen(b.dataset.load); return; }
+      if (b.dataset.delr != null) { myDel(b.dataset.delr); return; }
       if (b.dataset.i != null) { pts.splice(+b.dataset.i, 1); save(); drawRoute(); return; }
       if (b.dataset.card) { openCard({ type: 'apt', icao: b.dataset.card }); return; }
       if (b.dataset.x) { if (b.dataset.x === 'sid') pr.dep.sid = -1; else if (b.dataset.x === 'star') pr.arr.star = -1; else pr.arr.ap = -1; save(); drawRoute(); return; }
@@ -3392,16 +3501,23 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       else if (a === 'imp') impPoll('?go=1');
       else if (a === 'impstop') impPoll('?stop=1');
       else if (a === 'pln') pln();
+      else if (a === 'plnopen') d.querySelector('#hgVfrFile').click();
+      else if (a === 'save') mySave();
     });
+    d.querySelector('#hgVfrFile').onchange = function () { var f = this.files && this.files[0]; this.value = ''; if (f) f.text().then(plnRead).catch(function () { alert(T.plnBad); }); };
+    d.querySelector('#hgVfrName').addEventListener('keydown', function (e) { if (e.key === 'Enter') mySave(); });
     var cd = d.querySelector('#hgVfrCard');
     cd.addEventListener('click', function (e) { e.stopPropagation(); cardClick(e); });
     cd.addEventListener('change', cardChange);
     ['mousedown', 'dblclick', 'wheel', 'contextmenu'].forEach(function (ev) { cd.addEventListener(ev, function (e) { e.stopPropagation(); }); });
     var acI = d.querySelector('#hgVfrAc'), acN = d.querySelector('#hgVfrAcN'), acL = d.querySelector('#hgVfrAcL');
     var acName = function () { var o = acL.querySelector('option[value="' + acI.value + '"]'); acN.textContent = o ? o.textContent.split(' — ')[1] : ''; };
-    acI.value = acV; acName();
+    var ktI = d.querySelector('#hgVfrKt');
+    acI.value = acV; acName(); ktI.value = ktOf();
     acI.oninput = function () { acI.value = acI.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); acName(); };
-    acI.onchange = function () { if (!/^[A-Z0-9]{2,4}$/.test(acI.value)) acI.value = acV; acV = acI.value; try { localStorage.setItem('hg_vfr_ac', acV); } catch (e) {} acName(); };
+    acI.onchange = function () { if (!/^[A-Z0-9]{2,4}$/.test(acI.value)) acI.value = acV; acV = acI.value; try { localStorage.setItem('hg_vfr_ac', acV); } catch (e) {} acName(); ktI.value = ktOf(); side(); };
+    ktI.onchange = function () { var v = Math.round(+ktI.value); if (!(v >= 40 && v <= 450)) { ktI.value = ktOf(); return; } var r = acRow(acV); if (r && r[2] === v) delete ktMap[acV]; else ktMap[acV] = v; try { localStorage.setItem('hg_vfr_kt', JSON.stringify(ktMap)); } catch (e) {} side(); };
+    window.hgVfrSetAc = function (c) { acI.value = c; acI.onchange(); };
     var sel = d.querySelector('#hgVfrBg'); sel.value = String(bgIdx); sel.onchange = function () { setBg(+sel.value); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && d.classList.contains('on')) { if (card) closeCard(); else close(); } });
   }
@@ -3420,16 +3536,10 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     setTimeout(function () { map.invalidateSize(); if (pts.length > 1) map.fitBounds(L.latLngBounds(pts.map(function (p) { return [p.lat, p.lon]; })).pad(0.2)); draw(); drawRoute(); }, 60);
     loadData();
     impPoll();
+    myLoad();
   }
   function close() { var d = document.getElementById('hgVfr'); if (d) d.classList.remove('on'); }
   window.hgOpenVfr = open;
-  /* bouton « PLAN VFR » dans la barre de la carte Plan de vol personnel */
-  setInterval(function () {
-    var bar = document.getElementById('mapToolbar'); if (!bar || bar.querySelector('.hgv-open')) return;
-    var row = bar.querySelector('.al-row') || bar, ttl = row.querySelector('.al-title');
-    var b = el('button', 'hgv-open', '✈ ' + T.btn); b.type = 'button'; b.onclick = open;
-    if (ttl && ttl.nextSibling) row.insertBefore(b, ttl.nextSibling); else row.appendChild(b);
-  }, 800);
 })();
 </script>"""
 
