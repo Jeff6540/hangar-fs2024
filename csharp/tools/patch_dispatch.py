@@ -2478,3 +2478,22 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_now128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+# 12.8 : en mode Aléatoire / durée, la carte Plan de vol personnel s'ouvre sans aucun aéroport choisi (totalement libre)
+FREE_ANCH = ("            if (currentDep && !interactiveDep) interactiveDep = currentDep;\n            if (currentArr && !interactiveArr) interactiveArr = currentArr;",
+             "            if (typeof generationMode !== 'undefined' && generationMode === 'RANDOM') { if (typeof resetInteractiveSelection === 'function') resetInteractiveSelection(); }   /* 12.8 : carte libre en aléatoire */\n            else {\n            if (currentDep && !interactiveDep) interactiveDep = currentDep;\n            if (currentArr && !interactiveArr) interactiveArr = currentArr;\n            }")
+
+
+def patch_free128(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "carte libre en aléatoire" in s:
+        return
+    a, b = FREE_ANCH
+    assert s.count(a) == 1, path
+    open(path, "w", encoding="utf-8").write(s.replace(a, b))
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_free128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
