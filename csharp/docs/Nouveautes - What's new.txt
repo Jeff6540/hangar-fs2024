@@ -10,6 +10,7 @@ Version 12.8 — quoi de neuf
 - Avant de mettre à jour, le bouton « Nouveautés » du bandeau bleu affiche le résumé directement dans l'appli.
 - « Tout le détail » ouvre la liste complète des nouveautés.
 - Bouton « Remarque ou bug ? » en bas du menu (et dans Réglages → À propos) : il ouvre le Discord de l'appli pour poser une question ou signaler un problème.
+- Bouton « Les Fous Volants » (avec le logo de la VA) juste en dessous : il ouvre le Discord de la VA.
 
 Version 12.7 — journal de vol et nouveau look
 Journal de vol (nouveau)
@@ -96,6 +97,7 @@ Version 12.8 — what's new
 - Before updating, the "What's new" button of the blue banner shows the summary right in the app.
 - "All the details" opens the full list of changes.
 - "Feedback or bug?" button at the bottom of the menu (and in Settings → About): it opens the app's Discord to ask a question or report a problem.
+- "Les Fous Volants" button (with the VA's logo) right below: it opens the VA's Discord.
 
 Version 12.7 — flight log and new look
 Flight log (new)
