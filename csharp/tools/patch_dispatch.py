@@ -3146,6 +3146,17 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     if (st.state === 'run') impTimer = setTimeout(impPoll, 1000);
   }
   function impPoll(q) { fetch('/navimport' + (q || '')).then(function (r) { return r.json(); }).then(impUI).catch(function () {}); }
+  /* axe réel de la piste servie par un ILS (extrémités de piste OurAirports) : le cône suit la piste dessinée sur la carte */
+  function rwyAxis(p0, crs) {
+    var best = crs, bd = 15;
+    Object.keys(airportsDB).forEach(function (k) {
+      var a = airportsDB[k]; if (Math.abs(a.lat - p0.lat) > .12 || Math.abs(a.lon - p0.lon) > .16) return;
+      (rwy[a.ident] || rwy[k] || []).forEach(function (w) {
+        [brg(w.b, w.a), brg(w.a, w.b)].forEach(function (h) { var d = Math.abs(((h - crs) % 360 + 540) % 360 - 180); if (d < bd) { bd = d; best = h; } });
+      });
+    });
+    return best;
+  }
   function msfs(z) {
     if (!lyr.msfs) lyr.msfs = L.layerGroup().addTo(map);
     var tok = ++msfsTok, want = [];
@@ -3162,7 +3173,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
           if (kr[0] === 'wpt') {
             mk(o, '<svg width="13" height="13" viewBox="-6.5 -6.5 13 13"><polygon points="0,-5.2 4.8,3.6 -4.8,3.6" fill="#0e7490" stroke="#fff" stroke-width="1.4"/></svg>', 13, '<b>' + esc(r[0]) + '</b> · RNAV').addTo(lyr.msfs);
           } else {
-            var crs = (+r[7] || 0), back = (crs + 180) % 360, p0 = { lat: r[2], lon: r[3] }, a1 = dest(p0, back - 2.5, 9), a2 = dest(p0, back + 2.5, 9), mid = dest(p0, back, 8);
+            var crs = (+r[7] || 0), p0 = { lat: r[2], lon: r[3] }, axis = rwyAxis(p0, crs);
+            var back = (axis + 180) % 360, a1 = dest(p0, back - 2.5, 9), a2 = dest(p0, back + 2.5, 9), mid = dest(p0, back, 8);
             L.polygon([[p0.lat, p0.lon], [a1.lat, a1.lon], [mid.lat, mid.lon], [a2.lat, a2.lon]], { color: '#15803d', weight: 1.8, fillColor: '#22c55e', fillOpacity: .28, interactive: false }).addTo(lyr.msfs);
             var far = dest(p0, back, 9);
             L.polyline([[p0.lat, p0.lon], [far.lat, far.lon]], { color: '#14532d', weight: 1.4, dashArray: '6 5', interactive: false }).addTo(lyr.msfs);
