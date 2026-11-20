@@ -10,7 +10,7 @@ Version 12.8 — quoi de neuf
 - Avant de mettre à jour, le bouton « Nouveautés » du bandeau bleu affiche le résumé directement dans l'appli.
 - « Tout le détail » ouvre la liste complète des nouveautés.
 - L'altitude de croisière conseillée est retirée.
-- Moment du vol (FMS et carte Plan de vol personnel) : Matin, Journée, Crépuscule ou Nuit. L'appli calcule, avec le lever et le coucher du soleil à l'aéroport de départ, l'heure à régler dans MSFS (1 h avant le décollage pour la préparation), le décollage et l'arrivée, en UTC ; l'heure de départ est envoyée à SimBrief.
+- Moment du vol (FMS et carte Plan de vol personnel) : Matin, Journée, Crépuscule ou Nuit. L'appli calcule, avec le lever et le coucher du soleil à l'aéroport de départ, l'heure à régler dans MSFS (30 min avant le décollage pour la préparation en court et moyen-courrier, 1 h en gros porteur), le décollage et l'arrivée, en UTC ; l'heure de départ est envoyée à SimBrief.
 - Voler maintenant : avec « ⏰ Maintenant (heure réelle) », l'appli vérifie la lumière au décollage (départ) et à l'atterrissage (arrivée) ; en mode Aléatoire / durée, elle ne propose que les vols qui collent, et « 🎲 Trouver un départ » tire un aéroport où c'est le bon moment.
 - Carte Plan de vol personnel : la zone de nuit s'affiche en direct (aube et crépuscule en dégradé).
 - Bouton « Remarque ou bug ? » en bas du menu (et dans Réglages → À propos) : il ouvre le Discord de l'appli pour poser une question ou signaler un problème.
@@ -101,7 +101,7 @@ Version 12.8 — what's new
 - Before updating, the "What's new" button of the blue banner shows the summary right in the app.
 - "All the details" opens the full list of changes.
 - The advised cruise altitude has been removed.
-- Time of flight (FMS and Personal flight plan map): Morning, Day, Dusk or Night. From sunrise and sunset at the departure airport, the app computes the time to set in MSFS (1 h before takeoff for preparation), takeoff and arrival, in UTC; the departure time is sent to SimBrief.
+- Time of flight (FMS and Personal flight plan map): Morning, Day, Dusk or Night. From sunrise and sunset at the departure airport, the app computes the time to set in MSFS (30 min before takeoff for preparation on short and medium haul, 1 h on wide-bodies), takeoff and arrival, in UTC; the departure time is sent to SimBrief.
 - Fly now: with "⏰ Now (real time)", the app checks the light at takeoff (departure) and landing (arrival); in Random / duration mode it only offers flights that fit, and "🎲 Find a departure" picks an airport where it's the right time.
 - Personal flight plan map: the night area is shown live (dawn and dusk shaded).
 - "Feedback or bug?" button at the bottom of the menu (and in Settings → About): it opens the app's Discord to ask a question or report a problem.

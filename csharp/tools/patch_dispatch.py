@@ -2133,11 +2133,11 @@ if __name__ == "__main__":
 # ---- 12.8 : moment du vol (matin, journée, crépuscule, nuit) avec heures en UTC, envoyé à SimBrief ----
 TOD_TXT = {
  "fr": {"label": "MOMENT DU VOL", "short": "MOMENT", "none": "Libre", "m": "Matin", "d": "Journée", "c": "Crépuscule", "n": "Nuit",
-        "set": "Régler MSFS", "to": "Décollage", "ldg": "Arrivée", "prep": "préparation, repoussage et roulage compris",
+        "set": "Régler MSFS", "to": "Décollage", "ldg": "Arrivée", "prep": "préparation, repoussage et roulage compris : 30 min en court et moyen-courrier, 1 h en gros porteur", "prepL": "prépa",
         "tip": "Calculé avec le lever et le coucher du soleil à l'aéroport de départ. Règle l'heure de MSFS sur « Régler MSFS » pour avoir le temps de te préparer.",
         "noDep": "choisis un aéroport de départ", "tomorrow": "demain"},
  "en": {"label": "TIME OF FLIGHT", "short": "TIME", "none": "Any", "m": "Morning", "d": "Day", "c": "Dusk", "n": "Night",
-        "set": "Set MSFS to", "to": "Takeoff", "ldg": "Arrival", "prep": "including preparation, pushback and taxi",
+        "set": "Set MSFS to", "to": "Takeoff", "ldg": "Arrival", "prep": "including preparation, pushback and taxi: 30 min for short and medium haul, 1 h for wide-bodies", "prepL": "prep",
         "tip": "Computed from sunrise and sunset at the departure airport. Set the MSFS time to \"Set MSFS to\" so you have time to get ready.",
         "noDep": "pick a departure airport", "tomorrow": "tomorrow"},
 }
@@ -2176,7 +2176,15 @@ TOD_JS = r"""<script id="hangar-128-tod-js">
     var t = (document.getElementById('summaryFlightTime') || {}).textContent || '', m = t.match(/(\d+)\s*h\s*(\d+)/);
     return m ? (+m[1]) * 60 + (+m[2]) : 0;
   }
-  /* heure de décollage selon le moment ; MSFS se règle 60 min plus tôt (préparation, repoussage, roulage) */
+  /* heure de décollage selon le moment ; MSFS se règle plus tôt (préparation, repoussage, roulage) :
+     30 min pour les court et moyen-courriers, 1 h pour les gros porteurs (ou un vol de plus de 4 h) */
+  var HEAVY = /^(A30|A310|A33|A34|A35|A38|A3ST|A124|A225|AN12|AN22|B70|B74|B76|B77|B78|C17$|C5$|C5M|DC10|IL76|IL96|KC10|KC13|KC46|L101|MD11)/;
+  window.hgPrep = function (fm) {
+    var ac = ((document.getElementById('aircraftSelect') || {}).value || '').toUpperCase();
+    if (ac && HEAVY.test(ac)) return 60;
+    if (fm == null) fm = flightMin();
+    return fm > 240 ? 60 : 30;
+  };
   var PREP = 60;
   function plan(dep) {
     if (!mode || !dep || !Number.isFinite(+dep.lat)) return null;
@@ -2190,6 +2198,7 @@ TOD_JS = r"""<script id="hangar-128-tod-js">
       else to = s.set + 120;
       return to;
     }
+    PREP = window.hgPrep();
     var to = calc(day), tomorrow = false;
     if (day.getTime() + (to - PREP) * 60000 < now.getTime()) { day = new Date(day.getTime() + 864e5); to = calc(day); tomorrow = true; }
     var fm = flightMin();
@@ -2198,7 +2207,7 @@ TOD_JS = r"""<script id="hangar-128-tod-js">
   function result(dep) {
     if (!mode) return '';
     var p = plan(dep); if (!p) return '<span>' + T.noDep + '</span>';
-    return '<span class="k">' + T.set + '</span> <b>' + hhmm(p.set) + '</b>' + (p.tomorrow ? ' (' + T.tomorrow + ')' : '') +
+    return '<span class="k">' + T.set + '</span> <b>' + hhmm(p.set) + '</b>' + (p.tomorrow ? ' (' + T.tomorrow + ')' : '') + ' <span title="' + T.prep + '">(' + T.prepL + ' ' + (PREP === 60 ? '1 h' : '30 min') + ')</span>' +
            ' · ' + T.to + ' <b>' + hhmm(p.to) + '</b>' + (p.ldg != null ? ' · ' + T.ldg + ' <b>' + hhmm(p.ldg) + '</b>' : '');
   }
   function seg(id) {
@@ -2294,7 +2303,8 @@ NOW_CSS = r"""<style id="hangar-128-now">
 </style>"""
 NOW_JS = r"""<script id="hangar-128-now-js">
 (function () {
-  var T = __TXT__, KEYW = 'hg_tod_when', PREP = 60;
+  var T = __TXT__, KEYW = 'hg_tod_when';
+  function P(fm) { return window.hgPrep ? window.hgPrep(fm) : 60; }
   var when = 'set'; try { when = localStorage.getItem(KEYW) || 'set'; } catch (e) {}
   function mode() { try { return localStorage.getItem('hg_tod') || ''; } catch (e) { return ''; } }
   /* hauteur du soleil (degrés) à un endroit et un instant */
@@ -2328,8 +2338,8 @@ NOW_JS = r"""<script id="hangar-128-now-js">
   /* filtre de la recherche (aléatoire / durée) quand on vole maintenant */
   window.hgTodFilter = function (results, primaryApt, sm) {
     var m = mode(); if (!m || when !== 'now' || !primaryApt) return results;
-    var tTo = Date.now() + PREP * 60000;
     var out = results.filter(function (r) {
+      var tTo = Date.now() + P(r.flightTimeMin || 0) * 60000;
       var dep = sm === 'DEPARTURE' ? primaryApt : r, arr = sm === 'DEPARTURE' ? r : primaryApt;
       return fits(m, dep, arr, tTo, tTo + (r.flightTimeMin || 0) * 60000);
     });
@@ -2339,7 +2349,7 @@ NOW_JS = r"""<script id="hangar-128-now-js">
   /* tirer au hasard un aéroport de départ où c'est le bon moment maintenant */
   function pick() {
     var m = mode(); if (!m) return;
-    var tTo = Date.now() + PREP * 60000, list = [];
+    var tTo = Date.now() + P() * 60000, list = [];
     for (var k in airportsDB) {
       var a = airportsDB[k]; if (!a || (a.type !== 'large_airport' && a.type !== 'medium_airport') || !/^[A-Z][A-Z0-9]{3}$/.test(a.icao)) continue;
       var s = sunAlt(a.lat, a.lon, tTo), ok = m === 'm' ? (s.am && s.alt >= 1 && sunAlt(a.lat, a.lon, tTo - 2.5 * 3600e3).alt < 0) : m === 'd' ? s.alt > 15 : m === 'c' ? (!s.am && s.alt > 8 && s.alt < 20) : s.alt < -10;
@@ -2355,7 +2365,7 @@ NOW_JS = r"""<script id="hangar-128-now-js">
   function nowLine(dep, arr) {
     var m = mode(); if (!m || when !== 'now') return '';
     if (!dep || !arr || !Number.isFinite(+dep.lat) || !Number.isFinite(+arr.lat)) return T.noArr;
-    var tTo = Date.now() + PREP * 60000, tL = tTo + mins() * 60000, ok = fits(m, dep, arr, tTo, tL);
+    var tTo = Date.now() + P(mins()) * 60000, tL = tTo + mins() * 60000, ok = fits(m, dep, arr, tTo, tL);
     return T.nowTo + ' ' + NAME[label(+dep.lat, +dep.lon, tTo)] + ' · ' + T.nowLdg + ' ' + NAME[label(+arr.lat, +arr.lon, tL)] +
            ' — <b class="' + (ok ? 'hg-ok">✓ ' + T.ok : 'hg-ko">✗ ' + T.ko) + '</b>';
   }
