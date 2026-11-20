@@ -4721,7 +4721,7 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
                 fullMap.invalidateSize();
                 populateFullMapMarkers();
             }
-            if (typeof generationMode !== 'undefined' && generationMode === 'RANDOM') { if (typeof resetInteractiveSelection === 'function') resetInteractiveSelection(); }   /* 12.8 : carte libre en aléatoire */
+            if (true) { if (typeof resetInteractiveSelection === 'function') resetInteractiveSelection(); }   /* 12.8 : carte libre en aléatoire, et toujours vide à l'ouverture */
             else {
             if (currentDep && !interactiveDep) interactiveDep = currentDep;
             if (currentArr && !interactiveArr) interactiveArr = currentArr;

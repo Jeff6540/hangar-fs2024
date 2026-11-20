@@ -2510,9 +2510,9 @@ if __name__ == "__main__":
     for _l in ("fr", "en"):
         patch_now128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
 
-# 12.8 : en mode Aléatoire / durée, la carte Plan de vol personnel s'ouvre sans aucun aéroport choisi (totalement libre)
+# 12.8 : la carte Plan de vol personnel s'ouvre toujours sans aucun aéroport choisi (totalement libre)
 FREE_ANCH = ("            if (currentDep && !interactiveDep) interactiveDep = currentDep;\n            if (currentArr && !interactiveArr) interactiveArr = currentArr;",
-             "            if (typeof generationMode !== 'undefined' && generationMode === 'RANDOM') { if (typeof resetInteractiveSelection === 'function') resetInteractiveSelection(); }   /* 12.8 : carte libre en aléatoire */\n            else {\n            if (currentDep && !interactiveDep) interactiveDep = currentDep;\n            if (currentArr && !interactiveArr) interactiveArr = currentArr;\n            }")
+             "            if (true) { if (typeof resetInteractiveSelection === 'function') resetInteractiveSelection(); }   /* 12.8 : carte libre en aléatoire, et toujours vide à l'ouverture */\n            else {\n            if (currentDep && !interactiveDep) interactiveDep = currentDep;\n            if (currentArr && !interactiveArr) interactiveArr = currentArr;\n            }")
 
 
 def patch_free128(path, lang):
