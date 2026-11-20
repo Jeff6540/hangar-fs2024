@@ -2664,6 +2664,14 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
 .hg-todm .lb{font:800 9px "Segoe UI",Inter,sans-serif;color:#38BDF8;letter-spacing:.05em}
 .hg-todm .hg-tod{grid-template-columns:repeat(5,auto)}.hg-todm .hg-tod button{padding:3px 7px}
 .hg-todm .hg-todr{margin:0;font-size:10.5px;white-space:nowrap}
+</style><style id="hangar-128-now">
+.hg-when{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
+.hg-when button{padding:5px 2px;border-radius:6px;border:1px solid transparent;background:#121A24;color:#94A3B8;font:700 10px "Segoe UI",Inter,sans-serif;cursor:pointer}
+.hg-when button.on{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.8);color:#FDE7B0}
+.hg-pick{margin-top:6px;width:100%;padding:6px;border-radius:6px;border:1px solid rgba(56,189,248,.6);background:rgba(56,189,248,.10);color:#BAE6FD;font:700 10.5px "Segoe UI",Inter,sans-serif;cursor:pointer}
+.hg-pick:hover{background:rgba(56,189,248,.2);color:#fff}
+.hg-ok{color:#4ADE80}.hg-ko{color:#F87171}
+.hg-nightimg{pointer-events:none}
 </style></head>
 <body class="flex flex-col">
 
@@ -5492,7 +5500,7 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
             }
 
             results.sort((a, b) => (COMPAT_RANK[a.compat.status] - COMPAT_RANK[b.compat.status]) || (a.timeDiff - b.timeDiff));
-            const topResults = results.slice(0, 10);
+            const topResults = (window.hgTodFilter ? window.hgTodFilter(results, primaryApt, searchMode) : results).slice(0, 10);   /* 12.8 : moment du vol, maintenant */
             renderResults(topResults, primaryIcao, primaryApt, { simbriefCode: aircraftCode, cruiseFL, costIndex });
         }
 
@@ -6896,6 +6904,125 @@ ${waypoint(arr)}
       return url + '&date=' + date + '&deph=' + Math.floor(mm / 60) + '&depm=' + (mm % 60);
     };
   }
+})();
+</script><script id="hangar-128-now-js">
+(function () {
+  var T = {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure", "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant", "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil", "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.", "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit"}, KEYW = 'hg_tod_when', PREP = 60;
+  var when = 'set'; try { when = localStorage.getItem(KEYW) || 'set'; } catch (e) {}
+  function mode() { try { return localStorage.getItem('hg_tod') || ''; } catch (e) { return ''; } }
+  /* hauteur du soleil (degrés) à un endroit et un instant */
+  function sunAlt(lat, lon, ms) {
+    var r = Math.PI / 180, d = new Date(ms), N = (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 0)) / 864e5;
+    var hr = d.getUTCHours() + d.getUTCMinutes() / 60, g = 2 * Math.PI / 365 * (N - 1 + (hr - 12) / 24);
+    var eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    var de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    var tst = hr * 60 + eq + 4 * lon, ha = (tst / 4 - 180) * r;
+    var cz = Math.sin(lat * r) * Math.sin(de) + Math.cos(lat * r) * Math.cos(de) * Math.cos(ha);
+    return { alt: Math.asin(Math.max(-1, Math.min(1, cz))) / r, am: ((tst / 4 - 180) % 360 + 360) % 360 > 180 };
+  }
+  function label(lat, lon, ms) {
+    var s = sunAlt(lat, lon, ms);
+    if (s.alt < -6) return 'night';
+    if (s.alt < 0) return s.am ? 'dawn' : 'dusk';
+    if (s.am && sunAlt(lat, lon, ms - 3 * 3600e3).alt < 0) return 'morning';   /* matin = moins de 3 h après le lever du soleil */
+    return 'day';
+  }
+  /* le vol colle-t-il au moment choisi, au décollage (départ) et à l'atterrissage (arrivée) ? */
+  function fits(m, dep, arr, tTo, tLdg) {
+    var a = sunAlt(+dep.lat, +dep.lon, tTo), b = sunAlt(+arr.lat, +arr.lon, tLdg);
+    if (m === 'm') return a.am && a.alt >= -1 && sunAlt(+dep.lat, +dep.lon, tTo - 3 * 3600e3).alt < 0 && b.alt > 0;
+    if (m === 'd') return a.alt > 0 && b.alt > 0;
+    if (m === 'c') return a.alt > 0 && !b.am && b.alt < 5 && b.alt > -6;
+    if (m === 'n') return a.alt < -6 && b.alt < -6;
+    return true;
+  }
+  window.hgTodFits = fits;
+  function mins() { var t = (document.getElementById('summaryFlightTime') || {}).textContent || '', x = t.match(/(\d+)\s*h\s*(\d+)/); return x ? (+x[1]) * 60 + (+x[2]) : 0; }
+  /* filtre de la recherche (aléatoire / durée) quand on vole maintenant */
+  window.hgTodFilter = function (results, primaryApt, sm) {
+    var m = mode(); if (!m || when !== 'now' || !primaryApt) return results;
+    var tTo = Date.now() + PREP * 60000;
+    var out = results.filter(function (r) {
+      var dep = sm === 'DEPARTURE' ? primaryApt : r, arr = sm === 'DEPARTURE' ? r : primaryApt;
+      return fits(m, dep, arr, tTo, tTo + (r.flightTimeMin || 0) * 60000);
+    });
+    window.hgTodEmpty = out.length === 0 && results.length > 0;
+    return out;
+  };
+  /* tirer au hasard un aéroport de départ où c'est le bon moment maintenant */
+  function pick() {
+    var m = mode(); if (!m) return;
+    var tTo = Date.now() + PREP * 60000, list = [];
+    for (var k in airportsDB) {
+      var a = airportsDB[k]; if (!a || (a.type !== 'large_airport' && a.type !== 'medium_airport') || !/^[A-Z][A-Z0-9]{3}$/.test(a.icao)) continue;
+      var s = sunAlt(a.lat, a.lon, tTo), ok = m === 'm' ? (s.am && s.alt >= 1 && sunAlt(a.lat, a.lon, tTo - 2.5 * 3600e3).alt < 0) : m === 'd' ? s.alt > 15 : m === 'c' ? (!s.am && s.alt > 8 && s.alt < 20) : s.alt < -10;
+      if (ok) list.push(a.icao);
+    }
+    if (!list.length) return;
+    var code = list[Math.floor(Math.random() * list.length)];
+    try { setSearchMode('DEPARTURE'); } catch (e) {}
+    var inp = document.getElementById('primaryAirportInput'); if (inp) { inp.value = code; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+    try { triggerSearch(); } catch (e) {}
+  }
+  var NAME = { night: '🌙 ' + T.night, dawn: '🌅 ' + T.dawn, dusk: '🌇 ' + T.dusk, day: '☀️ ' + T.day, morning: '🌅 ' + T.morning };
+  function nowLine(dep, arr) {
+    var m = mode(); if (!m || when !== 'now') return '';
+    if (!dep || !arr || !Number.isFinite(+dep.lat) || !Number.isFinite(+arr.lat)) return T.noArr;
+    var tTo = Date.now() + PREP * 60000, tL = tTo + mins() * 60000, ok = fits(m, dep, arr, tTo, tL);
+    return T.nowTo + ' ' + NAME[label(+dep.lat, +dep.lon, tTo)] + ' · ' + T.nowLdg + ' ' + NAME[label(+arr.lat, +arr.lon, tL)] +
+           ' — <b class="' + (ok ? 'hg-ok">✓ ' + T.ok : 'hg-ko">✗ ' + T.ko) + '</b>';
+  }
+  function genMode() { try { return generationMode; } catch (e) { return 'MANUAL'; } }
+  function ui() {
+    var box = document.getElementById('hgTodMainBox'); if (!box) return;
+    if (!document.getElementById('hgWhen')) {
+      var w = document.createElement('div'); w.className = 'hg-when'; w.id = 'hgWhen';
+      w.innerHTML = '<button type="button" data-w="now">' + T.now + '</button><button type="button" data-w="set">' + T.set + '</button>';
+      box.insertBefore(w, document.getElementById('hgTodMainR'));
+      w.querySelectorAll('button').forEach(function (b) { b.onclick = function () { when = b.dataset.w; try { localStorage.setItem(KEYW, when); } catch (e) {} try { triggerSearch(); } catch (x) {} paint(); }; });
+      var p = document.createElement('button'); p.type = 'button'; p.id = 'hgPick'; p.className = 'hg-pick'; p.textContent = T.pick; p.onclick = pick;
+      box.appendChild(p);
+      var n = document.createElement('div'); n.id = 'hgNowLine'; n.className = 'hg-todr'; box.appendChild(n);
+    }
+  }
+  function paint() {
+    ui();
+    var m = mode();
+    document.querySelectorAll('#hgWhen button').forEach(function (b) { b.classList.toggle('on', b.dataset.w === when); });
+    var w = document.getElementById('hgWhen'); if (w) w.style.display = m ? '' : 'none';
+    var r = document.getElementById('hgTodMainR'); if (r) r.style.display = (m && when === 'now') ? 'none' : '';
+    var p = document.getElementById('hgPick'); if (p) p.style.display = (m && when === 'now' && genMode() === 'RANDOM') ? '' : 'none';
+    var dep = null, arr = null; try { dep = currentDep; arr = currentArr; } catch (e) {}
+    var n = document.getElementById('hgNowLine'); if (n) n.innerHTML = nowLine(dep, arr) + (window.hgTodEmpty && when === 'now' && m ? '<br><span class="hg-ko">' + T.none + '</span>' : '');
+    var mr = document.getElementById('hgTodMapR');
+    if (mr && m && when === 'now') { var d2 = null, a2 = null; try { d2 = interactiveDep || currentDep; a2 = interactiveArr || currentArr; } catch (e) {} mr.innerHTML = nowLine(d2, a2); }
+  }
+  setInterval(paint, 1500);
+
+  /* zone de nuit en direct sur la carte Plan de vol personnel (nuit foncée, aube et crépuscule plus doux) */
+  var layer = null, lastDraw = 0;
+  function nightImage() {
+    var W = 720, H = 480, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d'), img = g.createImageData(W, H), now = Date.now(), maxY = Math.log(Math.tan(Math.PI / 4 + 85 * Math.PI / 360));
+    for (var y = 0; y < H; y++) {
+      var my = maxY - (2 * maxY) * (y + 0.5) / H, lat = (2 * Math.atan(Math.exp(my)) - Math.PI / 2) * 180 / Math.PI;
+      for (var x = 0; x < W; x += 2) {
+        var lon = -180 + 360 * (x + 0.5) / W, a = sunAlt(lat, lon, now).alt;
+        var al = a >= 0 ? 0 : a <= -12 ? 0.5 : (-a / 12) * 0.5;
+        for (var k = 0; k < 2; k++) { var i = (y * W + x + k) * 4; img.data[i] = 4; img.data[i + 1] = 8; img.data[i + 2] = 22; img.data[i + 3] = Math.round(al * 255); }
+      }
+    }
+    g.putImageData(img, 0, 0); return c.toDataURL();
+  }
+  setInterval(function () {
+    var m = null; try { m = (typeof fullMap !== 'undefined' && fullMap) ? fullMap : null; } catch (e) {}
+    if (!m || typeof L === 'undefined') return;
+    if (layer && Date.now() - lastDraw < 120000 && m.hasLayer(layer)) return;
+    var url = nightImage(); lastDraw = Date.now();
+    if (!m.getPane('hgNight')) { var p = m.createPane('hgNight'); p.style.zIndex = 250; p.style.pointerEvents = 'none'; }
+    if (layer) layer.setUrl(url);
+    else layer = L.imageOverlay(url, [[-85, -180], [85, 180]], { pane: 'hgNight', className: 'hg-nightimg', interactive: false, opacity: 1 }).addTo(m);
+  }, 3000);
 })();
 </script></body>
 </html>
