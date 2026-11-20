@@ -19,7 +19,11 @@ body{display:flex;flex-direction:row}
 #side .bver{font-size:11.5px;color:var(--muted);white-space:nowrap}
 #bRail{align-self:flex-start;margin-left:4px;height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;white-space:nowrap}
 #bRail:hover{color:var(--fg);background:var(--hover)}
-#tabs{display:flex;flex-direction:column;gap:3px}
+#tabs{display:flex;flex-direction:column;gap:3px;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#2a3647 transparent;margin-right:-6px;padding-right:6px}
+#tabs::-webkit-scrollbar{width:6px}#tabs::-webkit-scrollbar-thumb{background:#2a3647;border-radius:6px}
+.sidefoot{flex:none}
+#tabs > *{flex:none}
+@media (max-height:940px){#bDiscord,#bDiscordLfv{padding:5px 9px;margin-bottom:6px}#bDiscord .dc-t > :not(:first-child),#bDiscordLfv .dc-t > :not(:first-child){display:none}#bDiscord .dc-logo svg,#bDiscord .dc-logo img,#bDiscordLfv .dc-logo img{width:24px!important;height:24px!important}.sidefoot{gap:6px}}
 #tabs > button{display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:10px;border:0;background:transparent;color:#B4C0CF;font-weight:500;cursor:pointer;text-align:left;white-space:nowrap}
 #tabs > button svg{flex:none;width:18px;height:18px;stroke:currentColor}
 #tabs > button:hover{background:var(--hover);color:var(--fg)}
