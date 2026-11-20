@@ -6884,14 +6884,7 @@ ${waypoint(arr)}
         host.parentNode.insertBefore(d, host.nextSibling); bind(d);
       }
     }
-    if (!document.getElementById('hgTodMap')) {
-      var sel = document.getElementById('mapCruiseAltitudeSelect'), grp = sel ? sel.parentNode : null;
-      if (grp) {
-        var m = document.createElement('div'); m.className = 'hg-todm'; m.title = T.tip;
-        m.innerHTML = '<span class="lb">' + T.short + '</span>' + seg('hgTodMap') + '<span class="hg-todr" id="hgTodMapR"></span>';
-        grp.parentNode.insertBefore(m, grp.nextSibling); bind(m);
-      }
-    }
+    /* 12.8 : sur la carte Plan de vol personnel, seulement la zone jour / nuit (pas de choix du moment) */
   }
   function paint() {
     build();
@@ -6916,7 +6909,7 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-128-now-js">
 (function () {
-  var T = {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure", "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant", "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil", "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.", "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit"}, KEYW = 'hg_tod_when';
+  var T = {"when": "Heure de MSFS", "now": "⏰ Maintenant (heure réelle)", "set": "🕑 Je règle l'heure", "nowTo": "Décollage", "nowLdg": "Atterrissage", "ok": "convient", "ko": "ne convient pas maintenant", "night": "nuit", "dawn": "aube", "dusk": "crépuscule", "day": "jour", "morning": "matin", "sunset": "coucher du soleil", "pick": "🎲 Trouver un départ où c'est le bon moment", "none": "Aucune destination ne colle maintenant avec ce départ. Essaie « Trouver un départ » ou une autre durée.", "noArr": "choisis le départ et l'arrivée", "nightLayer": "Jour / nuit", "dayC": "Jour", "nightC": "Nuit", "line": "lever / coucher du soleil"}, KEYW = 'hg_tod_when';
   function P(fm) { return window.hgPrep ? window.hgPrep(fm) : 60; }
   var when = 'set'; try { when = localStorage.getItem(KEYW) || 'set'; } catch (e) {}
   function mode() { try { return localStorage.getItem('hg_tod') || ''; } catch (e) { return ''; } }
@@ -7014,24 +7007,50 @@ ${waypoint(arr)}
   function nightImage() {
     var W = 720, H = 480, c = document.createElement('canvas'); c.width = W; c.height = H;
     var g = c.getContext('2d'), img = g.createImageData(W, H), now = Date.now(), maxY = Math.log(Math.tan(Math.PI / 4 + 85 * Math.PI / 360));
-    for (var y = 0; y < H; y++) {
-      var my = maxY - (2 * maxY) * (y + 0.5) / H, lat = (2 * Math.atan(Math.exp(my)) - Math.PI / 2) * 180 / Math.PI;
+    var A = new Float32Array((W / 2) * (H / 2));
+    for (var y = 0; y < H; y += 2) {
+      var my = maxY - (2 * maxY) * (y + 1) / H, lat = (2 * Math.atan(Math.exp(my)) - Math.PI / 2) * 180 / Math.PI;
       for (var x = 0; x < W; x += 2) {
-        var lon = -180 + 360 * (x + 0.5) / W, a = sunAlt(lat, lon, now).alt;
-        var al = a >= 0 ? 0 : a <= -12 ? 0.5 : (-a / 12) * 0.5;
-        for (var k = 0; k < 2; k++) { var i = (y * W + x + k) * 4; img.data[i] = 4; img.data[i + 1] = 8; img.data[i + 2] = 22; img.data[i + 3] = Math.round(al * 255); }
+        var lon = -180 + 360 * (x + 1) / W, a = sunAlt(lat, lon, now).alt;
+        A[(y / 2) * (W / 2) + x / 2] = a;
+        /* jour : rien ; aube / crépuscule (soleil de 0 à -12°) : voile progressif ; nuit : voile bleu nuit */
+        var al = a >= 0 ? 0 : a <= -12 ? 0.42 : (-a / 12) * 0.42;
+        for (var dy = 0; dy < 2; dy++) for (var k = 0; k < 2; k++) { var i = ((y + dy) * W + x + k) * 4; img.data[i] = 6; img.data[i + 1] = 12; img.data[i + 2] = 32; img.data[i + 3] = Math.round(al * 255); }
       }
     }
-    g.putImageData(img, 0, 0); return c.toDataURL();
+    g.putImageData(img, 0, 0);
+    /* ligne jour / nuit (lever ou coucher du soleil) */
+    g.fillStyle = 'rgba(253,186,116,.85)';
+    var w2 = W / 2, h2 = H / 2;
+    for (var yy = 0; yy < h2; yy++) for (var xx = 0; xx < w2; xx++) {
+      var v = A[yy * w2 + xx];
+      if (xx + 1 < w2 && (v >= 0) !== (A[yy * w2 + xx + 1] >= 0)) g.fillRect(xx * 2 + 1, yy * 2, 2, 2);
+      if (yy + 1 < h2 && (v >= 0) !== (A[(yy + 1) * w2 + xx] >= 0)) g.fillRect(xx * 2, yy * 2 + 1, 2, 2);
+    }
+    /* trois copies côte à côte : la zone suit la carte quand on fait le tour du monde */
+    var big = document.createElement('canvas'); big.width = W * 3; big.height = H;
+    var bg = big.getContext('2d'); for (var n = 0; n < 3; n++) bg.drawImage(c, n * W, 0);
+    return big.toDataURL();
+  }
+  function chip(m) {
+    var el = document.getElementById('hgNightChip');
+    if (!el) {
+      var box = m.getContainer(); el = document.createElement('div'); el.id = 'hgNightChip';
+      el.style.cssText = 'position:absolute;left:10px;bottom:10px;z-index:800;pointer-events:none;background:rgba(8,14,24,.82);border:1px solid rgba(56,189,248,.35);border-radius:8px;padding:4px 9px;font:700 11px "Segoe UI",Inter,sans-serif;color:#CBD5E1';
+      box.appendChild(el);
+    }
+    var d = new Date();
+    el.innerHTML = '☀️ ' + T.dayC + ' · <span style="color:#FDBA74">━</span> ' + T.line + ' · 🌙 ' + T.nightC + ' — ' + String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0') + ' UTC';
   }
   setInterval(function () {
     var m = null; try { m = (typeof fullMap !== 'undefined' && fullMap) ? fullMap : null; } catch (e) {}
     if (!m || typeof L === 'undefined') return;
+    chip(m);
     if (layer && Date.now() - lastDraw < 120000 && m.hasLayer(layer)) return;
     var url = nightImage(); lastDraw = Date.now();
     if (!m.getPane('hgNight')) { var p = m.createPane('hgNight'); p.style.zIndex = 250; p.style.pointerEvents = 'none'; }
     if (layer) layer.setUrl(url);
-    else layer = L.imageOverlay(url, [[-85, -180], [85, 180]], { pane: 'hgNight', className: 'hg-nightimg', interactive: false, opacity: 1 }).addTo(m);
+    else layer = L.imageOverlay(url, [[-85, -540], [85, 540]], { pane: 'hgNight', className: 'hg-nightimg', interactive: false, opacity: 1 }).addTo(m);
   }, 3000);
 })();
 </script></body>
