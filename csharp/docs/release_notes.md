@@ -4,6 +4,7 @@
 
 - Après chaque mise à jour, une petite fenêtre **« Quoi de neuf »** résume les nouveautés au premier lancement.
 - Avant de mettre à jour, le bouton **Nouveautés** du bandeau bleu affiche ce résumé dans l'appli.
+- **Moment du vol** : Matin, Journée, Crépuscule ou Nuit, avec les heures en UTC (heure à régler dans MSFS, décollage, arrivée), envoyé à SimBrief.
 - Un bouton **Remarque ou bug ?** en bas du menu ouvre le Discord de l'appli.
 - Et pour ceux qui arrivent de la 12.6 ou avant : le **journal de vol**, le nouveau **suivi de vol** et les menus sur toutes les pages, arrivés avec la 12.7.
 
@@ -15,6 +16,7 @@
 
 - After each update, a small **"What's new"** window sums up the changes at first launch.
 - Before updating, the **What's new** button of the blue banner shows this summary in the app.
+- **Time of flight**: Morning, Day, Dusk or Night, with times in UTC (time to set in MSFS, takeoff, arrival), sent to SimBrief.
 - A **Feedback or bug?** button at the bottom of the menu opens the app's Discord.
 - And for those coming from 12.6 or earlier: the **flight log**, the new **flight tracking** and menus on every page, which came with 12.7.
 

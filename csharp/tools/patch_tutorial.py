@@ -311,6 +311,11 @@ R["en"] += [("<tr><td>METAR · Free flight</td>", "<tr><td>Taxi</td><td>On the g
 R["fr"] += [("<b>▲ décollage</b> au sol et en montée (piste, V1, VR, V2, volets)", "<b>▲ décollage</b> au sol et en montée (piste, V1, VR, V2, volets, et en jaune la température de poussée réduite : <b>SEL TEMP</b> sur Boeing, <b>FLEX</b> sur Airbus)", "<b>SEL TEMP</b> sur Boeing")]
 R["en"] += [("<b>▲ takeoff</b> on the ground and in the climb (runway, V1, VR, V2, flaps)", "<b>▲ takeoff</b> on the ground and in the climb (runway, V1, VR, V2, flaps, and in yellow the reduced-thrust temperature: <b>SEL TEMP</b> on Boeing, <b>FLEX</b> on Airbus)", "<b>SEL TEMP</b> on Boeing")]
 
+
+# 12.8 : moment du vol
+R["fr"] += [('(Gros, Moyens, Aérodromes, chacun avec ON / OFF ;', "(à côté de l'altitude, <b>Moment</b> : Libre, Matin, Journée, Crépuscule ou Nuit — l'appli affiche en UTC l'heure à régler dans MSFS, 1 h avant le décollage pour te préparer, puis le décollage et l'arrivée, calculés avec le lever et le coucher du soleil au départ ; l'heure est envoyée à SimBrief. Le même choix existe dans le FMS, sous Type de vol) (Gros, Moyens, Aérodromes, chacun avec ON / OFF ;", "<b>Moment</b> : Libre, Matin")]
+R["en"] += [('(Large, Medium, Airfields, each with ON / OFF;', '(next to the altitude, <b>Time</b>: Any, Morning, Day, Dusk or Night — the app shows in UTC the time to set in MSFS, 1 h before takeoff to get ready, then takeoff and arrival, computed from sunrise and sunset at departure; the time is sent to SimBrief. The same choice is in the FMS, under Flight type) (Large, Medium, Airfields, each with ON / OFF;', "<b>Time</b>: Any, Morning")]
+
 # 12.3 : VATSIM et IVAO retirés de l'appli — on enlève leur partie du tutoriel (expression régulière, idempotent)
 CUT = {
  "fr": [(r"<p><b>Pilotes VATSIM et IVAO</b></p>.*?jusqu'à la position suivante\.</p>",

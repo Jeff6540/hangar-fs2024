@@ -2128,3 +2128,143 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_taxi127(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---- 12.8 : moment du vol (matin, journée, crépuscule, nuit) avec heures en UTC, envoyé à SimBrief ----
+TOD_TXT = {
+ "fr": {"label": "MOMENT DU VOL", "short": "MOMENT", "none": "Libre", "m": "Matin", "d": "Journée", "c": "Crépuscule", "n": "Nuit",
+        "set": "Régler MSFS", "to": "Décollage", "ldg": "Arrivée", "prep": "préparation, repoussage et roulage compris",
+        "tip": "Calculé avec le lever et le coucher du soleil à l'aéroport de départ. Règle l'heure de MSFS sur « Régler MSFS » pour avoir le temps de te préparer.",
+        "noDep": "choisis un aéroport de départ", "tomorrow": "demain"},
+ "en": {"label": "TIME OF FLIGHT", "short": "TIME", "none": "Any", "m": "Morning", "d": "Day", "c": "Dusk", "n": "Night",
+        "set": "Set MSFS to", "to": "Takeoff", "ldg": "Arrival", "prep": "including preparation, pushback and taxi",
+        "tip": "Computed from sunrise and sunset at the departure airport. Set the MSFS time to \"Set MSFS to\" so you have time to get ready.",
+        "noDep": "pick a departure airport", "tomorrow": "tomorrow"},
+}
+TOD_CSS = r"""<style id="hangar-128-tod">
+.hg-tod{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.hg-tod button{padding:6px 2px;border-radius:6px;border:1px solid transparent;background:#121A24;color:#94A3B8;font:700 10px "Segoe UI",Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.hg-tod button:hover{color:#FFFFFF}
+.hg-tod button.on{background:linear-gradient(180deg,rgba(56,189,248,.22),rgba(56,189,248,.08));border-color:rgba(56,189,248,.85);color:#F1F5F9}
+.hg-todr{margin-top:6px;font:600 11px/1.45 "Segoe UI",Inter,sans-serif;color:#9FB3C8}
+.hg-todr b{color:#FFFFFF}.hg-todr .k{color:#7DD3FC;font-weight:800}
+.hg-todm{display:flex;align-items:center;gap:6px;background:#0B1520;border:1px solid rgba(56,189,248,.4);border-radius:6px;padding:4px 8px}
+.hg-todm .lb{font:800 9px "Segoe UI",Inter,sans-serif;color:#38BDF8;letter-spacing:.05em}
+.hg-todm .hg-tod{grid-template-columns:repeat(5,auto)}.hg-todm .hg-tod button{padding:3px 7px}
+.hg-todm .hg-todr{margin:0;font-size:10.5px;white-space:nowrap}
+</style>"""
+TOD_JS = r"""<script id="hangar-128-tod-js">
+(function () {
+  var T = __TXT__, KEY = 'hg_tod';
+  var mode = ''; try { mode = localStorage.getItem(KEY) || ''; } catch (e) {}
+  var ICON = { '': '⏱', m: '🌅', d: '☀️', c: '🌇', n: '🌙' };
+  /* lever / coucher du soleil (algorithme de la NOAA), en minutes UTC depuis 0 h du jour donné */
+  function sun(lat, lon, date) {
+    var r = Math.PI / 180, start = Date.UTC(date.getUTCFullYear(), 0, 0), N = Math.floor((Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - start) / 864e5);
+    var g = 2 * Math.PI / 365 * (N - 1);
+    var eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    var de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    var noon = 720 - 4 * lon - eq;
+    var c = (Math.cos(90.833 * r) / (Math.cos(lat * r) * Math.cos(de)) - Math.tan(lat * r) * Math.tan(de));
+    if (c > 1) return { noon: noon, rise: null, set: null, polar: 'night' };
+    if (c < -1) return { noon: noon, rise: null, set: null, polar: 'day' };
+    var ha = Math.acos(c) / r;
+    return { noon: noon, rise: noon - 4 * ha, set: noon + 4 * ha };
+  }
+  function hhmm(min) { min = ((Math.round(min) % 1440) + 1440) % 1440; return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0') + ' UTC'; }
+  function flightMin() {
+    var t = (document.getElementById('summaryFlightTime') || {}).textContent || '', m = t.match(/(\d+)\s*h\s*(\d+)/);
+    return m ? (+m[1]) * 60 + (+m[2]) : 0;
+  }
+  /* heure de décollage selon le moment ; MSFS se règle 60 min plus tôt (préparation, repoussage, roulage) */
+  var PREP = 60;
+  function plan(dep) {
+    if (!mode || !dep || !Number.isFinite(+dep.lat)) return null;
+    var now = new Date(), day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    function calc(d) {
+      var s = sun(+dep.lat, +dep.lon, d), to;
+      if (mode === 'd') to = s.noon;
+      else if (s.rise == null) to = s.polar === 'day' ? (mode === 'n' ? s.noon + 720 : s.noon) : (mode === 'n' ? s.noon + 720 : s.noon);
+      else if (mode === 'm') to = s.rise + 60;
+      else if (mode === 'c') to = s.set - 30;
+      else to = s.set + 120;
+      return to;
+    }
+    var to = calc(day), tomorrow = false;
+    if (day.getTime() + (to - PREP) * 60000 < now.getTime()) { day = new Date(day.getTime() + 864e5); to = calc(day); tomorrow = true; }
+    var fm = flightMin();
+    return { day: day, set: to - PREP, to: to, ldg: fm ? to + fm : null, tomorrow: tomorrow };
+  }
+  function result(dep) {
+    if (!mode) return '';
+    var p = plan(dep); if (!p) return '<span>' + T.noDep + '</span>';
+    return '<span class="k">' + T.set + '</span> <b>' + hhmm(p.set) + '</b>' + (p.tomorrow ? ' (' + T.tomorrow + ')' : '') +
+           ' · ' + T.to + ' <b>' + hhmm(p.to) + '</b>' + (p.ldg != null ? ' · ' + T.ldg + ' <b>' + hhmm(p.ldg) + '</b>' : '');
+  }
+  function seg(id) {
+    return '<div class="hg-tod" id="' + id + '">' + ['', 'm', 'd', 'c', 'n'].map(function (k) {
+      return '<button type="button" data-m="' + k + '" title="' + (k ? T[k] : T.none) + '">' + ICON[k] + ' ' + (k ? T[k] : T.none) + '</button>'; }).join('') + '</div>';
+  }
+  function bind(root) {
+    root.querySelectorAll('button[data-m]').forEach(function (b) {
+      b.onclick = function () { mode = b.dataset.m; try { localStorage.setItem(KEY, mode); } catch (e) {} paint(); };
+    });
+  }
+  function depMain() { try { return currentDep; } catch (e) { return null; } }
+  function depMap() { try { return interactiveDep || currentDep; } catch (e) { return null; } }
+  function build() {
+    if (!document.getElementById('hgTodMain')) {
+      var ifr = document.getElementById('btnTypeIfr'), grid = ifr ? ifr.closest('.al-seg') : null, host = grid ? grid.parentNode.parentNode : null;
+      if (host) {
+        var d = document.createElement('div'); d.id = 'hgTodMainBox'; d.style.marginTop = '10px'; d.title = T.tip;
+        d.innerHTML = '<label class="block text-[10px] font-bold text-slate-400 mb-1 tracking-wider uppercase">' + T.label + '</label>' + seg('hgTodMain') + '<div class="hg-todr" id="hgTodMainR"></div>';
+        host.parentNode.insertBefore(d, host.nextSibling); bind(d);
+      }
+    }
+    if (!document.getElementById('hgTodMap')) {
+      var sel = document.getElementById('mapCruiseAltitudeSelect'), grp = sel ? sel.parentNode : null;
+      if (grp) {
+        var m = document.createElement('div'); m.className = 'hg-todm'; m.title = T.tip;
+        m.innerHTML = '<span class="lb">' + T.short + '</span>' + seg('hgTodMap') + '<span class="hg-todr" id="hgTodMapR"></span>';
+        grp.parentNode.insertBefore(m, grp.nextSibling); bind(m);
+      }
+    }
+  }
+  function paint() {
+    build();
+    document.querySelectorAll('.hg-tod button[data-m]').forEach(function (b) { b.classList.toggle('on', b.dataset.m === mode); });
+    var a = document.getElementById('hgTodMainR'); if (a) a.innerHTML = result(depMain()) + (mode ? '<br><span style="font-size:10px;color:#64748B">' + T.prep + '</span>' : '');
+    var b = document.getElementById('hgTodMapR'); if (b) b.innerHTML = result(depMap());
+  }
+  setInterval(paint, 1500); paint();
+  /* SimBrief : date et heure de départ (cales enlevées 15 min avant le décollage) */
+  if (typeof buildSimbriefUrl === 'function') {
+    var orig = buildSimbriefUrl;
+    buildSimbriefUrl = function (origin) {
+      var url = orig.apply(this, arguments), dep = null;
+      try { var d = airportsDB[String(origin || '').toUpperCase()]; if (d) dep = { lat: d.lat, lon: d.lon }; } catch (e) {}
+      var p = plan(dep || depMain()); if (!p) return url;
+      var off = p.to - 15, day = new Date(p.day.getTime() + Math.floor(off / 1440) * 864e5), mm = ((Math.round(off) % 1440) + 1440) % 1440;
+      var MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      var date = String(day.getUTCDate()).padStart(2, '0') + MON[day.getUTCMonth()] + String(day.getUTCFullYear()).slice(2);
+      return url + '&date=' + date + '&deph=' + Math.floor(mm / 60) + '&depm=' + (mm % 60);
+    };
+  }
+})();
+</script>"""
+
+
+def patch_tod128(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-128-tod" in s:
+        return
+    import json
+    s = s.replace("</head>", TOD_CSS + "</head>", 1)
+    s = s.replace("</body>", TOD_JS.replace("__TXT__", json.dumps(TOD_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_tod128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
