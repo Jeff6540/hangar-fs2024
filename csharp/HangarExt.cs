@@ -511,6 +511,12 @@ namespace HangarFS2024
                         r.Text(NavData.Query(k, s1, w1, n1, e1, 1500).ToString(Formatting.None), "application/json; charset=utf-8");
                         return;
                     }
+                case "/procs":
+                    {
+                        string icao; q.TryGetValue("icao", out icao);
+                        r.Text(NavData.Procs(icao).ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
                 case "/approaches":
                     {
                         string icao; q.TryGetValue("icao", out icao);

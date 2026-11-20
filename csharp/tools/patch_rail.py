@@ -12,6 +12,7 @@ ITEMS = [  # clé, icône (chemins SVG du menu principal), libellé FR, libellé
  ("vol", '<path d="M2 16l20-6-20-6 4 6z"/>', "Vol SimBrief", "SimBrief flight"),
  ("plan", '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>', "Plan de vol", "Flight plan"),
  ("perso", '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><circle cx="15" cy="11" r="2.5"/>', "Plan de vol personnel", "Personal flight plan"),
+ ("vfr", '<path d="M3 20l5-9 4 5 3-4 6 8z"/><circle cx="17" cy="6" r="2"/>', "Plan VFR", "VFR plan"),
  ("#", "", "Voler", "Fly"),
  ("track", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Suivi de vol", "Flight tracking"),
  ("journal", '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/>', "Journal de vol", "Flight log"),
@@ -45,7 +46,7 @@ JS = r"""<script id="hangar-127-rail-js">
 (function () {
   var ITEMS = __ITEMS__, HERE = '__HERE__', BRAND = '__BRAND__';
   function go(k) {
-    if (HERE === 'dispatch' && window.hgShow) { window.hgShow(/^(plan|track|journal|perso|rglobal|rva|rvradar)$/.test(k) ? k : '') || post(k); return; }
+    if (HERE === 'dispatch' && window.hgShow) { window.hgShow(/^(plan|track|journal|perso|vfr|rglobal|rva|rvradar)$/.test(k) ? k : '') || post(k); return; }
     post(k);
   }
   function post(k) {

@@ -56,7 +56,7 @@ namespace HangarFS2024
         public static void Stop() { stopAsked = true; }
 
         // ------------------------------------------------------------ import
-        const uint REQ_APT = 1, REQ_WPT = 2, REQ_NDB = 3, REQ_VOR = 4, DEF_APPR = 100, REQ_BASE = 1000;
+        const uint REQ_APT = 1, REQ_WPT = 2, REQ_NDB = 3, REQ_VOR = 4, DEF_APPR = 100, DEF_PROC = 101, REQ_BASE = 1000, REQ_PROC = 5000000;
 
         static void Run(string dll)
         {
@@ -80,16 +80,22 @@ namespace HangarFS2024
 
                 // 2) approches, aéroport par aéroport
                 var appr = Approaches(c, apts);
+                // 3) départs (SID) et arrivées (STAR) des aéroports qui ont des procédures ; en cas d'échec on garde le reste
+                JObject procs;
+                try { procs = Procedures(c, appr.Properties().Select(p => p.Name).ToList()); }
+                catch (Exception e) when (e.Message != "stop") { procs = new JObject(); }
 
                 Write(Path.Combine(tmp, "waypoints.json"), wpts);
                 Write(Path.Combine(tmp, "vors.json"), vors);
                 Write(Path.Combine(tmp, "ndbs.json"), ndbs);
                 File.WriteAllText(Path.Combine(tmp, "approaches.json"), appr.ToString(Formatting.None), new UTF8Encoding(false));
+                File.WriteAllText(Path.Combine(tmp, "procs.json"), procs.ToString(Formatting.None), new UTF8Encoding(false));
                 int nAppr = appr.Properties().Sum(p => ((JArray)p.Value).Count);
                 var meta = new JObject
                 {
                     ["date"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), ["airports"] = apts.Count, ["waypoints"] = wpts.Count,
                     ["vors"] = vors.Count(v => ((int)v[6] & 2) == 0), ["ils"] = vors.Count(v => ((int)v[6] & 2) != 0), ["ndbs"] = ndbs.Count, ["approaches"] = nAppr,
+                    ["sids"] = procs.Properties().Sum(p => ((JArray)p.Value["d"]).Count), ["stars"] = procs.Properties().Sum(p => ((JArray)p.Value["a"]).Count),
                 };
                 File.WriteAllText(Path.Combine(tmp, "meta.json"), meta.ToString(Formatting.None));
                 foreach (var f in Directory.GetFiles(tmp))
@@ -99,7 +105,7 @@ namespace HangarFS2024
                     File.Move(f, dst);
                 }
                 try { Directory.Delete(tmp, true); } catch (Exception) { }
-                lock (Gate) { cache.Clear(); apprCache = null; }
+                lock (Gate) { cache.Clear(); apprCache = null; procCache = null; }
                 Set("done", "", msg: null);
             }
             catch (Exception e)
@@ -272,6 +278,107 @@ namespace HangarFS2024
             return outRes;
         }
 
+        /// <summary>SID et STAR : { ICAO: { d: [départs], a: [arrivées] } } ; chaque procédure = { n, rw: [{r, l}], en: [{n, l}], c: [branches communes] }.</summary>
+        static JObject Procedures(SimConnectClient c, List<string> icaos)
+        {
+            var defs = new List<string> { "OPEN AIRPORT", "N_DEPARTURES" };
+            foreach (var kind in new[] { "DEPARTURE", "ARRIVAL" })
+            {
+                defs.AddRange(new[] { "OPEN " + kind, "NAME",
+                    "OPEN RUNWAY_TRANSITION", "RUNWAY_NUMBER", "RUNWAY_DESIGNATOR", "OPEN APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE", "CLOSE APPROACH_LEG", "CLOSE RUNWAY_TRANSITION",
+                    "OPEN ENROUTE_TRANSITION", "NAME", "OPEN APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE", "CLOSE APPROACH_LEG", "CLOSE ENROUTE_TRANSITION",
+                    "OPEN APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE", "CLOSE APPROACH_LEG",
+                    "CLOSE " + kind });
+            }
+            defs.Add("CLOSE AIRPORT");
+            foreach (var f in defs) if (c.AddFac(DEF_PROC, f) != 0) return new JObject();
+
+            var res = new JObject();
+            var pending = new Dictionary<uint, string>();
+            var objs = new Dictionary<uint, JObject>();
+            var byReq = new Dictionary<uint, JObject>();
+            int next = 0, done = 0, total = icaos.Count, fails = 0;
+            uint req = REQ_PROC;
+            var last = DateTime.UtcNow;
+            Set("run", "procs", 0, total);
+            while (done < total)
+            {
+                while (pending.Count < 24 && next < total)
+                {
+                    req++;
+                    string icao = icaos[next]; next++;
+                    if (c.ReqFac(DEF_PROC, req, icao, "") == 0) { pending[req] = icao; byReq[req] = new JObject { ["d"] = new JArray(), ["a"] = new JArray() }; }
+                    else done++;
+                }
+                byte[] b;
+                try { b = Wait(c, ref last, 20); }
+                catch (TimeoutException)
+                {
+                    done += pending.Count; foreach (var k in pending.Keys) byReq.Remove(k); pending.Clear(); last = DateTime.UtcNow;
+                    if (++fails >= 3 && res.Count == 0) return res;    // MSFS ne sait pas répondre à cette demande : on n'insiste pas
+                    continue;
+                }
+                if (b == null || b.Length < 16) continue;
+                uint id = BitConverter.ToUInt32(b, 8);
+                if (id == 29)
+                {
+                    uint r = BitConverter.ToUInt32(b, 12);
+                    string icao;
+                    if (pending.TryGetValue(r, out icao))
+                    {
+                        pending.Remove(r); done++;
+                        var o = byReq[r]; byReq.Remove(r);
+                        Func<JToken, JToken> clean = list => new JArray(((JArray)list).OfType<JObject>().Select(pr =>
+                        {
+                            pr.Remove("u");
+                            foreach (var key in new[] { "rw", "en" }) { foreach (var t in (JArray)pr[key]) ((JObject)t).Remove("u"); pr[key] = new JArray(((JArray)pr[key]).Where(t => ((JArray)t["l"]).Count > 0)); }
+                            return pr;
+                        }).Where(pr => ((JArray)pr["c"]).Count + ((JArray)pr["rw"]).Count + ((JArray)pr["en"]).Count > 0));
+                        o["d"] = clean(o["d"]); o["a"] = clean(o["a"]);
+                        if (((JArray)o["d"]).Count + ((JArray)o["a"]).Count > 0) res[icao] = o;
+                        if (done % 25 == 0) Set("run", "procs", done, total);
+                    }
+                    continue;
+                }
+                if (id != 28 || b.Length < 40) continue;
+                uint ureq = BitConverter.ToUInt32(b, 12), uid = BitConverter.ToUInt32(b, 16), parent = BitConverter.ToUInt32(b, 20), dtype = BitConverter.ToUInt32(b, 24);
+                JObject ap;
+                if (!byReq.TryGetValue(ureq, out ap)) continue;
+                const int D = 40;
+                if ((dtype == 10 || dtype == 11) && b.Length >= D + 8)            // départ / arrivée
+                {
+                    var pr = new JObject { ["u"] = uid, ["n"] = Txt(b, D, 8), ["rw"] = new JArray(), ["en"] = new JArray(), ["c"] = new JArray() };
+                    objs[uid] = pr; ((JArray)ap[dtype == 10 ? "d" : "a"]).Add(pr);
+                }
+                else if (dtype == 12 && b.Length >= D + 8)                         // transition de piste
+                {
+                    JObject pr;
+                    if (!objs.TryGetValue(parent, out pr) || pr["rw"] == null) continue;
+                    int rn = BitConverter.ToInt32(b, D), rd = BitConverter.ToInt32(b, D + 4);
+                    var t = new JObject { ["u"] = uid, ["r"] = rn >= 1 && rn <= 36 ? rn.ToString("00") + (rd >= 0 && rd < Desig.Length ? Desig[rd] : "") : "ALL", ["l"] = new JArray() };
+                    objs[uid] = t; ((JArray)pr["rw"]).Add(t);
+                }
+                else if (dtype == 13 && b.Length >= D + 8)                         // transition en route
+                {
+                    JObject pr;
+                    if (!objs.TryGetValue(parent, out pr) || pr["en"] == null) continue;
+                    var t = new JObject { ["u"] = uid, ["n"] = Txt(b, D, 8), ["l"] = new JArray() };
+                    objs[uid] = t; ((JArray)pr["en"]).Add(t);
+                }
+                else if (dtype == 7 && b.Length >= D + 36)                         // branche
+                {
+                    string fix = Txt(b, D + 4, 8);
+                    double lat = BitConverter.ToDouble(b, D + 20), lon = BitConverter.ToDouble(b, D + 28);
+                    if (fix == "" || (lat == 0 && lon == 0) || Math.Abs(lat) > 90 || Math.Abs(lon) > 180) continue;
+                    JObject o;
+                    if (!objs.TryGetValue(parent, out o)) continue;
+                    var leg = new JArray(fix, Math.Round(lat, 5), Math.Round(lon, 5), BitConverter.ToInt32(b, D));
+                    if (o["l"] != null) ((JArray)o["l"]).Add(leg); else if (o["c"] != null) ((JArray)o["c"]).Add(leg);
+                }
+            }
+            return res;
+        }
+
         static void Write(string path, List<object[]> rows)
         {
             using (var w = new StreamWriter(path, false, new UTF8Encoding(false)))
@@ -285,7 +392,20 @@ namespace HangarFS2024
 
         // ------------------------------------------------------------ lecture (page Plan VFR)
         static readonly Dictionary<string, JArray> cache = new Dictionary<string, JArray>();
-        static JObject apprCache;
+        static JObject apprCache, procCache;
+
+        public static JToken Procs(string icao)
+        {
+            lock (Gate)
+            {
+                if (procCache == null)
+                {
+                    string f = Path.Combine(Dir, "procs.json");
+                    try { procCache = File.Exists(f) ? JObject.Parse(File.ReadAllText(f)) : new JObject(); } catch (Exception) { procCache = new JObject(); }
+                }
+                return procCache[(icao ?? "").ToUpperInvariant()] ?? new JObject { ["d"] = new JArray(), ["a"] = new JArray() };
+            }
+        }
 
         static JArray Load(string name)
         {
