@@ -2181,6 +2181,7 @@ TOD_JS = r"""<script id="hangar-128-tod-js">
   var HEAVY = /^(A30|A310|A33|A34|A35|A38|A3ST|A124|A225|AN12|AN22|B70|B74|B76|B77|B78|C17$|C5$|C5M|DC10|IL76|IL96|KC10|KC13|KC46|L101|MD11)/;
   window.hgPrep = function (fm) {
     var ac = ((document.getElementById('aircraftSelect') || {}).value || '').toUpperCase();
+    try { var f = aircraftDB.find(function (a) { return a.code === ac; }); if (f && f.cat === 'heavy') return 60; if (f && f.cat !== 'heavy' && !HEAVY.test(ac)) return (fm == null ? flightMin() : fm) > 240 ? 60 : 30; } catch (e) {}
     if (ac && HEAVY.test(ac)) return 60;
     if (fm == null) fm = flightMin();
     return fm > 240 ? 60 : 30;
@@ -2350,6 +2351,7 @@ NOW_JS = r"""<script id="hangar-128-now-js">
     var tTo = Date.now() + P() * 60000, list = [];
     for (var k in airportsDB) {
       var a = airportsDB[k]; if (!a || (a.type !== 'large_airport' && a.type !== 'medium_airport') || !/^[A-Z][A-Z0-9]{3}$/.test(a.icao)) continue;
+      if (window.hgAptFits && !window.hgAptFits(a, 'takeoff')) continue;
       var s = sunAlt(a.lat, a.lon, tTo), ok = m === 'm' ? (s.am && s.alt >= 1 && sunAlt(a.lat, a.lon, tTo - 2.5 * 3600e3).alt < 0) : m === 'd' ? s.alt > 15 : m === 'c' ? (!s.am && s.alt > 8 && s.alt < 20) : s.alt < -10;
       if (ok) list.push(a.icao);
     }
@@ -2497,3 +2499,48 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_free128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+# 12.8 : en Aléatoire / durée, les destinations correspondent à l'avion choisi
+# (avion de ligne : vrais aéroports OACI, pistes compatibles d'abord ; gros porteur : grands aéroports)
+ACFIT_ANCH = ("            results.sort((a, b) => (COMPAT_RANK[a.compat.status] - COMPAT_RANK[b.compat.status]) || (a.timeDiff - b.timeDiff));",
+              "            if (window.hgAcFit) { const _f = window.hgAcFit(results); results.length = 0; Array.prototype.push.apply(results, _f); }   /* 12.8 : destinations adaptées à l'avion */\n            results.sort((a, b) => (COMPAT_RANK[a.compat.status] - COMPAT_RANK[b.compat.status]) || (a.timeDiff - b.timeDiff));")
+ACFIT_JS = r"""<script id="hangar-128-acfit-js">
+(function () {
+  function ac() { try { return getSelectedAircraft(); } catch (e) { return null; } }
+  function airliner(a) { return !!a && (a.cat === 'heavy' || (a.cat === 'jet' && (a.minRwy || 0) >= 5000)); }
+  /* l'aéroport convient-il à l'avion choisi ? */
+  window.hgAptFits = function (apt, phase) {
+    var a = ac(); if (!a || !apt) return true;
+    if (airliner(a)) {
+      if (!/^[A-Z]{4}$/.test(apt.icao || '')) return false;
+      if (a.cat === 'heavy' ? apt.type !== 'large_airport' : (apt.type !== 'large_airport' && apt.type !== 'medium_airport')) return false;
+    }
+    try { return evaluateAirportForAircraft(apt.icao, a, phase || 'takeoff').status === 'ok'; } catch (e) { return true; }
+  };
+  window.hgAcFit = function (results) {
+    var a = ac(); if (!a || !airliner(a)) return results;
+    var real = results.filter(function (r) {
+      if (!/^[A-Z]{4}$/.test(r.icao || '')) return false;
+      return a.cat === 'heavy' ? r.type === 'large_airport' : (r.type === 'large_airport' || r.type === 'medium_airport');
+    });
+    var ok = real.filter(function (r) { return r.compat && r.compat.status === 'ok'; });
+    return ok.length ? ok : real;
+  };
+})();
+</script>"""
+
+
+def patch_acfit128(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-128-acfit-js" in s:
+        return
+    a, b = ACFIT_ANCH
+    assert s.count(a) == 1, path
+    s = s.replace(a, b).replace("</body>", ACFIT_JS + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_acfit128(os.path.join(_web, "dispatch_%s.html" % _l), _l)
