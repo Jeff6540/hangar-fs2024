@@ -2712,6 +2712,43 @@ html body.hg129 #resultsList{max-height:min(46vh,460px)!important}
 #hgRail .it.on{background:rgba(56,189,248,.18);color:#7DD3FC;box-shadow:inset 3px 0 0 #38BDF8}
 html body{padding-left:52px!important;box-sizing:border-box}
 html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,html body #aircraftDropdownModal{left:52px!important}
+</style><style id="hangar-129-vfr">
+#hgVfr{position:fixed;left:52px;right:0;top:0;bottom:0;z-index:3000;display:none;flex-direction:column;background:#070d18;color:#cbd5e1;font:13px "Segoe UI",Inter,sans-serif}
+#hgVfr.on{display:flex}
+#hgVfr .vb{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(180deg,#0d1a2e,#091322);border-bottom:1px solid #16294a;flex-wrap:wrap}
+#hgVfr .vb2{padding:7px 14px;background:#0a1322}
+#hgVfr button.b,#hgVfr select{border:1px solid #1e3a5f;background:#0c1729;color:#cbd5e1;border-radius:9px;padding:6px 11px;font:700 12px "Segoe UI",Inter,sans-serif;cursor:pointer;white-space:nowrap}
+#hgVfr button.b:hover{border-color:#38bdf8;color:#fff}
+#hgVfr .t{font:800 14px "Segoe UI";color:#e2e8f0;letter-spacing:.06em;margin:0 4px}
+#hgVfr .sum{border:1px solid rgba(52,211,153,.45);border-radius:999px;padding:6px 13px;color:#6ee7b7;font-weight:700;font-size:12px}
+#hgVfr .grow{flex:1}
+#hgVfr button.sb{background:#38bdf8;color:#04121f;border-color:#38bdf8}
+#hgVfr button.pln{background:#f59e0b;color:#1a1003;border-color:#f59e0b}
+#hgVfr .gl{font:700 10px "Segoe UI";letter-spacing:.1em;color:#64748b}
+#hgVfr button.tg{display:flex;align-items:center;gap:7px}
+#hgVfr button.tg i{width:8px;height:8px;border-radius:50%;background:#334155;display:inline-block}
+#hgVfr button.tg.on{background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.6);color:#e0f2fe}
+#hgVfr button.tg.on i{background:var(--c,#38bdf8);box-shadow:0 0 6px var(--c,#38bdf8)}
+#hgVfr .vm{flex:1;display:flex;min-height:0}
+#hgVfrMap{flex:1;position:relative;background:#0b1220}
+#hgVfr .side{width:340px;background:#0b1526;border-left:1px solid #16294a;padding:14px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+#hgVfr .h{font:800 12.5px "Segoe UI";color:#7dd3fc;letter-spacing:.06em}
+#hgVfr table{width:100%;border-collapse:collapse;font-size:12.5px}
+#hgVfr th{color:#64748b;font-weight:700;text-align:left;padding:5px 4px;border-bottom:1px solid #1e3a5f;font-size:10.5px;letter-spacing:.05em}
+#hgVfr td{padding:7px 4px;border-bottom:1px solid #132339}
+#hgVfr td b{color:#f1f5f9}
+#hgVfr .tot{display:flex;justify-content:space-between;align-items:center;background:#0e1f36;border:1px solid #1e3a5f;border-radius:10px;padding:9px 12px;font-weight:700}
+#hgVfr .tot b{color:#38bdf8;font:800 18px Consolas,monospace}
+#hgVfr .hint{color:#64748b;font-size:11.5px;line-height:1.5;border:1px dashed #1e3a5f;border-radius:10px;padding:10px}
+#hgVfr .tip{position:absolute;left:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid rgba(56,189,248,.35);border-radius:9px;padding:6px 10px;font-size:12px;pointer-events:none}
+#hgVfr .st{position:absolute;right:12px;bottom:12px;z-index:900;background:rgba(8,14,24,.88);border:1px solid #1e3a5f;border-radius:9px;padding:5px 9px;font-size:11px;color:#94a3b8;pointer-events:none}
+#hgVfrMap .hg-dark{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.92) saturate(.6)}
+.hgv-ic{background:none;border:0}
+.hgv-lab{background:rgba(8,14,24,.82)!important;border:1px solid #1e3a5f!important;color:#e2e8f0!important;font:700 11px "Segoe UI",Inter,sans-serif!important;box-shadow:none!important;padding:1px 5px!important}
+.hgv-lab::before{display:none!important}
+.hgv-leg{background:rgba(40,8,48,.85)!important;border:1px solid #e879f9!important;color:#f5d0fe!important;font:800 11.5px "Segoe UI",Inter,sans-serif!important;box-shadow:none!important;padding:1px 6px!important}
+.hgv-leg::before{display:none!important}
+#mapToolbar button.hgv-open{background:linear-gradient(180deg,rgba(232,121,249,.25),rgba(232,121,249,.1))!important;border:1px solid rgba(232,121,249,.7)!important;color:#fae8ff!important;border-radius:10px!important;padding:6px 12px!important;font:800 12px "Segoe UI",Inter,sans-serif!important}
 </style></head>
 <body class="flex flex-col">
 
@@ -7271,6 +7308,220 @@ ${waypoint(arr)}
     r.addEventListener('click', function (e) { var b = e.target.closest('.it'); if (b) go(b.dataset.k); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
+</script><script id="hangar-129-vfr-js">
+(function () {
+  var T = {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point", "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes", "names": "Names", "bg": "Map background", "bgs": ["Terrain", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO", "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).", "tip": "Click anywhere to add a point · drag a point to move it · right-click a point to remove it", "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).", "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).", "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: remove"}, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
+  var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
+  var show = { apt: true, vor: true, ndb: true, rwy: true, names: false }, bgIdx = 0;
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.pts) { pts = sv.pts; wpN = sv.wpN || 0; } if (sv && sv.show) show = Object.assign(show, sv.show); if (sv && sv.bg != null) bgIdx = sv.bg; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ pts: pts, wpN: wpN, show: show, bg: bgIdx })); } catch (e) {} }
+  function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function csv(line) { var r = [], s = '', q = false; for (var i = 0; i < line.length; i++) { var c = line[i]; if (q) { if (c === '"') { if (line[i + 1] === '"') { s += '"'; i++; } else q = false; } else s += c; } else if (c === '"') q = true; else if (c === ',') { r.push(s); s = ''; } else s += c; } r.push(s); return r; }
+  var R = Math.PI / 180;
+  function dist(a, b) { var dl = (b.lat - a.lat) * R, dn = (b.lon - a.lon) * R, x = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a.lat * R) * Math.cos(b.lat * R) * Math.sin(dn / 2) * Math.sin(dn / 2); return 3440.065 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)); }
+  function brg(a, b) { var y = Math.sin((b.lon - a.lon) * R) * Math.cos(b.lat * R), x = Math.cos(a.lat * R) * Math.sin(b.lat * R) - Math.sin(a.lat * R) * Math.cos(b.lat * R) * Math.cos((b.lon - a.lon) * R); return (Math.atan2(y, x) / R + 360) % 360; }
+  function dest(p, b, nm) { var d = nm / 3440.065, la = p.lat * R, lo = p.lon * R, br = b * R; var la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(br)); var lo2 = lo + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2)); return { lat: la2 / R, lon: ((lo2 / R + 540) % 360) - 180 }; }
+  function magVar(p) { var best = null, bd = 1e9; for (var i = 0; i < nav.length; i++) { var n = nav[i]; if (n.mv == null) continue; var d = Math.abs(n.lat - p.lat) + Math.abs(n.lon - p.lon) * Math.cos(p.lat * R); if (d < bd) { bd = d; best = n; } } return best && bd < 6 ? best.mv : 0; }
+  function hdg(a, b) { var m = { lat: (a.lat + b.lat) / 2, lon: (a.lon + b.lon) / 2 }; var h = Math.round((brg(a, b) - magVar(m) + 720) % 360); return String(h === 0 ? 360 : h).padStart(3, '0') + '°'; }
+  function freq(n) { return n.t === 'NDB' || n.t === 'NDB-DME' ? String(Math.round(n.f)) : (n.f / 1000).toFixed(2); }
+  /* ---------- données OurAirports ---------- */
+  function loadData() {
+    if (loaded || loading) return; loading = true; status(T.load);
+    var a = fetch(BASE + 'navaids.csv').then(function (r) { return r.text(); }).then(function (t) {
+      var L1 = t.split(/\r?\n/), h = csv(L1[0]).map(function (x) { return x.trim().toLowerCase(); }), c = function (n) { return h.indexOf(n); };
+      var ci = { id: c('ident'), nm: c('name'), t: c('type'), f: c('frequency_khz'), la: c('latitude_deg'), lo: c('longitude_deg'), mv: c('magnetic_variation_deg') };
+      for (var i = 1; i < L1.length; i++) { if (!L1[i]) continue; var r = csv(L1[i]); var la = parseFloat(r[ci.la]), lo = parseFloat(r[ci.lo]); if (!isFinite(la) || !isFinite(lo)) continue;
+        var t2 = (r[ci.t] || '').toUpperCase(); if (t2 === 'TACAN') continue;
+        var mv = parseFloat(r[ci.mv]); nav.push({ id: (r[ci.id] || '').toUpperCase(), nm: r[ci.nm] || '', t: t2, f: parseFloat(r[ci.f]) || 0, lat: la, lon: lo, mv: isFinite(mv) ? mv : null }); }
+    }).catch(function () {});
+    var b = fetch(BASE + 'runways.csv').then(function (r) { return r.text(); }).then(function (t) {
+      var L1 = t.split(/\r?\n/);
+      for (var i = 1; i < L1.length; i++) { if (!L1[i]) continue; var r = csv(L1[i]); if (r[7] === '1') continue;
+        var a1 = parseFloat(r[9]), o1 = parseFloat(r[10]), a2 = parseFloat(r[15]), o2 = parseFloat(r[16]); if (!isFinite(a1) || !isFinite(o1) || !isFinite(a2) || !isFinite(o2)) continue;
+        var k = (r[2] || '').toUpperCase(); (rwy[k] = rwy[k] || []).push({ a: { lat: a1, lon: o1 }, b: { lat: a2, lon: o2 }, n1: r[8] || '', n2: r[14] || '' }); }
+    }).catch(function () {});
+    Promise.all([a, b]).then(function () { loaded = true; loading = false; status(nav.length.toLocaleString() + ' ' + T.loaded); draw(); drawRoute(); });
+  }
+  function status(s) { var e = document.getElementById('hgVfrSt'); if (e) e.textContent = s; }
+  /* ---------- couches ---------- */
+  function svgVor(dme) { return '<svg width="26" height="26" viewBox="-13 -13 26 26"><polygon points="-10,0 -5,-8.7 5,-8.7 10,0 5,8.7 -5,8.7" fill="rgba(10,20,40,.55)" stroke="#60a5fa" stroke-width="2.2"/>' + (dme ? '<rect x="-10" y="-8.7" width="20" height="17.4" fill="none" stroke="#60a5fa" stroke-width="1.3"/>' : '') + '<circle r="2.2" fill="#60a5fa"/></svg>'; }
+  function svgNdb() { return '<svg width="22" height="22" viewBox="-11 -11 22 22"><circle r="8" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="2 2.6"/><circle r="2.3" fill="#c084fc"/></svg>'; }
+  function svgApt(big) { var c = big ? '#38bdf8' : '#f59e0b'; return '<svg width="18" height="18" viewBox="-9 -9 18 18"><circle r="6" fill="#0f172a" stroke="' + c + '" stroke-width="2.6"/></svg>'; }
+  function addPtFrom(o) { add({ lat: o.lat, lon: o.lon, name: o.name, kind: o.kind }); }
+  function mk(o, html, size, tip) {
+    var m = L.marker([o.lat, o.lon], { icon: L.divIcon({ className: 'hgv-ic', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] }), keyboard: false });
+    m.bindTooltip(tip, { className: 'hgv-lab', direction: 'right', offset: [8, 0], permanent: !!show.names });
+    m.on('click', function (e) { L.DomEvent.stop(e); addPtFrom(o); });
+    return m;
+  }
+  function draw() {
+    if (!map) return;
+    ['apt', 'nav', 'rwy'].forEach(function (k) { if (!lyr[k]) lyr[k] = L.layerGroup().addTo(map); lyr[k].clearLayers(); });
+    var z = map.getZoom(), bb = map.getBounds().pad(0.15), n = 0;
+    if (show.rwy && z >= 9 && loaded) {
+      var shown = 0;
+      Object.keys(airportsDB).forEach(function (k) {
+        var ap = airportsDB[k]; if (shown > 160 || !bb.contains([ap.lat, ap.lon])) return;
+        var list = rwy[ap.ident] || rwy[k]; if (!list) return; shown++;
+        list.forEach(function (w) {
+          L.polyline([[w.a.lat, w.a.lon], [w.b.lat, w.b.lon]], { color: '#f8fafc', weight: 5, opacity: .9, interactive: false }).addTo(lyr.rwy);
+          var b1 = brg(w.b, w.a), e1 = dest(w.a, b1, 5), e2 = dest(w.b, (b1 + 180) % 360, 5);
+          L.polyline([[w.a.lat, w.a.lon], [e1.lat, e1.lon]], { color: '#fbbf24', weight: 1.6, dashArray: '7 6', opacity: .9, interactive: false }).addTo(lyr.rwy);
+          L.polyline([[w.b.lat, w.b.lon], [e2.lat, e2.lon]], { color: '#fbbf24', weight: 1.6, dashArray: '7 6', opacity: .9, interactive: false }).addTo(lyr.rwy);
+        });
+      });
+    }
+    if (show.apt) {
+      var cnt = 0;
+      Object.keys(airportsDB).forEach(function (k) {
+        var ap = airportsDB[k]; if (cnt > 700 || !/^[A-Z0-9]{4}$/.test(ap.icao) || !bb.contains([ap.lat, ap.lon])) return;
+        var big = ap.type === 'large_airport', med = ap.type === 'medium_airport';
+        if (!(big ? z >= 5 : med ? z >= 7 : z >= 9)) return;
+        cnt++;
+        mk({ lat: ap.lat, lon: ap.lon, name: ap.icao, kind: 'apt' }, svgApt(big || med), 18, '<b>' + esc(ap.icao) + '</b> ' + esc(ap.name)).addTo(lyr.apt);
+      });
+    }
+    if (loaded && (show.vor || show.ndb) && z >= 6) {
+      for (var i = 0; i < nav.length && n < 600; i++) {
+        var v = nav[i], isN = v.t.indexOf('NDB') === 0;
+        if (isN ? !(show.ndb && z >= 7) : !show.vor) continue;
+        if (!bb.contains([v.lat, v.lon])) continue; n++;
+        mk({ lat: v.lat, lon: v.lon, name: v.id, kind: isN ? 'ndb' : 'vor' }, isN ? svgNdb() : svgVor(/DME|VORTAC/.test(v.t)), isN ? 22 : 26,
+           '<b>' + esc(v.id) + '</b> ' + esc(freq(v)) + ' · ' + esc(v.t) + '<br><span style="opacity:.75">' + esc(v.nm) + '</span>').addTo(lyr.nav);
+      }
+    }
+  }
+  /* ---------- route ---------- */
+  function add(p) {
+    if (p.kind === 'wp' || !p.name) { wpN++; p.name = 'WP' + wpN; p.kind = 'wp'; }
+    pts.push(p); save(); drawRoute();
+  }
+  function drawRoute() {
+    if (!map) return;
+    if (!lyr.route) lyr.route = L.layerGroup().addTo(map);
+    lyr.route.clearLayers();
+    if (pts.length > 1) L.polyline(pts.map(function (p) { return [p.lat, p.lon]; }), { color: '#e879f9', weight: 4, opacity: .95, interactive: false }).addTo(lyr.route);
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i];
+      L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], { icon: L.divIcon({ className: 'hgv-ic', html: '', iconSize: [1, 1] }), interactive: false })
+        .bindTooltip(hdg(a, b) + ' · ' + Math.round(dist(a, b)) + ' NM', { permanent: true, direction: 'center', className: 'hgv-leg' }).addTo(lyr.route);
+    }
+    pts.forEach(function (p, i) {
+      var c = i === 0 ? '#22d3ee' : (i === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9');
+      var m = L.marker([p.lat, p.lon], { draggable: true, zIndexOffset: 1000, icon: L.divIcon({ className: 'hgv-ic', html: '<svg width="18" height="18" viewBox="-9 -9 18 18"><circle r="6" fill="#0f172a" stroke="' + c + '" stroke-width="3"/></svg>', iconSize: [18, 18], iconAnchor: [9, 9] }) });
+      m.bindTooltip('<b>' + esc(p.name) + '</b> · ' + T.rmv, { className: 'hgv-lab', direction: 'top', offset: [0, -8] });
+      m.on('click', function (e) { L.DomEvent.stop(e); });
+      m.on('contextmenu', function (e) { L.DomEvent.stop(e); pts.splice(i, 1); save(); drawRoute(); });
+      m.on('dragend', function () { var ll = m.getLatLng(); var q = pts[i]; q.lat = ll.lat; q.lon = ll.lng; if (q.kind !== 'wp') { wpN++; q.kind = 'wp'; q.name = 'WP' + wpN; } save(); drawRoute(); });
+      m.addTo(lyr.route);
+    });
+    side();
+  }
+  function side() {
+    var tb = document.getElementById('hgVfrLegs'), tot = 0, h = '';
+    for (var i = 1; i < pts.length; i++) { var a = pts[i - 1], b = pts[i], d = dist(a, b); tot += d;
+      h += '<tr><td>' + i + '</td><td>' + (a.kind === 'apt' ? '<b>' + esc(a.name) + '</b>' : esc(a.name)) + ' → ' + (b.kind === 'apt' ? '<b>' + esc(b.name) + '</b>' : esc(b.name)) + '</td><td>' + hdg(a, b) + '</td><td>' + Math.round(d) + ' NM</td></tr>'; }
+    if (tb) tb.innerHTML = h || '<tr><td colspan="4" style="color:#64748b">' + T.empty + '</td></tr>';
+    var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
+    var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
+    if (sm) sm.textContent = pts.length ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM') : T.title;
+  }
+  /* ---------- export ---------- */
+  function ends() {
+    if (pts.length < 2) { alert(T.few); return null; }
+    var a = pts[0], b = pts[pts.length - 1];
+    if (a.kind !== 'apt' || b.kind !== 'apt') { alert(T.needApt); return null; }
+    return [airportsDB[a.name] || { icao: a.name, lat: a.lat, lon: a.lon, elevation_ft: 0 }, airportsDB[b.name] || { icao: b.name, lat: b.lat, lon: b.lon, elevation_ft: 0 }];
+  }
+  function sbCoord(p) { var la = Math.abs(p.lat), lo = Math.abs(p.lon); var d1 = Math.floor(la), m1 = Math.round((la - d1) * 60), d2 = Math.floor(lo), m2 = Math.round((lo - d2) * 60);
+    if (m1 === 60) { d1++; m1 = 0; } if (m2 === 60) { d2++; m2 = 0; }
+    return String(d1).padStart(2, '0') + String(m1).padStart(2, '0') + (p.lat < 0 ? 'S' : 'N') + String(d2).padStart(3, '0') + String(m2).padStart(2, '0') + (p.lon < 0 ? 'W' : 'E'); }
+  function simbrief() {
+    var e = ends(); if (!e) return;
+    var route = pts.slice(1, -1).map(function (p) { return p.kind === 'wp' ? sbCoord(p) : p.name; }).join(' ');
+    var ac = 'C172'; try { ac = document.getElementById('aircraftSelect').value || ac; } catch (x) {}
+    var url = 'https://dispatch.simbrief.com/options/custom?' + new URLSearchParams({ orig: e[0].icao, dest: e[1].icao, type: ac, route: route, fltrules: 'V' }).toString();
+    window.open(url, '_blank');
+  }
+  function pln() {
+    var e = ends(); if (!e) return;
+    var dms = function (v, isLat) { var a = Math.abs(v), t = Math.round(a * 360000), d = Math.floor(t / 360000), m = Math.floor((t % 360000) / 6000), s = (t % 6000) / 100;
+      return (isLat ? (v < 0 ? 'S' : 'N') : (v < 0 ? 'W' : 'E')) + String(d).padStart(isLat ? 2 : 3, '0') + '° ' + String(m).padStart(2, '0') + "' " + s.toFixed(2).padStart(5, '0') + '"'; };
+    var alt = 3500, pos = function (p, el) { return dms(p.lat, true) + ',' + dms(p.lon, false) + ',+' + String(Math.max(0, Math.round(el || 0))).padStart(6, '0') + '.00'; };
+    var wp = function (id, type, p, el, icao) { return '        <ATCWaypoint id="' + xmlEscape(id) + '">\n            <ATCWaypointType>' + type + '</ATCWaypointType>\n            <WorldPosition>' + pos(p, el) + '</WorldPosition>\n' +
+      (icao ? '            <ICAO>\n                <ICAOIdent>' + xmlEscape(icao) + '</ICAOIdent>\n            </ICAO>\n' : '') + '        </ATCWaypoint>'; };
+    var body = [wp(e[0].icao, 'Airport', e[0], e[0].elevation_ft, e[0].icao)];
+    pts.slice(1, -1).forEach(function (p) { body.push(wp(p.name, 'User', p, alt)); });
+    body.push(wp(e[1].icao, 'Airport', e[1], e[1].elevation_ft, e[1].icao));
+    var title = e[0].icao + ' → ' + e[1].icao + ' (VFR)';
+    var x = '<?xml version="1.0" encoding="UTF-8"?>\n<SimBase.Document Type="AceXML" version="1,0" id="FlightPlan">\n    <Descr>' + xmlEscape(title) + '</Descr>\n    <FlightPlan.FlightPlan>\n        <Title>' + xmlEscape(title) + '</Title>\n        <FPType>VFR</FPType>\n        <RouteType>VFR</RouteType>\n        <CruisingAlt>' + alt + '</CruisingAlt>\n' +
+      '        <DepartureID>' + xmlEscape(e[0].icao) + '</DepartureID>\n        <DepartureLLA>' + pos(e[0], e[0].elevation_ft) + '</DepartureLLA>\n        <DestinationID>' + xmlEscape(e[1].icao) + '</DestinationID>\n        <DestinationLLA>' + pos(e[1], e[1].elevation_ft) + '</DestinationLLA>\n' +
+      body.join('\n') + '\n    </FlightPlan.FlightPlan>\n</SimBase.Document>';
+    var url = URL.createObjectURL(new Blob([x], { type: 'application/xml;charset=utf-8' })), a = document.createElement('a');
+    a.href = url; a.download = e[0].icao + '_' + e[1].icao + '_VFR.pln'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  /* ---------- fenêtre ---------- */
+  var BG = [
+    function () { return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' }); },
+    function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }); },
+    function () { return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'hg-dark', attribution: '© OpenStreetMap' }); },
+    function () { return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: '© Esri' }); }];
+  function setBg(i) { bgIdx = i; if (bgLayer) map.removeLayer(bgLayer); bgLayer = BG[i]().addTo(map); bgLayer.bringToBack(); save(); }
+  function build() {
+    if (document.getElementById('hgVfr')) return;
+    var d = el('div'); d.id = 'hgVfr';
+    var tg = function (k, c, lab) { return '<button type="button" class="b tg' + (show[k] ? ' on' : '') + '" data-k="' + k + '" style="--c:' + c + '"><i></i>' + lab + '</button>'; };
+    d.innerHTML = '<div class="vb"><button type="button" class="b" data-a="menu">← ' + T.menu + '</button><button type="button" class="b" data-a="back">↩ ' + T.back + '</button>' +
+      '<span class="t">✈ ' + T.title + '</span><span class="sum" id="hgVfrSum"></span><span class="grow"></span>' +
+      '<button type="button" class="b" data-a="undo">↶ ' + T.undo + '</button><button type="button" class="b" data-a="swap">⇄ ' + T.swap + '</button><button type="button" class="b" data-a="clear">⟲ ' + T.clear + '</button>' +
+      '<button type="button" class="b sb" data-a="sb">➤ SIMBRIEF</button><button type="button" class="b pln" data-a="pln">⬇ FICHIER .PLN</button><button type="button" class="b" data-a="back">✕</button></div>' +
+      '<div class="vb vb2"><span class="gl">' + T.show + '</span>' + tg('apt', '#38bdf8', T.apt) + tg('vor', '#60a5fa', T.vor) + tg('ndb', '#c084fc', T.ndb) + tg('rwy', '#fbbf24', T.rwy) + tg('names', '#94a3b8', T.names) +
+      '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
+      '<div class="vm"><div id="hgVfrMap"><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
+      '<table><thead><tr><th>#</th><th>' + T.from + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="hint">' + T.help + '</div></div></div>';
+    if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
+    document.body.appendChild(d);
+    d.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.k) { show[b.dataset.k] = !show[b.dataset.k]; b.classList.toggle('on', show[b.dataset.k]); save(); draw(); return; }
+      var a = b.dataset.a;
+      if (a === 'back') close();
+      else if (a === 'menu') { close(); try { if (typeof closeInteractiveMapModal === 'function') closeInteractiveMapModal(); } catch (x) {} }
+      else if (a === 'undo') { pts.pop(); save(); drawRoute(); }
+      else if (a === 'swap') { pts.reverse(); save(); drawRoute(); }
+      else if (a === 'clear') { pts = []; wpN = 0; save(); drawRoute(); }
+      else if (a === 'sb') simbrief();
+      else if (a === 'pln') pln();
+    });
+    var sel = d.querySelector('#hgVfrBg'); sel.value = String(bgIdx); sel.onchange = function () { setBg(+sel.value); };
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && d.classList.contains('on')) close(); });
+  }
+  function open() {
+    build(); document.getElementById('hgVfr').classList.add('on');
+    if (!map) {
+      map = L.map('hgVfrMap', { zoomControl: true, worldCopyJump: true });
+      var c = pts.length ? [pts[0].lat, pts[0].lon] : null;
+      try { if (!c && typeof fullMap !== 'undefined' && fullMap) { var ct = fullMap.getCenter(); c = [ct.lat, ct.lng]; } } catch (e) {}
+      map.setView(c || [46.6, 2.4], pts.length ? 9 : 7);
+      setBg(bgIdx);
+      map.on('click', function (e) { add({ lat: e.latlng.lat, lon: e.latlng.lng, kind: 'wp' }); });
+      map.on('moveend zoomend', draw);
+    }
+    setTimeout(function () { map.invalidateSize(); if (pts.length > 1) map.fitBounds(L.latLngBounds(pts.map(function (p) { return [p.lat, p.lon]; })).pad(0.2)); draw(); drawRoute(); }, 60);
+    loadData();
+  }
+  function close() { var d = document.getElementById('hgVfr'); if (d) d.classList.remove('on'); }
+  window.hgOpenVfr = open;
+  /* bouton « PLAN VFR » dans la barre de la carte Plan de vol personnel */
+  setInterval(function () {
+    var bar = document.getElementById('mapToolbar'); if (!bar || bar.querySelector('.hgv-open')) return;
+    var row = bar.querySelector('.al-row') || bar, ttl = row.querySelector('.al-title');
+    var b = el('button', 'hgv-open', '✈ ' + T.btn); b.type = 'button'; b.onclick = open;
+    if (ttl && ttl.nextSibling) row.insertBefore(b, ttl.nextSibling); else row.appendChild(b);
+  }, 800);
 })();
 </script></body>
 </html>
