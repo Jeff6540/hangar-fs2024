@@ -21,7 +21,7 @@ Version 12.9 — page Plan de vol plus claire
 - Entrée « Plan VFR » dans le menu (rubrique Préparer) ; la carte Plan de vol personnel n'affiche plus les petits aérodromes (ils sont dans la page Plan VFR).
 - Plan VFR : choix de l'avion pour SimBrief (monomoteurs, bimoteurs, turbopropulseurs légers, ou code OACI libre) avec sa vitesse de croisière, modifiable ; temps de chaque branche et temps de vol total.
 - Plan VFR : « Mes routes » garde tes routes sous un nom (dans le dossier des réglages de l'appli) pour les rouvrir plus tard ; « Ouvrir un .PLN » reprend un plan existant (le tien, Little Navmap, carte du monde de MSFS) pour le modifier.
-- Plan VFR : SimBrief reçoit les SID, STAR et pistes, et le début de l'approche choisie (SimBrief et Navigraph ajoutent l'approche eux-mêmes).
+- Plan VFR : SimBrief reçoit les SID, STAR et pistes, et la piste de l'approche choisie (SimBrief et Navigraph relient ton dernier point à l'approche et l'ajoutent eux-mêmes, sans petit crochet).
 - Menu : l'entrée « Plan de vol personnel » est retirée ; la carte s'ouvre depuis la page Plan de vol, bouton « Choisir départ et arrivée sur la carte ». « Ma VA FSHub » devient « Page de ma VA ». Le bouton ✈ PLAN VFR de la carte est retiré (entrée Plan VFR du menu).
 - Le nom « Avionics Dispatch » disparaît : la page s'appelle Plan de vol. Les restes de l'ancienne version Python sont retirés (bouton « Fermer l'ancien relais », recherche de la SimConnect.dll dans ses dossiers).
 - Menu : la rubrique Radars (radar FSHub global, page et radar de ma VA) est retirée. À la place, un bouton « Les Fous Volants · Le site de la VA » sous le Discord de la VA (et une entrée « Site de la VA » dans le menu des autres pages).
@@ -140,7 +140,7 @@ Version 12.9 — clearer Flight plan page
 - "VFR plan" entry in the menu (Prepare section); the Personal flight plan map no longer shows small airfields (they are in the VFR plan page).
 - VFR plan: aircraft choice for SimBrief (single-engine, twin-engine, light turboprops, or any ICAO code) with its cruise speed, editable; time of each leg and total flight time.
 - VFR plan: "My routes" keeps your routes under a name (in the app's settings folder) to open them later; "Open a .PLN" loads an existing plan (yours, Little Navmap, MSFS world map) so you can change it.
-- VFR plan: SimBrief gets the SIDs, STARs and runways, and the start of the chosen approach (SimBrief and Navigraph add the approach themselves).
+- VFR plan: SimBrief gets the SIDs, STARs and runways, and the runway of the chosen approach (SimBrief and Navigraph link your last point to the approach and add it themselves, with no small detour).
 - Menu: the "Personal flight plan" entry is removed; the map opens from the Flight plan page, "Pick departure and arrival on the map" button. "My VA on FSHub" becomes "My VA page". The map's ✈ VFR PLAN button is removed (VFR plan menu entry).
 - The "Avionics Dispatch" name is gone: the page is called Flight plan. Leftovers of the old Python version are removed ("Close the old relay" button, SimConnect.dll search in its folders).
 - Menu: the Radars section (FSHub global radar, VA page and VA radar) is removed. Instead, a "Les Fous Volants · The VA website" button below the VA Discord (and a "VA website" entry in the other pages' menu).

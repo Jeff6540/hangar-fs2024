@@ -3385,7 +3385,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     if (da && da.ok && pr.arr.icao === e[1].icao) {
       var st = da.a[pr.arr.star], ap2 = da.ap[pr.arr.ap];
       if (st) { var tl = starLegs(da, pr.arr); push(fix(tl[0])); push(st.n); if (pr.arr.rw >= 0 && st.rw[pr.arr.rw]) destrwy = st.rw[pr.arr.rw].r; }
-      else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbTok(al[0][0], { lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche : par son nom si 5 lettres, sinon en coordonnées */
+      /* approche choisie sans STAR : rien n'est ajouté à la route ; SimBrief / Navigraph relient le dernier point au début de l'approche (sinon petit crochet, les coordonnées étant arrondies à la minute) */
       if (ap2 && ap2.r) destrwy = ap2.r;
     }
     var q = { orig: e[0].icao, dest: e[1].icao, type: acV || 'C172', route: tok.join(' ') };   /* l'avion choisi dans la page VFR */
