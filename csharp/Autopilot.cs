@@ -346,6 +346,7 @@ namespace HangarFS2024
         static string phase = "", message = "", targetIdent = "";
         static double todNm = -1, targetAlt = -1, devFt;
         static int climbVs = 700;
+        static bool elevUnknown;
         static double nextCalc, lastAltSent = -1, lastVsSent = 99999, lastSentAt, lastVsAsk;
         const double FtPerNm = 318.4;   // pente de 3°
 
@@ -360,7 +361,7 @@ namespace HangarFS2024
         {
             lock (Gate)
                 return new JObject { ["on"] = on, ["phase"] = phase, ["tod"] = Math.Round(todNm, 1), ["alt"] = Math.Round(targetAlt), ["at"] = targetIdent,
-                    ["dev"] = Math.Round(devFt), ["climb"] = climbVs, ["msg"] = message };
+                    ["dev"] = Math.Round(devFt), ["climb"] = climbVs, ["msg"] = message, ["elevUnknown"] = elevUnknown };
         }
 
         static double Num(JToken t) { double d; double.TryParse(JsonStore.Str(t), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d); return d; }
@@ -395,6 +396,7 @@ namespace HangarFS2024
 
                 // altitude à respecter sur chaque point (destination : terrain + 1500 ft, 5 NM avant)
                 double bestTod = double.MaxValue, bestAlt = -1, pathAlt = double.MaxValue; string bestId = "";
+                elevUnknown = false;
                 // pas de descente avant le point le plus haut de la route restante (sinon la montée serait prise pour une descente)
                 // sommet = dernier point prévu à l'altitude de croisière (aucun devant : on peut descendre dès maintenant)
                 double topAlt = cruise;
@@ -408,7 +410,12 @@ namespace HangarFS2024
                     var w = route[i] as JObject ?? new JObject();
                     double a = Num(w["alt"]), d = along[i];
                     bool dest = i == route.Count - 1;
-                    if (dest) { a = a + 1500; d = Math.Max(0, d - 5); }
+                    if (dest)
+                    {   // terrain d'arrivée inconnu : pas de cible à l'arrivée (on ne descend pas plus bas que le dernier point connu)
+                        string ek = JsonStore.Str(w["elev"]).ToLowerInvariant();
+                        if (!(ek == "true" || (a > 0 && ek != "false"))) { elevUnknown = true; continue; }
+                        a = a + 1500; d = Math.Max(0, d - 5);
+                    }
                     if (a <= 0) continue;
                     if (a > highAhead && !dest) highAhead = a;
                     double pa = a + d * FtPerNm;                  // altitude du plan à 3° au niveau de l'avion

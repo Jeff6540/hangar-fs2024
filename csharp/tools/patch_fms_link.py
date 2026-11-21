@@ -48,7 +48,7 @@ JS = r"""<script src="/fms_store.js"></script><script id="hangar-fms-vfr-link">
     try { localStorage.setItem(KEY, sig); } catch (x) {}
     var dest = route[route.length - 1];
     [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
-      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && A.elevation_ft) w.alt = Math.round(A.elevation_ft); } catch (x) {}
+      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && isFinite(A.elevation_ft) && A.elevation_ft) {   /* 0 = souvent « inconnue » dans la base : on laisse le pilote la taper */ w.alt = Math.round(A.elevation_ft); w.elev = true; } } catch (x) {}
     });
     ilsFor(ap, dest).then(function (ils) {
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});

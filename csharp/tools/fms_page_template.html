@@ -24,6 +24,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
 .row.tod{color:var(--warn);cursor:default;background:#1d1a12}
+.altc .unk{color:var(--warn);font-weight:700}
 .altc{cursor:text;border-bottom:1px dashed transparent} .altc:hover{border-bottom-color:var(--skyt)} .altc i{font-style:normal;color:#5d6670}
 #cruise{cursor:text;padding:2px 6px;border:1px dashed #3a3d44;border-radius:6px} #cruise:hover{border-color:var(--skyt)}
 .ed{width:74px;text-align:center;font:inherit;color:var(--skyt);background:#11161c;border:1px solid var(--skyt);border-radius:5px;padding:1px}
@@ -155,7 +156,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     by: ['dernier changement : {s}', 'last change: {s}'],
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
-    setCruise: ['Croisière ?', 'Cruise?'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
+    setCruise: ['Croisière ?', 'Cruise?'],
+    elevUnk: ['Altitude du terrain d’arrivée inconnue : touche le « ? » de {a} pour la taper. En attendant, le VNAV ne descend pas plus bas que le dernier point qui a une altitude.', 'Arrival field elevation unknown: tap the “?” of {a} to type it. Meanwhile VNAV does not descend below the last fix with an altitude.'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
     todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'],
     apRelay: ['Relais arrêté', 'Relay stopped'], apNoSim: ['MSFS non connecté', 'MSFS not connected'], apWait: ['En attente de l’avion…', 'Waiting for the aircraft…'],
@@ -222,11 +224,13 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         var prev = route[i - 1], dd = '', tk = '';
         if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
         var cls = i === act ? ' on' : i < act ? ' done' : '';
-        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + (w.alt ? Math.round(w.alt) : (i > 0 && i < route.length - 1 ? '<i>+</i>' : '')) + '</span></span></div>';
+        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + ((i === 0 || i === route.length - 1) ? (elevOk(w) ? Math.round(w.alt || 0) : '<i class="unk">?</i>') : (w.alt ? Math.round(w.alt) : '<i>+</i>')) + '</span></span></div>';
       });
       $('list').innerHTML = h;
       todLive();
       $('info').innerHTML += (bits.length ? ' · ' : '') + t('total', { n: route.length, d: Math.round(total) });
+      var dW = route[route.length - 1];
+      if (dW && !elevOk(dW) && !$('msg').textContent) msg(t('elevUnk', { a: dW.ident }));
       if (!p.cruiseAlt && !route.some(function (w, j) { return j > 0 && j < route.length - 1 && w.alt; }) && !$('msg').textContent) msg(t('altHint'));
       var on = $('list').querySelector('.row.on'); if (on && !render.scrolled) { on.scrollIntoView({ block: 'center' }); render.scrolled = true; }
     }
@@ -314,6 +318,9 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     });
   }
 
+  // altitude du terrain connue ? (venue de SimBrief, du .PLN, de la base d'aéroports ou tapée à la main)
+  function elevOk(w) { return !!w && (w.elev === true || (w.alt > 0 && w.elev !== false)); }
+
   // ---- T/D prévu : même calcul que le VNAV (pente 3°, après le point le plus haut ; destination : terrain + 1500 ft, 5 NM avant)
   function planTod(p) {
     var route = p.route || []; if (route.length < 3) return null;
@@ -327,7 +334,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     var best = null;
     for (i = Math.max(1, peak); i < route.length; i++) {
       var a = route[i].alt || 0, d = cum[i], dest = i === route.length - 1;
-      if (dest) { a += 1500; d = Math.max(0, d - 5); }
+      if (dest) { if (!elevOk(route[i])) continue; a += 1500; d = Math.max(0, d - 5); }   // terrain inconnu : pas de cible à l'arrivée
       if (a <= 0 || a >= cruise - 300) continue;
       var s = d - (cruise - a) / 318.4;
       if (!best || s < best.s) best = { s: s, alt: a, to: route[i].ident + (dest ? ' (-5 NM)' : '') };
@@ -364,9 +371,10 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (ac && !directMode) {
       e.stopPropagation(); if (ac.querySelector('input')) return;
       var k = +ac.dataset.alt, p = (FmsStore.state && FmsStore.state.plan) || {}, rt = (p.route || []).slice();
-      if (!rt[k] || k === 0 || k === rt.length - 1) return;
+      if (!rt[k]) return;
+      var apt = k === 0 || k === rt.length - 1;
       editNum(ac, rt[k].alt, function (ok, v) {
-        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, { alt: Math.round(v / 100) * 100 }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
+        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, apt ? { alt: Math.round(v), elev: true } : { alt: Math.round(v / 100) * 100 }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
         else render(FmsStore.state);
       });
       return;
@@ -539,7 +547,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       if (d && !sid) { sid = d; if (rw) rwyDep = rw; }
       if (a) star = a;
       if (ap) { appr = ap + (rw ? ' ' + rw : ''); if (rw) rwyArr = rw; }
-      route.push({ ident: id, lat: lat, lon: lon, alt: isFinite(alt) && alt > 0 ? Math.round(alt) : 0, type: /airport/i.test(type) ? 'apt' : /vor/i.test(type) ? 'vor' : /ndb/i.test(type) ? 'ndb' : 'wpt',
+      route.push({ ident: id, lat: lat, lon: lon, alt: isFinite(alt) && alt > 0 ? Math.round(alt) : 0, elev: /airport/i.test(type) && isFinite(alt) ? true : undefined, type: /airport/i.test(type) ? 'apt' : /vor/i.test(type) ? 'vor' : /ndb/i.test(type) ? 'ndb' : 'wpt',
                    via: g(w, 'ATCAirway') || d || a || (ap ? appr : '') });
     });
     if (route.length < 2) return null;
@@ -578,7 +586,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     fetch('http://localhost:8765/simbrief?' + q).then(function (r) { return r.json(); }).then(function (j) {
       var fixes = arr(j && j.navlog && j.navlog.fix);
       if (!fixes.length || !j.origin || !j.destination) { msg((j && j.fetch && j.fetch.status && j.fetch.status !== 'Success') ? j.fetch.status : t('noPlan')); return; }
-      var route = [{ ident: j.origin.icao_code, lat: num(j.origin.pos_lat), lon: num(j.origin.pos_long), alt: num(j.origin.elevation), type: 'apt', via: '' }];
+      var route = [{ ident: j.origin.icao_code, lat: num(j.origin.pos_lat), lon: num(j.origin.pos_long), alt: num(j.origin.elevation), elev: true, type: 'apt', via: '' }];
       var sid = '', star = '', enroute = false;
       fixes.forEach(function (f) {
         if (f.ident === 'TOC' || f.ident === 'TOD') return;          // calculés par le FMS plus tard (VPATH)
@@ -587,7 +595,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         else enroute = true;
         route.push({ ident: f.ident, lat: num(f.pos_lat), lon: num(f.pos_long), alt: num(f.altitude_feet), type: f.type || '', via: f.via_airway && f.via_airway !== 'DCT' ? f.via_airway : '' });
       });
-      route.push({ ident: j.destination.icao_code, lat: num(j.destination.pos_lat), lon: num(j.destination.pos_long), alt: num(j.destination.elevation), type: 'apt', via: '' });
+      route.push({ ident: j.destination.icao_code, lat: num(j.destination.pos_lat), lon: num(j.destination.pos_long), alt: num(j.destination.elevation), elev: true, type: 'apt', via: '' });
       render.scrolled = false;
       FmsStore.set({ plan: {
         origin: { icao: j.origin.icao_code || '', rwy: j.origin.plan_rwy || '' },

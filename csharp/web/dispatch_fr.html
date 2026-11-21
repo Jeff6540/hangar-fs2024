@@ -8262,7 +8262,7 @@ ${waypoint(arr)}
     try { localStorage.setItem(KEY, sig); } catch (x) {}
     var dest = route[route.length - 1];
     [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
-      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && A.elevation_ft) w.alt = Math.round(A.elevation_ft); } catch (x) {}
+      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && isFinite(A.elevation_ft) && A.elevation_ft) {   /* 0 = souvent « inconnue » dans la base : on laisse le pilote la taper */ w.alt = Math.round(A.elevation_ft); w.elev = true; } } catch (x) {}
     });
     ilsFor(ap, dest).then(function (ils) {
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});
@@ -8307,7 +8307,7 @@ ${waypoint(arr)}
     var best = null;
     for (i = Math.max(1, peak); i < r.length; i++) {
       var a = r[i].alt || 0, d = cum[i], dest = i === r.length - 1;
-      if (dest) { a += 1500; d = Math.max(0, d - 5); }
+      if (dest) { if (!(r[i].elev === true || (r[i].alt > 0 && r[i].elev !== false))) continue; a += 1500; d = Math.max(0, d - 5); }
       if (a <= 0 || a >= cruise - 300) continue;
       var s = d - (cruise - a) / 318.4; if (!best || s < best.s) best = { s: Math.max(s, cum[peak]), alt: a, to: r[i].ident, toS: d };
     }
