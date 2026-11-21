@@ -39,6 +39,12 @@ namespace HangarFS2024
             new[] { "PLANE LONGITUDE", "degrees" },                  // 21
             new[] { "GROUND VELOCITY", "knots" },                    // 22
             new[] { "PLANE HEADING DEGREES TRUE", "degrees" },       // 23
+            new[] { "NAV ACTIVE FREQUENCY:1", "MHz" },               // 24  (approche / ILS)
+            new[] { "NAV STANDBY FREQUENCY:1", "MHz" },              // 25
+            new[] { "GPS DRIVES NAV1", "bool" },                     // 26
+            new[] { "NAV HAS LOCALIZER:1", "bool" },                 // 27
+            new[] { "NAV CDI:1", "number" },                         // 28
+            new[] { "NAV HAS GLIDE SLOPE:1", "bool" },               // 29
         };
 
         // ---- ordres envoyés à MSFS (numéro d'ordre = 1000 + position dans la liste)
@@ -51,6 +57,7 @@ namespace HangarFS2024
             "AP_NAV1_HOLD_ON", "AP_NAV1_HOLD_OFF", "AP_NAV1_HOLD",
             "AP_APR_HOLD_ON", "AP_APR_HOLD_OFF", "AP_APR_HOLD",
             "HEADING_BUG_SET", "AP_ALT_VAR_SET_ENGLISH", "AP_VS_VAR_SET_ENGLISH", "AP_SPD_VAR_SET",
+            "NAV1_STBY_SET_HZ", "NAV1_RADIO_SWAP", "VOR1_SET", "TOGGLE_GPS_DRIVES_NAV1",
         };
         public const uint EventBase = 1000;
 
@@ -107,6 +114,7 @@ namespace HangarFS2024
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
             if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
+            if (c == "ils_auto") { Approach.SetAuto(v >= 0.5); return; }
             foreach (var m in Modes)
             {
                 if (m.Key != c) continue;
@@ -148,6 +156,7 @@ namespace HangarFS2024
             double[] cur; lock (Gate) cur = vals != null && now - valsAt < 3 ? (double[])vals.Clone() : null;
             Lnav.Tick(cur, now, hdgBusy: IsPending("hdg"));
             Vnav.Tick(cur, now, vsBusy: IsPending("vs"));
+            Approach.Tick(cur, now, IsPending("nav") || IsPending("apr"));
             var list = new List<KeyValuePair<string, int>>();
             KeyValuePair<string, int> o;
             while (outbox.TryDequeue(out o)) list.Add(o);
@@ -160,7 +169,7 @@ namespace HangarFS2024
         /// <summary>État pour la fenêtre FMS (relais : /ap).</summary>
         public static JObject Snapshot(bool connected)
         {
-            var ln = Lnav.Snapshot(); var vn = Vnav.Snapshot();
+            var ln = Lnav.Snapshot(); var vn = Vnav.Snapshot(); var apx = Approach.Snapshot();
             lock (Gate)
             {
                 double now = RelayState.Now();
@@ -174,7 +183,7 @@ namespace HangarFS2024
                 modes["gs"] = new JObject { ["on"] = On(12), ["busy"] = false, ["no"] = false };
                 o["modes"] = modes;
                 o["target"] = new JObject { ["hdg"] = Math.Round(vals[3]), ["alt"] = Math.Round(vals[5]), ["vs"] = Math.Round(vals[7]), ["spd"] = Math.Round(vals[9]) };
-                o["lnav"] = ln; o["vnav"] = vn;
+                o["lnav"] = ln; o["vnav"] = vn; o["ils"] = apx;
                 o["actual"] = new JObject { ["hdg"] = Math.Round(vals[13]), ["alt"] = Math.Round(vals[14]), ["vs"] = Math.Round(vals[15]), ["spd"] = Math.Round(vals[16]), ["ground"] = On(17) };
                 return o;
             }
@@ -445,6 +454,78 @@ namespace HangarFS2024
                 // altitude atteinte : l'avion la tient (ALT) ; sinon le mode VS doit être actif
                 bool captured = Math.Abs(alt - wantAlt) < 150;
                 if (!captured && !vsOn && !vsBusy && now - lastVsAsk > 4) { lastVsAsk = now; Autopilot.ModeOn("vs"); }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ approche : fréquence ILS automatique, puis LOC avant APP
+    // L'ILS choisi dans le FMS (plan.ils) est mis en attente sur NAV1 à 80 NM, permuté à 25 NM, le cap de piste réglé ;
+    // vers 18 NM le mode NAV (LOC) est armé ; une fois l'axe capté, APR est armé pour descendre sur le plan de l'ILS.
+    static class Approach
+    {
+        static readonly object Gate = new object();
+        static bool auto = true;
+        static string state = "", ident = "", lastKey = "";
+        static double freqHz, crs, distNm = -1;
+        static bool hasGs;
+        static double nextCalc, lastStby, lastSwap, lastObs, lastGps, lastArm;
+        static bool obsSet;
+
+        public static void SetAuto(bool v) { lock (Gate) auto = v; }
+
+        public static JObject Snapshot()
+        {
+            lock (Gate)
+                return new JObject { ["auto"] = auto, ["ident"] = ident, ["freq"] = Math.Round(freqHz / 1e6, 2), ["crs"] = Math.Round(crs), ["gs"] = hasGs,
+                    ["state"] = state, ["dist"] = Math.Round(distNm, 1) };
+        }
+
+        static double Num(JToken t) { double d; double.TryParse(JsonStore.Str(t), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d); return d; }
+        static bool Same(double mhz, double hz) { return Math.Abs(mhz * 1e6 - hz) < 2000; }
+
+        public static void Tick(double[] v, double now, bool modeBusy)
+        {
+            lock (Gate)
+            {
+                if (now < nextCalc) return;
+                nextCalc = now + 1.0;
+                var plan = FlightStore.Get()["plan"] as JObject ?? new JObject();
+                var ils = plan["ils"] as JObject;
+                if (ils == null || Num(ils["freq"]) <= 0) { state = ""; ident = ""; freqHz = 0; distNm = -1; return; }
+                freqHz = Num(ils["freq"]); crs = Num(ils["crs"]); ident = JsonStore.Str(ils["ident"]); hasGs = JsonStore.Str(ils["gs"]) == "True" || JsonStore.Str(ils["gs"]) == "true";
+                string key = ident + freqHz;
+                if (key != lastKey) { lastKey = key; obsSet = false; }
+                var route = plan["route"] as JArray;
+                double dla, dlo;
+                if (v == null || v.Length < 30 || route == null || !Lnav.Pt(route, route.Count - 1, out dla, out dlo)) { state = "wait"; return; }
+                distNm = Lnav.Dist(v[20], v[21], dla, dlo) * Lnav.EarthNm;
+                bool active = Same(v[24], freqHz), standby = Same(v[25], freqHz);
+                bool apOn = v[1] >= 0.5, navOn = v[10] >= 0.5, aprOn = v[11] >= 0.5, gsOn = v[12] >= 0.5;
+                bool loc = v[27] >= 0.5;
+                double hdgMag = v[13], cdi = v[28];
+
+                if (aprOn && (gsOn || !hasGs)) { state = gsOn ? "gs" : "app"; return; }
+                if (aprOn) { state = "app"; return; }
+                if (!auto) { state = active ? "active" : standby ? "standby" : "manual"; return; }
+
+                // 1) fréquence en attente, 2) permutation, 3) cap de piste, 4) l'aiguille NAV1 sur l'ILS (et pas le GPS)
+                if (!active && !standby && distNm < 80 && now - lastStby > 5) { lastStby = now; Autopilot.Order("NAV1_STBY_SET_HZ", (int)freqHz); }
+                if (!active && standby && distNm < 25 && now - lastSwap > 5) { lastSwap = now; Autopilot.Order("NAV1_RADIO_SWAP", 0); }
+                if (active && !obsSet && now - lastObs > 3) { lastObs = now; obsSet = true; Autopilot.Order("VOR1_SET", (int)Math.Round(crs) % 360 == 0 ? 360 : (int)Math.Round(crs) % 360); }
+                if (active && v[26] >= 0.5 && distNm < 25 && now - lastGps > 5) { lastGps = now; Autopilot.Order("TOGGLE_GPS_DRIVES_NAV1", 0); }
+
+                state = active ? "active" : standby ? "standby" : "wait";
+                if (!active || !apOn || modeBusy) return;
+
+                // 5) LOC d'abord : mode NAV armé vers 18 NM si l'avion se présente dans le bon sens
+                double off = Math.Abs(((hdgMag - crs) % 360 + 540) % 360 - 180);
+                if (!navOn && loc && distNm < 18 && off < 90 && v[26] < 0.5 && now - lastArm > 6) { lastArm = now; Autopilot.ModeOn("nav"); state = "loc_arm"; return; }
+                if (navOn)
+                {
+                    state = "loc";
+                    // 6) axe capté (aiguille presque centrée, avion aligné) : APR pour le plan de descente
+                    if (hasGs && v[29] >= 0.5 && Math.Abs(cdi) < 40 && off < 30 && now - lastArm > 6) { lastArm = now; Autopilot.ModeOn("apr"); state = "app_arm"; }
+                }
             }
         }
     }

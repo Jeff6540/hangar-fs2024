@@ -26,7 +26,21 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row.tod{color:var(--warn);cursor:default;background:#1d1a12}
 .row.tod .live{color:var(--warn)}
 .empty{padding:28px 16px;text-align:center;color:var(--mut);line-height:1.6}
-.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tiles .wide{grid-column:span 2}
+.panel{flex:1;min-height:120px;overflow:auto;background:var(--scr);border:1px solid var(--line);border-radius:8px;padding:10px;display:none}
+.panel.on{display:block}
+.panel h4{margin:0 0 8px;font-size:13px;color:var(--skyt);display:flex;justify-content:space-between;align-items:center}
+.panel h4 button{background:none;border:1px solid var(--line);color:var(--mut);border-radius:6px;padding:3px 8px;cursor:pointer;font:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{background:#11161c;border:1px solid #3a3d44;border-radius:7px;padding:6px 10px;color:var(--txt);font:600 12px Consolas,monospace;cursor:pointer}
+.chip:hover{border-color:var(--skyt)} .chip.sel{background:#16324a;border-color:var(--skyt);color:#fff}
+.chip.ils{border-color:#4f9a6e}
+.panel .hint{font-size:12px;color:var(--mut);line-height:1.5}
+.ilsl{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--scr);border:1px solid #2f5a44;border-radius:8px;padding:6px 10px;font-size:12px;color:#d4f2df}
+.ilsl small{display:block;color:var(--mut);font-size:11px}
+.ilsl button{flex:none;background:#1d3b2b;border:1px solid #4f9a6e;color:#d4f2df;border-radius:6px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer}
+.ilsl button.off{background:#11161c;border-color:#3a3d44;color:var(--mut)}
 .tile{background:#16324a;border:1px solid #3d7aa6;border-radius:9px;padding:9px 4px;text-align:center;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
 .tile:hover{border-color:var(--skyt);color:#fff}
 .tile svg{display:block;margin:0 auto 3px;width:18px;height:18px;stroke:currentColor}
@@ -34,7 +48,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .mem{font-size:11px;color:var(--mut);display:flex;justify-content:space-between;gap:8px}
 .mem b{color:var(--ok);font-weight:600}
 #msg{min-height:16px;font-size:12px;color:var(--warn)}
-.scr{flex:1;min-height:0;display:none;flex-direction:column;gap:8px}
+.scr{flex:1;min-height:0;display:none;flex-direction:column;gap:8px;overflow:auto}
 .scr.on{display:flex}
 .nav{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .nav .tile.on{background:#1f4a6b;border-color:var(--skyt);color:#fff}
@@ -75,6 +89,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
 <div class="scr" id="scrPlan">
 <div class="list" id="list"></div>
+<div class="panel" id="apprPanel"></div>
 
 <div id="msg"></div>
 <div class="tiles">
@@ -82,6 +97,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <button class="tile" id="bPln"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14h6M9 17h4"/></svg><span data-t="pln"></span></button>
   <input type="file" id="plnFile" accept=".pln,.PLN,.xml" style="display:none">
   <button class="tile" id="bDirect"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 9l3 3-3 3"/></svg><span data-t="direct"></span></button>
+  <button class="tile wide" id="bAppr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18"/><path d="M5 18l7-12 7 12"/><path d="M12 6v12"/></svg><span data-t="appr"></span></button>
   <button class="tile warn" id="bNew"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span data-t="newflight"></span></button>
 </div>
 </div>
@@ -92,6 +108,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <div class="modes" id="apModes"></div>
   <div class="lnavl mono" id="apLnav"></div>
   <div class="lnavl mono" id="apVnav"></div>
+  <div class="ilsl" id="apIls" style="display:none"><span id="apIlsTxt"></span><button id="apIlsAuto"></button></div>
   <div class="sets" id="apSets"></div>
   <div class="legend" data-t="apLegendL"></div>
   <div class="legend" data-t="apLegend"></div>
@@ -109,6 +126,14 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   var LANG = 'fr';
   var T = {
     simbrief: ['Charger SimBrief', 'Load SimBrief'],
+    appr: ['Approche', 'Approach'], apprAt: ['Approches à {a}', 'Approaches at {a}'], close: ['Fermer', 'Close'],
+    apprNone: ['Aucune approche trouvée pour {a}. Les approches viennent des données de navigation de MSFS : importe-les une fois depuis la page Plan VFR.', 'No approach found for {a}. Approaches come from the MSFS navigation data: import them once from the VFR plan page.'],
+    apprNoDest: ['Charge d’abord un plan de vol (SimBrief ou .PLN).', 'Load a flight plan first (SimBrief or .PLN).'],
+    apprPickTr: ['Arrivée sur l’approche par :', 'Join the approach via:'], apprVectors: ['Vecteurs (finale seule)', 'Vectors (final only)'],
+    apprOk: ['Approche {n} chargée{i}.', 'Approach {n} loaded{i}.'], apprIls: [' · ILS {id} {f} · {c}°', ' · ILS {id} {f} · {c}°'], apprNoIls: [' (ILS non trouvé dans les données)', ' (ILS not found in the data)'],
+    ilsSt: { wait: ['en attente', 'waiting'], standby: ['en attente sur NAV1', 'in NAV1 standby'], active: ['active sur NAV1', 'active on NAV1'], manual: ['réglage manuel', 'manual tuning'],
+             loc_arm: ['LOC armé', 'LOC armed'], loc: ['LOC', 'LOC'], app_arm: ['APP armé', 'APP armed'], app: ['APP', 'APP'], gs: ['APP · GS capté', 'APP · GS captured'] },
+    ilsAutoOn: ['ILS auto', 'Auto ILS'], ilsAutoOff: ['ILS manuel', 'Manual ILS'],
     pln: ['Ouvrir un .PLN', 'Open a .PLN'],
     plnBad: ['Fichier .PLN illisible ou sans points de route.', 'Unreadable .PLN file or no waypoints.'],
     plnOk: ['Plan .PLN chargé : {f}', '.PLN plan loaded: {f}'],
@@ -206,6 +231,83 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     $('src').textContent = s ? t('by', { s: s }) : '';
   }
   FmsStore.onChange(render);
+
+  // ---- Approche : liste des approches de la destination (données de navigation de MSFS importées par la page Plan VFR)
+  var appr = { list: null, sel: -1 };
+  function closeAppr() { $('apprPanel').classList.remove('on'); $('list').style.display = ''; }
+  $('bAppr').onclick = function () {
+    var p = (FmsStore.state && FmsStore.state.plan) || {}, icao = p.dest && p.dest.icao, pnl = $('apprPanel');
+    if ($('apprPanel').classList.contains('on')) { closeAppr(); return; }
+    $('list').style.display = 'none'; pnl.classList.add('on');
+    var head = '<h4><span>' + t('apprAt', { a: esc(icao || '----') }) + '</span><button data-a="close">' + t('close') + '</button></h4>';
+    if (!icao || !(p.route || []).length) { pnl.innerHTML = head + '<div class="hint">' + t('apprNoDest') + '</div>'; return; }
+    pnl.innerHTML = head + '<div class="hint">…</div>';
+    fetch('/approaches?icao=' + encodeURIComponent(icao)).then(function (r) { return r.json(); }).catch(function () { return []; }).then(function (list) {
+      appr.list = Array.isArray(list) ? list : []; appr.sel = -1; appr.icao = icao; drawAppr(head);
+    });
+  };
+  function apprName(a) { return (a.t || '?') + ' ' + (a.r || '') + (a.s ? ' ' + a.s : ''); }
+  function drawAppr(head) {
+    var pnl = $('apprPanel'), L = appr.list;
+    head = head || pnl.querySelector('h4').outerHTML;
+    if (!L.length) { pnl.innerHTML = head + '<div class="hint">' + t('apprNone', { a: esc(appr.icao) }) + '</div>'; return; }
+    var h = head + '<div class="chips">' + L.map(function (a, i) {
+      return '<button class="chip' + (/^(ILS|LOC|LDA|SDF)/.test(a.t) ? ' ils' : '') + (i === appr.sel ? ' sel' : '') + '" data-a="ap" data-i="' + i + '">' + esc(apprName(a)) + '</button>';
+    }).join('') + '</div>';
+    if (appr.sel >= 0) {
+      var a = L[appr.sel];
+      h += '<div class="hint">' + t('apprPickTr') + '</div><div class="chips"><button class="chip" data-a="tr" data-i="-1">' + t('apprVectors') + '</button>' +
+        (a.tr || []).map(function (tr, i) { var l = tr.l || []; return l.length ? '<button class="chip" data-a="tr" data-i="' + i + '">' + esc(l[0][0]) + '</button>' : ''; }).join('') + '</div>';
+    }
+    pnl.innerHTML = h;
+  }
+  $('apprPanel').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    if (b.dataset.a === 'close') { closeAppr(); return; }
+    if (b.dataset.a === 'ap') { appr.sel = +b.dataset.i; drawAppr(); return; }
+    if (b.dataset.a === 'tr') applyAppr(appr.list[appr.sel], +b.dataset.i);
+  });
+  function findIls(a, dest) {   // ILS de la piste : près de la destination, axe proche du numéro de piste
+    return new Promise(function (res) {
+      if (!/^(ILS|LOC|LDA|SDF)/.test(a.t) || !ok(dest)) { res(null); return; }
+      var q = '&s=' + (dest.lat - .25) + '&w=' + (dest.lon - .35) + '&n=' + (dest.lat + .25) + '&e=' + (dest.lon + .35);
+      fetch('/nav?k=ils' + q).then(function (r) { return r.json(); }).catch(function () { return []; }).then(function (arr) {
+        var rh = (parseInt(a.r, 10) || 0) * 10, best = null;
+        (arr || []).forEach(function (r) {
+          var loc = +r[7] || 0, mv = +r[4] || 0;
+          // axe magnétique = axe vrai − déclinaison ; on garde le premier calcul qui tombe près du numéro de piste
+          var cs = [loc - mv, loc, loc + mv].filter(function (c) { return Math.abs(((c - rh) % 360 + 540) % 360 - 180) < 30; });
+          if (!rh || !cs.length) return;
+          var c = cs[0], d = Math.abs(((loc - rh) % 360 + 540) % 360 - 180);
+          if (!best || d < best.d) best = { d: d, ident: r[0], freq: +r[5], crs: Math.round(((c % 360) + 360) % 360) || 360 };
+        });
+        res(best ? { ident: best.ident, freq: best.freq, crs: best.crs, gs: a.t === 'ILS', type: a.t } : null);
+      });
+    });
+  }
+  function applyAppr(a, tri) {
+    var st = FmsStore.state || {}, p = st.plan || {}, route = (p.route || []).filter(function (w) { return !w.ap; });
+    if (route.length < 2) return;
+    var dest = route[route.length - 1], body = route.slice(0, -1), name = apprName(a);
+    var legs = (tri >= 0 && a.tr && a.tr[tri] ? a.tr[tri].l || [] : []).concat(a.f || []);
+    var pts = [];
+    legs.forEach(function (l) {
+      if (!l || !l[0] || (pts.length && pts[pts.length - 1].ident === l[0])) return;
+      pts.push({ ident: l[0], lat: +l[1], lon: +l[2], alt: 0, type: 'wpt', via: name, ap: true });
+    });
+    if (!pts.length) return;
+    var k = -1; body.forEach(function (w, i) { if (w.ident === pts[0].ident && i > 0) k = i; });   // point d'entrée déjà dans la route : on raccorde là
+    if (k > 0) { if (body[k].alt) pts[0].alt = body[k].alt; body = body.slice(0, k); }   // on garde l'altitude prévue du point de raccord
+    var nr = body.concat(pts, [dest]);
+    var curId = route[p.activeLeg || 1] ? route[p.activeLeg || 1].ident : '', act = -1;
+    nr.forEach(function (w, i) { if (act < 0 && i > 0 && w.ident === curId) act = i; });
+    if (act < 1) act = Math.min(p.activeLeg || 1, nr.length - 1);
+    findIls(a, dest).then(function (ils) {
+      FmsStore.set({ plan: { route: nr, activeLeg: act, approach: name, dest: { rwy: a.r || '' }, ils: ils } }, 'fms');
+      closeAppr(); render.scrolled = false;
+      msg(t('apprOk', { n: name, i: ils ? t('apprIls', { id: ils.ident, f: (ils.freq / 1e6).toFixed(2), c: String(ils.crs).padStart(3, '0') }) : (/^(ILS|LOC)/.test(a.t) ? t('apprNoIls') : '') }));
+    });
+  }
 
   // ---- T/D prévu : même calcul que le VNAV (pente 3°, après le point le plus haut ; destination : terrain + 1500 ft, 5 NM avant)
   function planTod(p) {
@@ -344,6 +446,13 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (ln && ln.on && ln.to && ln.hdg >= 0) le.textContent = t('lnavTo', { p: ln.to, d: ln.dist, h: String(ln.hdg || 360).padStart(3, '0') });
     else if (ln && ln.msg) { le.textContent = ln.msg; le.classList.add('msg'); }
     else le.textContent = '';
+    var il = live && st.ils && st.ils.ident ? st.ils : null;
+    $('apIls').style.display = il ? '' : 'none';
+    if (il) {
+      var stx = T.ilsSt[il.state] ? T.ilsSt[il.state][LANG === 'en' ? 1 : 0] : '';
+      $('apIlsTxt').innerHTML = 'ILS ' + esc(il.ident) + ' · ' + il.freq.toFixed(2) + ' · ' + String(il.crs).padStart(3, '0') + '°<small>' + esc(stx) + (il.dist >= 0 ? ' · ' + il.dist + ' NM' : '') + '</small>';
+      var bA = $('apIlsAuto'); bA.textContent = il.auto ? t('ilsAutoOn') : t('ilsAutoOff'); bA.classList.toggle('off', !il.auto); bA.dataset.v = il.auto ? '0' : '1';
+    }
     var vn = live && st.vnav ? st.vnav : null, ve = $('apVnav');
     ve.className = 'lnavl mono';
     if (vn && vn.on && vn.msg) { ve.textContent = vn.msg; ve.classList.add('msg'); }
@@ -369,6 +478,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     });
     drawSets();
   }
+  $('apIlsAuto').onclick = function () { apSend('ils_auto', +this.dataset.v); };
   var polling = false;
   function poll() {
     if (polling) return; polling = true;
