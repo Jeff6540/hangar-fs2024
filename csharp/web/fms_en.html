@@ -63,6 +63,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .chsel button.on{background:#1f4a6b;border-color:var(--skyt);color:#fff}
 .chtitle{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:#d4e6f5}
 .chtitle small{display:block;color:var(--mut);font-size:11px}
+.chtitle > span:last-child{flex:none;white-space:nowrap}
 .chtitle button{flex:none;background:#16324a;border:1px solid #3d7aa6;color:#e6f5ff;border-radius:6px;padding:5px 8px;font:600 11px inherit;cursor:pointer}
 #chart{width:100%;aspect-ratio:1/1;background:#0b1118;border:1px solid var(--line);border-radius:8px;display:block}
 .chnote{font-size:11px;color:var(--mut);line-height:1.4}
@@ -141,7 +142,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
 <div class="scr" id="scrChart">
   <div class="chsel"><button id="chDep"></button><button id="chArr"></button></div>
-  <div class="chtitle"><span id="chTitle"></span><button id="chSia" style="display:none"></button></div>
+  <div class="chtitle"><span id="chTitle"></span><span><button id="chNg"></button> <button id="chSia" style="display:none"></button></span></div>
   <svg id="chart" viewBox="0 0 480 480"></svg>
   <div class="chnote" data-t="chNote"></div>
 </div>
@@ -203,7 +204,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     elevUnk: ['Altitude du terrain d’arrivée inconnue : touche le « ? » de {a} pour la taper. En attendant, le VNAV ne descend pas plus bas que le dernier point qui a une altitude.', 'Arrival field elevation unknown: tap the “?” of {a} to type it. Meanwhile VNAV does not descend below the last fix with an altitude.'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
     todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'], navChart: ['Cartes', 'Charts'],
-    chDep: ['Départ', 'Departure'], chArr: ['Arrivée', 'Arrival'], chSia: ['Carte officielle (SIA)', 'Official chart (SIA)'],
+    chDep: ['Départ', 'Departure'], chArr: ['Arrivée', 'Arrival'], chSia: ['Carte officielle (SIA)', 'Official chart (SIA)'], chNg: ['Navigraph', 'Navigraph'], chNgCopied: ['Code {c} copié : colle-le (Ctrl+V) dans la recherche de Navigraph Charts.', 'Code {c} copied: paste it (Ctrl+V) into the Navigraph Charts search.'],
     chNone: ['Charge d’abord un plan de vol.', 'Load a flight plan first.'], chDirect: ['route directe', 'direct route'],
     chNote: ['Schéma dessiné d’après ton plan de vol et les données de MSFS (points, altitudes, piste) : pour se repérer, pas pour naviguer. Le bouton SIA ouvre les cartes officielles des aéroports français dans ton navigateur.', 'Diagram drawn from your flight plan and MSFS data (fixes, altitudes, runway): for orientation, not for navigation. The SIA button opens the official charts of French airports in your browser.'],
     comAutoOn: ['COM auto', 'Auto COM'], comAutoOff: ['COM manuel', 'Manual COM'], comStby: ['attente', 'standby'],
@@ -539,6 +540,12 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     return 'https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_' + dd + '_' + M[d.getUTCMonth()] + '_' + y + '/FRANCE/AIRAC-' + y + '-' + mm + '-' + dd + '/html/eAIP/FR-AD-2.' + icao + '-fr-FR.html';
   }
   $('chSia').onclick = function () { if (this.dataset.u) window.open(this.dataset.u, '_blank'); };
+  // Navigraph : pas de lien direct vers une carte ; on copie le code de l'aéroport et on ouvre Navigraph Charts
+  $('chNg').onclick = function () {
+    var c = this.dataset.icao || '', done = function () { var n = document.querySelector('#scrChart .chnote'); n.textContent = t('chNgCopied', { c: c }); n.style.color = 'var(--ok)'; setTimeout(function () { n.textContent = t('chNote'); n.style.color = ''; }, 8000); };
+    try { navigator.clipboard.writeText(c).then(done, done); } catch (e) { done(); }
+    window.open('https://charts.navigraph.com/', '_blank');
+  };
   function chAlt(w) {
     if (!w.alt) return '';
     var a = Math.round(w.alt), s = a >= 18000 ? 'FL' + Math.round(a / 100) : String(a);
@@ -553,7 +560,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     var dep = chSide === 'dep', apt = dep ? route[0] : route[route.length - 1], icao = (dep ? o.icao : d.icao) || apt.ident || '';
     var rwy = dep ? o.rwy : d.rwy, proc = dep ? plan.departure : [plan.arrival, plan.approach].filter(Boolean).join(' · ');
     $('chTitle').innerHTML = esc(icao) + (rwy ? ' · ' + (L1 ? 'RWY ' : 'piste ') + esc(rwy) : '') + '<small>' + esc(proc || t('chDirect')) + '</small>';
-    var sb = $('chSia'); sb.textContent = t('chSia');
+    var sb = $('chSia'); sb.textContent = t('chSia'); $('chNg').textContent = t('chNg'); $('chNg').dataset.icao = icao;
     if (/^LF[A-Z]{2}$/.test(icao)) { sb.style.display = ''; sb.dataset.u = siaUrl(icao); } else sb.style.display = 'none';
     // points montrés : la procédure (via = SID / STAR, points d'approche), sinon ceux à moins de 40 NM de l'aéroport
     var idx = [], i, n = route.length;
