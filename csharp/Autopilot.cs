@@ -46,6 +46,8 @@ namespace HangarFS2024
             new[] { "NAV HAS LOCALIZER:1", "bool" },                 // 27
             new[] { "NAV CDI:1", "number" },                         // 28
             new[] { "NAV HAS GLIDE SLOPE:1", "bool" },               // 29
+            new[] { "NAV ACTIVE FREQUENCY:2", "MHz" },               // 30  (liners : ILS aussi sur NAV2)
+            new[] { "NAV STANDBY FREQUENCY:2", "MHz" },              // 31
         };
 
         // ---- ordres envoyés à MSFS (numéro d'ordre = 1000 + position dans la liste)
@@ -59,6 +61,7 @@ namespace HangarFS2024
             "AP_APR_HOLD_ON", "AP_APR_HOLD_OFF", "AP_APR_HOLD",
             "HEADING_BUG_SET", "AP_ALT_VAR_SET_ENGLISH", "AP_VS_VAR_SET_ENGLISH", "AP_SPD_VAR_SET",
             "NAV1_STBY_SET_HZ", "NAV1_RADIO_SWAP", "VOR1_SET", "TOGGLE_GPS_DRIVES_NAV1",
+            "NAV2_STBY_SET_HZ", "NAV2_RADIO_SWAP",
         };
         public const uint EventBase = 1000;
 
@@ -159,11 +162,22 @@ namespace HangarFS2024
             double[] cur; lock (Gate) cur = vals != null && now - valsAt < 3 ? (double[])vals.Clone() : null;
             Lnav.Tick(cur, now, hdgBusy: IsPending("hdg"));
             Vnav.Tick(cur, now, vsBusy: IsPending("vs"));
-            Approach.Tick(cur, now, IsPending("nav") || IsPending("apr"));
+            Approach.Tick(cur, now, IsPending("nav") || IsPending("apr"), Liner(now));
             var list = new List<KeyValuePair<string, int>>();
             KeyValuePair<string, int> o;
             while (outbox.TryDequeue(out o)) list.Add(o);
             return list;
+        }
+
+        // PMDG 737 ou iFly 737 MAX (vérifié au plus une fois toutes les 2 s)
+        static string liner; static double nextLiner;
+        static string Liner(double now)
+        {
+            if (now < nextLiner) return liner;
+            nextLiner = now + 2;
+            string ac; lock (Gate) ac = aircraft;
+            liner = Pmdg.Snapshot() != null || Pmdg.IsPmdg737(ac) ? "pmdg" : Ifly.Snapshot() != null || Ifly.IsIfly(ac) ? "ifly" : null;
+            return liner;
         }
 
         // avions aux systèmes maison, qui n'écoutent souvent pas les ordres standards de MSFS
@@ -534,7 +548,7 @@ namespace HangarFS2024
         static string state = "", ident = "", lastKey = "";
         static double freqHz, crs, distNm = -1;
         static bool hasGs;
-        static double nextCalc, lastStby, lastSwap, lastObs, lastGps, lastArm;
+        static double nextCalc, lastStby, lastSwap, lastObs, lastGps, lastArm, lastStby2, lastSwap2;
         static bool obsSet;
 
         public static void SetAuto(bool v) { lock (Gate) auto = v; }
@@ -549,7 +563,7 @@ namespace HangarFS2024
         static double Num(JToken t) { double d; double.TryParse(JsonStore.Str(t), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d); return d; }
         static bool Same(double mhz, double hz) { return Math.Abs(mhz * 1e6 - hz) < 2000; }
 
-        public static void Tick(double[] v, double now, bool modeBusy)
+        public static void Tick(double[] v, double now, bool modeBusy, string liner)
         {
             lock (Gate)
             {
@@ -572,11 +586,28 @@ namespace HangarFS2024
 
                 if (aprOn && (gsOn || !hasGs)) { state = gsOn ? "gs" : "app"; return; }
                 if (aprOn) { state = "app"; return; }
-                if (!auto) { state = active ? "active" : standby ? "standby" : "manual"; return; }
+                bool two = liner != null && v.Length >= 32;   // PMDG / iFly : ILS sur NAV1 et NAV2, les deux courses
+                bool active2 = two && Same(v[30], freqHz), standby2 = two && Same(v[31], freqHz);
+                if (!auto) { state = active ? (active2 ? "active2" : "active") : standby ? "standby" : "manual"; return; }
 
                 // 1) fréquence en attente, 2) permutation, 3) cap de piste, 4) l'aiguille NAV1 sur l'ILS (et pas le GPS)
                 if (!active && !standby && distNm < 80 && now - lastStby > 5) { lastStby = now; Autopilot.Order("NAV1_STBY_SET_HZ", (int)freqHz); }
                 if (!active && standby && distNm < 25 && now - lastSwap > 5) { lastSwap = now; Autopilot.Order("NAV1_RADIO_SWAP", 0); }
+                if (two)
+                {
+                    if (!active2 && !standby2 && distNm < 80 && now - lastStby2 > 5) { lastStby2 = now; Autopilot.Order("NAV2_STBY_SET_HZ", (int)freqHz); }
+                    if (!active2 && standby2 && distNm < 25 && now - lastSwap2 > 5) { lastSwap2 = now; Autopilot.Order("NAV2_RADIO_SWAP", 0); }
+                    // les deux courses (gauche et droite) du MCP, par le SDK de l'avion
+                    if (active && !obsSet && now - lastObs > 3)
+                    {
+                        lastObs = now; obsSet = true;
+                        var o = new JObject { ["c"] = liner + "_set", ["k"] = "crs", ["v"] = Math.Round(crs) };
+                        if (liner == "pmdg") Pmdg.Command(o); else Ifly.Command(o);
+                    }
+                    // LOC et APP restent au pilote sur ces avions (boutons du MCP)
+                    state = active ? (active2 ? "active2" : "active") : standby ? "standby" : "wait";
+                    return;
+                }
                 if (active && !obsSet && now - lastObs > 3) { lastObs = now; obsSet = true; Autopilot.Order("VOR1_SET", (int)Math.Round(crs) % 360 == 0 ? 360 : (int)Math.Round(crs) % 360); }
                 if (active && v[26] >= 0.5 && distNm < 25 && now - lastGps > 5) { lastGps = now; Autopilot.Order("TOGGLE_GPS_DRIVES_NAV1", 0); }
 
