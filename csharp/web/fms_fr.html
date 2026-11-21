@@ -20,7 +20,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row{display:grid;grid-template-columns:1.5fr .8fr .8fr .9fr;padding:7px 10px;border-left:3px solid transparent;cursor:pointer}
 .row:hover{background:#121821}
 .row.head{position:sticky;top:0;background:#0f1318;color:#8fb8d6;font-size:11px;cursor:default;border-bottom:1px solid var(--line)}
-.row.done{color:#5d6670}
+.row.done{color:#6fcf97}
+.row.done span:first-child::before{content:'✓ ';color:#4f9a6e}
 .row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
 .row.tod{color:var(--warn);cursor:default;background:#1d1a12}
@@ -206,7 +207,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     pmHint: ['Boutons et molettes du MCP du PMDG : le FMS de l’avion garde la route.', 'PMDG MCP buttons and knobs: the aircraft FMS keeps the route.'],
     lIas: ['IAS / Mach', 'IAS / Mach'], lCrs: ['Course', 'Course'],
     lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
-    src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
+    src: { lnav: ['LNAV', 'LNAV'], fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
   };
   function t(k, v) { var s = (T[k] || [k, k])[LANG === 'en' ? 1 : 0]; Object.keys(v || {}).forEach(function (x) { s = s.replace('{' + x + '}', v[x]); }); return s; }
   function $(id) { return document.getElementById(id); }
@@ -570,11 +571,19 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   }
   // ---- PMDG 737 : MCP de l'avion (SDK)
   var PM_BTN = [['cmda', 'CMD A', 1], ['cmdb', 'CMD B', 1], ['at', 'A/T', 0], ['n1', 'N1', 0], ['speed', 'SPEED', 0], ['vnav', 'VNAV', 0], ['lvlchg', 'LVL CHG', 0],
-    ['hdgsel', 'HDG SEL', 0], ['lnav', 'LNAV', 0], ['vorloc', 'VOR/LOC', 0], ['app', 'APP', 0], ['althold', 'ALT HLD', 0], ['vs', 'V/S', 0], ['fdl', 'F/D', 0]];
+    ['hdgsel', 'HDG SEL', 0], ['lnav', 'LNAV', 0], ['vorloc', 'VOR/LOC', 0], ['app', 'APP', 0], ['althold', 'ALT HLD', 0], ['vs', 'V/S', 0], ['fd', 'F/D', 0]];
   var PM_SET = [['ias', 'lIas', 1, 5, 100, 400, ' kt'], ['hdg', 'lHdg', 1, 10, 1, 360, '°'], ['alt', 'lAlt', 100, 1000, 0, 41000, ' ft'], ['vs', 'lVs', 100, 500, -7900, 6000, ''], ['crs', 'lCrs', 1, 10, 1, 360, '°']];
   $('pmModes').innerHTML = PM_BTN.map(function (b) { return '<button class="md' + (b[2] ? ' cmd' : '') + '" data-pb="' + b[0] + '">' + b[1] + '<small></small></button>'; }).join('');
   $('pmSets').innerHTML = PM_SET.map(function (x) { return '<div class="set" data-ps="' + x[0] + '"><span class="lb">' + t(x[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>'; }).join('');
-  $('pmModes').addEventListener('click', function (e) { var b = e.target.closest('[data-pb]'); if (!b) return; try { window.chrome.webview.postMessage({ ap: { c: mcpKind(), b: b.dataset.pb } }); } catch (x) {} b.classList.add('busy'); });
+  $('pmModes').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pb]'); if (!b) return;
+    var send = function (k) { try { window.chrome.webview.postMessage({ ap: { c: mcpKind(), b: k } }); } catch (x) {} };
+    if (b.dataset.pb === 'fd') {   // les deux F/D ensemble : tous les deux allumés → on éteint les deux, sinon on allume ceux qui sont éteints
+      var on = (mcp() && mcp().on) || {}, both = on.fdl && on.fdr;
+      if (both) { send('fdl'); send('fdr'); } else { if (!on.fdl) send('fdl'); if (!on.fdr) send('fdr'); }
+    } else send(b.dataset.pb);
+    b.classList.add('busy');
+  });
   var pmLocal = {}, pmAt = {};
   function mcp() { return ap ? (ap.pmdg737 ? ap.pmdg : ap.ifly737 ? ap.ifly : null) : null; }
   function mcpKind() { return ap && ap.ifly737 && !ap.pmdg737 ? 'ifly' : 'pmdg'; }
@@ -621,9 +630,10 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     $('pmNote').textContent = !pm ? t(ifl ? 'ifNoSdk' : 'pmNoSdk') : !pm.powered ? t('pmOff') : t(ifl ? 'ifHint' : 'pmHint');
     $('pmNote').style.color = !pm || !pm.powered ? 'var(--warn)' : 'var(--mut)';
     $('pmModes').querySelectorAll('[data-pb]').forEach(function (b) {
-      var k = b.dataset.pb, on = !!(pm && pm.on && pm.on[k]);
+      var k = b.dataset.pb, on = !!(pm && pm.on && pm.on[k]), lbl = on ? 'ON' : '';
+      if (k === 'fd' && pm && pm.on) { on = pm.on.fdl && pm.on.fdr; lbl = on ? 'ON' : pm.on.fdl ? 'G seul' : pm.on.fdr ? 'D seul' : ''; if (LANG === 'en' && lbl.indexOf('seul') > 0) lbl = lbl === 'G seul' ? 'L only' : 'R only'; }
       b.classList.toggle('on', on); b.classList.remove('busy');
-      b.querySelector('small').textContent = pm ? (on ? 'ON' : '') : '—';
+      b.querySelector('small').textContent = pm ? lbl : '—';
     });
     PM_SET.forEach(function (x) {
       var row = $('pmSets').querySelector('[data-ps="' + x[0] + '"]'), val = row.querySelector('.val'), v = pmVal(x[0]);

@@ -223,6 +223,37 @@ namespace HangarFS2024
             }
         }
 
+        // ---- suivi du vol sans LNAV (FMS de l'avion, NAV, pilotage à la main) : la liste avance au passage de chaque point
+        static double nextFollow;
+        static void Follow(double[] v, double now)
+        {
+            if (now < nextFollow) return;
+            nextFollow = now + 2;
+            if (v == null || v.Length < 24 || v[17] >= 0.5 || v[22] < 50) return;   // au sol ou trop lent : rien
+            var st = FlightStore.Get();
+            var plan = st["plan"] as JObject ?? new JObject();
+            var route = plan["route"] as JArray;
+            if (route == null || route.Count < 3) return;
+            int act = Math.Max(1, Math.Min(route.Count - 1, (int?)plan["activeLeg"] ?? 1)), start = act;
+            double lat = v[20], lon = v[21];
+            for (int guard = 0; guard < 5 && act < route.Count - 1; guard++)
+            {
+                double pla, plo, bla, blo, nla, nlo;
+                if (!Pt(route, act - 1, out pla, out plo) || !Pt(route, act, out bla, out blo) || !Pt(route, act + 1, out nla, out nlo)) break;
+                double dB = Dist(lat, lon, bla, blo) * EarthNm;
+                double legLen = Dist(pla, plo, bla, blo), d13 = Dist(pla, plo, lat, lon);
+                double crs12 = Brg(pla, plo, bla, blo), crs13 = Brg(pla, plo, lat, lon);
+                double xtd = Math.Asin(Math.Sin(d13) * Math.Sin((crs13 - crs12) * R));
+                double atd = Math.Acos(Math.Max(-1, Math.Min(1, Math.Cos(d13) / Math.Max(1e-9, Math.Cos(xtd)))));
+                if (Math.Abs(Wrap(crs13 - crs12)) > 90) atd = -atd;
+                // point passé : à moins de 1,5 NM, ou dépassé le long de la route (et plus près du tronçon suivant que de l'ancien)
+                bool passed = dB < 1.5 || (legLen > 0 && atd >= legLen && Dist(lat, lon, nla, nlo) < Dist(bla, blo, nla, nlo) + 2 / EarthNm);
+                if (!passed) break;
+                act++;
+            }
+            if (act != start) FlightStore.Set(new JObject { ["plan"] = new JObject { ["activeLeg"] = act } }, "track");
+        }
+
         public static void ManualHeading()   // cap réglé à la main : le pilote reprend la main sur le LNAV
         {
             lock (Gate) if (on) Off(Hangar.L("LNAV désengagé : cap réglé à la main.", "LNAV disengaged: heading set by hand."));
@@ -267,7 +298,7 @@ namespace HangarFS2024
         {
             lock (Gate)
             {
-                if (!on) { cmdMag = -1; return; }
+                if (!on) { cmdMag = -1; Follow(v, now); return; }
                 if (now < nextCalc) return;
                 nextCalc = now + 0.25;
                 if (v == null || v.Length < 24) { message = Hangar.L("En attente de l'avion…", "Waiting for the aircraft…"); return; }
