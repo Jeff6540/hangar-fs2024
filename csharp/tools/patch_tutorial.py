@@ -418,6 +418,35 @@ R["en"] += [
  ("<b>At the top, the summary</b>: block time, flight time,", "<b>At the top, the summary</b>: block time (gate to gate), flight time (takeoff → landing),", "block time (gate to gate), flight time (takeoff → landing)"),
 ]
 
+R["fr"] += [
+ ("Si tu as choisi une approche, il reçoit son point de début :",
+  "Les VOR et NDB de ta route lui sont envoyés par leurs coordonnées (sinon SimBrief pourrait choisir une balise du même nom ailleurs dans le monde, par exemple TAN pris pour Tanger). Si tu as choisi une approche, il reçoit son point de début :",
+  "par leurs coordonnées (sinon SimBrief"),
+ ("Une <b>légende</b>, en bas à droite, rappelle les couleurs et se replie d'un clic sur son titre.",
+  "Une <b>légende</b>, en bas à droite, rappelle les couleurs et se replie d'un clic sur son titre. Les cercles gris au contour rouge en pointillés sont les aéroports <b>incompatibles</b> avec ton avion (trop loin ou piste inadaptée). Une fois le départ et l'arrivée choisis, la légende montre aussi la <b>frise jour / nuit</b> du vol (voir Plan de vol).",
+  "aéroports <b>incompatibles</b> avec ton avion"),
+ ("<li><b>Destinations</b> : elles correspondent à l'avion choisi (vrais aéroports avec une piste adaptée pour un avion de ligne, grands aéroports pour un gros porteur), avec la compatibilité des pistes.",
+  "<li><b>Destinations</b> : elles correspondent à l'avion choisi (vrais aéroports avec une piste adaptée pour un avion de ligne, grands aéroports pour un gros porteur), avec la compatibilité des pistes : longueur, mais aussi <b>largeur</b> (un avion de ligne est refusé sous 30 m, « à vérifier » sous 45 m ; 45 m pour un gros porteur) et <b>infrastructures</b> (un terrain sans vols commerciaux réguliers, petit aérodrome ou base militaire, est marqué « à vérifier » pour un avion de ligne, cause 🏢 Infrastructures).</li><li><b>Frise jour / nuit</b> : sous le temps de vol, une barre montre si tu voles de jour (jaune), à l'aube ou au crépuscule (orange) ou de nuit (bleu), avec l'heure locale de décollage et d'atterrissage de chaque aéroport et l'heure UTC. Le calcul suit la position de l'avion selon sa vitesse et le déplacement du soleil, vu de l'altitude de croisière (en altitude, on voit le soleil plus longtemps qu'au sol) ; elle annonce aussi un lever ou coucher du soleil en route.",
+  "<b>Frise jour / nuit</b> : sous le temps de vol"),
+]
+R["en"] += [
+ ("If you chose an approach, it gets its starting point:",
+  "The VORs and NDBs of your route are sent by their coordinates (otherwise SimBrief could pick a beacon with the same name elsewhere in the world, e.g. TAN taken for Tangier). If you chose an approach, it gets its starting point:",
+  "sent by their coordinates (otherwise SimBrief"),
+ ("A <b>legend</b>, bottom right, recalls the colours and folds with a click on its title.",
+  "A <b>legend</b>, bottom right, recalls the colours and folds with a click on its title. Grey circles with a red dashed outline are airports <b>incompatible</b> with your aircraft (too far or unsuitable runway). Once departure and arrival are chosen, the legend also shows the flight's <b>day / night strip</b> (see Flight plan).",
+  "airports <b>incompatible</b> with your aircraft"),
+ ("<li><b>Destinations</b>: they match the chosen aircraft (real airports with a suitable runway for an airliner, large airports for a wide-body), with runway compatibility.",
+  "<li><b>Destinations</b>: they match the chosen aircraft (real airports with a suitable runway for an airliner, large airports for a wide-body), with runway compatibility: length, but also <b>width</b> (an airliner is refused under 30 m, \"to check\" under 45 m; 45 m for a wide-body) and <b>facilities</b> (a field without scheduled commercial flights, small airfield or military base, is marked \"to check\" for an airliner, cause 🏢 Facilities).</li><li><b>Day / night strip</b>: under the flight time, a bar shows whether you fly by day (yellow), at dawn or dusk (orange) or by night (blue), with the local takeoff and landing time of each airport and the UTC time. It follows the aircraft's position from its speed and the sun's movement, seen from cruise altitude (up high you see the sun longer than on the ground); it also announces a sunrise or sunset en route.",
+  "<b>Day / night strip</b>: under the flight time"),
+]
+
+CUT.setdefault("fr", []).extend([(r"avec la distance totale\. (?=Les boutons <b>Aéroports</b>, <b>VOR / DME</b>)", 'avec la distance totale. Les VOR / DME sont des hexagones blancs bordés de bleu marine (différents des aéroports) et les NDB des ronds violets ; si tu as importé les données de navigation de MSFS, les NDB viennent de là. Les petits aérodromes apparaissent dès un zoom moyen (inutile de zoomer très serré). ')])
+CUT.setdefault("en", []).extend([(r"with the total distance\. (?=The <b>Airports</b>, <b>VOR / DME</b>)", 'with the total distance. VOR / DMEs are white hexagons with a navy border (different from airports) and NDBs are purple circles; if you imported the MSFS navigation data, the NDBs come from there. Small airfields appear from a medium zoom (no need to zoom in very close). ')])
+
+CUT.setdefault("fr", []).extend([(r", ou bouton <b>✈ PLAN VFR</b> dans la barre de la carte Plan de vol personnel\)", ")")])
+CUT.setdefault("en", []).extend([(r", or <b>✈ VFR PLAN</b> button in the Personal flight plan map bar\)", ")")])
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():
