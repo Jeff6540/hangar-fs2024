@@ -396,8 +396,11 @@ namespace HangarFS2024
                 // altitude à respecter sur chaque point (destination : terrain + 1500 ft, 5 NM avant)
                 double bestTod = double.MaxValue, bestAlt = -1, pathAlt = double.MaxValue; string bestId = "";
                 // pas de descente avant le point le plus haut de la route restante (sinon la montée serait prise pour une descente)
-                int peak = act; double peakAlt = -1;
-                for (int i = act; i < route.Count - 1; i++) { double a0 = Num((route[i] as JObject ?? new JObject())["alt"]); if (a0 > peakAlt) { peakAlt = a0; peak = i; } }
+                // sommet = dernier point prévu à l'altitude de croisière (aucun devant : on peut descendre dès maintenant)
+                double topAlt = cruise;
+                for (int i = act; i < route.Count - 1; i++) topAlt = Math.Max(topAlt, Num((route[i] as JObject ?? new JObject())["alt"]));
+                int peak = act;
+                for (int i = act; i < route.Count - 1; i++) if (Num((route[i] as JObject ?? new JObject())["alt"]) >= topAlt - 300) peak = i;
                 double highAhead = cruise;
                 for (int i = act; i < route.Count; i++)
                 {

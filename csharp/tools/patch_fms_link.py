@@ -47,6 +47,9 @@ JS = r"""<script src="/fms_store.js"></script><script id="hangar-fms-vfr-link">
     if (sig === last) return;                  // rien n'a changé depuis le dernier envoi (ex. simple ouverture de la page)
     try { localStorage.setItem(KEY, sig); } catch (x) {}
     var dest = route[route.length - 1];
+    [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
+      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && A.elevation_ft) w.alt = Math.round(A.elevation_ft); } catch (x) {}
+    });
     ilsFor(ap, dest).then(function (ils) {
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});
       // même départ et même arrivée : on garde l'altitude de croisière déjà connue du FMS

@@ -30,8 +30,9 @@ JS = r"""<script id="hangar-fms-track">
   function profile(p) {
     var r = p.route || [], cum = [0], i; if (r.length < 2) return {};
     for (i = 1; i < r.length; i++) cum[i] = cum[i - 1] + nm(r[i - 1], r[i]);
-    var peak = 0, top = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) > top) { top = r[i].alt; peak = i; }
+    var top = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) > top) top = r[i].alt;
     var cruise = Math.max(p.cruiseAlt || 0, top), out = { cum: cum, cruise: cruise };
+    var peak = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) >= cruise - 300) peak = i;   // dernier point à la croisière (aucun : le départ)
     if (cruise <= 0) return out;
     var best = null;
     for (i = Math.max(1, peak); i < r.length; i++) {

@@ -8261,6 +8261,9 @@ ${waypoint(arr)}
     if (sig === last) return;                  // rien n'a changé depuis le dernier envoi (ex. simple ouverture de la page)
     try { localStorage.setItem(KEY, sig); } catch (x) {}
     var dest = route[route.length - 1];
+    [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
+      try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && A.elevation_ft) w.alt = Math.round(A.elevation_ft); } catch (x) {}
+    });
     ilsFor(ap, dest).then(function (ils) {
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});
       // même départ et même arrivée : on garde l'altitude de croisière déjà connue du FMS
@@ -8297,8 +8300,9 @@ ${waypoint(arr)}
   function profile(p) {
     var r = p.route || [], cum = [0], i; if (r.length < 2) return {};
     for (i = 1; i < r.length; i++) cum[i] = cum[i - 1] + nm(r[i - 1], r[i]);
-    var peak = 0, top = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) > top) { top = r[i].alt; peak = i; }
+    var top = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) > top) top = r[i].alt;
     var cruise = Math.max(p.cruiseAlt || 0, top), out = { cum: cum, cruise: cruise };
+    var peak = 0; for (i = 1; i < r.length - 1; i++) if ((r[i].alt || 0) >= cruise - 300) peak = i;   // dernier point à la croisière (aucun : le départ)
     if (cruise <= 0) return out;
     var best = null;
     for (i = Math.max(1, peak); i < r.length; i++) {
