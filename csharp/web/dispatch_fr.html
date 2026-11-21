@@ -6424,7 +6424,9 @@ ${waypoint(arr)}
     }
     /* trajectoire : un point toutes les 15 s, ou plus souvent quand l'altitude change vite */
     var tr = rec.trk, lp = tr[tr.length - 1], ts = Math.round((now - rec.t0) / 1000);
-    if (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== gnd)) {
+    var jump = !isFinite(u.lat) || !isFinite(u.lon) || Math.abs(u.lat) > 90 || Math.abs(u.lon) > 180 || (Math.abs(u.lat) < 0.01 && Math.abs(u.lon) < 0.01) ||
+      (lp && nm(lp[0], lp[1], u.lat, u.lon) > Math.max(30, (ts - lp[4]) / 3600 * 600));   /* position impossible : pas dans la trajectoire */
+    if (!jump && (!lp || ts - lp[4] >= 15 || Math.abs(altI - lp[2]) > 400 || (prev && prev.ground !== gnd))) {
       tr.push([+u.lat.toFixed(4), +u.lon.toFixed(4), Math.round(altI), +rec.dist.toFixed(1), ts, P]);
       if (tr.length > 3000) rec.trk = tr.filter(function (_, i) { return i % 2 === 0 || i === tr.length - 1; });
     }
@@ -6588,6 +6590,17 @@ ${waypoint(arr)}
   }
   function drawMap(r) {
     var el = document.getElementById('hgJMap'); if (!el || typeof L === 'undefined' || !L.map) return;
+    function hgCleanTrack(t) {   /* un point à plus de 30 NM de ses deux voisins (ou à 0 / 0) est une position fausse du simulateur */
+      var ok = t.filter(function (p) { return isFinite(p[0]) && isFinite(p[1]) && !(Math.abs(p[0]) < 0.01 && Math.abs(p[1]) < 0.01); });
+      return ok.filter(function (p, i) {
+        var a = ok[i - 1], b = ok[i + 1];
+        var da = a ? nm(a[0], a[1], p[0], p[1]) : null, db = b ? nm(p[0], p[1], b[0], b[1]) : null;
+        if (da == null && db == null) return true;
+        if (da == null) return db < 30 || (ok[i + 2] && nm(b[0], b[1], ok[i + 2][0], ok[i + 2][1]) > 30);
+        if (db == null) return da < 30 || (ok[i - 2] && nm(ok[i - 2][0], ok[i - 2][1], a[0], a[1]) > 30);
+        return da < 30 || db < 30;
+      });
+    }
     if (!ui.map) {
       ui.map = L.map(el, { zoomControl: true, attributionControl: false, worldCopyJump: true }).setView([46.5, 2.5], 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, className: 'hg-jdark' }).addTo(ui.map);
@@ -6602,7 +6615,7 @@ ${waypoint(arr)}
       r.plan.segs.s.forEach(function (sg) { L.polyline(sg.pts, { color: COLS[sg.k] || '#FF4DDB', weight: sg.k === 'route' ? 3 : 4, opacity: .95 }).addTo(ui.layers); b = b.concat(sg.pts); });
       (r.plan.segs.f || []).forEach(function (f) { L.circleMarker([f[0], f[1]], { radius: 3, color: '#000', weight: 1, fillColor: '#E6EDF5', fillOpacity: 1 }).bindTooltip(String(f[2]), { direction: 'top' }).addTo(ui.layers); });
     } else if (r.plan && r.plan.route && r.plan.route.length > 1) { L.polyline(r.plan.route, { color: '#94A3B8', weight: 2, dashArray: '6 6', opacity: .9 }).addTo(ui.layers); b = b.concat(r.plan.route); }
-    var tr = (r.trk || []).map(function (q) { return [q[0], q[1]]; });
+    var tr = hgCleanTrack((r.trk || []).map(function (q) { return [q[0], q[1]]; }));
     if (tr.length > 1) { L.polyline(tr, { color: '#38BDF8', weight: 3.5, opacity: .95 }).addTo(ui.layers); b = b.concat(tr); }
     function apt(code, ll) { if (!ll) return; L.circleMarker(ll, { radius: 6, color: '#06121C', weight: 2, fillColor: '#38BDF8', fillOpacity: 1 }).bindTooltip(code, { permanent: true, direction: 'right', className: 'hg-apt-tip' }).addTo(ui.layers); }
     if (r.plan && r.plan.route) { apt(r.plan.dep, r.plan.route[0]); apt(r.plan.arr, r.plan.route[r.plan.route.length - 1]); }
