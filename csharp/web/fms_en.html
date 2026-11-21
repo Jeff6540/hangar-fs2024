@@ -621,8 +621,16 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     }
     if (dep && (!route.length || route[0].ident !== dep)) { var d0 = llaPt('DepartureLLA', dep); if (d0) route.unshift(d0); }
     if (arr && (!route.length || route[route.length - 1].ident !== arr)) { var a0 = llaPt('DestinationLLA', arr); if (a0) route.push(a0); }
-    if (route.length < 2) return null;
-    approachAlts(route, true);
+    if (!route.length) return null;
+    // toutes les altitudes égales à la croisière (plans « VFR » de Plan VFR ou de Little Navmap) : ce ne sont pas des contraintes
+    var cr = parseInt(g(x, 'CruisingAlt'), 10) || 0;
+    if (cr && route.every(function (w) { return w.type === 'apt' || !w.alt || w.alt === cr; })) route.forEach(function (w) { if (w.type !== 'apt') w.alt = 0; });
+    // points d'approche reconnus à leur nom (IO14L, FF14L…) juste avant le seuil de piste RW14L, quand le fichier ne le dit pas
+    route.forEach(function (w, i) {
+      if (!/^RW\d{2}/.test(w.ident)) return;
+      w.ap = true;
+      for (var k = i - 1; k >= 0 && /^[A-Z]{2}\d{2}[LRC]?$/.test(route[k].ident) && !/^RW/.test(route[k].ident); k--) route[k].ap = true;
+    });
     return { origin: { icao: dep, rwy: rwyDep }, dest: { icao: arr, rwy: rwyArr }, cruiseAlt: parseInt(g(x, 'CruisingAlt'), 10) || 0,
              route: route, departure: sid, arrival: star, approach: appr, activeLeg: 1 };
   }
@@ -633,10 +641,25 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     rd.onload = function () {
       var plan = null; try { plan = parsePln(String(rd.result || '')); } catch (e) {}
       if (!plan) { msg(t('plnBad')); return; }
-      render.scrolled = false;
-      FmsStore.set({ plan: plan }, 'pln');
-      msg(t('plnOk', { f: f.name }));
-      setTimeout(function () { if ($('msg').textContent === t('plnOk', { f: f.name })) msg(''); }, 5000);
+      // départ / arrivée donnés seulement par leur code (format Little Navmap pour MSFS 2024) : position et altitude prises dans la base d'aéroports
+      var r0 = plan.route, need = [];
+      if (plan.origin.icao && r0[0].ident !== plan.origin.icao) need.push(['dep', plan.origin.icao]);
+      if (plan.dest.icao && r0[r0.length - 1].ident !== plan.dest.icao) need.push(['arr', plan.dest.icao]);
+      Promise.all(need.map(function (n) {
+        return fetch('/fms-airport?icao=' + encodeURIComponent(n[1])).then(function (x) { return x.json(); }).catch(function () { return {}; }).then(function (a) { return [n, a]; });
+      })).then(function (res) {
+        res.forEach(function (x) {
+          var n = x[0], a = x[1]; if (!a || !a.ok) return;
+          var w = { ident: n[1], lat: +a.lat, lon: +a.lon, alt: a.elev ? Math.round(a.elev) : 0, elev: a.elev ? true : undefined, type: 'apt', via: '' };
+          if (n[0] === 'dep') r0.unshift(w); else r0.push(w);
+        });
+        if (r0.length < 2) { msg(t('plnBad')); return; }
+        approachAlts(r0, true);
+        render.scrolled = false;
+        FmsStore.set({ plan: plan }, 'pln');
+        msg(t('plnOk', { f: f.name }));
+        setTimeout(function () { if ($('msg').textContent === t('plnOk', { f: f.name })) msg(''); }, 5000);
+      });
     };
     rd.onerror = function () { msg(t('plnBad')); };
     rd.readAsText(f);

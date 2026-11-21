@@ -39,60 +39,100 @@ namespace HangarFS2024
 
         static bool Named(string id) { return Regex.IsMatch(id ?? "", "^[A-Z0-9]{2,5}$") && !Regex.IsMatch(id, "^WP\\d+$"); }
 
-        /// <summary>Fabrique le .PLN (format MSFS) à partir du plan du FMS.</summary>
+        /// <summary>Fabrique le .PLN au format minimal de Little Navmap pour MSFS 2024 (celui que le GTN PMS50 importe) :
+        /// départ et arrivée par leur code OACI, seulement les points intermédiaires, texte en ASCII, degrés sans zéros devant.</summary>
         public static string Pln(JObject plan, out string dep, out string arr)
         {
             var route = plan["route"] as JArray ?? new JArray();
             var pts = route.OfType<JObject>().Where(w => !(Num(w["lat"]) == 0 && Num(w["lon"]) == 0)).ToList();
-            dep = pts.Count > 0 ? JsonStore.Str(pts[0]["ident"]) : ""; arr = pts.Count > 1 ? JsonStore.Str(pts[pts.Count - 1]["ident"]) : "";
-            string sid = JsonStore.Str(plan["departure"]), star = JsonStore.Str(plan["arrival"]), appr = JsonStore.Str(plan["approach"]);
-            bool ifr = sid != "" || star != "" || appr != "";
-            int cruise = (int)Num(plan["cruiseAlt"]); if (cruise <= 0) cruise = 5000;
-            var sb = new StringBuilder();
-            sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<SimBase.Document Type=\"AceXML\" version=\"1,0\">\r\n    <Descr>AceXML Document</Descr>\r\n    <FlightPlan.FlightPlan>\r\n");
-            sb.Append("        <Title>").Append(Esc(dep + " to " + arr)).Append("</Title>\r\n");
-            sb.Append("        <FPType>").Append(ifr ? "IFR" : "VFR").Append("</FPType>\r\n");
-            sb.Append("        <RouteType>").Append(ifr ? "HighAlt" : "VOR").Append("</RouteType>\r\n");
-            sb.Append("        <CruisingAlt>").Append(cruise).Append("</CruisingAlt>\r\n");
-            sb.Append("        <DepartureID>").Append(Esc(dep)).Append("</DepartureID>\r\n");
-            sb.Append("        <DestinationID>").Append(Esc(arr)).Append("</DestinationID>\r\n");
-            if (pts.Count > 1)
+            var o = plan["origin"] as JObject ?? new JObject(); var d0 = plan["dest"] as JObject ?? new JObject();
+            dep = JsonStore.Str(o["icao"]); arr = JsonStore.Str(d0["icao"]);
+            if (dep == "" && pts.Count > 0) dep = JsonStore.Str(pts[0]["ident"]);
+            if (arr == "" && pts.Count > 1) arr = JsonStore.Str(pts[pts.Count - 1]["ident"]);
+            int cruise = (int)Num(plan["cruiseAlt"]); if (cruise <= 0) cruise = 3500;
+            Func<string, string> asc = t => Regex.Replace(t ?? "", "[^\\x20-\\x7E]", "");
+            Func<double, bool, string> dms = (v, lat) =>
             {
-                sb.Append("        <DepartureLLA>").Append(Dms(Num(pts[0]["lat"]), true) + "," + Dms(Num(pts[0]["lon"]), false) + ",+000000.00").Append("</DepartureLLA>\r\n");
-                sb.Append("        <DestinationLLA>").Append(Dms(Num(pts[pts.Count - 1]["lat"]), true) + "," + Dms(Num(pts[pts.Count - 1]["lon"]), false) + ",+000000.00").Append("</DestinationLLA>\r\n");
-            }
-            sb.Append("        <AppVersion>\r\n            <AppVersionMajor>12</AppVersionMajor>\r\n            <AppVersionBuild>282174</AppVersionBuild>\r\n        </AppVersion>\r\n");
-            string rwyArr = JsonStore.Str((plan["dest"] as JObject ?? new JObject())["rwy"]);
+                double a = Math.Abs(v); long tt = (long)Math.Round(a * 360000); long dd = tt / 360000, mm = (tt % 360000) / 6000; double ss = (tt % 6000) / 100.0;
+                return (lat ? (v < 0 ? "S" : "N") : (v < 0 ? "W" : "E")) + dd + "\u00b0 " + mm + "' " + ss.ToString("0.00", CI) + "\"";
+            };
+            string a1 = Esc(asc(dep)), a2 = Esc(asc(arr));
+            string sid = JsonStore.Str(plan["departure"]), star = JsonStore.Str(plan["arrival"]), appr = JsonStore.Str(plan["approach"]);
+            var sb = new StringBuilder();
+            sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SimBase.Document>\n    <FlightPlan.FlightPlan>\n");
+            sb.Append("        <DepartureID>").Append(a1).Append("</DepartureID>\n        <DestinationID>").Append(a2).Append("</DestinationID>\n");
+            sb.Append("        <Title>").Append(a1 + " - " + a2).Append("</Title>\n");
+            sb.Append("        <Descr>").Append((sid != "" || star != "" || appr != "") ? "IFR" : "VFR").Append(" flight from ").Append(a1).Append(" to ").Append(a2).Append(" created by Hangar FS 2024 FMS</Descr>\n");
+            sb.Append("        <FPType>").Append((sid != "" || star != "" || appr != "") ? "IFR" : "VFR").Append("</FPType>\n");
+            sb.Append("        <CruisingAlt>").Append(cruise).Append(".000</CruisingAlt>\n");
+            sb.Append("        <AppVersion>\n            <AppVersionMajor>12</AppVersionMajor>\n            <AppVersionMinor>1</AppVersionMinor>\n            <AppVersionBuild>282174</AppVersionBuild>\n        </AppVersion>\n");
             for (int i = 0; i < pts.Count; i++)
             {
                 var w = pts[i];
-                string id = JsonStore.Str(w["ident"]).ToUpperInvariant(), type = JsonStore.Str(w["type"]), via = JsonStore.Str(w["via"]);
-                bool apt = type == "apt" && (i == 0 || i == pts.Count - 1);
-                bool named = apt || Named(id);
-                string wt = apt ? "Airport" : !named ? "User" : type == "vor" ? "VOR" : type == "ndb" ? "NDB" : "Intersection";
-                double alt = Num(w["alt"]);
-                sb.Append("        <ATCWaypoint id=\"").Append(Esc(id)).Append("\">\r\n");
-                sb.Append("            <ATCWaypointType>").Append(wt).Append("</ATCWaypointType>\r\n");
-                sb.Append("            <WorldPosition>").Append(Dms(Num(w["lat"]), true) + "," + Dms(Num(w["lon"]), false) + "," + (alt >= 0 ? "+" : "-") + Math.Abs(alt).ToString("000000.00", CI)).Append("</WorldPosition>\r\n");
-                if (!apt && via != "" && via == sid) sb.Append("            <DepartureFP>").Append(Esc(sid)).Append("</DepartureFP>\r\n");
-                else if (!apt && via != "" && via == star) sb.Append("            <ArrivalFP>").Append(Esc(star)).Append("</ArrivalFP>\r\n");
-                else if (!apt && (JsonStore.Str(w["ap"]) == "True" || JsonStore.Str(w["ap"]) == "true") && appr != "")
+                string id = Esc(asc(JsonStore.Str(w["ident"]).ToUpperInvariant()));
+                bool endApt = JsonStore.Str(w["type"]) == "apt" && (i == 0 || i == pts.Count - 1) && (id == a1 || id == a2);
+                if (endApt) continue;   // départ et arrivée : seulement par DepartureID / DestinationID
+                int alt = (int)Num(w["alt"]); if (alt <= 0 || id.StartsWith("RW")) alt = cruise;
+                sb.Append("        <ATCWaypoint id=\"").Append(id).Append("\">\n            <ATCWaypointType>User</ATCWaypointType>\n");
+                sb.Append("            <WorldPosition>").Append(dms(Num(w["lat"]), true)).Append(",").Append(dms(Num(w["lon"]), false)).Append(",+").Append(alt.ToString("000000", CI)).Append(".00</WorldPosition>\n");
+                sb.Append("            <ICAO>\n                <ICAOIdent>").Append(id).Append("</ICAOIdent>\n            </ICAO>\n        </ATCWaypoint>\n");
+            }
+            sb.Append("    </FlightPlan.FlightPlan>\n</SimBase.Document>\n");
+            return sb.ToString();
+        }
+
+        // ---- aéroports (base OurAirports de l'appli) : position et altitude, pour un .PLN qui ne donne que le code OACI
+        static Dictionary<string, double[]> aptCache;
+        public static JObject Airport(string icao)
+        {
+            icao = (icao ?? "").Trim().ToUpperInvariant();
+            if (icao == "") return new JObject { ["ok"] = false };
+            if (aptCache == null)
+            {
+                var c = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
+                try
                 {
-                    var m = Regex.Match(appr, "^([A-Z/ ]+?)\\s+(\\d{2})([LRC]?)");
-                    if (m.Success)
+                    if (!File.Exists(Airports.FilePath)) Airports.Load();
+                    using (var rd = new StreamReader(Airports.FilePath, Encoding.UTF8))
                     {
-                        sb.Append("            <ApproachTypeFP>").Append(Esc(m.Groups[1].Value.Trim())).Append("</ApproachTypeFP>\r\n");
-                        sb.Append("            <RunwayNumberFP>").Append(m.Groups[2].Value).Append("</RunwayNumberFP>\r\n");
-                        string des = m.Groups[3].Value == "L" ? "LEFT" : m.Groups[3].Value == "R" ? "RIGHT" : m.Groups[3].Value == "C" ? "CENTER" : "";
-                        if (des != "") sb.Append("            <RunwayDesignatorFP>").Append(des).Append("</RunwayDesignatorFP>\r\n");
+                        var head = SplitCsv(rd.ReadLine() ?? "");
+                        int iId = head.IndexOf("ident"), iIcao = head.IndexOf("icao_code"), iGps = head.IndexOf("gps_code"), iLa = head.IndexOf("latitude_deg"), iLo = head.IndexOf("longitude_deg"), iEl = head.IndexOf("elevation_ft");
+                        string line;
+                        while ((line = rd.ReadLine()) != null)
+                        {
+                            var f = SplitCsv(line);
+                            Func<int, string> g = k => k >= 0 && k < f.Count ? f[k] : "";
+                            double la, lo, el;
+                            if (!double.TryParse(g(iLa), NumberStyles.Float, CI, out la) || !double.TryParse(g(iLo), NumberStyles.Float, CI, out lo)) continue;
+                            bool hasEl = double.TryParse(g(iEl), NumberStyles.Float, CI, out el);
+                            var rec = new[] { la, lo, hasEl ? el : double.NaN };
+                            foreach (var k in new[] { g(iIcao), g(iGps), g(iId) }) if (k.Length >= 3 && !c.ContainsKey(k)) c[k] = rec;
+                        }
                     }
                 }
-                else if (via != "" && Regex.IsMatch(via, "^[A-Z]{1,2}\\d{1,4}$")) sb.Append("            <ATCAirway>").Append(Esc(via)).Append("</ATCAirway>\r\n");
-                if (named) sb.Append("            <ICAO>\r\n                <ICAOIdent>").Append(Esc(id)).Append("</ICAOIdent>\r\n            </ICAO>\r\n");
-                sb.Append("        </ATCWaypoint>\r\n");
+                catch (Exception) { }
+                aptCache = c;
             }
-            sb.Append("    </FlightPlan.FlightPlan>\r\n</SimBase.Document>\r\n");
-            return sb.ToString();
+            double[] r;
+            if (!aptCache.TryGetValue(icao, out r)) return new JObject { ["ok"] = false };
+            var o = new JObject { ["ok"] = true, ["lat"] = r[0], ["lon"] = r[1] };
+            if (!double.IsNaN(r[2]) && r[2] != 0) o["elev"] = Math.Round(r[2]);
+            return o;
+        }
+
+        static List<string> SplitCsv(string line)
+        {
+            var res = new List<string>(); var sb = new StringBuilder(); bool q = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char ch = line[i];
+                if (q) { if (ch == '"') { if (i + 1 < line.Length && line[i + 1] == '"') { sb.Append('"'); i++; } else q = false; } else sb.Append(ch); }
+                else if (ch == '"') q = true;
+                else if (ch == ',') { res.Add(sb.ToString()); sb.Clear(); }
+                else sb.Append(ch);
+            }
+            res.Add(sb.ToString());
+            return res;
         }
 
         /// <summary>Plan au format Garmin .gfp (GTN TDS) : FPN/RI:F:DEP:F:FIX:…:F:ARR (les points libres sont mis en coordonnées).</summary>

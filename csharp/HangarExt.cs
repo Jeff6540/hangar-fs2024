@@ -441,6 +441,12 @@ namespace HangarFS2024
                         return;
                     }
                 case "/fms-export": r.Text(FmsExport.Run(CfgS("community"), CfgS("library"), Relay.Connected).ToString(Formatting.None), "application/json; charset=utf-8"); return;   // FMS : envoyer le plan à l'avion
+                case "/fms-airport":   // FMS : position et altitude d'un aéroport (base OurAirports)
+                    {
+                        string ai; q.TryGetValue("icao", out ai);
+                        r.Text(FmsExport.Airport(ai).ToString(Formatting.None), "application/json; charset=utf-8");
+                        return;
+                    }
                 case "/fms-folder":   // FMS : ouvrir le dossier des plans, le fichier envoyé sélectionné
                     {
                         string ff; q.TryGetValue("f", out ff);
