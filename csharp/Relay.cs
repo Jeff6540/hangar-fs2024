@@ -410,6 +410,7 @@ namespace HangarFS2024
                     ["callsign"] = Text(buf, p, 32), ["airline"] = Text(buf, p + 32, 64), ["flight"] = Text(buf, p + 96, 8),
                     ["model"] = Model(buf, p + 104, 32), ["title"] = Text(buf, p + 136, 256),
                 };
+                if (buf.Length >= p + 408) { double trk = D(buf, p + 400); if (!double.IsNaN(trk) && trk != 0) rec["trk"] = (((int)Math.Round(trk) % 360) + 360) % 360; }
                 Put(reqId, rec);
                 return "data";
             }
@@ -490,6 +491,7 @@ namespace HangarFS2024
                 new object[] { "ATC ID", null, SimConnectClient.DT_STRING32 }, new object[] { "ATC AIRLINE", null, SimConnectClient.DT_STRING64 },
                 new object[] { "ATC FLIGHT NUMBER", null, SimConnectClient.DT_STRING8 }, new object[] { "ATC MODEL", null, SimConnectClient.DT_STRING32 },
                 new object[] { "TITLE", null, SimConnectClient.DT_STRING256 }, new object[] { "PLANE ALT ABOVE GROUND", "feet", SimConnectClient.DT_FLOAT64 },
+                new object[] { "GPS GROUND TRUE TRACK", "degrees", SimConnectClient.DT_FLOAT64 },   // route suivie au sol (avec le vent), pour orienter l'icône sur la carte
             };
             var flightFields = new[] {
                 new[] { "VERTICAL SPEED", "feet per minute" }, new[] { "FUEL TOTAL QUANTITY WEIGHT", "pounds" }, new[] { "TOTAL WEIGHT", "pounds" },

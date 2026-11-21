@@ -4397,6 +4397,8 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
         }
 
         function upsertTrafficMarker(a, isUser) {
+            // mon avion en vol : l'icône suit la route au sol (vent compris), donc reste alignée sur le tracé
+            if (isUser && !a.ground && typeof a.trk === 'number' && (a.gs || 0) >= 50) a = Object.assign({}, a, { hdg: a.trk });
             const latLng = [a.lat, a.lon];
             let m = isUser ? trafficUserMarker : trafficMarkers.get(a.id);
             const rt = { f: a.from || a.efrom || '', t: a.to || a.eto || '', n: a.callsign || [a.airline, a.flight].filter(Boolean).join(' ') || ('#' + a.id) };
