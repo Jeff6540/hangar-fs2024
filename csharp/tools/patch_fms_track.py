@@ -37,7 +37,7 @@ JS = r"""<script id="hangar-fms-track">
     var best = null;
     for (i = Math.max(1, peak); i < r.length; i++) {
       var a = r[i].alt || 0, d = cum[i], dest = i === r.length - 1;
-      if (dest) { if (!(r[i].elev === true || (r[i].alt > 0 && r[i].elev !== false))) continue; a += 1500; d = Math.max(0, d - 5); }
+      if (dest) { if (!(r[i].elev === true || (r[i].alt > 0 && r[i].elev !== false)) || r.some(function (q) { return q.ap && q.alt > 0; })) continue; a += 1500; d = Math.max(0, d - 5); }
       if (a <= 0 || a >= cruise - 300) continue;
       var s = d - (cruise - a) / 318.4; if (!best || s < best.s) best = { s: Math.max(s, cum[peak]), alt: a, to: r[i].ident, toS: d };
     }

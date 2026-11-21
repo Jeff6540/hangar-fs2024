@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
@@ -414,6 +415,10 @@ namespace HangarFS2024
                     {   // terrain d'arrivée inconnu : pas de cible à l'arrivée (on ne descend pas plus bas que le dernier point connu)
                         string ek = JsonStore.Str(w["elev"]).ToLowerInvariant();
                         if (!(ek == "true" || (a > 0 && ek != "false"))) { elevUnknown = true; continue; }
+                        // approche avec une altitude (FAF) : c'est elle la dernière cible, l'ILS fait le reste
+                        bool faf = false;
+                        foreach (var q in route.OfType<JObject>()) { string apf = JsonStore.Str(q["ap"]).ToLowerInvariant(); if (apf == "true" && Num(q["alt"]) > 0) { faf = true; break; } }
+                        if (faf) continue;
                         a = a + 1500; d = Math.Max(0, d - 5);
                     }
                     if (a <= 0) continue;

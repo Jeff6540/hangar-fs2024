@@ -50,6 +50,19 @@ JS = r"""<script src="/fms_store.js"></script><script id="hangar-fms-vfr-link">
     [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
       try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && isFinite(A.elevation_ft) && A.elevation_ft) {   /* 0 = souvent « inconnue » dans la base : on laisse le pilote la taper */ w.alt = Math.round(A.elevation_ft); w.elev = true; } } catch (x) {}
     });
+    // approche : pas d'altitude sur le seuil de piste ; FAF à 3000 ft par défaut (terrain + 1500 ft si plus haut), points d'avant au même niveau
+    (function () {
+      var last = route.length - 1, rwI = -1, faf = -1, i, aps = [];
+      for (i = 1; i <= last; i++) if (/^RW\d/.test(route[i].ident)) { route[i].alt = 0; if (rwI < 0) rwI = i; }
+      for (i = 1; i < last; i++) if (route[i].ap && !/^RW\d/.test(route[i].ident)) aps.push(i);
+      var end = rwI > 0 ? rwI : last;
+      aps.forEach(function (k) { if (k < end && /^(FF|FI|FA|FAF)/.test(route[k].ident)) faf = k; });
+      if (faf < 0) aps.forEach(function (k) { if (k < end) faf = k; });
+      if (faf < 0) return;
+      var el = dest.elev ? dest.alt || 0 : 0, def = Math.max(3000, Math.ceil((el + 1500) / 100) * 100);
+      if (!route[faf].alt) { route[faf].alt = def; route[faf].altDef = true; }
+      aps.forEach(function (k) { if (k < faf && !route[k].alt) { route[k].alt = route[faf].alt; route[k].altDef = true; } });
+    })();
     ilsFor(ap, dest).then(function (ils) {
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});
       // même départ et même arrivée : on garde l'altitude de croisière déjà connue du FMS

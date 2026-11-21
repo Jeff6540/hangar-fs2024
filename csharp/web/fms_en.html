@@ -25,6 +25,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
 .row.tod{color:var(--warn);cursor:default;background:#1d1a12}
 .altc .unk{color:var(--warn);font-weight:700}
+.altc .def{color:var(--mut);margin-left:2px}
 .altc{cursor:text;border-bottom:1px dashed transparent} .altc:hover{border-bottom-color:var(--skyt)} .altc i{font-style:normal;color:#5d6670}
 #cruise{cursor:text;padding:2px 6px;border:1px dashed #3a3d44;border-radius:6px} #cruise:hover{border-color:var(--skyt)}
 .ed{width:74px;text-align:center;font:inherit;color:var(--skyt);background:#11161c;border:1px solid var(--skyt);border-radius:5px;padding:1px}
@@ -169,6 +170,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
     setCruise: ['Croisière ?', 'Cruise?'],
+    defNote: ['* altitude d’approche par défaut (3000 ft au FAF) : touche-la pour la corriger selon la carte.', '* default approach altitude (3000 ft at the FAF): tap it to correct it from the chart.'],
     elevUnk: ['Altitude du terrain d’arrivée inconnue : touche le « ? » de {a} pour la taper. En attendant, le VNAV ne descend pas plus bas que le dernier point qui a une altitude.', 'Arrival field elevation unknown: tap the “?” of {a} to type it. Meanwhile VNAV does not descend below the last fix with an altitude.'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
     todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'],
@@ -236,11 +238,12 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         var prev = route[i - 1], dd = '', tk = '';
         if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
         var cls = i === act ? ' on' : i < act ? ' done' : '';
-        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + ((i === 0 || i === route.length - 1) ? (elevOk(w) ? Math.round(w.alt || 0) : '<i class="unk">?</i>') : (w.alt ? Math.round(w.alt) : '<i>+</i>')) + '</span></span></div>';
+        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + ((i === 0 || i === route.length - 1) ? (elevOk(w) ? Math.round(w.alt || 0) : '<i class="unk">?</i>') : (w.alt ? Math.round(w.alt) + (w.altDef ? '<i class="def">*</i>' : '') : '<i>+</i>')) + '</span></span></div>';
       });
       $('list').innerHTML = h;
       todLive();
       $('info').innerHTML += (bits.length ? ' · ' : '') + t('total', { n: route.length, d: Math.round(total) });
+      if (route.some(function (w) { return w.altDef; }) && !$('msg').textContent) msg(t('defNote'));
       var dW = route[route.length - 1];
       if (dW && !elevOk(dW) && !$('msg').textContent) msg(t('elevUnk', { a: dW.ident }));
       if (!p.cruiseAlt && !route.some(function (w, j) { return j > 0 && j < route.length - 1 && w.alt; }) && !$('msg').textContent) msg(t('altHint'));
@@ -323,11 +326,30 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     var curId = route[p.activeLeg || 1] ? route[p.activeLeg || 1].ident : '', act = -1;
     nr.forEach(function (w, i) { if (act < 0 && i > 0 && w.ident === curId) act = i; });
     if (act < 1) act = Math.min(p.activeLeg || 1, nr.length - 1);
+    approachAlts(nr, false);
     findIls(a, dest).then(function (ils) {
       FmsStore.set({ plan: { route: nr, activeLeg: act, approach: name, dest: { rwy: a.r || '' }, ils: ils } }, 'fms');
       closeAppr(); render.scrolled = false;
       msg(t('apprOk', { n: name, i: ils ? t('apprIls', { id: ils.ident, f: (ils.freq / 1e6).toFixed(2), c: String(ils.crs).padStart(3, '0') }) : (/^(ILS|LOC)/.test(a.t) ? t('apprNoIls') : '') }));
     });
+  }
+
+  // Approche : seuil de piste sans altitude ; plan d'approche finale (FAF) à 3000 ft par défaut (ou terrain + 1500 ft si plus haut),
+  // et les points de l'approche avant le FAF au même niveau (palier avant de capter le plan de descente). fromFile : on remplace les
+  // altitudes venues d'un fichier ; sinon on ne remplit que les altitudes vides (celles tapées à la main sont gardées).
+  function approachAlts(route, fromFile) {
+    var last = route.length - 1, rwI = -1, i;
+    for (i = 1; i <= last; i++) if (/^RW\d/.test(route[i].ident || '')) { route[i].alt = 0; if (rwI < 0) rwI = i; }
+    var apIdx = []; for (i = 1; i < last; i++) if (route[i].ap && !/^RW\d/.test(route[i].ident || '')) apIdx.push(i);
+    if (!apIdx.length) return;
+    var end = rwI > 0 ? rwI : last, faf = -1;
+    apIdx.forEach(function (k) { if (k < end && /^(FF|FI|FA|FAF)/.test(route[k].ident)) faf = k; });
+    if (faf < 0) apIdx.forEach(function (k) { if (k < end) faf = k; });
+    if (faf < 0) return;
+    var elev = elevOk(route[last]) ? route[last].alt || 0 : 0, def = Math.max(3000, Math.ceil((elev + 1500) / 100) * 100);
+    if (fromFile || !route[faf].alt) { route[faf].alt = def; route[faf].altDef = true; }
+    var fa = route[faf].alt;
+    apIdx.forEach(function (k) { if (k < faf && (fromFile || !route[k].alt || route[k].altDef)) { route[k].alt = fa; route[k].altDef = true; } });
   }
 
   // altitude du terrain connue ? (venue de SimBrief, du .PLN, de la base d'aéroports ou tapée à la main)
@@ -358,6 +380,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     }).catch(function () { pnl.innerHTML = head + '<div class="hint">' + t('sendErr') + '</div>'; });
   };
 
+  function hasFaf(route) { return route.some(function (w) { return w.ap && w.alt > 0; }); }
+
   // ---- T/D prévu : même calcul que le VNAV (pente 3°, après le point le plus haut ; destination : terrain + 1500 ft, 5 NM avant)
   function planTod(p) {
     var route = p.route || []; if (route.length < 3) return null;
@@ -371,7 +395,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     var best = null;
     for (i = Math.max(1, peak); i < route.length; i++) {
       var a = route[i].alt || 0, d = cum[i], dest = i === route.length - 1;
-      if (dest) { if (!elevOk(route[i])) continue; a += 1500; d = Math.max(0, d - 5); }   // terrain inconnu : pas de cible à l'arrivée
+      if (dest) { if (!elevOk(route[i]) || hasFaf(route)) continue; a += 1500; d = Math.max(0, d - 5); }   // terrain inconnu, ou approche avec FAF : pas de cible à l'arrivée
       if (a <= 0 || a >= cruise - 300) continue;
       var s = d - (cruise - a) / 318.4;
       if (!best || s < best.s) best = { s: s, alt: a, to: route[i].ident + (dest ? ' (-5 NM)' : '') };
@@ -411,7 +435,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       if (!rt[k]) return;
       var apt = k === 0 || k === rt.length - 1;
       editNum(ac, rt[k].alt, function (ok, v) {
-        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, apt ? { alt: Math.round(v), elev: true } : { alt: Math.round(v / 100) * 100 }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
+        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, apt ? { alt: Math.round(v), elev: true } : { alt: Math.round(v / 100) * 100, altDef: false }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
         else render(FmsStore.state);
       });
       return;
@@ -585,10 +609,20 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       if (a) star = a;
       if (ap) { appr = ap + (rw ? ' ' + rw : ''); if (rw) rwyArr = rw; }
       route.push({ ident: id, lat: lat, lon: lon, alt: isFinite(alt) && alt > 0 ? Math.round(alt) : 0, elev: /airport/i.test(type) && isFinite(alt) ? true : undefined, type: /airport/i.test(type) ? 'apt' : /vor/i.test(type) ? 'vor' : /ndb/i.test(type) ? 'ndb' : 'wpt',
-                   via: g(w, 'ATCAirway') || d || a || (ap ? appr : '') });
+                   via: g(w, 'ATCAirway') || d || a || (ap ? appr : ''), ap: ap ? true : undefined });
     });
+    var dep = (g(x, 'DepartureID') || (route[0] || {}).ident || '').toUpperCase(), arr = (g(x, 'DestinationID') || (route[route.length - 1] || {}).ident || '').toUpperCase();
+    // certains .PLN (tablette de MSFS 2024…) n'ont pas les aéroports dans la liste des points : on les rajoute
+    function llaPt(tag, id) {
+      var v = g(x, tag); if (!v || !id) return null;
+      var pp = v.split(','), la = dms(pp[0]), lo = dms(pp[1]), el = parseFloat(pp[2]);
+      if (!isFinite(la) || !isFinite(lo)) return null;
+      return { ident: id, lat: la, lon: lo, alt: isFinite(el) ? Math.round(el) : 0, elev: isFinite(el) && el !== 0 ? true : undefined, type: 'apt', via: '' };
+    }
+    if (dep && (!route.length || route[0].ident !== dep)) { var d0 = llaPt('DepartureLLA', dep); if (d0) route.unshift(d0); }
+    if (arr && (!route.length || route[route.length - 1].ident !== arr)) { var a0 = llaPt('DestinationLLA', arr); if (a0) route.push(a0); }
     if (route.length < 2) return null;
-    var dep = (g(x, 'DepartureID') || route[0].ident).toUpperCase(), arr = (g(x, 'DestinationID') || route[route.length - 1].ident).toUpperCase();
+    approachAlts(route, true);
     return { origin: { icao: dep, rwy: rwyDep }, dest: { icao: arr, rwy: rwyArr }, cruiseAlt: parseInt(g(x, 'CruisingAlt'), 10) || 0,
              route: route, departure: sid, arrival: star, approach: appr, activeLeg: 1 };
   }
