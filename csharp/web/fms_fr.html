@@ -24,7 +24,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
 .empty{padding:28px 16px;text-align:center;color:var(--mut);line-height:1.6}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .tile{background:#16324a;border:1px solid #3d7aa6;border-radius:9px;padding:9px 4px;text-align:center;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
 .tile:hover{border-color:var(--skyt);color:#fff}
 .tile svg{display:block;margin:0 auto 3px;width:18px;height:18px;stroke:currentColor}
@@ -75,6 +75,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 <div id="msg"></div>
 <div class="tiles">
   <button class="tile" id="bSimbrief"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span data-t="simbrief"></span></button>
+  <button class="tile" id="bPln"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14h6M9 17h4"/></svg><span data-t="pln"></span></button>
+  <input type="file" id="plnFile" accept=".pln,.PLN,.xml" style="display:none">
   <button class="tile" id="bDirect"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 9l3 3-3 3"/></svg><span data-t="direct"></span></button>
   <button class="tile warn" id="bNew"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span data-t="newflight"></span></button>
 </div>
@@ -100,10 +102,13 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   var LANG = 'fr';
   var T = {
     simbrief: ['Charger SimBrief', 'Load SimBrief'],
+    pln: ['Ouvrir un .PLN', 'Open a .PLN'],
+    plnBad: ['Fichier .PLN illisible ou sans points de route.', 'Unreadable .PLN file or no waypoints.'],
+    plnOk: ['Plan .PLN chargé : {f}', '.PLN plan loaded: {f}'],
     direct: ['Direct vers…', 'Direct to…'],
     newflight: ['Nouveau vol', 'New flight'],
     point: ['Point', 'Fix'], dtk: ['Route', 'Track'], dist: ['Dist.', 'Dist.'], alt: ['Alt.', 'Alt.'],
-    empty: ['Aucun plan en mémoire.<br>Appuie sur « Charger SimBrief » pour récupérer ton dernier plan.', 'No flight plan in memory.<br>Press “Load SimBrief” to fetch your latest plan.'],
+    empty: ['Aucun plan en mémoire.<br>Appuie sur « Charger SimBrief » pour récupérer ton dernier plan, ou sur « Ouvrir un .PLN ».', 'No flight plan in memory.<br>Press “Load SimBrief” to fetch your latest plan, or “Open a .PLN”.'],
     loading: ['Lecture du plan SimBrief…', 'Reading the SimBrief plan…'],
     noUser: ['Indique ton identifiant SimBrief dans Réglages.', 'Set your SimBrief ID in Settings.'],
     relay: ['Le relais de l’appli ne répond pas. Démarre-le depuis l’appli.', 'The app relay is not answering. Start it from the app.'],
@@ -124,7 +129,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     apLegend: ['Sous chaque bouton : « avion » = mode géré par l’avion ; « non géré » = l’avion n’a pas réagi (le FMS pourra le forcer plus tard).', 'Under each button: “aircraft” = mode handled by the aircraft; “not handled” = the aircraft did not react (the FMS will be able to force it later).'],
     byAc: ['avion', 'aircraft'], notHandled: ['non géré', 'not handled'], onTxt: ['ON', 'ON'],
     lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
-    src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
+    src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
   };
   function t(k, v) { var s = (T[k] || [k, k])[LANG === 'en' ? 1 : 0]; Object.keys(v || {}).forEach(function (x) { s = s.replace('{' + x + '}', v[x]); }); return s; }
   function $(id) { return document.getElementById(id); }
@@ -156,6 +161,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (p.origin && p.origin.rwy) bits.push(esc(o) + ' ' + esc(p.origin.rwy));
     if (p.departure) bits.push(t('sid') + ' ' + esc(p.departure));
     if (p.arrival) bits.push(t('star') + ' ' + esc(p.arrival));
+    if (p.approach) bits.push(esc(p.approach));
     if (p.dest && p.dest.rwy) bits.push(esc(d) + ' ' + esc(p.dest.rwy));
     $('info').innerHTML = bits.join(' · ');
     $('cruise').textContent = p.cruiseAlt ? 'FL' + String(Math.round(p.cruiseAlt / 100)).padStart(3, '0') : '';
@@ -301,6 +307,50 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       .then(function () { polling = false; });
   }
   poll(); setInterval(poll, 500);
+
+  // ---- Ouvrir un .PLN (carte du monde de MSFS, Plan de vol, Plan VFR, Little Navmap…)
+  function dms(x) {
+    var m = String(x).trim().match(/^([NSEW])\s*(\d+)[°\s]+(\d+)['\s]+([\d.]+)/i);
+    if (!m) { var f = parseFloat(x); return isFinite(f) ? f : NaN; }
+    var v = (+m[2]) + (+m[3]) / 60 + parseFloat(m[4]) / 3600;
+    return /[SW]/i.test(m[1]) ? -v : v;
+  }
+  function parsePln(text) {
+    var x = new DOMParser().parseFromString(text, 'application/xml');
+    if (x.getElementsByTagName('parsererror').length) return null;
+    var g = function (n, tag) { var e = n.getElementsByTagName(tag)[0]; return e ? e.textContent.trim() : ''; };
+    var route = [], sid = '', star = '', appr = '', rwyDep = '', rwyArr = '';
+    Array.prototype.slice.call(x.getElementsByTagName('ATCWaypoint')).forEach(function (w, i) {
+      var pos = g(w, 'WorldPosition').split(','), lat = dms(pos[0]), lon = dms(pos[1]), alt = parseFloat(pos[2]);
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      var type = g(w, 'ATCWaypointType'), id = (g(w, 'ICAOIdent') || w.getAttribute('id') || ('WP' + (i + 1))).toUpperCase();
+      var d = g(w, 'DepartureFP'), a = g(w, 'ArrivalFP'), ap = g(w, 'ApproachTypeFP'), rw = g(w, 'RunwayNumberFP') + g(w, 'RunwayDesignatorFP').replace(/NONE/i, '').charAt(0);
+      if (d && !sid) { sid = d; if (rw) rwyDep = rw; }
+      if (a) star = a;
+      if (ap) { appr = ap + (rw ? ' ' + rw : ''); if (rw) rwyArr = rw; }
+      route.push({ ident: id, lat: lat, lon: lon, alt: isFinite(alt) && alt > 0 ? Math.round(alt) : 0, type: /airport/i.test(type) ? 'apt' : /vor/i.test(type) ? 'vor' : /ndb/i.test(type) ? 'ndb' : 'wpt',
+                   via: g(w, 'ATCAirway') || d || a || (ap ? appr : '') });
+    });
+    if (route.length < 2) return null;
+    var dep = (g(x, 'DepartureID') || route[0].ident).toUpperCase(), arr = (g(x, 'DestinationID') || route[route.length - 1].ident).toUpperCase();
+    return { origin: { icao: dep, rwy: rwyDep }, dest: { icao: arr, rwy: rwyArr }, cruiseAlt: parseInt(g(x, 'CruisingAlt'), 10) || 0,
+             route: route, departure: sid, arrival: star, approach: appr, activeLeg: 1 };
+  }
+  $('bPln').onclick = function () { $('plnFile').value = ''; $('plnFile').click(); };
+  $('plnFile').onchange = function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var plan = null; try { plan = parsePln(String(rd.result || '')); } catch (e) {}
+      if (!plan) { msg(t('plnBad')); return; }
+      render.scrolled = false;
+      FmsStore.set({ plan: plan }, 'pln');
+      msg(t('plnOk', { f: f.name }));
+      setTimeout(function () { if ($('msg').textContent === t('plnOk', { f: f.name })) msg(''); }, 5000);
+    };
+    rd.onerror = function () { msg(t('plnBad')); };
+    rd.readAsText(f);
+  };
 
   // ---- Charger SimBrief (par le relais de l'appli, comme Plan de vol)
   function user() {
