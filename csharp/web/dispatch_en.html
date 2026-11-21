@@ -2779,6 +2779,10 @@ html body.hg129 #resultsList{max-height:min(46vh,460px)!important}
 #hgRail .it.on{background:rgba(56,189,248,.18);color:#7DD3FC;box-shadow:inset 3px 0 0 #38BDF8}
 html body{padding-left:52px!important;box-sizing:border-box}
 html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,html body #aircraftDropdownModal{left:52px!important}
+</style><style id="hangar-129-time">
+.hg-tsub{display:block;color:#64748b;font:600 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.02em;margin-top:-1px}
+.hg-tblk{display:block;color:#94a3b8;font:600 11px "Segoe UI",Inter,sans-serif;margin-top:2px}
+.hg-lblk{display:block;color:#64748b;font:600 9px "Segoe UI",Inter,sans-serif;white-space:nowrap}
 </style></head>
 <body class="flex flex-col">
 
@@ -7350,7 +7354,7 @@ ${waypoint(arr)}
 })();
 </script><script id="hangar-129-vfr-js">
 (function () {
-  var T = {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point", "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes", "names": "Names", "acft": "AIRCRAFT", "acTip": "Aircraft sent to SimBrief: pick from the list or type an ICAO code (e.g. C414)", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO", "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).", "tip": "Click: add a point · drag: move · right-click an airport, an ILS or a point: its card (SID, STAR, approaches)", "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).", "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).", "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "pt": "POINT", "procs": "PROCEDURES", "sid": "Departure (SID)", "star": "Arrival (STAR)", "appr2": "Approach", "none": "none", "cardOf": "Card", "kinds": {"wp": "free point", "apt": "airport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "RNAV point", "ils": "ILS"}, "rmPt": "Remove from route", "addRoute": "Add to route", "isDep": "Departure of your route", "isArr": "Arrival of your route", "inRoute": "In your route", "notIn": "Not in your route", "setDep": "Depart here", "setArr": "Arrive here", "rwys": "Runways", "sids": "Departures (SID)", "stars": "Arrivals (STAR)", "apprs": "Approaches", "rwAny": "All runways", "rwPick": "Choose the runway…", "pickRw": "Choose the runway first.", "onMap": "show on map", "rwy1": "Runway", "enNone": "No transition", "enVia": "Transition", "choose": "Choose", "needDep": "First set this airport as your route's departure.", "needArr": "First set this airport as your route's arrival.", "appr": "APPROACH", "apDirect": "None (direct arrival)", "apNoTr": "No transition", "apVia": "Transition via", "apNone": "No approach in the MSFS data for this airport.", "apNeed": "First import the MSFS data (at the bottom of the right column) to get RNAV points, ILS, SIDs, STARs and approaches.", "apInfo": "Right-click an airport (or its ILS) to see and choose SID, STAR and approach. The chosen paths are added to your route, the .PLN file and SimBrief (SID, STAR and runways).", "msfs": "MSFS DATA (RNAV, ILS, SID, STAR, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.", "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.", "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches", "procs": "Departures and arrivals"}, "kt": "kt", "ktTip": "Cruise speed in knots: change it if you fly faster or slower, it is kept for this aircraft", "time": "TIME", "ttot": "Flight time", "my": "MY ROUTES", "save": "💾 Save", "namePh": "Route name (e.g. Pyrenees tour)", "noRoutes": "No saved route yet.", "openRt": "Open", "plnOpen": "📂 OPEN A .PLN", "plnBad": "This .PLN file could not be read.", "saved": "Route saved.", "needName": "Give your route a name first.", "needPts": "Place at least two points before saving.", "delQ": "Delete the route \"%s\"?", "repQ": "A route \"%s\" already exists. Replace it?", "plnNote": "Plan opened. The SID, STAR and approaches in the file became plain points: choose them again in the airport card if you want.", "saveErr": "Unable to save the route (app closed?).", "tooLong": "Route too long to be saved: remove a few points."}, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
+  var T = {"btn": "VFR PLAN", "title": "VFR PLAN", "menu": "Main menu", "back": "Personal flight plan", "undo": "Undo last point", "swap": "Swap", "clear": "Clear", "show": "SHOW", "apt": "Airports", "vor": "VOR / DME", "ndb": "NDB", "rwy": "Runway axes", "names": "Names", "acft": "AIRCRAFT", "acTip": "Aircraft sent to SimBrief: pick from the list or type an ICAO code (e.g. C414)", "bg": "Map background", "bgs": ["Terrain", "Topo", "Map", "Dark map", "Satellite"], "route": "MY VFR ROUTE", "from": "FROM → TO", "hdg": "HDG", "dist": "DIST.", "total": "Total distance", "legs": "legs", "leg1": "leg", "empty": "Click on the map to set your first point (preferably on your departure airport).", "tip": "Click: add a point · drag: move · right-click an airport, an ILS or a point: its card (SID, STAR, approaches)", "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).", "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).", "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "pt": "POINT", "procs": "PROCEDURES", "sid": "Departure (SID)", "star": "Arrival (STAR)", "appr2": "Approach", "none": "none", "cardOf": "Card", "kinds": {"wp": "free point", "apt": "airport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "RNAV point", "ils": "ILS"}, "rmPt": "Remove from route", "addRoute": "Add to route", "isDep": "Departure of your route", "isArr": "Arrival of your route", "inRoute": "In your route", "notIn": "Not in your route", "setDep": "Depart here", "setArr": "Arrive here", "rwys": "Runways", "sids": "Departures (SID)", "stars": "Arrivals (STAR)", "apprs": "Approaches", "rwAny": "All runways", "rwPick": "Choose the runway…", "pickRw": "Choose the runway first.", "onMap": "show on map", "rwy1": "Runway", "enNone": "No transition", "enVia": "Transition", "choose": "Choose", "needDep": "First set this airport as your route's departure.", "needArr": "First set this airport as your route's arrival.", "appr": "APPROACH", "apDirect": "None (direct arrival)", "apNoTr": "No transition", "apVia": "Transition via", "apNone": "No approach in the MSFS data for this airport.", "apNeed": "First import the MSFS data (at the bottom of the right column) to get RNAV points, ILS, SIDs, STARs and approaches.", "apInfo": "Right-click an airport (or its ILS) to see and choose SID, STAR and approach. The chosen paths are added to your route, the .PLN file and SimBrief (SID, STAR and runways).", "msfs": "MSFS DATA (RNAV, ILS, SID, STAR, APPROACHES)", "impWhy": "Once, with MSFS 2024 open (at the main menu): the app reads your simulator's RNAV points, ILS and approaches and keeps them on your PC. Then everything works with the simulator off. Do it again after a big MSFS update.", "impGo": "Import from MSFS", "impUpd": "Update from MSFS", "impStop": "Stop", "impDate": "Data imported on", "impOk": "Import complete.", "cWpt": "RNAV points", "cAppr": "approaches", "steps": {"open": "Connecting to MSFS", "airports": "Airport list", "waypoints": "RNAV points", "vors": "VOR and ILS", "ndbs": "NDB", "approaches": "Approaches", "procs": "Departures and arrivals"}, "kt": "kt", "ktTip": "Cruise speed in knots: change it if you fly faster or slower, it is kept for this aircraft", "time": "TIME", "ttot": "Flight time", "my": "MY ROUTES", "save": "💾 Save", "namePh": "Route name (e.g. Pyrenees tour)", "noRoutes": "No saved route yet.", "openRt": "Open", "plnOpen": "📂 OPEN A .PLN", "plnBad": "This .PLN file could not be read.", "saved": "Route saved.", "needName": "Give your route a name first.", "needPts": "Place at least two points before saving.", "delQ": "Delete the route \"%s\"?", "repQ": "A route \"%s\" already exists. Replace it?", "plnNote": "Plan opened. The SID, STAR and approaches in the file became plain points: choose them again in the airport card if you want.", "saveErr": "Unable to save the route (app closed?).", "tsub": "takeoff → landing", "gate": "gate to gate", "blkTip": "Estimated block time (gate to gate): flight time + 10 min taxi. The flight time includes 5 min of circuit at departure and arrival.", "tooLong": "Route too long to be saved: remove a few points."}, BASE = 'https://davidmegginson.github.io/ourairports-data/', KEY = 'hg_vfr_route';
   var map = null, bgLayer = null, lyr = {}, nav = [], rwy = {}, loaded = false, loading = false, pts = [], wpN = 0;
   var show = { apt: true, vor: true, ndb: true, rwy: true, names: false, rnav: false, ils: false }, bgIdx = 0;
   var acV = 'C172'; try { acV = localStorage.getItem('hg_vfr_ac') || 'C172'; } catch (e) {}
@@ -7360,6 +7364,8 @@ ${waypoint(arr)}
   var ktMap = {}; try { ktMap = JSON.parse(localStorage.getItem('hg_vfr_kt') || '{}') || {}; } catch (e) {}
   function acRow(c) { for (var i = 0; i < AC.length; i++) if (AC[i][0] === c) return AC[i]; return null; }
   function ktOf() { var v = +ktMap[acV]; if (v >= 40 && v <= 450) return v; var r = acRow(acV); return r ? r[2] : 120; }
+  /* temps de vol (décollage → atterrissage) : branches à la vitesse de croisière + 5 min de tour de piste au départ et à l'arrivée */
+  function vfrMin(nm) { return nm / ktOf() * 60 + 5; }
   function fmtT(min) { min = Math.round(min); return min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0'); }
   var navOk = false, navMeta = null, PD = {}, msfsTok = 0, impTimer = null, card = null;
   var pr = { dep: { icao: '', sid: -1, rw: -1, en: -1 }, arr: { icao: '', star: -1, rw: -1, en: -1, ap: -1, tr: -1 } };
@@ -7775,10 +7781,11 @@ ${waypoint(arr)}
     });
     if (tb) tb.innerHTML = h || '<tr><td colspan="6" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
-    var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(tot / ktOf() * 60) : '—';
+    var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(vfrMin(tot)) : '—';
+    var bk = document.getElementById('hgVfrBlk'); if (bk) bk.textContent = tot > 0 ? '≈ ' + fmtT(vfrMin(tot) + 10) + ' ' + T.gate : '';
     var kl = document.getElementById('hgVfrKtL'); if (kl) kl.textContent = '(' + acV + ' · ' + ktOf() + ' kt)';
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
-    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(tot / ktOf() * 60)) : (pts.length ? pts[0].name : T.title);
+    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(vfrMin(tot))) : (pts.length ? pts[0].name : T.title);
   }
   /* ---------- export ---------- */
   function ends() {
@@ -7921,7 +7928,7 @@ ${waypoint(arr)}
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div id="hgVfrCard" style="display:none"></div><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th>' + T.time + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
-      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small></span><b id="hgVfrTime">—</b></div>' +
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small><small style="display:block;color:#64748b;font-weight:600;font-size:10px">' + T.tsub + '</small></span><b id="hgVfrTime">—</b></div><div id="hgVfrBlk" title="' + T.blkTip + '" style="text-align:right;color:#94a3b8;font-size:11.5px;margin-top:3px"></div>' +
       '<div class="h" style="margin-top:14px">' + T.my + '</div><div class="myr"><input id="hgVfrName" maxlength="60" placeholder="' + T.namePh + '"><button type="button" class="b" data-a="save">' + T.save + '</button></div><div class="myl" id="hgVfrMy"></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
@@ -8005,6 +8012,36 @@ ${waypoint(arr)}
     r.addEventListener('click', function (e) { var b = e.target.closest('.it'); if (b) go(b.dataset.k); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
+</script><script id="hangar-129-time-js">
+(function () {
+  var T = {"sub": "takeoff → landing", "gate": "gate to gate", "blk": "block", "dur": "TARGET FLIGHT TIME (±5 MIN)", "blkTip": "Estimated block time (gate to gate): flight time + typical taxi (10 min light aircraft, 20 min turboprop or jet, 30 min wide-body)", "durTip": "Flight time, from takeoff to landing (taxi not included)"};
+  function cat() { var s = document.getElementById('aircraftSelect'); return (s && s.getAttribute('data-cat')) || 'jet'; }
+  function taxi() { var c = cat(); return c === 'heavy' ? 30 : (c === 'jet' || c === 'turboprop') ? 20 : 10; }
+  function parse(t) { var m = /(?:(\d+)\s*h\s*)?(\d+)\s*m/.exec(t || ''); return m ? (+(m[1] || 0)) * 60 + (+m[2]) : null; }
+  function fmt(min) { var h = Math.floor(min / 60), m = min % 60; return (h ? h + 'h ' : '') + (m < 10 ? '0' : '') + m + 'm'; }
+  function setTxt(el, t) { if (el && el.textContent !== t) el.textContent = t; }
+  function run() {
+    var el = document.getElementById('summaryFlightTime');
+    if (el) {
+      var box = el.parentNode;
+      if (!document.getElementById('hgTimeSub')) {
+        var lab = box.querySelector('span'); var sm = document.createElement('span'); sm.id = 'hgTimeSub'; sm.className = 'hg-tsub'; sm.textContent = T.sub;
+        if (lab && lab !== el) lab.insertAdjacentElement('afterend', sm);
+        var b = document.createElement('span'); b.id = 'hgBlockT'; b.className = 'hg-tblk'; b.title = T.blkTip; box.appendChild(b);
+      }
+      var v = parse(el.textContent); setTxt(document.getElementById('hgBlockT'), v != null ? '≈ ' + fmt(v + taxi()) + ' ' + T.gate : '');
+    }
+    document.querySelectorAll('#resultsList .text-right.font-mono').forEach(function (d) {
+      var t = d.querySelector('.text-cockpit-cyan'), v = t && parse(t.textContent); if (v == null) return;
+      var s = d.querySelector('.hg-lblk'); if (!s) { s = document.createElement('span'); s.className = 'hg-lblk'; s.title = T.blkTip; d.appendChild(s); }
+      setTxt(s, T.blk + ' ≈ ' + fmt(v + taxi()));
+    });
+    var dl = document.querySelector('#durationPickerContainer label'); if (dl) { setTxt(dl, T.dur); dl.title = T.durTip; }
+  }
+  var tm = 0; function later() { if (!tm) tm = setTimeout(function () { tm = 0; run(); }, 120); }
+  function start() { run(); new MutationObserver(later).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-cat'] }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script></body>
 </html>

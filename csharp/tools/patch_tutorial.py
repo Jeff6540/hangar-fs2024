@@ -405,6 +405,19 @@ R["en"] += [
 CUT.setdefault("fr", []).extend([(r"<p>Dans le menu de gauche, la rubrique <b>Radars</b> ouvre dans ton navigateur.*?</p>", ""), (r"Les radars FSHub sont dans le menu de gauche\. ", "")])
 CUT.setdefault("en", []).extend([(r"<p>In the left menu, the <b>Radars</b> section opens in your browser.*?</p>", ""), (r"The FSHub radars are in the left menu\. ", "")])
 
+
+# 12.9 : temps unifiés (temps de vol = décollage → atterrissage ; temps bloc = porte à porte)
+R["fr"] += [
+ ("la distance, le temps de vol et le cadre <b>Export</b>", "la distance, le <b>temps de vol</b> (du décollage à l'atterrissage, montée et descente comprises, sans le roulage) avec en dessous le <b>temps bloc</b> estimé « porte à porte » (temps de vol + roulage type : 10 min en avion léger, 20 min en turbopropulseur ou en jet, 30 min en gros porteur ; chaque destination de la liste l'affiche aussi), et le cadre <b>Export</b>", "le <b>temps bloc</b> estimé « porte à porte »"),
+ ("le <b>temps</b> de chaque branche et le <b>temps de vol</b> total, sans le roulage ni le vent.", "le <b>temps</b> de chaque branche et le <b>temps de vol</b> total (du décollage à l'atterrissage : les branches plus 5 min de tour de piste au départ et à l'arrivée, sans le vent), et en dessous le temps bloc estimé « porte à porte » (+10 min de roulage).", "plus 5 min de tour de piste au départ et à l'arrivée"),
+ ("<b>En haut, le résumé</b> : temps bloc, temps de vol,", "<b>En haut, le résumé</b> : temps bloc (porte à porte), temps de vol (décollage → atterrissage),", "temps bloc (porte à porte), temps de vol (décollage → atterrissage)"),
+]
+R["en"] += [
+ ("the distance, the flight time and the <b>Export</b> box", "the distance, the <b>flight time</b> (from takeoff to landing, climb and descent included, taxi not included) with below it the estimated \"gate to gate\" <b>block time</b> (flight time + typical taxi: 10 min light aircraft, 20 min turboprop or jet, 30 min wide-body; each destination in the list shows it too), and the <b>Export</b> box", "the estimated \"gate to gate\" <b>block time</b>"),
+ ("the <b>time</b> of each leg and the total <b>flight time</b>, without taxi or wind.", "the <b>time</b> of each leg and the total <b>flight time</b> (from takeoff to landing: the legs plus 5 min of circuit at departure and arrival, no wind), and below it the estimated \"gate to gate\" block time (+10 min taxi).", "plus 5 min of circuit at departure and arrival"),
+ ("<b>At the top, the summary</b>: block time, flight time,", "<b>At the top, the summary</b>: block time (gate to gate), flight time (takeoff → landing),", "block time (gate to gate), flight time (takeoff → landing)"),
+]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

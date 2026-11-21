@@ -2831,14 +2831,16 @@ VFR_TXT["fr"].update({"kt": "kt", "ktTip": "Vitesse de croisière en nœuds : ch
     "saved": "Route enregistrée.", "needName": "Donne d'abord un nom à ta route.", "needPts": "Pose au moins deux points avant d'enregistrer.",
     "delQ": "Supprimer la route « %s » ?", "repQ": "Une route « %s » existe déjà. La remplacer ?",
     "plnNote": "Plan ouvert. Les SID, STAR et approches du fichier sont devenus de simples points : rechoisis-les dans la fiche de l'aéroport si tu veux.",
-    "saveErr": "Impossible d'enregistrer la route (appli fermée ?).", "tooLong": "Route trop longue pour être enregistrée : retire quelques points."})
+    "saveErr": "Impossible d'enregistrer la route (appli fermée ?).", "tsub": "décollage → atterrissage", "gate": "porte à porte",
+    "blkTip": "Temps bloc estimé (porte à porte) : temps de vol + 10 min de roulage. Le temps de vol compte 5 min de tour de piste au départ et à l'arrivée.", "tooLong": "Route trop longue pour être enregistrée : retire quelques points."})
 VFR_TXT["en"].update({"kt": "kt", "ktTip": "Cruise speed in knots: change it if you fly faster or slower, it is kept for this aircraft",
     "time": "TIME", "ttot": "Flight time", "my": "MY ROUTES", "save": "💾 Save", "namePh": "Route name (e.g. Pyrenees tour)",
     "noRoutes": "No saved route yet.", "openRt": "Open", "plnOpen": "📂 OPEN A .PLN", "plnBad": "This .PLN file could not be read.",
     "saved": "Route saved.", "needName": "Give your route a name first.", "needPts": "Place at least two points before saving.",
     "delQ": "Delete the route \"%s\"?", "repQ": "A route \"%s\" already exists. Replace it?",
     "plnNote": "Plan opened. The SID, STAR and approaches in the file became plain points: choose them again in the airport card if you want.",
-    "saveErr": "Unable to save the route (app closed?).", "tooLong": "Route too long to be saved: remove a few points."})
+    "saveErr": "Unable to save the route (app closed?).", "tsub": "takeoff → landing", "gate": "gate to gate",
+    "blkTip": "Estimated block time (gate to gate): flight time + 10 min taxi. The flight time includes 5 min of circuit at departure and arrival.", "tooLong": "Route too long to be saved: remove a few points."})
 
 VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr{position:fixed;left:52px;right:0;top:0;bottom:0;z-index:3000;display:none;flex-direction:column;background:#070d18;color:#cbd5e1;font:13px "Segoe UI",Inter,sans-serif}
@@ -2916,6 +2918,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   var ktMap = {}; try { ktMap = JSON.parse(localStorage.getItem('hg_vfr_kt') || '{}') || {}; } catch (e) {}
   function acRow(c) { for (var i = 0; i < AC.length; i++) if (AC[i][0] === c) return AC[i]; return null; }
   function ktOf() { var v = +ktMap[acV]; if (v >= 40 && v <= 450) return v; var r = acRow(acV); return r ? r[2] : 120; }
+  /* temps de vol (décollage → atterrissage) : branches à la vitesse de croisière + 5 min de tour de piste au départ et à l'arrivée */
+  function vfrMin(nm) { return nm / ktOf() * 60 + 5; }
   function fmtT(min) { min = Math.round(min); return min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0'); }
   var navOk = false, navMeta = null, PD = {}, msfsTok = 0, impTimer = null, card = null;
   var pr = { dep: { icao: '', sid: -1, rw: -1, en: -1 }, arr: { icao: '', star: -1, rw: -1, en: -1, ap: -1, tr: -1 } };
@@ -3331,10 +3335,11 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     });
     if (tb) tb.innerHTML = h || '<tr><td colspan="6" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
-    var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(tot / ktOf() * 60) : '—';
+    var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(vfrMin(tot)) : '—';
+    var bk = document.getElementById('hgVfrBlk'); if (bk) bk.textContent = tot > 0 ? '≈ ' + fmtT(vfrMin(tot) + 10) + ' ' + T.gate : '';
     var kl = document.getElementById('hgVfrKtL'); if (kl) kl.textContent = '(' + acV + ' · ' + ktOf() + ' kt)';
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
-    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(tot / ktOf() * 60)) : (pts.length ? pts[0].name : T.title);
+    if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(vfrMin(tot))) : (pts.length ? pts[0].name : T.title);
   }
   /* ---------- export ---------- */
   function ends() {
@@ -3477,7 +3482,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div id="hgVfrCard" style="display:none"></div><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th>' + T.time + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
-      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small></span><b id="hgVfrTime">—</b></div>' +
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small><small style="display:block;color:#64748b;font-weight:600;font-size:10px">' + T.tsub + '</small></span><b id="hgVfrTime">—</b></div><div id="hgVfrBlk" title="' + T.blkTip + '" style="text-align:right;color:#94a3b8;font-size:11.5px;margin-top:3px"></div>' +
       '<div class="h" style="margin-top:14px">' + T.my + '</div><div class="myr"><input id="hgVfrName" maxlength="60" placeholder="' + T.namePh + '"><button type="button" class="b" data-a="save">' + T.save + '</button></div><div class="myl" id="hgVfrMy"></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
@@ -3557,3 +3562,66 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_vfr129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# 12.9 : temps unifiés. « Temps de vol » = du décollage à l'atterrissage partout ; à côté, le temps bloc estimé (porte à porte) =
+# temps de vol + roulage type (10 min avion léger, 20 min turbopropulseur ou jet, 30 min gros porteur), comme SimBrief et le journal de vol.
+TIME129_TXT = {
+    "fr": {"sub": "décollage → atterrissage", "gate": "porte à porte", "blk": "bloc", "dur": "DURÉE DE VOL CIBLE (±5 MIN)",
+           "blkTip": "Temps bloc estimé (porte à porte) : temps de vol + roulage type (10 min en avion léger, 20 min en turbopropulseur ou en jet, 30 min en gros porteur)",
+           "durTip": "Temps de vol, du décollage à l'atterrissage (sans le roulage)"},
+    "en": {"sub": "takeoff → landing", "gate": "gate to gate", "blk": "block", "dur": "TARGET FLIGHT TIME (±5 MIN)",
+           "blkTip": "Estimated block time (gate to gate): flight time + typical taxi (10 min light aircraft, 20 min turboprop or jet, 30 min wide-body)",
+           "durTip": "Flight time, from takeoff to landing (taxi not included)"},
+}
+TIME129_CSS = r"""<style id="hangar-129-time">
+.hg-tsub{display:block;color:#64748b;font:600 9.5px "Segoe UI",Inter,sans-serif;letter-spacing:.02em;margin-top:-1px}
+.hg-tblk{display:block;color:#94a3b8;font:600 11px "Segoe UI",Inter,sans-serif;margin-top:2px}
+.hg-lblk{display:block;color:#64748b;font:600 9px "Segoe UI",Inter,sans-serif;white-space:nowrap}
+</style>"""
+TIME129_JS = r"""<script id="hangar-129-time-js">
+(function () {
+  var T = __TXT__;
+  function cat() { var s = document.getElementById('aircraftSelect'); return (s && s.getAttribute('data-cat')) || 'jet'; }
+  function taxi() { var c = cat(); return c === 'heavy' ? 30 : (c === 'jet' || c === 'turboprop') ? 20 : 10; }
+  function parse(t) { var m = /(?:(\d+)\s*h\s*)?(\d+)\s*m/.exec(t || ''); return m ? (+(m[1] || 0)) * 60 + (+m[2]) : null; }
+  function fmt(min) { var h = Math.floor(min / 60), m = min % 60; return (h ? h + 'h ' : '') + (m < 10 ? '0' : '') + m + 'm'; }
+  function setTxt(el, t) { if (el && el.textContent !== t) el.textContent = t; }
+  function run() {
+    var el = document.getElementById('summaryFlightTime');
+    if (el) {
+      var box = el.parentNode;
+      if (!document.getElementById('hgTimeSub')) {
+        var lab = box.querySelector('span'); var sm = document.createElement('span'); sm.id = 'hgTimeSub'; sm.className = 'hg-tsub'; sm.textContent = T.sub;
+        if (lab && lab !== el) lab.insertAdjacentElement('afterend', sm);
+        var b = document.createElement('span'); b.id = 'hgBlockT'; b.className = 'hg-tblk'; b.title = T.blkTip; box.appendChild(b);
+      }
+      var v = parse(el.textContent); setTxt(document.getElementById('hgBlockT'), v != null ? '≈ ' + fmt(v + taxi()) + ' ' + T.gate : '');
+    }
+    document.querySelectorAll('#resultsList .text-right.font-mono').forEach(function (d) {
+      var t = d.querySelector('.text-cockpit-cyan'), v = t && parse(t.textContent); if (v == null) return;
+      var s = d.querySelector('.hg-lblk'); if (!s) { s = document.createElement('span'); s.className = 'hg-lblk'; s.title = T.blkTip; d.appendChild(s); }
+      setTxt(s, T.blk + ' ≈ ' + fmt(v + taxi()));
+    });
+    var dl = document.querySelector('#durationPickerContainer label'); if (dl) { setTxt(dl, T.dur); dl.title = T.durTip; }
+  }
+  var tm = 0; function later() { if (!tm) tm = setTimeout(function () { tm = 0; run(); }, 120); }
+  function start() { run(); new MutationObserver(later).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-cat'] }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>"""
+
+
+def patch_time129(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-129-time" in s:
+        return
+    js = TIME129_JS.replace("__TXT__", json.dumps(TIME129_TXT[lang], ensure_ascii=False))
+    s = s.replace("</head>", TIME129_CSS + "</head>", 1).replace("</body>", js + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_time129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
