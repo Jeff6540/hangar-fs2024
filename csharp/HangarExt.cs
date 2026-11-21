@@ -425,13 +425,21 @@ namespace HangarFS2024
                 case "/close":
                     {
                         string w; q.TryGetValue("w", out w);
-                        bool ok = (w == "map" || w == "dispatch" || w == "tuto") && CloseWebWindow(w);
+                        bool ok = (w == "map" || w == "dispatch" || w == "tuto" || w == "fms") && CloseWebWindow(w);
                         r.Text(ok ? "ok" : "no", "text/plain");
                         return;
                     }
                 case "/version": r.Text(MapVer.ToString(), "text/plain"); return;
                 case "/data.json": r.Text(mapJson ?? "{}", "application/json; charset=utf-8"); return;
                 case "/tutorial": r.Text(WebText("tutorial_" + lang + ".html"), "text/html; charset=utf-8"); return;
+                case "/fms":
+                    {   // FMS : l'identifiant SimBrief des réglages est passé à la page (jamais écrit dans le code)
+                        string html = WebText("fms_" + lang + ".html");
+                        html = html.Replace("<!--HANGAR_USER-->", "<script>window.HG_SIMBRIEF_USER=" + JsonConvert.ToString(CfgS("simbrief_user")) + ";</script>");
+                        r.Text(html, "text/html; charset=utf-8");
+                        return;
+                    }
+                case "/fms_store.js": r.Text(WebText("fms_store.js"), "application/javascript; charset=utf-8"); return;
                 case "/dispatch":
                     {
                         string html = WebText("dispatch_" + lang + ".html");

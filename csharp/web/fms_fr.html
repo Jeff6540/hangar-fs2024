@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FMS — Hangar FS 2024</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<!--HANGAR_USER-->
+<style>
+:root{--bg:#15181e;--dev:#1b1d22;--scr:#0b0d10;--line:#2a2d33;--sky:#38BDF8;--skyt:#7fd3ff;--txt:#cfe6f5;--mut:#9aa3ad;--act:#e05bd8;--actt:#f2a7ee;--ok:#7fe0a8;--warn:#f2c46b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:13px "Segoe UI Variable Text","Segoe UI",Inter,sans-serif}
+body{display:flex;flex-direction:column;padding:10px;gap:8px}
+.mono{font-family:Consolas,"Cascadia Mono",monospace}
+.bar{display:flex;align-items:center;justify-content:space-between;background:var(--scr);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.route{font-size:18px;color:var(--skyt);letter-spacing:.5px}
+.route small{font-size:12px;color:var(--mut)}
+.sub{font-size:12px;color:var(--mut)}
+.list{flex:1;min-height:120px;overflow:auto;background:var(--scr);border:1px solid var(--line);border-radius:8px}
+.row{display:grid;grid-template-columns:1.5fr .8fr .8fr .9fr;padding:7px 10px;border-left:3px solid transparent;cursor:pointer}
+.row:hover{background:#121821}
+.row.head{position:sticky;top:0;background:#0f1318;color:#8fb8d6;font-size:11px;cursor:default;border-bottom:1px solid var(--line)}
+.row.done{color:#5d6670}
+.row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
+.row .via{display:block;font-size:10.5px;color:var(--mut)}
+.empty{padding:28px 16px;text-align:center;color:var(--mut);line-height:1.6}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tile{background:#16324a;border:1px solid #3d7aa6;border-radius:9px;padding:9px 4px;text-align:center;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
+.tile:hover{border-color:var(--skyt);color:#fff}
+.tile svg{display:block;margin:0 auto 3px;width:18px;height:18px;stroke:currentColor}
+.tile.warn{background:#3a2a14;border-color:#a8792f}
+.mem{font-size:11px;color:var(--mut);display:flex;justify-content:space-between;gap:8px}
+.mem b{color:var(--ok);font-weight:600}
+#msg{min-height:16px;font-size:12px;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div>
+    <div class="route mono" id="route">---- <small>→</small> ----</div>
+    <div class="sub" id="info"></div>
+  </div>
+  <div class="sub mono" id="cruise"></div>
+</div>
+
+<div class="list" id="list"></div>
+
+<div id="msg"></div>
+<div class="tiles">
+  <button class="tile" id="bSimbrief"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span data-t="simbrief"></span></button>
+  <button class="tile" id="bDirect"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 9l3 3-3 3"/></svg><span data-t="direct"></span></button>
+  <button class="tile warn" id="bNew"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span data-t="newflight"></span></button>
+</div>
+<div class="mem"><span id="mem"></span><span id="src"></span></div>
+
+<script src="/fms_store.js"></script>
+<script>
+(function () {
+  var LANG = 'fr';
+  var T = {
+    simbrief: ['Charger SimBrief', 'Load SimBrief'],
+    direct: ['Direct vers…', 'Direct to…'],
+    newflight: ['Nouveau vol', 'New flight'],
+    point: ['Point', 'Fix'], dtk: ['Route', 'Track'], dist: ['Dist.', 'Dist.'], alt: ['Alt.', 'Alt.'],
+    empty: ['Aucun plan en mémoire.<br>Appuie sur « Charger SimBrief » pour récupérer ton dernier plan.', 'No flight plan in memory.<br>Press “Load SimBrief” to fetch your latest plan.'],
+    loading: ['Lecture du plan SimBrief…', 'Reading the SimBrief plan…'],
+    noUser: ['Indique ton identifiant SimBrief dans Réglages.', 'Set your SimBrief ID in Settings.'],
+    relay: ['Le relais de l’appli ne répond pas. Démarre-le depuis l’appli.', 'The app relay is not answering. Start it from the app.'],
+    noPlan: ['SimBrief n’a pas renvoyé de plan.', 'SimBrief returned no plan.'],
+    confirmNew: ['Effacer le plan en mémoire et repartir de zéro ?', 'Clear the stored plan and start over?'],
+    pickDirect: ['Touche le point vers lequel aller dans la liste.', 'Tap the fix to fly to in the list.'],
+    mem: ['Mémoire : version {r} · {t}', 'Memory: version {r} · {t}'],
+    memOk: ['gardée', 'kept'],
+    by: ['dernier changement : {s}', 'last change: {s}'],
+    total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
+    sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
+    src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
+  };
+  function t(k, v) { var s = (T[k] || [k, k])[LANG === 'en' ? 1 : 0]; Object.keys(v || {}).forEach(function (x) { s = s.replace('{' + x + '}', v[x]); }); return s; }
+  function $(id) { return document.getElementById(id); }
+  document.querySelectorAll('[data-t]').forEach(function (e) { e.textContent = t(e.dataset.t); });
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(s) { $('msg').textContent = s || ''; }
+
+  // ---- calculs de navigation
+  var R = Math.PI / 180;
+  function distNm(a, b) {
+    var dLat = (b.lat - a.lat) * R, dLon = (b.lon - a.lon) * R;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * R) * Math.cos(b.lat * R) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 3440.065 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  }
+  function bearing(a, b) {
+    var y = Math.sin((b.lon - a.lon) * R) * Math.cos(b.lat * R);
+    var x = Math.cos(a.lat * R) * Math.sin(b.lat * R) - Math.sin(a.lat * R) * Math.cos(b.lat * R) * Math.cos((b.lon - a.lon) * R);
+    return (Math.atan2(y, x) / R + 360) % 360;
+  }
+  function ok(p) { return p && isFinite(p.lat) && isFinite(p.lon); }
+
+  // ---- affichage
+  var directMode = false;
+  function render(st) {
+    var p = (st && st.plan) || {}, route = p.route || [], act = p.activeLeg || 0;
+    var o = (p.origin && p.origin.icao) || '----', d = (p.dest && p.dest.icao) || '----';
+    $('route').innerHTML = esc(o) + ' <small>→</small> ' + esc(d);
+    var bits = [];
+    if (p.origin && p.origin.rwy) bits.push(esc(o) + ' ' + esc(p.origin.rwy));
+    if (p.departure) bits.push(t('sid') + ' ' + esc(p.departure));
+    if (p.arrival) bits.push(t('star') + ' ' + esc(p.arrival));
+    if (p.dest && p.dest.rwy) bits.push(esc(d) + ' ' + esc(p.dest.rwy));
+    $('info').innerHTML = bits.join(' · ');
+    $('cruise').textContent = p.cruiseAlt ? 'FL' + String(Math.round(p.cruiseAlt / 100)).padStart(3, '0') : '';
+
+    if (!route.length) { $('list').innerHTML = '<div class="empty">' + t('empty') + '</div>'; }
+    else {
+      var h = '<div class="row head"><span>' + t('point') + '</span><span>' + t('dtk') + '</span><span>' + t('dist') + '</span><span>' + t('alt') + '</span></div>', total = 0;
+      route.forEach(function (w, i) {
+        var prev = route[i - 1], dd = '', tk = '';
+        if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
+        var cls = i === act ? ' on' : i < act ? ' done' : '';
+        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + (w.alt ? Math.round(w.alt) : '') + '</span></div>';
+      });
+      $('list').innerHTML = h;
+      $('info').innerHTML += (bits.length ? ' · ' : '') + t('total', { n: route.length, d: Math.round(total) });
+      var on = $('list').querySelector('.row.on'); if (on && !render.scrolled) { on.scrollIntoView({ block: 'center' }); render.scrolled = true; }
+    }
+    var when = st && st.updated ? new Date(st.updated).toLocaleTimeString(LANG === 'en' ? 'en-GB' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+    $('mem').innerHTML = t('mem', { r: (st && st.rev) || 0, t: when }) + ' · <b>' + t('memOk') + '</b>';
+    var s = st && st.source ? (T.src[st.source] ? T.src[st.source][LANG === 'en' ? 1 : 0] : st.source) : '';
+    $('src').textContent = s ? t('by', { s: s }) : '';
+  }
+  FmsStore.onChange(render);
+
+  // ---- Direct vers : on touche un point de la liste
+  $('bDirect').onclick = function () { directMode = !directMode; msg(directMode ? t('pickDirect') : ''); };
+  $('list').addEventListener('click', function (e) {
+    var r = e.target.closest('.row[data-i]'); if (!r || !directMode) return;
+    directMode = false; msg('');
+    FmsStore.set({ plan: { activeLeg: +r.dataset.i } }, 'fms');
+  });
+
+  // ---- Nouveau vol
+  $('bNew').onclick = function () { if (confirmBox()) FmsStore.reset('fms'); };
+  function confirmBox() {   // pas de fenêtre « confirm » du navigateur : deuxième appui pour valider
+    var b = $('bNew');
+    if (b.dataset.armed) { delete b.dataset.armed; msg(''); return true; }
+    b.dataset.armed = '1'; msg(t('confirmNew'));
+    setTimeout(function () { delete b.dataset.armed; if ($('msg').textContent === t('confirmNew')) msg(''); }, 4000);
+    return false;
+  }
+
+  // ---- Charger SimBrief (par le relais de l'appli, comme Plan de vol)
+  function user() {
+    var u = window.HG_SIMBRIEF_USER || '';
+    if (!u) { try { u = localStorage.getItem('avd_simbrief_user') || ''; } catch (e) {} }
+    return String(u).trim();
+  }
+  function arr(x) { return Array.isArray(x) ? x : x ? [x] : []; }
+  function num(x) { var n = parseFloat(x); return isFinite(n) ? n : 0; }
+  $('bSimbrief').onclick = function () {
+    var u = user(); if (!u) { msg(t('noUser')); return; }
+    msg(t('loading'));
+    var q = /^\d+$/.test(u) ? 'userid=' + encodeURIComponent(u) : 'username=' + encodeURIComponent(u);
+    fetch('http://localhost:8765/simbrief?' + q).then(function (r) { return r.json(); }).then(function (j) {
+      var fixes = arr(j && j.navlog && j.navlog.fix);
+      if (!fixes.length || !j.origin || !j.destination) { msg((j && j.fetch && j.fetch.status && j.fetch.status !== 'Success') ? j.fetch.status : t('noPlan')); return; }
+      var route = [{ ident: j.origin.icao_code, lat: num(j.origin.pos_lat), lon: num(j.origin.pos_long), alt: num(j.origin.elevation), type: 'apt', via: '' }];
+      var sid = '', star = '', enroute = false;
+      fixes.forEach(function (f) {
+        if (f.ident === 'TOC' || f.ident === 'TOD') return;          // calculés par le FMS plus tard (VPATH)
+        if (f.ident === j.destination.icao_code && f.type === 'apt') return;
+        if (f.is_sid_star === '1' && f.via_airway && f.via_airway !== 'DCT') { if (!enroute) sid = f.via_airway; else star = f.via_airway; }
+        else enroute = true;
+        route.push({ ident: f.ident, lat: num(f.pos_lat), lon: num(f.pos_long), alt: num(f.altitude_feet), type: f.type || '', via: f.via_airway && f.via_airway !== 'DCT' ? f.via_airway : '' });
+      });
+      route.push({ ident: j.destination.icao_code, lat: num(j.destination.pos_lat), lon: num(j.destination.pos_long), alt: num(j.destination.elevation), type: 'apt', via: '' });
+      render.scrolled = false;
+      FmsStore.set({ plan: {
+        origin: { icao: j.origin.icao_code || '', rwy: j.origin.plan_rwy || '' },
+        dest: { icao: j.destination.icao_code || '', rwy: j.destination.plan_rwy || '' },
+        cruiseAlt: num(j.general && j.general.initial_altitude),
+        route: route, departure: sid, arrival: star, approach: '', activeLeg: 1
+      } }, 'simbrief');
+      msg('');
+    }).catch(function () { msg(t('relay')); });
+  };
+})();
+</script>
+</body>
+</html>

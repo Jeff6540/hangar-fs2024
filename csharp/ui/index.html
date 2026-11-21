@@ -292,6 +292,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
     <div class="tsec" data-t="secFly"></div>
     <button data-open="openTracking"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg><span class="lbl" data-t="tabTracking"></span><span class="ext">↗</span></button>
     <button data-open="openJournal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/></svg><span class="lbl" data-t="tabJournal"></span><span class="ext">↗</span></button>
+    <button data-open="openFms"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3M14 15h2"/></svg><span class="lbl" data-t="tabFms"></span><span class="ext">↗</span></button>
     <div class="tsec"></div>
     <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="lbl" data-t="tabSet"></span></button>
   </nav>
@@ -564,7 +565,7 @@ const TXT = {
  stnone:["—","—"], stflight:["Lié (vol)","Linked (flight)"], stlinked:["Lié","Linked"], stext:["Lien externe","External link"], streal:["Copie réelle","Real copy"], "st?":["?","?"],
  noGroup:["(racine)","(root)"], noLib:["Indique le dossier de ta bibliothèque dans l'onglet Réglages.","Set your library folder in the Settings tab."],
  statCom:["Dans Community","In Community"], statApt:["Scènes d'aéroport","Airport sceneries"], statReal:["Dossiers réels","Real folders"], statBroken:["Liens cassés","Broken links"],
- railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan de vol","Flight plan"], tabPerso:["Plan de vol personnel","Personal flight plan"], lfvSiteTitle:["Les Fous Volants","Les Fous Volants"], lfvSiteSub:["Le site de la VA ↗","The VA website ↗"], tabVfr:["Plan VFR","VFR plan"], tabRGlobal:["Radar FSHub global","FSHub global radar"], tabRVa:["Page de ma VA","My VA page"], tabRVaRadar:["Radar de ma VA","My VA radar"], secAddons:["Add-ons","Add-ons"], secPrep:["Préparer","Prepare"], secFly:["Voler","Fly"], secRadars:["Radars","Radars"], tabTracking:["Suivi de vol","Flight tracking"], tabJournal:["Journal de vol","Flight log"],
+ railHide:["« Réduire le menu","« Collapse menu"], railShow:["»","»"], tabDispatchSide:["Plan de vol","Flight plan"], tabPerso:["Plan de vol personnel","Personal flight plan"], lfvSiteTitle:["Les Fous Volants","Les Fous Volants"], lfvSiteSub:["Le site de la VA ↗","The VA website ↗"], tabVfr:["Plan VFR","VFR plan"], tabRGlobal:["Radar FSHub global","FSHub global radar"], tabRVa:["Page de ma VA","My VA page"], tabRVaRadar:["Radar de ma VA","My VA radar"], secAddons:["Add-ons","Add-ons"], secPrep:["Préparer","Prepare"], secFly:["Voler","Fly"], secRadars:["Radars","Radars"], tabTracking:["Suivi de vol","Flight tracking"], tabFms:["FMS","FMS"], tabJournal:["Journal de vol","Flight log"],
  cardPaths:["Dossiers et chemins","Folders and paths"], cardStart:["Démarrage","Startup"], cardAccess:["Accessibilité","Accessibility"], cardScreens:["Écrans","Screens"],
  tUpd:["Vérifier les mises à jour au démarrage","Check for updates at startup"],
  updCheck:["Vérifier maintenant","Check now"], updGo:["Mettre à jour","Update"], updNews:["Nouveautés","What's new"], updLater:["Plus tard","Later"],
@@ -680,7 +681,7 @@ const TXT = {
  mLayout:["🗎  Régénérer le fichier layout.json","🗎  Regenerate the layout.json file"], mCheckFolder:["☑  Cocher tout le dossier","☑  Check the whole folder"], mUncheckFolder:["☐  Décocher tout le dossier","☐  Uncheck the whole folder"],
  mDisable1:["✖  Désactiver l'add-on sélectionné","✖  Disable the selected add-on"], mDisableN:["✖  Désactiver les %s add-ons sélectionnés","✖  Disable the %s selected add-ons"], mDelBroken1:["—  Supprimer le lien invalide sélectionné","—  Delete the selected invalid link"],
  mDelBrokenAll:["✖  Supprimer tous les liens invalides","✖  Delete all invalid links"], mMove:["◀  Déplacer vers un dossier de la bibliothèque…","◀  Move to a library folder…"],
- opening_map:["Ouverture de la carte des scènes…","Opening the scenery map…"], opening_disp:["Ouverture de Plan & suivi de vol…","Opening Flight plan & tracking…"],
+ opening_fms:["Ouverture du FMS…","Opening the FMS…"], opening_map:["Ouverture de la carte des scènes…","Opening the scenery map…"], opening_disp:["Ouverture de Plan & suivi de vol…","Opening Flight plan & tracking…"],
  launchMsfs:["▶  Lancer MSFS 2024","▶  Launch MSFS 2024"], optRelay:["Arrêter le relais à la fermeture du simulateur (il redémarre avec lui)","Stop the relay when the simulator closes (it restarts with it)"],
  optOnly:["Ne charger que les scènes du vol","Load only the flight's sceneries"],
  optOnlyHelp:["— les autres aéroports sont mis de côté, puis remis à la fin du vol (scènes ★ protégées et non-aéroports jamais touchés)","— other airports are set aside, then put back at the end of the flight (★ protected sceneries and non-airports never touched)"],
@@ -1745,7 +1746,7 @@ $("bImport").onclick = async () => {
 // ---------------------------------------------------------------- divers
 document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 document.querySelectorAll("#tabs button[data-radar]").forEach(b => b.onclick = () => run("openRadar", {k: b.dataset.radar}));
-document.querySelectorAll("#tabs button[data-open]").forEach(b => b.onclick = () => { $("status").textContent = t(b.dataset.open === "openMap" ? "opening_map" : "opening_disp"); run(b.dataset.open); });
+document.querySelectorAll("#tabs button[data-open]").forEach(b => b.onclick = () => { $("status").textContent = t(b.dataset.open === "openMap" ? "opening_map" : b.dataset.open === "openFms" ? "opening_fms" : "opening_disp"); run(b.dataset.open); });
 $("bTuto").onclick = () => run("openTutorial");
 document.querySelectorAll("[data-url]").forEach(b => b.onclick = () => run("openUrl", {url: b.dataset.url}));
 document.querySelectorAll("#flags button[data-lang]").forEach(b => b.onclick = async () => {

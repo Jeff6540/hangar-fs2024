@@ -261,6 +261,7 @@ namespace HangarFS2024
                 case "track": await HandleCommand("openTracking", new JObject()); return;
                 case "journal": await HandleCommand("openJournal", new JObject()); return;
                 case "tuto": await HandleCommand("openTutorial", new JObject()); return;
+                case "fms": await HandleCommand("openFms", new JObject()); return;
                 // 12.9 : carte « Plan de vol personnel » et radars FSHub depuis les menus
                 case "perso": case "vfr": case "rva": case "rvradar": await OpenDispatchAt(nav); return;
                 case "rglobal": OpenUrl("https://fshub.io/radar"); return;
@@ -400,6 +401,12 @@ namespace HangarFS2024
                         WebWindow jw;
                         if (webWins.TryGetValue("dispatch", out jw) && !jw.IsDisposed) { jw.BringUp(); jw.PostJson("{\"open\":\"journal\"}"); }
                         else OpenWeb("dispatch", "/dispatch#journal", JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
+                        return null;
+                    }
+                case "openFms":
+                    {   // FMS : petite fenêtre à part, à poser dans un coin de l'écran pendant le vol
+                        if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
+                        OpenWeb("fms", "/fms", "FMS — Hangar FS 2024", new Size(520, 760), false);
                         return null;
                     }
                 case "openTutorial":

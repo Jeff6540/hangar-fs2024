@@ -1,4 +1,4 @@
-// Fenêtres de la carte des scènes, de Plan & suivi de vol et du tutoriel : la page est servie par l'appli
+// Fenêtres de la carte des scènes, de Plan & suivi de vol, du FMS et du tutoriel : la page est servie par l'appli
 // (http://127.0.0.1:47620…) et affichée par WebView2, comme les fenêtres dédiées de la 11.8.
 using System;
 using System.Collections.Generic;
@@ -29,6 +29,10 @@ namespace HangarFS2024
             web.Dock = DockStyle.Fill;
             web.DefaultBackgroundColor = ColorTranslator.FromHtml("#15181e");
             Controls.Add(web);
+            // chaque changement du plan de vol est envoyé à la page, quelle que soit la fenêtre qui l'a fait
+            Action<string> onFms = json => { try { if (IsHandleCreated && !IsDisposed) BeginInvoke((Action)(() => PostJson(json))); } catch (Exception) { } };
+            FlightStore.Changed += onFms;
+            FormClosed += (o, e) => FlightStore.Changed -= onFms;
             Load += async (s, e) =>
             {
                 try
@@ -44,6 +48,8 @@ namespace HangarFS2024
                         try
                         {
                             var j = Newtonsoft.Json.Linq.JObject.Parse(m.WebMessageAsJson);
+                            // FMS : mémoire commune du plan de vol (voir FlightStore.cs)
+                            if (j["fms"] is Newtonsoft.Json.Linq.JObject) { string rep = FlightStore.Handle((Newtonsoft.Json.Linq.JObject)j["fms"]); if (rep != null) PostJson(rep); return; }
                             if (j["journalSave"] is Newtonsoft.Json.Linq.JObject) { Journal.Save((Newtonsoft.Json.Linq.JObject)j["journalSave"]); return; }
                             if (j["journalDelete"] != null) { Journal.Delete(JsonStore.Str(j["journalDelete"])); return; }
                             string nav = JsonStore.Str(j["nav"]);

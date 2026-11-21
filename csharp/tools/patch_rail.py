@@ -15,6 +15,7 @@ ITEMS = [  # clé, icône (chemins SVG du menu principal), libellé FR, libellé
  ("#", "", "Voler", "Fly"),
  ("track", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Suivi de vol", "Flight tracking"),
  ("journal", '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/>', "Journal de vol", "Flight log"),
+ ("fms", '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3M14 15h2"/>', "FMS", "FMS"),
  ("#", "", "Les Fous Volants", "Les Fous Volants"),
  ("lfvsite", '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/>', "Site de la VA", "VA website"),
  ("#", "", "", ""),
