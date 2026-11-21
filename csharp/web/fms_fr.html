@@ -133,6 +133,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     simbrief: ['Charger SimBrief', 'Load SimBrief'],
     send: ['Envoyer à l’avion', 'Send to aircraft'], sendAt: ['Envoi du plan à l’avion', 'Sending the plan to the aircraft'], sending: ['Envoi…', 'Sending…'],
     sendErr: ['L’appli n’a pas répondu.', 'The app did not answer.'],
+    sdEfb: ['<b>MSFS 2024 (G1000, G3000… des avions de base)</b> : ces GPS ne prennent un plan que depuis la tablette. Fichier prêt : <b>{f}</b>.<br>Sur la tablette : Route › Charger depuis le PC › ce fichier › Envoyer à l’avionique.', '<b>MSFS 2024 (G1000, G3000… default aircraft)</b>: these GPS only take a plan from the tablet. File ready: <b>{f}</b>.<br>On the tablet: Route › Load from PC › this file › Send to avionics.'],
+    openDir: ['Ouvrir le dossier', 'Open the folder'],
     sdMsfs: ['<b>MSFS (G1000, G3000… des avions de base)</b> : plan chargé comme plan actif. Vérifie la page FPL de l’avion ; si rien n’apparaît, cet avion ne relit pas le plan en vol (essaie avant le roulage).', '<b>MSFS (G1000, G3000… default aircraft)</b>: plan loaded as the active plan. Check the aircraft FPL page; if nothing shows, this aircraft does not reread the plan in flight (try before taxi).'],
     sdNoSim: ['<b>MSFS</b> : pas envoyé, MSFS n’est pas connecté (lance le vol puis réessaie).', '<b>MSFS</b>: not sent, MSFS is not connected (start the flight then try again).'],
     sdPms: ['<b>{m} PMS50</b> : plan prêt. Dans le GTN : Flight Plan › Import (fichier fpl.pln).', '<b>{m} PMS50</b>: plan ready. In the GTN: Flight Plan › Import (fpl.pln file).'],
@@ -332,6 +334,10 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   function elevOk(w) { return !!w && (w.elev === true || (w.alt > 0 && w.elev !== false)); }
 
   // ---- Envoyer à l'avion : MSFS (plan actif), GTN PMS50 (fpl.pln), GTN TDS (.gfp)
+  var lastFile = '';
+  $('apprPanel').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-a="dir"]'); if (b) fetch('/fms-folder?f=' + encodeURIComponent(lastFile), { cache: 'no-store' });
+  });
   $('bSend').onclick = function () {
     var pnl = $('apprPanel'), head = '<h4><span>' + t('sendAt') + '</span><button data-a="close">' + t('close') + '</button></h4>';
     $('list').style.display = 'none'; pnl.classList.add('on'); pnl.innerHTML = head + '<div class="hint">' + t('sending') + '</div>';
@@ -339,7 +345,11 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       if (j.error) { pnl.innerHTML = head + '<div class="hint">' + esc(j.error) + '</div>'; return; }
       var L2 = [], gtn = false;
       (j.targets || []).forEach(function (x) {
-        if (x.id === 'msfs') L2.push(x.ok ? t('sdMsfs') : x.why === 'nosim' ? t('sdNoSim') : t('sdFail', { t: 'MSFS', w: esc(x.why) }));
+        if (x.id === 'msfs') {
+          var fn = (j.file || '').split(/[\\/]/).pop();
+          L2.push(j.file ? t('sdEfb', { f: esc(fn) }) + '<br><button class="chip" data-a="dir" style="margin-top:6px">' + t('openDir') + '</button>' : t('sdFail', { t: 'MSFS', w: esc(x.why) }));
+          lastFile = j.file || '';
+        }
         else if (x.id === 'pms50') { gtn = true; L2.push(x.ok ? t('sdPms', { m: esc(x.model) }) : t('sdFail', { t: esc(x.model) + ' PMS50', w: esc(x.why) })); }
         else if (x.id === 'tds') { gtn = true; L2.push(x.ok ? t('sdTds', { f: esc(x.file) }) : t('sdFail', { t: 'GTN TDS', w: esc(x.why) })); }
       });

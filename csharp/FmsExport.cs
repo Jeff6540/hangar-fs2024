@@ -126,6 +126,21 @@ namespace HangarFS2024
             }
         }
 
+        /// <summary>Ouvre le dossier des plans du FMS dans l'explorateur, le dernier fichier sélectionné.</summary>
+        public static bool OpenFolder(string file)
+        {
+            try
+            {
+                Directory.CreateDirectory(Dir);
+                string full = string.IsNullOrEmpty(file) ? "" : Path.GetFullPath(file);
+                if (full != "" && File.Exists(full) && full.StartsWith(Path.GetFullPath(Dir), StringComparison.OrdinalIgnoreCase))
+                    System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + full + "\"");
+                else System.Diagnostics.Process.Start("explorer.exe", "\"" + Dir + "\"");
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
+
         /// <summary>Envoie le plan du FMS : renvoie ce qui a été fait, cible par cible.</summary>
         public static JObject Run(string community, string library, bool simConnected)
         {
