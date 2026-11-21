@@ -40,7 +40,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .apst .ac{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .apst .st{flex:none;color:var(--mut)} .apst .st.ok{color:var(--ok)} .apst .st.bad{color:var(--warn)}
 .note{font-size:11.5px;color:var(--warn);line-height:1.45}
-.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .md{background:#11161c;border:1px solid #3a3d44;border-radius:8px;padding:8px 2px;text-align:center;color:var(--mut);font:600 13px "Segoe UI",Inter,sans-serif;cursor:pointer}
 .md small{display:block;font-size:10.5px;font-weight:500;margin-top:2px}
 .md:hover{border-color:#5b6470}
@@ -89,6 +89,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <div class="note" id="apNote"></div>
   <div class="modes" id="apModes"></div>
   <div class="lnavl mono" id="apLnav"></div>
+  <div class="lnavl mono" id="apVnav"></div>
   <div class="sets" id="apSets"></div>
   <div class="legend" data-t="apLegendL"></div>
   <div class="legend" data-t="apLegend"></div>
@@ -131,8 +132,12 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     apNoteNone: ['Cet avion n’a pas de pilote automatique : le FMS ne peut rien commander.', 'This aircraft has no autopilot: the FMS cannot command anything.'],
     apNoteCustom: ['Avion à systèmes maison : certaines commandes peuvent ne pas répondre (affichage seulement dans ce cas).', 'Aircraft with custom systems: some commands may not respond (display only in that case).'],
     apLegend: ['Sous chaque bouton : « avion » = mode géré par l’avion ; « non géré » = l’avion n’a pas réagi (le FMS pourra le forcer plus tard).', 'Under each button: “aircraft” = mode handled by the aircraft; “not handled” = the aircraft did not react (the FMS will be able to force it later).'],
-    byFms: ['FMS', 'FMS'], lnavTo: ['LNAV → {p} · {d} NM · cap {h}°', 'LNAV → {p} · {d} NM · hdg {h}°'],
-    apLegendL: ['LNAV : l’avion suit la route du FMS de l’appli (le FMS règle le cap sur le mode HDG). NAV : l’avion suit son propre plan de vol.', 'LNAV: the aircraft follows the app FMS route (the FMS sets the heading on HDG mode). NAV: the aircraft follows its own flight plan.'],
+    byFms: ['FMS', 'FMS'],
+    vnClimb: ['VNAV ↑ montée vers {a} ft · VS +{v}', 'VNAV ↑ climb to {a} ft · VS +{v}'],
+    vnCruise: ['VNAV · TOD dans {d} NM → {a} ft à {p}', 'VNAV · TOD in {d} NM → {a} ft at {p}'],
+    vnCruiseNone: ['VNAV · croisière, pas de descente prévue devant', 'VNAV · cruise, no descent ahead'],
+    vnPath: ['VPATH ↓ {a} ft à {p} · écart {e} ft', 'VPATH ↓ {a} ft at {p} · deviation {e} ft'], lnavTo: ['LNAV → {p} · {d} NM · cap {h}°', 'LNAV → {p} · {d} NM · hdg {h}°'],
+    apLegendL: ['LNAV : l’avion suit la route du FMS de l’appli (le FMS règle le cap sur le mode HDG). NAV : l’avion suit son propre plan de vol. VNAV : montée vers la croisière, puis descente automatique au TOD sur un plan à 3° (VPATH), par l’altitude cible et le mode VS.', 'LNAV: the aircraft follows the app FMS route (the FMS sets the heading on HDG mode). NAV: the aircraft follows its own flight plan. VNAV: climb to cruise, then automatic descent at TOD on a 3° path (VPATH), using the altitude target and VS mode.'],
     byAc: ['avion', 'aircraft'], notHandled: ['non géré', 'not handled'], onTxt: ['ON', 'ON'],
     lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
     src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
@@ -222,7 +227,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   // ---- pilote automatique (relais : /ap ; ordres par la fenêtre de l'appli)
   function apSend(c, v) { try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ ap: { c: c, v: v } }); } catch (e) {} }
-  var MODES = [['ap', 'AP'], ['lnav', 'LNAV'], ['hdg', 'HDG'], ['nav', 'NAV'], ['apr', 'APR'], ['alt', 'ALT'], ['vs', 'VS'], ['spd', 'SPD']];
+  var MODES = [['ap', 'AP'], ['lnav', 'LNAV'], ['vnav', 'VNAV'], ['hdg', 'HDG'], ['nav', 'NAV'], ['apr', 'APR'], ['alt', 'ALT'], ['vs', 'VS'], ['spd', 'SPD']];
   var SETS = [  // clé, libellé, pas court, pas maintenu, min, max, unité
     ['hdg', 'lHdg', 1, 5, 1, 360, '°'], ['alt', 'lAlt', 100, 500, 0, 50000, ' ft'], ['vs', 'lVs', 100, 100, -6000, 6000, ''], ['spd', 'lSpd', 1, 5, 40, 400, ' kt']];
   var ap = null, local = {}, localAt = {};
@@ -232,7 +237,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   }).join('');
   $('apModes').addEventListener('click', function (e) {
     var b = e.target.closest('.md'); if (!b || !ap || !ap.modes) return;
-    var m = b.dataset.m === 'lnav' ? (ap.lnav || {}) : (ap.modes[b.dataset.m] || {}); apSend(b.dataset.m, m.on ? 0 : 1);
+    var m = b.dataset.m === 'lnav' ? (ap.lnav || {}) : b.dataset.m === 'vnav' ? (ap.vnav || {}) : (ap.modes[b.dataset.m] || {}); apSend(b.dataset.m, m.on ? 0 : 1);
     b.classList.add('busy');
   });
   function spec(k) { return SETS.filter(function (s) { return s[0] === k; })[0]; }
@@ -301,10 +306,21 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (ln && ln.on && ln.to && ln.hdg >= 0) le.textContent = t('lnavTo', { p: ln.to, d: ln.dist, h: String(ln.hdg || 360).padStart(3, '0') });
     else if (ln && ln.msg) { le.textContent = ln.msg; le.classList.add('msg'); }
     else le.textContent = '';
+    var vn = live && st.vnav ? st.vnav : null, ve = $('apVnav');
+    ve.className = 'lnavl mono';
+    if (vn && vn.on && vn.msg) { ve.textContent = vn.msg; ve.classList.add('msg'); }
+    else if (vn && vn.on && vn.phase === 'climb') ve.textContent = t('vnClimb', { a: vn.alt, v: vn.climb });
+    else if (vn && vn.on && vn.phase === 'path') ve.textContent = t('vnPath', { a: vn.alt, p: vn.at, e: (vn.dev > 0 ? '+' : '') + vn.dev });
+    else if (vn && vn.on && vn.phase === 'cruise') ve.textContent = vn.tod >= 0 && vn.alt > 0 ? t('vnCruise', { d: vn.tod, a: vn.alt, p: vn.at }) : t('vnCruiseNone');
+    else if (vn && vn.msg) { ve.textContent = vn.msg; ve.classList.add('msg'); }
+    else ve.textContent = '';
     $('apModes').querySelectorAll('.md').forEach(function (b) {
-      if (b.dataset.m === 'lnav') {
-        b.classList.toggle('fms', !!(ln && ln.on)); b.classList.remove('busy');
-        b.querySelector('small').textContent = ln ? (ln.on ? t('onTxt') + ' · ' : '') + t('byFms') : '—';
+      if (b.dataset.m === 'lnav' || b.dataset.m === 'vnav') {
+        var f = b.dataset.m === 'lnav' ? ln : vn;
+        b.classList.toggle('fms', !!(f && f.on)); b.classList.remove('busy');
+        var lbl = f ? (f.on ? t('onTxt') + ' · ' : '') + t('byFms') : '—';
+        if (b.dataset.m === 'vnav' && f && f.on && f.phase === 'path') lbl = 'VPATH · ' + t('byFms');
+        b.querySelector('small').textContent = lbl;
         return;
       }
       var m = live ? st.modes[b.dataset.m] : null;

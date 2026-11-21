@@ -88,7 +88,7 @@ namespace HangarFS2024
         }
 
         /// <summary>MSFS déconnecté.</summary>
-        public static void Clear() { lock (Gate) { vals = null; pending.Clear(); } Lnav.Engage(false); }
+        public static void Clear() { lock (Gate) { vals = null; pending.Clear(); } Lnav.Engage(false); Vnav.Engage(false); }
 
         static bool On(int i) { return vals != null && i < vals.Length && vals[i] >= 0.5; }
 
@@ -100,11 +100,13 @@ namespace HangarFS2024
             switch (c)
             {
                 case "hdg_set": Lnav.ManualHeading(); outbox.Enqueue(Kv("HEADING_BUG_SET", (int)Math.Round(((v % 360) + 360) % 360))); return;
-                case "alt_set": outbox.Enqueue(Kv("AP_ALT_VAR_SET_ENGLISH", Clamp(v, -1000, 60000))); return;
-                case "vs_set": outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
+                case "alt_set": Vnav.Manual(); outbox.Enqueue(Kv("AP_ALT_VAR_SET_ENGLISH", Clamp(v, -1000, 60000))); return;
+                case "vs_set": Vnav.Manual(); outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
                 case "spd_set": outbox.Enqueue(Kv("AP_SPD_VAR_SET", Clamp(v, 0, 600))); return;
             }
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
+            if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
+            if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
             foreach (var m in Modes)
             {
                 if (m.Key != c) continue;
@@ -145,6 +147,7 @@ namespace HangarFS2024
             }
             double[] cur; lock (Gate) cur = vals != null && now - valsAt < 3 ? (double[])vals.Clone() : null;
             Lnav.Tick(cur, now, hdgBusy: IsPending("hdg"));
+            Vnav.Tick(cur, now, vsBusy: IsPending("vs"));
             var list = new List<KeyValuePair<string, int>>();
             KeyValuePair<string, int> o;
             while (outbox.TryDequeue(out o)) list.Add(o);
@@ -157,7 +160,7 @@ namespace HangarFS2024
         /// <summary>État pour la fenêtre FMS (relais : /ap).</summary>
         public static JObject Snapshot(bool connected)
         {
-            var ln = Lnav.Snapshot();
+            var ln = Lnav.Snapshot(); var vn = Vnav.Snapshot();
             lock (Gate)
             {
                 double now = RelayState.Now();
@@ -171,7 +174,7 @@ namespace HangarFS2024
                 modes["gs"] = new JObject { ["on"] = On(12), ["busy"] = false, ["no"] = false };
                 o["modes"] = modes;
                 o["target"] = new JObject { ["hdg"] = Math.Round(vals[3]), ["alt"] = Math.Round(vals[5]), ["vs"] = Math.Round(vals[7]), ["spd"] = Math.Round(vals[9]) };
-                o["lnav"] = ln;
+                o["lnav"] = ln; o["vnav"] = vn;
                 o["actual"] = new JObject { ["hdg"] = Math.Round(vals[13]), ["alt"] = Math.Round(vals[14]), ["vs"] = Math.Round(vals[15]), ["spd"] = Math.Round(vals[16]), ["ground"] = On(17) };
                 return o;
             }
@@ -214,14 +217,14 @@ namespace HangarFS2024
                     ["hdg"] = cmdMag < 0 ? -1 : Math.Round(cmdMag), ["msg"] = message };
         }
 
-        const double R = Math.PI / 180, EarthNm = 3440.065;
-        static double Dist(double la1, double lo1, double la2, double lo2)   // en radians d'arc
+        internal const double R = Math.PI / 180, EarthNm = 3440.065;
+        internal static double Dist(double la1, double lo1, double la2, double lo2)   // en radians d'arc
         {
             double dLa = (la2 - la1) * R, dLo = (lo2 - lo1) * R;
             double h = Math.Sin(dLa / 2) * Math.Sin(dLa / 2) + Math.Cos(la1 * R) * Math.Cos(la2 * R) * Math.Sin(dLo / 2) * Math.Sin(dLo / 2);
             return 2 * Math.Atan2(Math.Sqrt(h), Math.Sqrt(1 - h));
         }
-        static double Brg(double la1, double lo1, double la2, double lo2)    // en degrés vrais
+        internal static double Brg(double la1, double lo1, double la2, double lo2)    // en degrés vrais
         {
             double y = Math.Sin((lo2 - lo1) * R) * Math.Cos(la2 * R);
             double x = Math.Cos(la1 * R) * Math.Sin(la2 * R) - Math.Sin(la1 * R) * Math.Cos(la2 * R) * Math.Cos((lo2 - lo1) * R);
@@ -230,7 +233,7 @@ namespace HangarFS2024
         static double Wrap(double a) { a = (a + 540) % 360 - 180; return a; }     // -180..180
         static double Norm(double a) { return ((a % 360) + 360) % 360; }
 
-        static bool Pt(JArray route, int i, out double lat, out double lon)
+        internal static bool Pt(JArray route, int i, out double lat, out double lon)
         {
             lat = lon = 0;
             if (route == null || i < 0 || i >= route.Count) return false;
@@ -318,6 +321,130 @@ namespace HangarFS2024
                     Autopilot.Order("HEADING_BUG_SET", bug);
                     lastBugSent = bug; lastBugAt = now;
                 }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ VNAV / VPATH : montée, début de descente (TOD) et descente sur un plan à 3°
+    // Montée : altitude cible = croisière (ou point plus haut devant), VS de montée réglable.
+    // Descente : pour chaque point plus bas devant l'avion, le FMS calcule où commencer la descente (pente 3°)
+    // et prévient une minute avant ; au TOD il règle l'altitude cible et la VS, puis la corrige pour rester sur le plan.
+    static class Vnav
+    {
+        static readonly object Gate = new object();
+        static bool on;
+        static string phase = "", message = "", targetIdent = "";
+        static double todNm = -1, targetAlt = -1, devFt;
+        static int climbVs = 700;
+        static double nextCalc, lastAltSent = -1, lastVsSent = 99999, lastSentAt, lastVsAsk;
+        const double FtPerNm = 318.4;   // pente de 3°
+
+        public static void Engage(bool v) { lock (Gate) { on = v; lastAltSent = -1; lastVsSent = 99999; if (v) message = ""; phase = ""; todNm = -1; } }
+        public static void SetClimb(double v) { lock (Gate) climbVs = (int)Math.Max(300, Math.Min(3000, Math.Round(v / 100) * 100)); }
+        public static void Manual()
+        {
+            lock (Gate) if (on) { on = false; phase = ""; message = Hangar.L("VNAV désengagé : altitude ou VS réglée à la main.", "VNAV disengaged: altitude or VS set by hand."); }
+        }
+
+        public static JObject Snapshot()
+        {
+            lock (Gate)
+                return new JObject { ["on"] = on, ["phase"] = phase, ["tod"] = Math.Round(todNm, 1), ["alt"] = Math.Round(targetAlt), ["at"] = targetIdent,
+                    ["dev"] = Math.Round(devFt), ["climb"] = climbVs, ["msg"] = message };
+        }
+
+        static double Num(JToken t) { double d; double.TryParse(JsonStore.Str(t), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d); return d; }
+
+        public static void Tick(double[] v, double now, bool vsBusy)
+        {
+            lock (Gate)
+            {
+                if (!on) return;
+                if (now < nextCalc) return;
+                nextCalc = now + 0.5;
+                if (v == null || v.Length < 24) { message = Hangar.L("En attente de l'avion…", "Waiting for the aircraft…"); return; }
+                if (v[1] < 0.5) { message = Hangar.L("AP coupé : appuie sur AP pour que l'avion suive le profil.", "AP off: press AP for the aircraft to follow the profile."); return; }
+                if (v[12] >= 0.5) { on = false; phase = ""; message = Hangar.L("VNAV terminé : l'avion est sur le plan de descente de l'ILS.", "VNAV finished: the aircraft is on the ILS glideslope."); return; }
+
+                var st = FlightStore.Get();
+                var plan = st["plan"] as JObject ?? new JObject();
+                var route = plan["route"] as JArray;
+                if (route == null || route.Count < 2) { on = false; message = Hangar.L("Pas de route dans le FMS.", "No route in the FMS."); return; }
+                int act = Math.Max(1, Math.Min(route.Count - 1, (int?)plan["activeLeg"] ?? 1));
+                double lat = v[20], lon = v[21], alt = v[14], gs = Math.Max(60, v[22]);
+                double cruise = Num(plan["cruiseAlt"]);
+
+                // distances le long de la route depuis l'avion
+                var along = new double[route.Count];
+                double la, lo, pla = lat, plo = lon, sum = 0;
+                for (int i = act; i < route.Count; i++)
+                {
+                    if (!Lnav.Pt(route, i, out la, out lo)) { along[i] = -1; continue; }
+                    sum += Lnav.Dist(pla, plo, la, lo) * Lnav.EarthNm; along[i] = sum; pla = la; plo = lo;
+                }
+
+                // altitude à respecter sur chaque point (destination : terrain + 1500 ft, 5 NM avant)
+                double bestTod = double.MaxValue, bestAlt = -1, pathAlt = double.MaxValue; string bestId = "";
+                // pas de descente avant le point le plus haut de la route restante (sinon la montée serait prise pour une descente)
+                int peak = act; double peakAlt = -1;
+                for (int i = act; i < route.Count - 1; i++) { double a0 = Num((route[i] as JObject ?? new JObject())["alt"]); if (a0 > peakAlt) { peakAlt = a0; peak = i; } }
+                double highAhead = cruise;
+                for (int i = act; i < route.Count; i++)
+                {
+                    if (along[i] < 0) continue;
+                    var w = route[i] as JObject ?? new JObject();
+                    double a = Num(w["alt"]), d = along[i];
+                    bool dest = i == route.Count - 1;
+                    if (dest) { a = a + 1500; d = Math.Max(0, d - 5); }
+                    if (a <= 0) continue;
+                    if (a > highAhead && !dest) highAhead = a;
+                    double pa = a + d * FtPerNm;                  // altitude du plan à 3° au niveau de l'avion
+                    if (i >= peak && pa < pathAlt) pathAlt = pa;
+                    if (a < alt - (phase == "path" ? 50 : 300) && i >= peak)   // en descente : on garde la cible jusqu'à l'atteindre
+                    {
+                        double tod = d - (alt - a) / FtPerNm;      // distance jusqu'au début de descente
+                        if (tod < bestTod) { bestTod = tod; bestAlt = a; bestId = JsonStore.Str(w["ident"]) + (dest ? " (-5 NM)" : ""); }
+                    }
+                }
+
+                double wantAlt, wantVs;
+                if (bestAlt > 0 && bestTod <= 0.2)
+                {   // VPATH : descente sur le plan à 3°, corrigée selon l'écart
+                    phase = "path";
+                    devFt = alt - pathAlt;
+                    wantAlt = Math.Round(bestAlt / 100) * 100;
+                    wantVs = -gs * 5.31 - devFt * 2.0;
+                    wantVs = Math.Max(-2500, Math.Min(-300, wantVs));
+                    todNm = 0; targetAlt = wantAlt; targetIdent = bestId;
+                    message = "";
+                }
+                else
+                {
+                    devFt = 0;
+                    todNm = bestAlt > 0 ? bestTod : -1;
+                    double climbTo = Math.Max(cruise, 0);
+                    if (climbTo > 0 && alt < climbTo - 200)
+                    {   // montée vers la croisière
+                        phase = "climb"; wantAlt = Math.Round(climbTo / 100) * 100; wantVs = climbVs;
+                        targetAlt = wantAlt; targetIdent = "";
+                    }
+                    else
+                    {   // croisière : on attend le TOD
+                        phase = "cruise"; targetAlt = bestAlt; targetIdent = bestId;
+                        double oneMin = gs / 60.0;
+                        message = bestAlt > 0 && todNm <= oneMin ? Hangar.L("Descente dans 1 min", "Descent in 1 min") : "";
+                        return;
+                    }
+                }
+
+                // ordres vers l'avion : altitude cible d'abord, puis VS, puis mode VS
+                int altI = (int)wantAlt, vsI = (int)(Math.Round(wantVs / 100) * 100);
+                bool vsOn = v[6] >= 0.5;
+                if (lastAltSent != altI || now - lastSentAt > 3) { Autopilot.Order("AP_ALT_VAR_SET_ENGLISH", altI); lastAltSent = altI; }
+                if (Math.Abs(lastVsSent - vsI) >= 100 || now - lastSentAt > 3) { Autopilot.Order("AP_VS_VAR_SET_ENGLISH", vsI); lastVsSent = vsI; lastSentAt = now; }
+                // altitude atteinte : l'avion la tient (ALT) ; sinon le mode VS doit être actif
+                bool captured = Math.Abs(alt - wantAlt) < 150;
+                if (!captured && !vsOn && !vsBusy && now - lastVsAsk > 4) { lastVsAsk = now; Autopilot.ModeOn("vs"); }
             }
         }
     }
