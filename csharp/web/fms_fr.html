@@ -200,6 +200,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     pmSdkBtn: ['Activer le SDK PMDG', 'Enable the PMDG SDK'], pmSdkOk: ['SDK activé dans {n} fichier(s) d’options. Recharge le vol (ou relance MSFS) pour qu’il démarre.', 'SDK enabled in {n} options file(s). Reload the flight (or restart MSFS) for it to start.'],
     pmSdkAlready: ['Le SDK était déjà activé. Recharge le vol si le MCP ne s’affiche toujours pas.', 'The SDK was already enabled. Reload the flight if the MCP still does not show.'],
     pmSdkNone: ['Fichier d’options du PMDG 737 introuvable : lance une fois le PMDG dans MSFS 2024, puis réessaie.', 'PMDG 737 options file not found: start the PMDG once in MSFS 2024, then try again.'],
+    ifNoSdk: ['iFly 737 MAX détecté, mais son module ne répond pas. Vérifie que « iFly Plugin » est bien lancé avec MSFS (il est livré avec l’avion), puis attends que l’avion soit chargé.', 'iFly 737 MAX detected, but its module is not answering. Check that “iFly Plugin” runs with MSFS (it ships with the aircraft), then wait for the aircraft to load.'],
+    ifHint: ['Boutons et molettes du MCP de l’iFly : le FMS de l’avion garde la route.', 'iFly MCP buttons and knobs: the aircraft FMS keeps the route.'],
     pmOff: ['MCP éteint (avion pas encore alimenté).', 'MCP off (aircraft not powered yet).'],
     pmHint: ['Boutons et molettes du MCP du PMDG : le FMS de l’avion garde la route.', 'PMDG MCP buttons and knobs: the aircraft FMS keeps the route.'],
     lIas: ['IAS / Mach', 'IAS / Mach'], lCrs: ['Course', 'Course'],
@@ -572,15 +574,17 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   var PM_SET = [['ias', 'lIas', 1, 5, 100, 400, ' kt'], ['hdg', 'lHdg', 1, 10, 1, 360, '°'], ['alt', 'lAlt', 100, 1000, 0, 41000, ' ft'], ['vs', 'lVs', 100, 500, -7900, 6000, ''], ['crs', 'lCrs', 1, 10, 1, 360, '°']];
   $('pmModes').innerHTML = PM_BTN.map(function (b) { return '<button class="md' + (b[2] ? ' cmd' : '') + '" data-pb="' + b[0] + '">' + b[1] + '<small></small></button>'; }).join('');
   $('pmSets').innerHTML = PM_SET.map(function (x) { return '<div class="set" data-ps="' + x[0] + '"><span class="lb">' + t(x[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>'; }).join('');
-  $('pmModes').addEventListener('click', function (e) { var b = e.target.closest('[data-pb]'); if (!b) return; try { window.chrome.webview.postMessage({ ap: { c: 'pmdg', b: b.dataset.pb } }); } catch (x) {} b.classList.add('busy'); });
+  $('pmModes').addEventListener('click', function (e) { var b = e.target.closest('[data-pb]'); if (!b) return; try { window.chrome.webview.postMessage({ ap: { c: mcpKind(), b: b.dataset.pb } }); } catch (x) {} b.classList.add('busy'); });
   var pmLocal = {}, pmAt = {};
-  function pmVal(k) { if (pmLocal[k] != null && Date.now() - pmAt[k] < 2500) return pmLocal[k]; var pm = ap && ap.pmdg; return pm ? (k === 'ias' ? pm.ias : pm[k]) : null; }
+  function mcp() { return ap ? (ap.pmdg737 ? ap.pmdg : ap.ifly737 ? ap.ifly : null) : null; }
+  function mcpKind() { return ap && ap.ifly737 && !ap.pmdg737 ? 'ifly' : 'pmdg'; }
+  function pmVal(k) { if (pmLocal[k] != null && Date.now() - pmAt[k] < 2500) return pmLocal[k]; var pm = mcp(); return pm && pm[k] != null ? pm[k] : null; }
   function pmSet(k, v) {
     var x = PM_SET.filter(function (q) { return q[0] === k; })[0];
     if (k === 'hdg' || k === 'crs') { v = Math.round(v) % 360; if (v <= 0) v += 360; }
     else if (!(k === 'ias' && v < 1)) v = Math.max(x[4], Math.min(x[5], Math.round(v)));
     pmLocal[k] = v; pmAt[k] = Date.now(); drawPm();
-    try { window.chrome.webview.postMessage({ ap: { c: 'pmdg_set', k: k, v: v } }); } catch (e) {}
+    try { window.chrome.webview.postMessage({ ap: { c: mcpKind() + '_set', k: k, v: v } }); } catch (e) {}
   }
   var pmHold = null;
   $('pmSets').addEventListener('pointerdown', function (e) {
@@ -611,10 +615,10 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   };
   var pmSdkMsgAt = 0;
   function drawPm() {
-    var pm = ap && ap.pmdg;
-    $('pmSdk').textContent = t('pmSdkBtn'); $('pmSdk').style.display = pm ? 'none' : '';
+    var pm = mcp(), ifl = mcpKind() === 'ifly';
+    $('pmSdk').textContent = t('pmSdkBtn'); $('pmSdk').style.display = pm || ifl ? 'none' : '';
     if (!pm && Date.now() - pmSdkMsgAt < 15000) return;   // laisser lire le résultat du bouton
-    $('pmNote').textContent = !pm ? t('pmNoSdk') : !pm.powered ? t('pmOff') : t('pmHint');
+    $('pmNote').textContent = !pm ? t(ifl ? 'ifNoSdk' : 'pmNoSdk') : !pm.powered ? t('pmOff') : t(ifl ? 'ifHint' : 'pmHint');
     $('pmNote').style.color = !pm || !pm.powered ? 'var(--warn)' : 'var(--mut)';
     $('pmModes').querySelectorAll('[data-pb]').forEach(function (b) {
       var k = b.dataset.pb, on = !!(pm && pm.on && pm.on[k]);
@@ -631,7 +635,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   function drawAp(st, relayOk) {
     ap = st;
-    var isPm = !!(st && st.pmdg737);
+    var isPm = !!(st && (st.pmdg737 || st.ifly737));
     $('pmPanel').style.display = isPm ? '' : 'none';
     ['apModes', 'apSets', 'apLnav', 'apVnav'].forEach(function (id) { $(id).style.display = isPm ? 'none' : ''; });
     document.querySelectorAll('#scrAp .legend').forEach(function (l) { l.style.display = isPm ? 'none' : ''; });
@@ -643,7 +647,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     else if (!st.live) { stEl.textContent = t('apWait'); }
     else if (!st.available) { stEl.textContent = t('apNone'); stEl.classList.add('bad'); note = t('apNoteNone'); }
     else { stEl.textContent = '● ' + t('apOk'); stEl.classList.add('ok'); }
-    if (st && st.custom && !note && !st.pmdg737) note = t('apNoteCustom');
+    if (st && st.custom && !note && !st.pmdg737 && !st.ifly737) note = t('apNoteCustom');
     $('apAc').textContent = (st && st.aircraft) || '';
     $('apNote').textContent = note;
     var live = st && st.live && st.modes;

@@ -113,6 +113,7 @@ namespace HangarFS2024
                 case "spd_set": outbox.Enqueue(Kv("AP_SPD_VAR_SET", Clamp(v, 0, 600))); return;
             }
             if (c == "pmdg" || c == "pmdg_set") { Pmdg.Command(a); return; }   // PMDG 737 : MCP de l'avion
+            if (c == "ifly" || c == "ifly_set") { Ifly.Command(a); return; }   // iFly 737 MAX : MCP de l'avion
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
             if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
@@ -179,6 +180,11 @@ namespace HangarFS2024
                 var o = new JObject { ["connected"] = connected, ["live"] = fresh, ["aircraft"] = aircraft, ["custom"] = Custom.IsMatch(aircraft ?? "") };
                 var pm = connected ? Pmdg.Snapshot() : null;   // bloc du SDK reçu : c'est un PMDG 737, quel que soit le nom de la livrée
                 if (pm != null || Pmdg.IsPmdg737(aircraft)) { o["pmdg737"] = true; if (pm != null) o["pmdg"] = pm; }
+                else
+                {   // iFly 737 MAX : mémoire partagée de son module (si elle répond, c'est un iFly, quel que soit le nom de la livrée)
+                    var ifl = connected ? Ifly.Snapshot() : null;
+                    if (ifl != null || Ifly.IsIfly(aircraft)) { o["ifly737"] = true; if (ifl != null) o["ifly"] = ifl; }
+                }
                 if (!fresh) return o;
                 o["available"] = On(0);
                 var modes = new JObject();
