@@ -37,7 +37,13 @@ namespace HangarFS2024
         static byte[] data; static double dataAt;
         static readonly ConcurrentQueue<KeyValuePair<uint, int>> outbox = new ConcurrentQueue<KeyValuePair<uint, int>>();
 
-        public static bool IsPmdg737(string title) { var t = (title ?? "").ToUpperInvariant(); return t.Contains("PMDG") && t.Contains("737"); }
+        // titres des PMDG : « PMDG 737-800 … » ou simplement « 737-800 PAX BW HD », « 737-700 BDSF … » (le MAX d'iFly s'écrit 737-8 / MAX)
+        public static bool IsPmdg737(string title)
+        {
+            var t = (title ?? "").ToUpperInvariant();
+            if (t.Contains("IFLY") || t.Contains("MAX")) return false;
+            return (t.Contains("PMDG") && t.Contains("737")) || System.Text.RegularExpressions.Regex.IsMatch(t, "(^|[^0-9])737-[6789]00");
+        }
 
         public static void Update(byte[] buf, int offset)
         {
