@@ -80,21 +80,8 @@ JS = r"""<script id="hangar-fms-track">
     box.addEventListener('click', function (e) { if (e.target.closest('[data-fold]')) { folded = !folded; try { localStorage.setItem('hg_fms_track_fold', folded ? '1' : '0'); } catch (x) {} info(); } });
     ['mousedown', 'dblclick', 'wheel', 'touchstart'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
   }
-  // le cadre se place sous la légende de la carte (en haut à droite), qu'elle soit repliée ou dépliée
-  function place() {
-    if (!box) return;
-    var host = document.getElementById('leafletTrafficMap'), lg = document.getElementById('alMainLegend'), top = 10;
-    if (host && lg && lg.offsetParent && lg.style.display !== 'none' && !lg.classList.contains('hidden')) {
-      var h = host.getBoundingClientRect(), r = lg.getBoundingClientRect();
-      if (r.height && r.bottom > h.top && r.left < h.right && r.right > h.left + h.width / 2) top = Math.max(10, Math.round(r.bottom - h.top + 8));
-    }
-    box.style.top = top + 'px';
-  }
-  window.addEventListener('resize', function () { setTimeout(place, 60); });
-  document.addEventListener('click', function () { setTimeout(place, 80); }, true);
   function info() {
     ensureBox(); if (!box) return;
-    place();
     var st = window.FmsStore && window.FmsStore.state, p = (st && st.plan) || {}, r = p.route || [];
     if (folded) { box.innerHTML = '<div class="hd" data-fold="1">▸ ' + T.unfold + '</div>'; return; }
     var h = '<div class="hd" data-fold="1">▾ ' + T.title + (p.origin && p.origin.icao ? ' · ' + esc(p.origin.icao) + ' → ' + esc(p.dest && p.dest.icao) : '') + '</div>';
@@ -114,13 +101,29 @@ JS = r"""<script id="hangar-fms-track">
     box.innerHTML = h;
   }
   var css = document.createElement('style');
-  css.textContent = '#hgFmsBox{position:absolute;top:10px;right:10px;z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
+  css.textContent = '#hgFmsBox{position:absolute;top:10px;left:58px;z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
     '#hgFmsBox .hd{color:#7fd3ff;font-weight:700;cursor:pointer;user-select:none}#hgFmsBox .ln{margin-top:3px}#hgFmsBox .mu{color:#9aa3ad}#hgFmsBox .mg{color:#f2a7ee}#hgFmsBox .am{color:#f2c46b}#hgFmsBox .gr{color:#7fe0a8}' +
     '.hg-fms-lab{background:rgba(11,13,16,.85)!important;border:1px solid #e05bd8!important;color:#f8e6f7!important;font:11px Consolas,monospace!important;padding:1px 5px!important;box-shadow:none!important}' +
     '.hg-fms-lab::before{display:none!important}.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
     '.hg-fms-pin{font-size:15px;line-height:16px;text-align:center;text-shadow:0 0 3px #000,0 0 3px #000}';
   document.head.appendChild(css);
+  var aptSig = '';
+  function preloadAirports() {
+    var st = window.FmsStore && window.FmsStore.state, r = st && st.plan && st.plan.route || [];
+    if (r.length < 2) return;
+    var a = r[0], b = r[r.length - 1];
+    if (!isFinite(a.lat) || !isFinite(b.lat) || (a.lat === 0 && a.lon === 0)) return;
+    var cur = window.alFlightAirports;
+    if (cur && cur.length && !cur._fms) return;              // un plan SimBrief est chargé : c'est lui qui décide
+    var sig = [a.lat, a.lon, b.lat, b.lon].join(',');
+    if (sig === aptSig) return;
+    aptSig = sig;
+    var list = [[a.lat, a.lon], [b.lat, b.lon]]; list._fms = true;
+    window.alFlightAirports = list;
+    try { window.dispatchEvent(new Event('al-plan')); } catch (e) {}
+  }
   function tick() {
+    preloadAirports();
     if (!open() || !map()) return;
     var st = window.FmsStore && window.FmsStore.state;
     if (st && (st.rev !== lastRev || !layer)) { lastRev = st.rev; draw(st); }
