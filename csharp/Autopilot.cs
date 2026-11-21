@@ -48,6 +48,7 @@ namespace HangarFS2024
             new[] { "NAV HAS GLIDE SLOPE:1", "bool" },               // 29
             new[] { "NAV ACTIVE FREQUENCY:2", "MHz" },               // 30  (liners : ILS aussi sur NAV2)
             new[] { "NAV STANDBY FREQUENCY:2", "MHz" },              // 31
+            new[] { "PLANE ALT ABOVE GROUND", "feet" },              // 32  (COM auto : phases du vol)
         };
 
         // ---- ordres envoyés à MSFS (numéro d'ordre = 1000 + position dans la liste)
@@ -61,7 +62,7 @@ namespace HangarFS2024
             "AP_APR_HOLD_ON", "AP_APR_HOLD_OFF", "AP_APR_HOLD",
             "HEADING_BUG_SET", "AP_ALT_VAR_SET_ENGLISH", "AP_VS_VAR_SET_ENGLISH", "AP_SPD_VAR_SET",
             "NAV1_STBY_SET_HZ", "NAV1_RADIO_SWAP", "VOR1_SET", "TOGGLE_GPS_DRIVES_NAV1",
-            "NAV2_STBY_SET_HZ", "NAV2_RADIO_SWAP",
+            "NAV2_STBY_SET_HZ", "NAV2_RADIO_SWAP", "COM_RADIO_SET_HZ", "COM_STBY_RADIO_SET_HZ",
         };
         public const uint EventBase = 1000;
 
@@ -126,6 +127,7 @@ namespace HangarFS2024
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
             if (c == "ils_auto") { Approach.SetAuto(v >= 0.5); return; }
             if (c == "ils_arm") { Approach.SetArm(v >= 0.5); return; }
+            if (c == "com_auto") { ComAuto.SetAuto(v >= 0.5); return; }
             foreach (var m in Modes)
             {
                 if (m.Key != c) continue;
@@ -168,6 +170,7 @@ namespace HangarFS2024
             Lnav.Tick(cur, now, hdgBusy: IsPending("hdg"));
             Vnav.Tick(cur, now, vsBusy: IsPending("vs"));
             Approach.Tick(cur, now, IsPending("nav") || IsPending("apr"), Liner(now));
+            ComAuto.Tick(cur, now);
             var list = new List<KeyValuePair<string, int>>();
             KeyValuePair<string, int> o;
             while (outbox.TryDequeue(out o)) list.Add(o);
@@ -191,12 +194,12 @@ namespace HangarFS2024
         /// <summary>État pour la fenêtre FMS (relais : /ap).</summary>
         public static JObject Snapshot(bool connected)
         {
-            var ln = Lnav.Snapshot(); var vn = Vnav.Snapshot(); var apx = Approach.Snapshot();
+            var ln = Lnav.Snapshot(); var vn = Vnav.Snapshot(); var apx = Approach.Snapshot(); var com = ComAuto.Snapshot();
             lock (Gate)
             {
                 double now = RelayState.Now();
                 bool fresh = connected && vals != null && now - valsAt < 5;
-                var o = new JObject { ["connected"] = connected, ["live"] = fresh, ["aircraft"] = aircraft, ["custom"] = Custom.IsMatch(aircraft ?? "") };
+                var o = new JObject { ["connected"] = connected, ["live"] = fresh, ["aircraft"] = aircraft, ["custom"] = Custom.IsMatch(aircraft ?? ""), ["com"] = com };
                 var pm = connected ? Pmdg.Snapshot() : null;   // bloc du SDK reçu : c'est un PMDG 737, quel que soit le nom de la livrée
                 if (pm != null || Pmdg.IsPmdg737(aircraft)) { o["pmdg737"] = true; if (pm != null) o["pmdg"] = pm; }
                 else

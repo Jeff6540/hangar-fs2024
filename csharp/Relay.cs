@@ -364,6 +364,7 @@ namespace HangarFS2024
             if (buf.Length < 12) return null;
             uint msgId = BitConverter.ToUInt32(buf, 8);
             if (msgId == 16 && buf.Length >= 44 && BitConverter.ToUInt32(buf, 12) == REQ_PMDG) { Pmdg.Update(buf, 40); return "pmdg"; }   // FMS : MCP du PMDG 737
+            if ((msgId == 28 || msgId == 29) && ComAuto.OnFacility(msgId, buf)) return "freq";   // FMS : fréquences des aéroports (COM auto)
             if (msgId == 8 || msgId == 9)
             {
                 if (buf.Length < 20) return "short";
@@ -556,6 +557,9 @@ namespace HangarFS2024
                         if (client.Add(DEFINE_A220, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { a220Ok = false; break; }
                     foreach (var w in A220.Writable) client.Add(w.Key, w.Value, "Bool", SimConnectClient.DT_FLOAT64);
                     if (sendOk) for (int i = 0; i < A220.Events.Length; i++) client.MapEvent(A220.EventBase + (uint)i, A220.Events[i]);
+                    // COM auto : fréquences des aéroports du plan, demandées à la volée
+                    bool freqOk = SimConnectClient.LoadNav();
+                    if (freqOk) foreach (var f in ComAuto.FacFields) if (client.AddFac(ComAuto.DefFreq, f) != 0) { freqOk = false; break; }
                     SetConnected(true);
                     Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé au suivi de vol.", "connected to MSFS: AI traffic is sent to flight tracking."));
                     double nextAi = 0, nextUser = 0, nextRoute = 0;
@@ -597,6 +601,8 @@ namespace HangarFS2024
                             foreach (var o in A220.TakeOrders(Autopilot.Values())) client.Send(o.Key, o.Value);   // Airbus A220 : FCP
                             foreach (var w in A220.TakeWrites()) client.SetDouble(w.Key, w.Value);
                         }
+                        foreach (var fr in ComAuto.TakeRequests())
+                            if (!freqOk || client.ReqFac(ComAuto.DefFreq, fr.Key, fr.Value, "") != 0) ComAuto.RequestFailed(fr.Key);
                         bool got = false;
                         while (true)
                         {
