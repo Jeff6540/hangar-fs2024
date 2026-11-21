@@ -655,6 +655,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (!relayOk) { stEl.textContent = t('apRelay'); stEl.classList.add('bad'); note = t('apNoteRelay'); }
     else if (!st.connected) { stEl.textContent = t('apNoSim'); stEl.classList.add('bad'); }
     else if (!st.live) { stEl.textContent = t('apWait'); }
+    else if (isPm) { var pmv = mcp(); stEl.textContent = (pmv && pmv.live === false) ? t('apWait') : '● ' + (st.pmdg737 ? 'PMDG' : 'iFly') + ' ' + t('apOk').replace(/^AP /, ''); if (!(pmv && pmv.live === false)) stEl.classList.add('ok'); }
     else if (!st.available) { stEl.textContent = t('apNone'); stEl.classList.add('bad'); note = t('apNoteNone'); }
     else { stEl.textContent = '● ' + t('apOk'); stEl.classList.add('ok'); }
     if (st && st.custom && !note && !st.pmdg737 && !st.ifly737) note = t('apNoteCustom');
