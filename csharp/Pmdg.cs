@@ -125,7 +125,7 @@ namespace HangarFS2024
                 string[] pkgs; try { pkgs = System.IO.Directory.GetDirectories(root, "pmdg-aircraft-73*"); } catch (Exception) { continue; }
                 foreach (var pkg in pkgs)
                 {
-                    string[] inis; try { inis = System.IO.Directory.GetFiles(pkg, "737*_Options.ini", System.IO.SearchOption.AllDirectories);   // 737_Options.ini (MSFS) ou 737NG3_Options.ini } catch (Exception) { continue; }
+                    string[] inis; try { inis = System.IO.Directory.GetFiles(pkg, "737*_Options.ini" /* 737_Options.ini (MSFS) ou 737NG3_Options.ini */, System.IO.SearchOption.AllDirectories); } catch (Exception) { continue; }
                     foreach (var f in inis)
                     {
                         try
