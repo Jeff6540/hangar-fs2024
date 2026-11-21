@@ -107,6 +107,55 @@ JS = r"""<script id="hangar-fms-track">
     '.hg-fms-lab::before{display:none!important}.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
     '.hg-fms-pin{font-size:15px;line-height:16px;text-align:center;text-shadow:0 0 3px #000,0 0 3px #000}';
   document.head.appendChild(css);
+  // ---- plan SimBrief importé dans le Suivi de vol : le FMS le reçoit aussi (approche du FMS gardée si même arrivée)
+  function arr(x) { return Array.isArray(x) ? x : x ? [x] : []; }
+  function num(x) { var n = parseFloat(x); return isFinite(n) ? n : 0; }
+  function sbToFms() {
+    var j = window.alPlanFull; if (!j || !window.FmsStore || !j.origin || !j.destination) return;
+    var id = [(j.params && (j.params.request_id || j.params.time_generated)) || '', j.origin.icao_code, j.destination.icao_code, j.general && j.general.route].join('|');
+    var last = ''; try { last = localStorage.getItem('hg_fms_sb_sent') || ''; } catch (e) {}
+    if (id === last) return;                 // même plan déjà envoyé (réouverture de la page) : on ne touche pas au FMS
+    try { localStorage.setItem('hg_fms_sb_sent', id); } catch (e) {}
+    var fixes = arr(j.navlog && j.navlog.fix); if (!fixes.length) return;
+    var route = [{ ident: j.origin.icao_code, lat: num(j.origin.pos_lat), lon: num(j.origin.pos_long), alt: num(j.origin.elevation), elev: true, type: 'apt', via: '' }];
+    var sid = '', star = '', enroute = false;
+    fixes.forEach(function (fx) {
+      if (fx.ident === 'TOC' || fx.ident === 'TOD') return;
+      if (fx.ident === j.destination.icao_code && fx.type === 'apt') return;
+      if (fx.is_sid_star === '1' && fx.via_airway && fx.via_airway !== 'DCT') { if (!enroute) sid = fx.via_airway; else star = fx.via_airway; } else enroute = true;
+      route.push({ ident: fx.ident, lat: num(fx.pos_lat), lon: num(fx.pos_long), alt: num(fx.altitude_feet), type: fx.type || '', via: fx.via_airway && fx.via_airway !== 'DCT' ? fx.via_airway : '' });
+    });
+    var dest = { ident: j.destination.icao_code, lat: num(j.destination.pos_lat), lon: num(j.destination.pos_long), alt: num(j.destination.elevation), elev: true, type: 'apt', via: '' };
+    var old = (window.FmsStore.state && window.FmsStore.state.plan) || {}, keep = {};
+    if (old.dest && old.dest.icao === dest.ident && old.approach) {
+      // même arrivée : l'approche du FMS est raccordée à la fin de la STAR
+      var aps = (old.route || []).filter(function (w) { return w.ap; });
+      if (aps.length) {
+        var k = -1; route.forEach(function (w, i) { if (i > 0 && w.ident === aps[0].ident) k = i; });
+        if (k > 0) route = route.slice(0, k);
+        route = route.concat(aps);
+        keep = { approach: old.approach, ils: old.ils || null };
+        if (old.dest.rwy) keep.rwy = old.dest.rwy;
+      }
+    }
+    route.push(dest);
+    var plan = { origin: { icao: j.origin.icao_code || '', rwy: j.origin.plan_rwy || '' }, dest: { icao: dest.ident, rwy: keep.rwy || j.destination.plan_rwy || '' },
+      cruiseAlt: num(j.general && j.general.initial_altitude), route: route, departure: sid, arrival: star, approach: keep.approach || '', ils: keep.ils || null, activeLeg: 1 };
+    window.FmsStore.set({ plan: plan }, 'simbrief');
+  }
+  window.addEventListener('al-plan', function () { setTimeout(sbToFms, 50); });
+  // ---- un seul tracé : le trait SimBrief est masqué quand le FMS a une route pour le même vol
+  function sbVisibility() {
+    var m = map(); if (!m) return;
+    var st = window.FmsStore && window.FmsStore.state, p = st && st.plan || {}, pd = window.alPlanData;
+    var same = !!(pd && pd.origin && pd.destination && p.origin && p.dest && (p.route || []).length > 1 &&
+      p.origin.icao === pd.origin.icao_code && p.dest.icao === pd.destination.icao_code);
+    [typeof sbLayer !== 'undefined' ? sbLayer : null, typeof sbLabelLayer !== 'undefined' ? sbLabelLayer : null].forEach(function (lg) {
+      if (!lg) return;
+      if (same && m.hasLayer(lg)) m.removeLayer(lg);
+      else if (!same && !m.hasLayer(lg)) lg.addTo(m);
+    });
+  }
   var aptSig = '';
   function preloadAirports() {
     var st = window.FmsStore && window.FmsStore.state, r = st && st.plan && st.plan.route || [];
@@ -125,6 +174,7 @@ JS = r"""<script id="hangar-fms-track">
   function tick() {
     preloadAirports();
     if (!open() || !map()) return;
+    sbVisibility();
     var st = window.FmsStore && window.FmsStore.state;
     if (st && (st.rev !== lastRev || !layer)) { lastRev = st.rev; draw(st); }
     fetch('http://localhost:8765/ap', { cache: 'no-store' }).then(function (x) { return x.json(); }).then(function (j) { ap = j; info(); }, function () { ap = null; info(); });
