@@ -109,7 +109,7 @@ namespace HangarFS2024
             {
                 case "hdg_set": Lnav.ManualHeading(); outbox.Enqueue(Kv("HEADING_BUG_SET", (int)Math.Round(((v % 360) + 360) % 360))); return;
                 case "alt_set": Vnav.Manual(); outbox.Enqueue(Kv("AP_ALT_VAR_SET_ENGLISH", Clamp(v, -1000, 60000))); return;
-                case "vs_set": Vnav.Manual(); outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
+                case "vs_set": if (!Vnav.ClimbVs(v)) Vnav.Manual(); outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
                 case "spd_set": outbox.Enqueue(Kv("AP_SPD_VAR_SET", Clamp(v, 0, 600))); return;
             }
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
@@ -352,7 +352,17 @@ namespace HangarFS2024
         const double FtPerNm = 318.4;   // pente de 3°
 
         public static void Engage(bool v) { lock (Gate) { on = v; lastAltSent = -1; lastVsSent = 99999; if (v) message = ""; phase = ""; todNm = -1; } }
-        public static void SetClimb(double v) { lock (Gate) climbVs = (int)Math.Max(300, Math.Min(3000, Math.Round(v / 100) * 100)); }
+        public static void SetClimb(double v) { lock (Gate) { climbVs = (int)Math.Max(300, Math.Min(3000, Math.Round(v / 100) * 100)); lastVsSent = 99999; } }
+        /// <summary>VS réglée à la main pendant la montée VNAV : elle devient la VS de montée, sans rien désengager.</summary>
+        public static bool ClimbVs(double v)
+        {
+            lock (Gate)
+            {
+                if (!on || phase != "climb" || v < 100) return false;
+                climbVs = (int)Math.Max(300, Math.Min(3000, Math.Round(v / 100) * 100)); lastVsSent = climbVs;
+                return true;
+            }
+        }
         public static void Manual()
         {
             lock (Gate) if (on) { on = false; phase = ""; message = Hangar.L("VNAV désengagé : altitude ou VS réglée à la main.", "VNAV disengaged: altitude or VS set by hand."); }
