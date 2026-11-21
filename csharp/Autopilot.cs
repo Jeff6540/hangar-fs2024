@@ -98,6 +98,9 @@ namespace HangarFS2024
             }
         }
 
+        /// <summary>Dernières valeurs lues (null si trop anciennes).</summary>
+        public static double[] Values() { lock (Gate) return vals != null && RelayState.Now() - valsAt < 3 ? (double[])vals.Clone() : null; }
+
         /// <summary>MSFS déconnecté.</summary>
         public static void Clear() { lock (Gate) { vals = null; pending.Clear(); } Lnav.Engage(false); Vnav.Engage(false); }
 
@@ -117,6 +120,7 @@ namespace HangarFS2024
             }
             if (c == "pmdg" || c == "pmdg_set") { Pmdg.Command(a); return; }   // PMDG 737 : MCP de l'avion
             if (c == "ifly" || c == "ifly_set") { Ifly.Command(a); return; }   // iFly 737 MAX : MCP de l'avion
+            if (c == "a220" || c == "a220_set") { A220.Command(a); return; }   // Airbus A220 : FCP de l'avion
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
             if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
@@ -176,7 +180,7 @@ namespace HangarFS2024
             if (now < nextLiner) return liner;
             nextLiner = now + 2;
             string ac; lock (Gate) ac = aircraft;
-            liner = Pmdg.Snapshot() != null || Pmdg.IsPmdg737(ac) ? "pmdg" : Ifly.Snapshot() != null || Ifly.IsIfly(ac) ? "ifly" : null;
+            liner = Pmdg.Snapshot() != null || Pmdg.IsPmdg737(ac) ? "pmdg" : Ifly.Snapshot() != null || Ifly.IsIfly(ac) ? "ifly" : A220.IsA220(ac) ? "a220" : null;
             return liner;
         }
 
@@ -198,6 +202,7 @@ namespace HangarFS2024
                 {   // iFly 737 MAX : mémoire partagée de son module (si elle répond, c'est un iFly, quel que soit le nom de la livrée)
                     var ifl = connected ? Ifly.Snapshot() : null;
                     if (ifl != null || Ifly.IsIfly(aircraft)) { o["ifly737"] = true; if (ifl != null) o["ifly"] = ifl; }
+                    else if (A220.IsA220(aircraft)) { o["a220"] = true; var fcp = connected ? A220.Snapshot(fresh ? vals : null) : null; if (fcp != null) o["fcp"] = fcp; }
                 }
                 if (!fresh) return o;
                 o["available"] = On(0);
@@ -586,6 +591,8 @@ namespace HangarFS2024
 
                 if (aprOn && (gsOn || !hasGs)) { state = gsOn ? "gs" : "app"; return; }
                 if (aprOn) { state = "app"; return; }
+                // A220 : son FMC règle lui-même l'ILS (fréquences et courses), le FMS n'y touche pas
+                if (liner == "a220") { state = active ? "active" : "fmc"; return; }
                 bool two = liner != null && v.Length >= 32;   // PMDG / iFly : ILS sur NAV1 et NAV2, les deux courses
                 bool active2 = two && Same(v[30], freqHz), standby2 = two && Same(v[31], freqHz);
                 if (!auto) { state = active ? (active2 ? "active2" : "active") : standby ? "standby" : "manual"; return; }

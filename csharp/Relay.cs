@@ -223,6 +223,8 @@ namespace HangarFS2024
         static OpenFn open; static CloseFn close; static AddDefFn addDef; static ReqTypeFn reqType; static NextFn next;
         static MapFn mapEvt; static TransmitFn transmit; static PlanLoadFn planLoad;
         static CdNameFn cdName; static CdDefFn cdDef; static CdReqFn cdReq;
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int SetDataFn(IntPtr h, uint def, uint obj, uint flags, uint count, uint size, ref double data);
+        static SetDataFn setData;
         IntPtr handle = IntPtr.Zero;
 
         public static bool Load(string dll)
@@ -235,6 +237,7 @@ namespace HangarFS2024
             next = Get<NextFn>("SimConnect_GetNextDispatch");
             mapEvt = Get<MapFn>("SimConnect_MapClientEventToSimEvent"); transmit = Get<TransmitFn>("SimConnect_TransmitClientEvent");
             planLoad = Get<PlanLoadFn>("SimConnect_FlightPlanLoad");
+            setData = Get<SetDataFn>("SimConnect_SetDataOnSimObject");
             cdName = Get<CdNameFn>("SimConnect_MapClientDataNameToID"); cdDef = Get<CdDefFn>("SimConnect_AddToClientDataDefinition"); cdReq = Get<CdReqFn>("SimConnect_RequestClientData");
             return open != null && close != null && addDef != null && reqType != null && next != null;
         }
@@ -266,6 +269,8 @@ namespace HangarFS2024
             if (cdDef(handle, def, 0, size, 0, 0) != 0) return false;
             return cdReq(handle, id, req, def, 3 /* à chaque changement */, 1 /* seulement si ça change */, 0, 0, 0) == 0;
         }
+        /// <summary>Écrit une valeur (définition à une seule variable) sur ton avion.</summary>
+        public int SetDouble(uint def, double v) { return setData == null ? -1 : setData(handle, def, 0, 0, 0, 8, ref v); }
         public int LoadPlan(string fileNoExt) { return planLoad == null ? -1 : planLoad(handle, fileNoExt); }   // FMS : plan .PLN chargé comme plan actif
         public int Send(uint id, int data) { return transmit == null ? -1 : transmit(handle, 0, id, unchecked((uint)data), 1, 0x10); }
         public byte[] Next()
@@ -314,7 +319,7 @@ namespace HangarFS2024
     // ------------------------------------------------------------------ données partagées du relais
     class RelayState
     {
-        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3, REQ_AP = 5, DEFINE_AP = 4, REQ_PMDG = 6;
+        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3, REQ_AP = 5, DEFINE_AP = 4, REQ_PMDG = 6, REQ_A220 = 7, DEFINE_A220 = 23;
         const double STALE = 10.0;
         readonly object gate = new object();
         public volatile bool Connected;
@@ -333,7 +338,7 @@ namespace HangarFS2024
             lock (gate)
             {
                 Connected = v;
-                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; Autopilot.Clear(); Pmdg.Clear(); }
+                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; Autopilot.Clear(); Pmdg.Clear(); A220.Clear(); }
             }
         }
 
@@ -389,6 +394,15 @@ namespace HangarFS2024
                     lock (gate) title = user != null ? JsonStore.Str(user.Item2["title"]) : "";
                     Autopilot.Update(v, title);
                     return "ap";
+                }
+                if (reqId == REQ_A220)   // FMS : FCP de l'Airbus A220 (variables de l'avion)
+                {
+                    int n = A220.Fields.Length;
+                    if (buf.Length < O + n * 8) return "other";
+                    var v = new double[n];
+                    for (int i = 0; i < n; i++) v[i] = D(buf, O + i * 8);
+                    A220.Update(v);
+                    return "a220";
                 }
                 if (reqId == REQ_ROUTE)
                 {
@@ -536,6 +550,12 @@ namespace HangarFS2024
                     // PMDG 737 : boutons du MCP (« #numéro ») et bloc de données du SDK (diffusé seulement si activé dans les options de l'avion)
                     if (sendOk) foreach (var pe in Pmdg.AllEvents()) client.MapEvent(pe, "#" + pe);
                     client.ClientData(Pmdg.DataName, Pmdg.DataId, Pmdg.DataDef, Pmdg.DataSize, REQ_PMDG);
+                    // Airbus A220 : variables du FCP (lues et écrites) et boutons standards qu'il écoute
+                    bool a220Ok = true;
+                    foreach (var f in A220.Fields)
+                        if (client.Add(DEFINE_A220, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { a220Ok = false; break; }
+                    foreach (var w in A220.Writable) client.Add(w.Key, w.Value, "Bool", SimConnectClient.DT_FLOAT64);
+                    if (sendOk) for (int i = 0; i < A220.Events.Length; i++) client.MapEvent(A220.EventBase + (uint)i, A220.Events[i]);
                     SetConnected(true);
                     Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé au suivi de vol.", "connected to MSFS: AI traffic is sent to flight tracking."));
                     double nextAi = 0, nextUser = 0, nextRoute = 0;
@@ -547,6 +567,7 @@ namespace HangarFS2024
                             client.Request(REQ_USER, DEFINE_ID, 0, 0);
                             if (flightOk) client.Request(REQ_FLIGHT, DEFINE_FLIGHT, 0, 0);
                             if (apOk) client.Request(REQ_AP, DEFINE_AP, 0, 0);
+                            if (a220Ok) client.Request(REQ_A220, DEFINE_A220, 0, 0);
                             nextUser = now + 0.5;
                         }
                         if (now >= nextAi)     // trafic IA : chaque seconde
@@ -573,6 +594,8 @@ namespace HangarFS2024
                                 if (id >= 0) client.Send((uint)id, o.Value);
                             }
                             foreach (var o in Pmdg.TakeOrders()) client.Send(o.Key, o.Value);   // PMDG 737 : MCP
+                            foreach (var o in A220.TakeOrders(Autopilot.Values())) client.Send(o.Key, o.Value);   // Airbus A220 : FCP
+                            foreach (var w in A220.TakeWrites()) client.SetDouble(w.Key, w.Value);
                         }
                         bool got = false;
                         while (true)

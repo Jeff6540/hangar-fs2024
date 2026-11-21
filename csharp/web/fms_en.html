@@ -158,7 +158,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     apprNoDest: ['Charge d’abord un plan de vol (SimBrief ou .PLN).', 'Load a flight plan first (SimBrief or .PLN).'],
     apprPickTr: ['Arrivée sur l’approche par :', 'Join the approach via:'], apprVectors: ['Vecteurs (finale seule)', 'Vectors (final only)'],
     apprOk: ['Approche {n} chargée{i}.', 'Approach {n} loaded{i}.'], apprIls: [' · ILS {id} {f} · {c}°', ' · ILS {id} {f} · {c}°'], apprNoIls: [' (ILS non trouvé dans les données)', ' (ILS not found in the data)'],
-    ilsSt: { wait: ['en attente', 'waiting'], standby: ['en attente sur NAV1', 'in NAV1 standby'], active: ['active sur NAV1', 'active on NAV1'], active2: ['active sur NAV1 et NAV2', 'active on NAV1 and NAV2'], manual: ['réglage manuel', 'manual tuning'],
+    ilsSt: { wait: ['en attente', 'waiting'], standby: ['en attente sur NAV1', 'in NAV1 standby'], active: ['active sur NAV1', 'active on NAV1'], active2: ['active sur NAV1 et NAV2', 'active on NAV1 and NAV2'], fmc: ['réglée par le FMC de l’avion', 'tuned by the aircraft FMC'], manual: ['réglage manuel', 'manual tuning'],
              loc_arm: ['LOC armé', 'LOC armed'], loc: ['LOC', 'LOC'], app_arm: ['APP armé', 'APP armed'], app: ['APP', 'APP'], gs: ['APP · GS capté', 'APP · GS captured'] },
     ilsAutoOn: ['ILS auto', 'Auto ILS'], ilsAutoOff: ['ILS manuel', 'Manual ILS'],
     pln: ['Ouvrir un .PLN', 'Open a .PLN'],
@@ -203,6 +203,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     pmSdkNone: ['Fichier d’options du PMDG 737 introuvable : lance une fois le PMDG dans MSFS 2024, puis réessaie.', 'PMDG 737 options file not found: start the PMDG once in MSFS 2024, then try again.'],
     ifNoSdk: ['iFly 737 MAX détecté, mais son module ne répond pas. Vérifie que « iFly Plugin » est bien lancé avec MSFS (il est livré avec l’avion), puis attends que l’avion soit chargé.', 'iFly 737 MAX detected, but its module is not answering. Check that “iFly Plugin” runs with MSFS (it ships with the aircraft), then wait for the aircraft to load.'],
     ifHint: ['Boutons et molettes du MCP de l’iFly : le FMS de l’avion garde la route.', 'iFly MCP buttons and knobs: the aircraft FMS keeps the route.'],
+    fcpNone: ['Airbus A220 détecté : en attente de ses variables (attends que l’avion soit chargé et alimenté).', 'Airbus A220 detected: waiting for its variables (wait for the aircraft to be loaded and powered).'],
+    fcpHint: ['Boutons et molettes du FCP de l’A220 : le FMC de l’avion garde la route et règle l’ILS.', 'A220 FCP buttons and knobs: the aircraft FMC keeps the route and tunes the ILS.'],
     pmOff: ['MCP éteint (avion pas encore alimenté).', 'MCP off (aircraft not powered yet).'],
     pmHint: ['Boutons et molettes du MCP du PMDG : le FMS de l’avion garde la route.', 'PMDG MCP buttons and knobs: the aircraft FMS keeps the route.'],
     lIas: ['IAS / Mach', 'IAS / Mach'], lCrs: ['Course', 'Course'],
@@ -573,8 +575,17 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   var PM_BTN = [['cmda', 'CMD A', 1], ['cmdb', 'CMD B', 1], ['at', 'A/T', 0], ['n1', 'N1', 0], ['speed', 'SPEED', 0], ['vnav', 'VNAV', 0], ['lvlchg', 'LVL CHG', 0],
     ['hdgsel', 'HDG SEL', 0], ['lnav', 'LNAV', 0], ['vorloc', 'VOR/LOC', 0], ['app', 'APP', 0], ['althold', 'ALT HLD', 0], ['vs', 'V/S', 0], ['fd', 'F/D', 0]];
   var PM_SET = [['ias', 'lIas', 1, 5, 100, 400, ' kt'], ['hdg', 'lHdg', 1, 10, 1, 360, '°'], ['alt', 'lAlt', 100, 1000, 0, 41000, ' ft'], ['vs', 'lVs', 100, 500, -7900, 6000, ''], ['crs', 'lCrs', 1, 10, 1, 360, '°']];
-  $('pmModes').innerHTML = PM_BTN.map(function (b) { return '<button class="md' + (b[2] ? ' cmd' : '') + '" data-pb="' + b[0] + '">' + b[1] + '<small></small></button>'; }).join('');
-  $('pmSets').innerHTML = PM_SET.map(function (x) { return '<div class="set" data-ps="' + x[0] + '"><span class="lb">' + t(x[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>'; }).join('');
+  // Airbus A220 : FCP (pas de course : son FMC règle l'ILS)
+  var FCP_BTN = [['ap', 'AP', 1], ['at', 'A/T', 0], ['fd', 'F/D', 0], ['hdg', 'HDG', 0], ['nav', 'NAV', 0], ['appr', 'APPR', 0], ['flc', 'FLC', 0], ['alt', 'ALT', 0], ['vs', 'VS', 0], ['vnav', 'VNAV', 0]];
+  var B737_BTN = PM_BTN, B737_SET = PM_SET, pmBuilt = '';
+  function buildPm(kind) {
+    if (pmBuilt === kind) return; pmBuilt = kind;
+    PM_BTN = kind === 'a220' ? FCP_BTN : B737_BTN;
+    PM_SET = kind === 'a220' ? B737_SET.filter(function (x) { return x[0] !== 'crs'; }) : B737_SET;
+    $('pmModes').innerHTML = PM_BTN.map(function (b) { return '<button class="md' + (b[2] ? ' cmd' : '') + '" data-pb="' + b[0] + '">' + b[1] + '<small></small></button>'; }).join('');
+    $('pmSets').innerHTML = PM_SET.map(function (x) { return '<div class="set" data-ps="' + x[0] + '"><span class="lb">' + t(x[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>'; }).join('');
+  }
+  buildPm('pmdg');
   $('pmModes').addEventListener('click', function (e) {
     var b = e.target.closest('[data-pb]'); if (!b) return;
     var send = function (k) { try { window.chrome.webview.postMessage({ ap: { c: mcpKind(), b: k } }); } catch (x) {} };
@@ -585,8 +596,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     b.classList.add('busy');
   });
   var pmLocal = {}, pmAt = {};
-  function mcp() { return ap ? (ap.pmdg737 ? ap.pmdg : ap.ifly737 ? ap.ifly : null) : null; }
-  function mcpKind() { return ap && ap.ifly737 && !ap.pmdg737 ? 'ifly' : 'pmdg'; }
+  function mcp() { return ap ? (ap.pmdg737 ? ap.pmdg : ap.ifly737 ? ap.ifly : ap.a220 ? ap.fcp : null) : null; }
+  function mcpKind() { return ap && ap.pmdg737 ? 'pmdg' : ap && ap.ifly737 ? 'ifly' : ap && ap.a220 ? 'a220' : 'pmdg'; }
   function pmVal(k) { if (pmLocal[k] != null && Date.now() - pmAt[k] < 2500) return pmLocal[k]; var pm = mcp(); return pm && pm[k] != null ? pm[k] : null; }
   function pmSet(k, v) {
     var x = PM_SET.filter(function (q) { return q[0] === k; })[0];
@@ -624,10 +635,11 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   };
   var pmSdkMsgAt = 0;
   function drawPm() {
-    var pm = mcp(), ifl = mcpKind() === 'ifly';
-    $('pmSdk').textContent = t('pmSdkBtn'); $('pmSdk').style.display = pm || ifl ? 'none' : '';
-    if (!pm && Date.now() - pmSdkMsgAt < 15000) return;   // laisser lire le résultat du bouton
-    $('pmNote').textContent = !pm ? t(ifl ? 'ifNoSdk' : 'pmNoSdk') : !pm.powered ? t('pmOff') : t(ifl ? 'ifHint' : 'pmHint');
+    var kind = mcpKind(), pm = mcp(), ifl = kind === 'ifly', fcp = kind === 'a220';
+    buildPm(kind);
+    $('pmSdk').textContent = t('pmSdkBtn'); $('pmSdk').style.display = pm || ifl || fcp ? 'none' : '';
+    if (!pm && !fcp && Date.now() - pmSdkMsgAt < 15000) return;   // laisser lire le résultat du bouton
+    $('pmNote').textContent = !pm ? t(fcp ? 'fcpNone' : ifl ? 'ifNoSdk' : 'pmNoSdk') : !pm.powered ? t('pmOff') : t(fcp ? 'fcpHint' : ifl ? 'ifHint' : 'pmHint');
     $('pmNote').style.color = !pm || !pm.powered ? 'var(--warn)' : 'var(--mut)';
     $('pmModes').querySelectorAll('[data-pb]').forEach(function (b) {
       var k = b.dataset.pb, on = !!(pm && pm.on && pm.on[k]), lbl = on ? 'ON' : '';
@@ -645,7 +657,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   function drawAp(st, relayOk) {
     ap = st;
-    var isPm = !!(st && (st.pmdg737 || st.ifly737));
+    var isPm = !!(st && (st.pmdg737 || st.ifly737 || st.a220));
     $('pmPanel').style.display = isPm ? '' : 'none';
     ['apModes', 'apSets', 'apLnav', 'apVnav'].forEach(function (id) { $(id).style.display = isPm ? 'none' : ''; });
     document.querySelectorAll('#scrAp .legend').forEach(function (l) { l.style.display = isPm ? 'none' : ''; });
@@ -655,10 +667,10 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (!relayOk) { stEl.textContent = t('apRelay'); stEl.classList.add('bad'); note = t('apNoteRelay'); }
     else if (!st.connected) { stEl.textContent = t('apNoSim'); stEl.classList.add('bad'); }
     else if (!st.live) { stEl.textContent = t('apWait'); }
-    else if (isPm) { var pmv = mcp(); stEl.textContent = (pmv && pmv.live === false) ? t('apWait') : '● ' + (st.pmdg737 ? 'PMDG' : 'iFly') + ' ' + t('apOk').replace(/^AP /, ''); if (!(pmv && pmv.live === false)) stEl.classList.add('ok'); }
+    else if (isPm) { var pmv = mcp(); stEl.textContent = (pmv && pmv.live === false) ? t('apWait') : '● ' + (st.pmdg737 ? 'PMDG' : st.ifly737 ? 'iFly' : 'A220') + ' ' + t('apOk').replace(/^AP /, ''); if (!(pmv && pmv.live === false)) stEl.classList.add('ok'); }
     else if (!st.available) { stEl.textContent = t('apNone'); stEl.classList.add('bad'); note = t('apNoteNone'); }
     else { stEl.textContent = '● ' + t('apOk'); stEl.classList.add('ok'); }
-    if (st && st.custom && !note && !st.pmdg737 && !st.ifly737) note = t('apNoteCustom');
+    if (st && st.custom && !note && !st.pmdg737 && !st.ifly737 && !st.a220) note = t('apNoteCustom');
     $('apAc').textContent = (st && st.aircraft) || '';
     $('apNote').textContent = note;
     var live = st && st.live && st.modes;
