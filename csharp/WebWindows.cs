@@ -49,6 +49,7 @@ namespace HangarFS2024
                         {
                             var j = Newtonsoft.Json.Linq.JObject.Parse(m.WebMessageAsJson);
                             // FMS : mémoire commune du plan de vol (voir FlightStore.cs)
+                            if (j["ap"] is Newtonsoft.Json.Linq.JObject) { Autopilot.Command((Newtonsoft.Json.Linq.JObject)j["ap"]); return; }   // FMS : boutons du pilote auto
                             if (j["fms"] is Newtonsoft.Json.Linq.JObject) { string rep = FlightStore.Handle((Newtonsoft.Json.Linq.JObject)j["fms"]); if (rep != null) PostJson(rep); return; }
                             if (j["journalSave"] is Newtonsoft.Json.Linq.JObject) { Journal.Save((Newtonsoft.Json.Linq.JObject)j["journalSave"]); return; }
                             if (j["journalDelete"] != null) { Journal.Delete(JsonStore.Str(j["journalDelete"])); return; }

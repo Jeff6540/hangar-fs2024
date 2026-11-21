@@ -210,9 +210,13 @@ namespace HangarFS2024
         delegate int AddDefFn(IntPtr h, uint def, [MarshalAs(UnmanagedType.LPStr)] string datum, [MarshalAs(UnmanagedType.LPStr)] string units, int type, float eps, uint id);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int ReqTypeFn(IntPtr h, uint req, uint def, uint radius, int type);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int NextFn(IntPtr h, out IntPtr data, out uint size);
+        // FMS : ordres envoyés à l'avion (pilote automatique)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int MapFn(IntPtr h, uint evt, [MarshalAs(UnmanagedType.LPStr)] string name);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int TransmitFn(IntPtr h, uint obj, uint evt, uint data, uint group, uint flags);
 
         static IntPtr module = IntPtr.Zero;
         static OpenFn open; static CloseFn close; static AddDefFn addDef; static ReqTypeFn reqType; static NextFn next;
+        static MapFn mapEvt; static TransmitFn transmit;
         IntPtr handle = IntPtr.Zero;
 
         public static bool Load(string dll)
@@ -223,6 +227,7 @@ namespace HangarFS2024
             open = Get<OpenFn>("SimConnect_Open"); close = Get<CloseFn>("SimConnect_Close");
             addDef = Get<AddDefFn>("SimConnect_AddToDataDefinition"); reqType = Get<ReqTypeFn>("SimConnect_RequestDataOnSimObjectType");
             next = Get<NextFn>("SimConnect_GetNextDispatch");
+            mapEvt = Get<MapFn>("SimConnect_MapClientEventToSimEvent"); transmit = Get<TransmitFn>("SimConnect_TransmitClientEvent");
             return open != null && close != null && addDef != null && reqType != null && next != null;
         }
 
@@ -242,6 +247,10 @@ namespace HangarFS2024
         }
         public int Add(uint def, string datum, string units, int type) { return addDef(handle, def, datum, units, type, 0f, UNUSED); }
         public int Request(uint req, uint def, uint radius, int type) { return reqType(handle, req, def, radius, type); }
+        public bool CanSend { get { return mapEvt != null && transmit != null; } }
+        public int MapEvent(uint id, string name) { return mapEvt == null ? -1 : mapEvt(handle, id, name); }
+        // objet 0 = ton avion ; groupe 1 = priorité la plus haute ; 0x10 = « le groupe est une priorité »
+        public int Send(uint id, int data) { return transmit == null ? -1 : transmit(handle, 0, id, unchecked((uint)data), 1, 0x10); }
         public byte[] Next()
         {
             IntPtr p; uint size;
@@ -260,7 +269,7 @@ namespace HangarFS2024
     // ------------------------------------------------------------------ données partagées du relais
     class RelayState
     {
-        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3;
+        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3, REQ_AP = 5, DEFINE_AP = 4;
         const double STALE = 10.0;
         readonly object gate = new object();
         public volatile bool Connected;
@@ -279,7 +288,7 @@ namespace HangarFS2024
             lock (gate)
             {
                 Connected = v;
-                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; }
+                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; Autopilot.Clear(); }
             }
         }
 
@@ -323,6 +332,17 @@ namespace HangarFS2024
                     };
                     lock (gate) flight = Tuple.Create(Now(), f);
                     return "flight";
+                }
+                if (reqId == REQ_AP)   // FMS : pilote automatique de ton avion
+                {
+                    int n = Autopilot.Fields.Length;
+                    if (buf.Length < O + n * 8) return "other";
+                    var v = new double[n];
+                    for (int i = 0; i < n; i++) v[i] = D(buf, O + i * 8);
+                    string title;
+                    lock (gate) title = user != null ? JsonStore.Str(user.Item2["title"]) : "";
+                    Autopilot.Update(v, title);
+                    return "ap";
                 }
                 if (reqId == REQ_ROUTE)
                 {
@@ -457,6 +477,14 @@ namespace HangarFS2024
                     bool flightOk = true;
                     foreach (var f in flightFields)
                         if (client.Add(DEFINE_FLIGHT, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { flightOk = false; break; }
+                    // FMS : lecture du pilote automatique et ordres vers l'avion
+                    bool apOk = true;
+                    foreach (var f in Autopilot.Fields)
+                        if (client.Add(DEFINE_AP, f[0], f[1], SimConnectClient.DT_FLOAT64) != 0) { apOk = false; break; }
+                    bool sendOk = client.CanSend;
+                    if (sendOk)
+                        for (int i = 0; i < Autopilot.Events.Length; i++)
+                            if (client.MapEvent(Autopilot.EventBase + (uint)i, Autopilot.Events[i]) != 0) { sendOk = false; break; }
                     SetConnected(true);
                     Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé à Avionics Dispatch.", "connected to MSFS: AI traffic is sent to Avionics Dispatch."));
                     double nextAi = 0, nextUser = 0, nextRoute = 0;
@@ -467,6 +495,7 @@ namespace HangarFS2024
                         {
                             client.Request(REQ_USER, DEFINE_ID, 0, 0);
                             if (flightOk) client.Request(REQ_FLIGHT, DEFINE_FLIGHT, 0, 0);
+                            if (apOk) client.Request(REQ_AP, DEFINE_AP, 0, 0);
                             nextUser = now + 0.5;
                         }
                         if (now >= nextAi)     // trafic IA : chaque seconde
@@ -479,6 +508,12 @@ namespace HangarFS2024
                             client.Request(REQ_ROUTE, DEFINE_ROUTE, RADIUS, 2);
                             nextRoute = now + 5.0;
                         }
+                        if (sendOk)   // ordres du FMS (boutons du pilote automatique)
+                            foreach (var o in Autopilot.TakeOrders())
+                            {
+                                int id = Autopilot.EventId(o.Key);
+                                if (id >= 0) client.Send((uint)id, o.Value);
+                            }
                         bool got = false;
                         while (true)
                         {
