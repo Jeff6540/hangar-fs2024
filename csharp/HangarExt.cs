@@ -440,6 +440,7 @@ namespace HangarFS2024
                         r.Text(html, "text/html; charset=utf-8");
                         return;
                     }
+                case "/fms-export": r.Text(FmsExport.Run(CfgS("community"), CfgS("library"), Relay.Connected).ToString(Formatting.None), "application/json; charset=utf-8"); return;   // FMS : envoyer le plan à l'avion
                 case "/fms_store.js": r.Text(WebText("fms_store.js"), "application/javascript; charset=utf-8"); return;
                 case "/dispatch":
                     {

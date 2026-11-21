@@ -101,7 +101,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <button class="tile" id="bPln"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14h6M9 17h4"/></svg><span data-t="pln"></span></button>
   <input type="file" id="plnFile" accept=".pln,.PLN,.xml" style="display:none">
   <button class="tile" id="bDirect"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 9l3 3-3 3"/></svg><span data-t="direct"></span></button>
-  <button class="tile wide" id="bAppr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18"/><path d="M5 18l7-12 7 12"/><path d="M12 6v12"/></svg><span data-t="appr"></span></button>
+  <button class="tile" id="bAppr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18"/><path d="M5 18l7-12 7 12"/><path d="M12 6v12"/></svg><span data-t="appr"></span></button>
+  <button class="tile" id="bSend"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16l20-6-20-6 4 6z"/><path d="M6 10h7"/></svg><span data-t="send"></span></button>
   <button class="tile warn" id="bNew"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span data-t="newflight"></span></button>
 </div>
 </div>
@@ -130,6 +131,15 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   var LANG = 'en';
   var T = {
     simbrief: ['Charger SimBrief', 'Load SimBrief'],
+    send: ['Envoyer à l’avion', 'Send to aircraft'], sendAt: ['Envoi du plan à l’avion', 'Sending the plan to the aircraft'], sending: ['Envoi…', 'Sending…'],
+    sendErr: ['L’appli n’a pas répondu.', 'The app did not answer.'],
+    sdMsfs: ['<b>MSFS (G1000, G3000… des avions de base)</b> : plan chargé comme plan actif. Vérifie la page FPL de l’avion ; si rien n’apparaît, cet avion ne relit pas le plan en vol (essaie avant le roulage).', '<b>MSFS (G1000, G3000… default aircraft)</b>: plan loaded as the active plan. Check the aircraft FPL page; if nothing shows, this aircraft does not reread the plan in flight (try before taxi).'],
+    sdNoSim: ['<b>MSFS</b> : pas envoyé, MSFS n’est pas connecté (lance le vol puis réessaie).', '<b>MSFS</b>: not sent, MSFS is not connected (start the flight then try again).'],
+    sdPms: ['<b>{m} PMS50</b> : plan prêt. Dans le GTN : Flight Plan › Import (fichier fpl.pln).', '<b>{m} PMS50</b>: plan ready. In the GTN: Flight Plan › Import (fpl.pln file).'],
+    sdTds: ['<b>GTN TDS (GTNXi)</b> : plan prêt ({f}). Dans le GTN : FPL › Menu › Catalog › Menu › Import.', '<b>TDS GTN (GTNXi)</b>: plan ready ({f}). In the GTN: FPL › Menu › Catalog › Menu › Import.'],
+    sdFail: ['<b>{t}</b> : échec ({w}).', '<b>{t}</b>: failed ({w}).'],
+    sdNone: ['Aucun GTN PMS50 ou TDS trouvé dans Community, la bibliothèque ou ProgramData.', 'No PMS50 or TDS GTN found in Community, the library or ProgramData.'],
+    sdNote: ['Le tracé sert à l’affichage : continue à voler avec LNAV / VNAV du FMS (n’appuie pas sur NAV).', 'The route is for display: keep flying with the FMS LNAV / VNAV (do not press NAV).'],
     appr: ['Approche', 'Approach'], apprAt: ['Approches à {a}', 'Approaches at {a}'], close: ['Fermer', 'Close'],
     apprNone: ['Aucune approche trouvée pour {a}. Les approches viennent des données de navigation de MSFS : importe-les une fois depuis la page Plan VFR.', 'No approach found for {a}. Approaches come from the MSFS navigation data: import them once from the VFR plan page.'],
     apprNoDest: ['Charge d’abord un plan de vol (SimBrief ou .PLN).', 'Load a flight plan first (SimBrief or .PLN).'],
@@ -320,6 +330,23 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   // altitude du terrain connue ? (venue de SimBrief, du .PLN, de la base d'aéroports ou tapée à la main)
   function elevOk(w) { return !!w && (w.elev === true || (w.alt > 0 && w.elev !== false)); }
+
+  // ---- Envoyer à l'avion : MSFS (plan actif), GTN PMS50 (fpl.pln), GTN TDS (.gfp)
+  $('bSend').onclick = function () {
+    var pnl = $('apprPanel'), head = '<h4><span>' + t('sendAt') + '</span><button data-a="close">' + t('close') + '</button></h4>';
+    $('list').style.display = 'none'; pnl.classList.add('on'); pnl.innerHTML = head + '<div class="hint">' + t('sending') + '</div>';
+    fetch('/fms-export', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.error) { pnl.innerHTML = head + '<div class="hint">' + esc(j.error) + '</div>'; return; }
+      var L2 = [], gtn = false;
+      (j.targets || []).forEach(function (x) {
+        if (x.id === 'msfs') L2.push(x.ok ? t('sdMsfs') : x.why === 'nosim' ? t('sdNoSim') : t('sdFail', { t: 'MSFS', w: esc(x.why) }));
+        else if (x.id === 'pms50') { gtn = true; L2.push(x.ok ? t('sdPms', { m: esc(x.model) }) : t('sdFail', { t: esc(x.model) + ' PMS50', w: esc(x.why) })); }
+        else if (x.id === 'tds') { gtn = true; L2.push(x.ok ? t('sdTds', { f: esc(x.file) }) : t('sdFail', { t: 'GTN TDS', w: esc(x.why) })); }
+      });
+      if (!gtn) L2.push(t('sdNone'));
+      pnl.innerHTML = head + L2.map(function (l) { return '<div class="hint" style="margin-bottom:8px">' + l + '</div>'; }).join('') + '<div class="hint" style="color:var(--warn)">' + t('sdNote') + '</div>';
+    }).catch(function () { pnl.innerHTML = head + '<div class="hint">' + t('sendErr') + '</div>'; });
+  };
 
   // ---- T/D prévu : même calcul que le VNAV (pente 3°, après le point le plus haut ; destination : terrain + 1500 ft, 5 NM avant)
   function planTod(p) {

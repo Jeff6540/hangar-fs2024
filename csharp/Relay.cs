@@ -212,11 +212,12 @@ namespace HangarFS2024
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int NextFn(IntPtr h, out IntPtr data, out uint size);
         // FMS : ordres envoyés à l'avion (pilote automatique)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int MapFn(IntPtr h, uint evt, [MarshalAs(UnmanagedType.LPStr)] string name);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int PlanLoadFn(IntPtr h, [MarshalAs(UnmanagedType.LPStr)] string file);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int TransmitFn(IntPtr h, uint obj, uint evt, uint data, uint group, uint flags);
 
         static IntPtr module = IntPtr.Zero;
         static OpenFn open; static CloseFn close; static AddDefFn addDef; static ReqTypeFn reqType; static NextFn next;
-        static MapFn mapEvt; static TransmitFn transmit;
+        static MapFn mapEvt; static TransmitFn transmit; static PlanLoadFn planLoad;
         IntPtr handle = IntPtr.Zero;
 
         public static bool Load(string dll)
@@ -228,6 +229,7 @@ namespace HangarFS2024
             addDef = Get<AddDefFn>("SimConnect_AddToDataDefinition"); reqType = Get<ReqTypeFn>("SimConnect_RequestDataOnSimObjectType");
             next = Get<NextFn>("SimConnect_GetNextDispatch");
             mapEvt = Get<MapFn>("SimConnect_MapClientEventToSimEvent"); transmit = Get<TransmitFn>("SimConnect_TransmitClientEvent");
+            planLoad = Get<PlanLoadFn>("SimConnect_FlightPlanLoad");
             return open != null && close != null && addDef != null && reqType != null && next != null;
         }
 
@@ -250,6 +252,7 @@ namespace HangarFS2024
         public bool CanSend { get { return mapEvt != null && transmit != null; } }
         public int MapEvent(uint id, string name) { return mapEvt == null ? -1 : mapEvt(handle, id, name); }
         // objet 0 = ton avion ; groupe 1 = priorité la plus haute ; 0x10 = « le groupe est une priorité »
+        public int LoadPlan(string fileNoExt) { return planLoad == null ? -1 : planLoad(handle, fileNoExt); }   // FMS : plan .PLN chargé comme plan actif
         public int Send(uint id, int data) { return transmit == null ? -1 : transmit(handle, 0, id, unchecked((uint)data), 1, 0x10); }
         public byte[] Next()
         {
@@ -535,6 +538,12 @@ namespace HangarFS2024
                         {
                             client.Request(REQ_ROUTE, DEFINE_ROUTE, RADIUS, 2);
                             nextRoute = now + 5.0;
+                        }
+                        string planFile;   // FMS : « Envoyer à l'avion »
+                        while (FmsExport.PlanLoads.TryDequeue(out planFile))
+                        {
+                            int hr = client.LoadPlan(planFile);
+                            Log(hr == 0 ? Hangar.L("FMS : plan de vol envoyé à MSFS.", "FMS: flight plan sent to MSFS.") : Hangar.L("FMS : MSFS a refusé le plan de vol (code ", "FMS: MSFS refused the flight plan (code ") + (uint)hr + ")");
                         }
                         if (sendOk)   // ordres du FMS (boutons du pilote automatique)
                             foreach (var o in Autopilot.TakeOrders())
