@@ -11,6 +11,7 @@ ITEMS = [  # clé, icône (chemins SVG du menu principal), libellé FR, libellé
  ("plan", '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>', "Plan de vol", "Flight plan"),
  ("track", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Suivi de vol", "Flight tracking"),
  ("journal", '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/>', "Journal de vol", "Flight log"),
+ ("fms", '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3M14 15h2"/>', "FMS", "FMS"),
  ("set", '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>', "Réglages", "Settings"),
 ]
 CSS = r"""<style id="hangar-127-rail">

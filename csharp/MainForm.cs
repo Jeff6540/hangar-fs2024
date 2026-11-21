@@ -261,6 +261,7 @@ namespace HangarFS2024
                 case "track": await HandleCommand("openTracking", new JObject()); return;
                 case "journal": await HandleCommand("openJournal", new JObject()); return;
                 case "tuto": await HandleCommand("openTutorial", new JObject()); return;
+                case "fms": await HandleCommand("openFms", new JObject()); return;
                 case "lib": case "launch": case "vol": case "set":
                     if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
                     Show(); Activate(); BringToFront();
@@ -387,6 +388,12 @@ namespace HangarFS2024
                         WebWindow jw;
                         if (webWins.TryGetValue("dispatch", out jw) && !jw.IsDisposed) { jw.BringUp(); jw.PostJson("{\"open\":\"journal\"}"); }
                         else OpenWeb("dispatch", "/dispatch#journal", JsonStore.Str(Hangar.Titles()["dispatch_" + Hangar.Lang]), new Size(1500, 950), true);
+                        return null;
+                    }
+                case "openFms":
+                    {   // FMS : petite fenêtre à part, à poser dans un coin de l'écran pendant le vol
+                        if (!hangar.RelayRunning && !hangar.RelayManualOff && !hangar.RelayPortBusy) await Task.Run(() => hangar.RelayStart(false, false));
+                        OpenWeb("fms", "/fms", Hangar.L("FMS — Hangar FS 2024", "FMS — Hangar FS 2024"), new Size(520, 760), false);
                         return null;
                     }
                 case "openTutorial":
