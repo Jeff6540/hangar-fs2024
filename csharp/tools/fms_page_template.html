@@ -23,6 +23,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row.done{color:#5d6670}
 .row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
+.row.tod{color:var(--warn);cursor:default;background:#1d1a12}
+.row.tod .live{color:var(--warn)}
 .empty{padding:28px 16px;text-align:center;color:var(--mut);line-height:1.6}
 .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .tile{background:#16324a;border:1px solid #3d7aa6;border-radius:9px;padding:9px 4px;text-align:center;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
@@ -125,6 +127,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     by: ['dernier changement : {s}', 'last change: {s}'],
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
+    todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'],
     apRelay: ['Relais arrêté', 'Relay stopped'], apNoSim: ['MSFS non connecté', 'MSFS not connected'], apWait: ['En attente de l’avion…', 'Waiting for the aircraft…'],
     apOk: ['AP connecté', 'AP connected'], apNone: ['Pas de pilote auto', 'No autopilot'],
@@ -180,13 +183,20 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (!route.length) { $('list').innerHTML = '<div class="empty">' + t('empty') + '</div>'; }
     else {
       var h = '<div class="row head"><span>' + t('point') + '</span><span>' + t('dtk') + '</span><span>' + t('dist') + '</span><span>' + t('alt') + '</span></div>', total = 0;
+      var todp = planTod(p), todDone = false;
       route.forEach(function (w, i) {
+        // point T/D (début de descente) inséré à sa place dans la liste
+        if (todp && !todDone && i === todp.leg) {
+          todDone = true;
+          h += '<div class="row mono tod" id="todRow"><span>▼ T/D<span class="via">' + t('todVia', { a: Math.round(todp.alt), p: esc(todp.to) }) + (todp.steep ? ' · ' + t('todSteep') : '') + '</span></span><span></span><span>' + todp.fromPrev.toFixed(1) + '</span><span>' + Math.round(todp.from) + '</span></div>';
+        }
         var prev = route[i - 1], dd = '', tk = '';
         if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
         var cls = i === act ? ' on' : i < act ? ' done' : '';
         h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + (w.alt ? Math.round(w.alt) : '') + '</span></div>';
       });
       $('list').innerHTML = h;
+      todLive();
       $('info').innerHTML += (bits.length ? ' · ' : '') + t('total', { n: route.length, d: Math.round(total) });
       var on = $('list').querySelector('.row.on'); if (on && !render.scrolled) { on.scrollIntoView({ block: 'center' }); render.scrolled = true; }
     }
@@ -196,6 +206,34 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     $('src').textContent = s ? t('by', { s: s }) : '';
   }
   FmsStore.onChange(render);
+
+  // ---- T/D prévu : même calcul que le VNAV (pente 3°, après le point le plus haut ; destination : terrain + 1500 ft, 5 NM avant)
+  function planTod(p) {
+    var route = p.route || []; if (route.length < 3) return null;
+    var cum = [0];
+    for (var i = 1; i < route.length; i++) cum[i] = cum[i - 1] + (ok(route[i - 1]) && ok(route[i]) ? distNm(route[i - 1], route[i]) : 0);
+    var peak = 0, top = 0;
+    for (i = 1; i < route.length - 1; i++) if ((route[i].alt || 0) > top) { top = route[i].alt; peak = i; }
+    var cruise = Math.max(p.cruiseAlt || 0, top); if (cruise <= 0) return null;
+    var best = null;
+    for (i = Math.max(1, peak); i < route.length; i++) {
+      var a = route[i].alt || 0, d = cum[i], dest = i === route.length - 1;
+      if (dest) { a += 1500; d = Math.max(0, d - 5); }
+      if (a <= 0 || a >= cruise - 300) continue;
+      var s = d - (cruise - a) / 318.4;
+      if (!best || s < best.s) best = { s: s, alt: a, to: route[i].ident + (dest ? ' (-5 NM)' : '') };
+    }
+    if (!best) return null;
+    if (best.s <= cum[peak]) { best.s = cum[peak] + 0.01; best.steep = true; }   // trop court pour 3° : descente dès le point le plus haut
+    for (i = 1; i < route.length; i++) if (cum[i] >= best.s) { best.leg = i; best.fromPrev = best.s - cum[i - 1]; best.from = cruise; return best; }
+    return null;
+  }
+  function todLive() {   // distance réelle jusqu'au T/D quand le VNAV est engagé
+    var r = $('todRow'); if (!r) return;
+    var vn = ap && ap.live && ap.vnav ? ap.vnav : null, el = r.querySelector('.live');
+    if (!el) { el = document.createElement('span'); el.className = 'via live'; r.firstChild.appendChild(el); }
+    el.textContent = vn && vn.on ? (vn.phase === 'path' ? t('todNow') : vn.tod >= 0 ? t('todIn', { d: vn.tod }) : '') : '';
+  }
 
   // ---- Direct vers : on touche un point de la liste
   $('bDirect').onclick = function () { directMode = !directMode; msg(directMode ? t('pickDirect') : ''); };
@@ -335,7 +373,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   function poll() {
     if (polling) return; polling = true;
     fetch('http://localhost:8765/ap', { cache: 'no-store' }).then(function (r) { return r.json(); })
-      .then(function (j) { drawAp(j, true); }, function () { drawAp({}, false); })
+      .then(function (j) { drawAp(j, true); todLive(); }, function () { drawAp({}, false); })
       .then(function () { polling = false; });
   }
   poll(); setInterval(poll, 500);
