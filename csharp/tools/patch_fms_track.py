@@ -59,7 +59,9 @@ JS = r"""<script id="hangar-fms-track">
       L.polyline([[r[i - 1].lat, r[i - 1].lon], [r[i].lat, r[i].lon]], { color: done ? '#9ca3af' : '#e05bd8', weight: on ? 5 : 3, opacity: done ? .6 : 1, dashArray: r[i].ap ? '8 6' : null, interactive: false }).addTo(layer);
     }
     r.forEach(function (w, i) {
-      var lbl = '<b>' + esc(w.ident) + '</b>' + (w.alt ? ' · ' + Math.round(w.alt) + ' ' + T.ft : '');
+      // altitude : « * » = valeur par défaut du FMS, A = à ou au-dessus, B = à ou au-dessous (données MSFS)
+      var sfx = w.altDef ? '*' : w.altDesc === 2 ? 'A' : w.altDesc === 3 ? 'B' : w.altDesc === 4 ? '±' : '';
+      var lbl = '<b>' + esc(w.ident) + '</b>' + (w.faf ? ' FAF' : '') + (w.alt ? ' · ' + Math.round(w.alt) + sfx + ' ' + T.ft : '');
       L.circleMarker([w.lat, w.lon], { radius: i === act ? 6 : 4, color: '#000', weight: 1, fillColor: i === act ? '#e05bd8' : i < act ? '#9ca3af' : '#ffffff', fillOpacity: 1 })
         .bindTooltip(lbl, { permanent: true, direction: 'right', offset: [6, 0], className: 'hg-fms-lab' }).addTo(layer);
     });
