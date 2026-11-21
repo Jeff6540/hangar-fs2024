@@ -101,7 +101,7 @@ JS = r"""<script id="hangar-fms-track">
     box.innerHTML = h;
   }
   var css = document.createElement('style');
-  css.textContent = '#hgFmsBox{position:absolute;top:10px;left:58px;z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
+  css.textContent = '#hgFmsBox{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
     '#hgFmsBox .hd{color:#7fd3ff;font-weight:700;cursor:pointer;user-select:none}#hgFmsBox .ln{margin-top:3px}#hgFmsBox .mu{color:#9aa3ad}#hgFmsBox .mg{color:#f2a7ee}#hgFmsBox .am{color:#f2c46b}#hgFmsBox .gr{color:#7fe0a8}' +
     '.hg-fms-lab{background:rgba(11,13,16,.85)!important;border:1px solid #e05bd8!important;color:#f8e6f7!important;font:11px Consolas,monospace!important;padding:1px 5px!important;box-shadow:none!important}' +
     '.hg-fms-lab::before{display:none!important}.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
