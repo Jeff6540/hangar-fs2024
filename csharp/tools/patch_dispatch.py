@@ -2559,7 +2559,7 @@ ACFIT_JS = r"""<script id="hangar-128-acfit-js">
     try { return evaluateAirportForAircraft(apt.icao, a, phase || 'takeoff').status === 'ok'; } catch (e) { return true; }
   };
   window.hgAcFit = function (results) {
-    var a = ac(); if (!a || !airliner(a)) return results;
+    var a = ac(); if (!a || !airliner(a)) return results.slice();   /* une copie : l'appelant vide le tableau d'origine avant d'y remettre le résultat */
     var real = results.filter(function (r) {
       if (!/^[A-Z]{4}$/.test(r.icao || '')) return false;
       return a.cat === 'heavy' ? r.type === 'large_airport' : (r.type === 'large_airport' || r.type === 'medium_airport');

@@ -26,6 +26,7 @@ Version 12.9 — page Plan de vol plus claire
 - Le nom « Avionics Dispatch » disparaît : la page s'appelle Plan de vol. Les restes de l'ancienne version Python sont retirés (bouton « Fermer l'ancien relais », recherche de la SimConnect.dll dans ses dossiers).
 - Menu : la rubrique Radars (radar FSHub global, page et radar de ma VA) est retirée. À la place, un bouton « Les Fous Volants · Le site de la VA » sous le Discord de la VA (et une entrée « Site de la VA » dans le menu des autres pages).
 - Temps unifiés dans toute l'appli : « temps de vol » veut toujours dire du décollage à l'atterrissage (la durée choisie en aléatoire aussi). À côté, le temps bloc estimé « porte à porte » (temps de vol + roulage type : 10 min avion léger, 20 min turbopropulseur ou jet, 30 min gros porteur), comme SimBrief et le journal de vol. Plan VFR : 5 min de tour de piste comptées au départ et à l'arrivée.
+- Correction : en Aléatoire / durée, aucune destination n'était trouvée pour les avions légers, turbopropulseurs et jets d'affaires (bug apparu en 12.8).
 - Import des données MSFS plus sûr, et recherche de la SimConnect.dll faite une seule fois par lancement.
 
 Version 12.8 — quoi de neuf
@@ -140,6 +141,7 @@ Version 12.9 — clearer Flight plan page
 - The "Avionics Dispatch" name is gone: the page is called Flight plan. Leftovers of the old Python version are removed ("Close the old relay" button, SimConnect.dll search in its folders).
 - Menu: the Radars section (FSHub global radar, VA page and VA radar) is removed. Instead, a "Les Fous Volants · The VA website" button below the VA Discord (and a "VA website" entry in the other pages' menu).
 - Unified times across the app: "flight time" always means from takeoff to landing (the duration chosen in random mode too). Next to it, the estimated "gate to gate" block time (flight time + typical taxi: 10 min light aircraft, 20 min turboprop or jet, 30 min wide-body), like SimBrief and the flight log. VFR plan: 5 min of circuit counted at departure and arrival.
+- Fix: in Random / duration mode, no destination was found for light aircraft, turboprops and business jets (bug introduced in 12.8).
 - Safer MSFS data import, and the SimConnect.dll search runs only once per launch.
 
 Version 12.8 — what's new
