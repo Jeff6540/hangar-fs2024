@@ -80,8 +80,21 @@ JS = r"""<script id="hangar-fms-track">
     box.addEventListener('click', function (e) { if (e.target.closest('[data-fold]')) { folded = !folded; try { localStorage.setItem('hg_fms_track_fold', folded ? '1' : '0'); } catch (x) {} info(); } });
     ['mousedown', 'dblclick', 'wheel', 'touchstart'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
   }
+  // le cadre se place sous la légende de la carte (en haut à droite), qu'elle soit repliée ou dépliée
+  function place() {
+    if (!box) return;
+    var host = document.getElementById('leafletTrafficMap'), lg = document.getElementById('alMainLegend'), top = 10;
+    if (host && lg && lg.offsetParent && lg.style.display !== 'none' && !lg.classList.contains('hidden')) {
+      var h = host.getBoundingClientRect(), r = lg.getBoundingClientRect();
+      if (r.height && r.bottom > h.top && r.left < h.right && r.right > h.left + h.width / 2) top = Math.max(10, Math.round(r.bottom - h.top + 8));
+    }
+    box.style.top = top + 'px';
+  }
+  window.addEventListener('resize', function () { setTimeout(place, 60); });
+  document.addEventListener('click', function () { setTimeout(place, 80); }, true);
   function info() {
     ensureBox(); if (!box) return;
+    place();
     var st = window.FmsStore && window.FmsStore.state, p = (st && st.plan) || {}, r = p.route || [];
     if (folded) { box.innerHTML = '<div class="hd" data-fold="1">▸ ' + T.unfold + '</div>'; return; }
     var h = '<div class="hd" data-fold="1">▾ ' + T.title + (p.origin && p.origin.icao ? ' · ' + esc(p.origin.icao) + ' → ' + esc(p.dest && p.dest.icao) : '') + '</div>';
