@@ -112,6 +112,7 @@ namespace HangarFS2024
                 case "vs_set": if (!Vnav.ClimbVs(v)) Vnav.Manual(); outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
                 case "spd_set": outbox.Enqueue(Kv("AP_SPD_VAR_SET", Clamp(v, 0, 600))); return;
             }
+            if (c == "pmdg" || c == "pmdg_set") { Pmdg.Command(a); return; }   // PMDG 737 : MCP de l'avion
             if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
             if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
@@ -176,6 +177,8 @@ namespace HangarFS2024
                 double now = RelayState.Now();
                 bool fresh = connected && vals != null && now - valsAt < 5;
                 var o = new JObject { ["connected"] = connected, ["live"] = fresh, ["aircraft"] = aircraft, ["custom"] = Custom.IsMatch(aircraft ?? "") };
+                var pm = connected ? Pmdg.Snapshot() : null;   // bloc du SDK reçu : c'est un PMDG 737, quel que soit le nom de la livrée
+                if (pm != null || Pmdg.IsPmdg737(aircraft)) { o["pmdg737"] = true; if (pm != null) o["pmdg"] = pm; }
                 if (!fresh) return o;
                 o["available"] = On(0);
                 var modes = new JObject();

@@ -79,6 +79,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .set .val input{width:100%;text-align:center;font:inherit;color:inherit;background:#11161c;border:1px solid var(--skyt);border-radius:6px;padding:2px}
 .set.off .val{color:#5d6670}
 .legend{font-size:11px;color:var(--mut)}
+.modes.pm .md.on{background:#3a3214;border-color:#c9a227;color:#ffe9a8} .modes.pm .md.on small{color:#ffd65c}
+.modes.pm .md.cmd.on{background:#1d3b2b;border-color:#4f9a6e;color:#d4f2df} .modes.pm .md.cmd.on small{color:var(--ok)}
 .md.fms{background:#16324a;border-color:var(--skyt);color:#e6f5ff} .md.fms small{color:var(--warn)}
 .lnavl{min-height:16px;font-size:12px;color:var(--actt)} .lnavl.msg{color:var(--warn);font-family:inherit}
 </style>
@@ -111,6 +113,12 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 <div class="scr" id="scrAp">
   <div class="apst"><span class="ac" id="apAc"></span><span class="st" id="apSt"></span></div>
   <div class="note" id="apNote"></div>
+  <div id="pmPanel" style="display:none">
+    <div class="note" id="pmNote"></div>
+    <button class="chip" id="pmSdk" style="display:none;margin:6px 0">Activer le SDK PMDG</button>
+    <div class="modes pm" id="pmModes"></div>
+    <div class="sets" id="pmSets" style="margin-top:6px"></div>
+  </div>
   <div class="modes" id="apModes"></div>
   <div class="lnavl mono" id="apLnav"></div>
   <div class="lnavl mono" id="apVnav"></div>
@@ -188,6 +196,13 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     vnPath: ['VPATH ↓ {a} ft à {p} · écart {e} ft', 'VPATH ↓ {a} ft at {p} · deviation {e} ft'], lnavTo: ['LNAV → {p} · {d} NM · cap {h}°', 'LNAV → {p} · {d} NM · hdg {h}°'],
     apLegendL: ['LNAV : l’avion suit la route du FMS de l’appli (le FMS règle le cap sur le mode HDG). NAV : l’avion suit son propre plan de vol. VNAV : montée vers la croisière, puis descente automatique au TOD sur un plan à 3° (VPATH), par l’altitude cible et le mode VS.', 'LNAV: the aircraft follows the app FMS route (the FMS sets the heading on HDG mode). NAV: the aircraft follows its own flight plan. VNAV: climb to cruise, then automatic descent at TOD on a 3° path (VPATH), using the altitude target and VS mode.'],
     byAc: ['avion', 'aircraft'], notHandled: ['non géré', 'not handled'], onTxt: ['ON', 'ON'],
+    pmNoSdk: ['PMDG 737 détecté, mais son SDK ne diffuse pas. Dans le fichier 737NG3_Options.ini de l’avion, section [SDK], ajoute la ligne EnableDataBroadcast=1, puis recharge le vol.', 'PMDG 737 detected, but its SDK is not broadcasting. In the aircraft’s 737NG3_Options.ini file, [SDK] section, add the line EnableDataBroadcast=1, then reload the flight.'],
+    pmSdkBtn: ['Activer le SDK PMDG', 'Enable the PMDG SDK'], pmSdkOk: ['SDK activé dans {n} fichier(s) d’options. Recharge le vol (ou relance MSFS) pour qu’il démarre.', 'SDK enabled in {n} options file(s). Reload the flight (or restart MSFS) for it to start.'],
+    pmSdkAlready: ['Le SDK était déjà activé. Recharge le vol si le MCP ne s’affiche toujours pas.', 'The SDK was already enabled. Reload the flight if the MCP still does not show.'],
+    pmSdkNone: ['Fichier d’options du PMDG 737 introuvable : lance une fois le PMDG dans MSFS 2024, puis réessaie.', 'PMDG 737 options file not found: start the PMDG once in MSFS 2024, then try again.'],
+    pmOff: ['MCP éteint (avion pas encore alimenté).', 'MCP off (aircraft not powered yet).'],
+    pmHint: ['Boutons et molettes du MCP du PMDG : le FMS de l’avion garde la route.', 'PMDG MCP buttons and knobs: the aircraft FMS keeps the route.'],
+    lIas: ['IAS / Mach', 'IAS / Mach'], lCrs: ['Course', 'Course'],
     lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
     src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
   };
@@ -551,8 +566,76 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       row.querySelector('.lb small').textContent = act == null ? '' : t('now') + ' ' + (s[0] === 'hdg' ? String(norm('hdg', act)).padStart(3, '0') + '°' : act);
     });
   }
+  // ---- PMDG 737 : MCP de l'avion (SDK)
+  var PM_BTN = [['cmda', 'CMD A', 1], ['cmdb', 'CMD B', 1], ['at', 'A/T', 0], ['n1', 'N1', 0], ['speed', 'SPEED', 0], ['vnav', 'VNAV', 0], ['lvlchg', 'LVL CHG', 0],
+    ['hdgsel', 'HDG SEL', 0], ['lnav', 'LNAV', 0], ['vorloc', 'VOR/LOC', 0], ['app', 'APP', 0], ['althold', 'ALT HLD', 0], ['vs', 'V/S', 0], ['fdl', 'F/D', 0]];
+  var PM_SET = [['ias', 'lIas', 1, 5, 100, 400, ' kt'], ['hdg', 'lHdg', 1, 10, 1, 360, '°'], ['alt', 'lAlt', 100, 1000, 0, 41000, ' ft'], ['vs', 'lVs', 100, 500, -7900, 6000, ''], ['crs', 'lCrs', 1, 10, 1, 360, '°']];
+  $('pmModes').innerHTML = PM_BTN.map(function (b) { return '<button class="md' + (b[2] ? ' cmd' : '') + '" data-pb="' + b[0] + '">' + b[1] + '<small></small></button>'; }).join('');
+  $('pmSets').innerHTML = PM_SET.map(function (x) { return '<div class="set" data-ps="' + x[0] + '"><span class="lb">' + t(x[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>'; }).join('');
+  $('pmModes').addEventListener('click', function (e) { var b = e.target.closest('[data-pb]'); if (!b) return; try { window.chrome.webview.postMessage({ ap: { c: 'pmdg', b: b.dataset.pb } }); } catch (x) {} b.classList.add('busy'); });
+  var pmLocal = {}, pmAt = {};
+  function pmVal(k) { if (pmLocal[k] != null && Date.now() - pmAt[k] < 2500) return pmLocal[k]; var pm = ap && ap.pmdg; return pm ? (k === 'ias' ? pm.ias : pm[k]) : null; }
+  function pmSet(k, v) {
+    var x = PM_SET.filter(function (q) { return q[0] === k; })[0];
+    if (k === 'hdg' || k === 'crs') { v = Math.round(v) % 360; if (v <= 0) v += 360; }
+    else if (!(k === 'ias' && v < 1)) v = Math.max(x[4], Math.min(x[5], Math.round(v)));
+    pmLocal[k] = v; pmAt[k] = Date.now(); drawPm();
+    try { window.chrome.webview.postMessage({ ap: { c: 'pmdg_set', k: k, v: v } }); } catch (e) {}
+  }
+  var pmHold = null;
+  $('pmSets').addEventListener('pointerdown', function (e) {
+    var b = e.target.closest('button[data-d]'); if (!b) return;
+    var k = b.closest('.set').dataset.ps, x = PM_SET.filter(function (q) { return q[0] === k; })[0], d = +b.dataset.d;
+    if (pmVal(k) == null) return; e.preventDefault();
+    var step = function (n) { var c = pmVal(k); if (c == null) return; if (k === 'ias' && c < 1) pmSet(k, Math.round((c + d * 0.01) * 100) / 100); else pmSet(k, c + d * n); };
+    step(x[2]);
+    var t0 = setTimeout(function () { pmHold = setInterval(function () { step(x[3]); }, 140); }, 450);
+    var stop = function () { clearTimeout(t0); if (pmHold) { clearInterval(pmHold); pmHold = null; } window.removeEventListener('pointerup', stop); };
+    window.addEventListener('pointerup', stop);
+  });
+  $('pmSets').addEventListener('click', function (e) {
+    var v = e.target.closest('.val'); if (!v || v.querySelector('input')) return;
+    var k = v.closest('.set').dataset.ps, cur = pmVal(k); if (cur == null) return;
+    v.dataset.edit = '1'; v.innerHTML = '<input type="number" step="any" value="' + cur + '">';
+    var i = v.querySelector('input'); i.focus(); i.select();
+    var done = function (ok) { var n = parseFloat(i.value); v.dataset.edit = ''; if (ok && isFinite(n)) pmSet(k, n); else drawPm(); };
+    i.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') done(true); if (ev.key === 'Escape') done(false); });
+    i.addEventListener('blur', function () { if (v.dataset.edit) done(true); });
+  });
+  $('pmSdk').onclick = function () {
+    fetch('/fms-pmdg-sdk', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var n = (j.files || []).length;
+      $('pmNote').textContent = !n ? t('pmSdkNone') : j.changed ? t('pmSdkOk', { n: j.changed }) : t('pmSdkAlready');
+      pmSdkMsgAt = Date.now();
+    }).catch(function () { $('pmNote').textContent = t('sendErr'); pmSdkMsgAt = Date.now(); });
+  };
+  var pmSdkMsgAt = 0;
+  function drawPm() {
+    var pm = ap && ap.pmdg;
+    $('pmSdk').textContent = t('pmSdkBtn'); $('pmSdk').style.display = pm ? 'none' : '';
+    if (!pm && Date.now() - pmSdkMsgAt < 15000) return;   // laisser lire le résultat du bouton
+    $('pmNote').textContent = !pm ? t('pmNoSdk') : !pm.powered ? t('pmOff') : t('pmHint');
+    $('pmNote').style.color = !pm || !pm.powered ? 'var(--warn)' : 'var(--mut)';
+    $('pmModes').querySelectorAll('[data-pb]').forEach(function (b) {
+      var k = b.dataset.pb, on = !!(pm && pm.on && pm.on[k]);
+      b.classList.toggle('on', on); b.classList.remove('busy');
+      b.querySelector('small').textContent = pm ? (on ? 'ON' : '') : '—';
+    });
+    PM_SET.forEach(function (x) {
+      var row = $('pmSets').querySelector('[data-ps="' + x[0] + '"]'), val = row.querySelector('.val'), v = pmVal(x[0]);
+      var blank = pm && ((x[0] === 'vs' && pm.vsBlank) || (x[0] === 'ias' && pm.iasBlank));
+      row.classList.toggle('off', v == null || blank);
+      if (!val.dataset.edit) val.textContent = v == null || blank ? '---' : x[0] === 'ias' && v < 1 ? 'M' + v.toFixed(2) : (x[0] === 'hdg' || x[0] === 'crs') ? String(v).padStart(3, '0') + x[6] : (x[0] === 'vs' && v > 0 ? '+' : '') + v + (x[0] === 'ias' ? ' kt' : x[6]);
+    });
+  }
+
   function drawAp(st, relayOk) {
     ap = st;
+    var isPm = !!(st && st.pmdg737);
+    $('pmPanel').style.display = isPm ? '' : 'none';
+    ['apModes', 'apSets', 'apLnav', 'apVnav'].forEach(function (id) { $(id).style.display = isPm ? 'none' : ''; });
+    document.querySelectorAll('#scrAp .legend').forEach(function (l) { l.style.display = isPm ? 'none' : ''; });
+    if (isPm) drawPm();
     var stEl = $('apSt'), note = '';
     stEl.className = 'st';
     if (!relayOk) { stEl.textContent = t('apRelay'); stEl.classList.add('bad'); note = t('apNoteRelay'); }
@@ -560,7 +643,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     else if (!st.live) { stEl.textContent = t('apWait'); }
     else if (!st.available) { stEl.textContent = t('apNone'); stEl.classList.add('bad'); note = t('apNoteNone'); }
     else { stEl.textContent = '● ' + t('apOk'); stEl.classList.add('ok'); }
-    if (st && st.custom && !note) note = t('apNoteCustom');
+    if (st && st.custom && !note && !st.pmdg737) note = t('apNoteCustom');
     $('apAc').textContent = (st && st.aircraft) || '';
     $('apNote').textContent = note;
     var live = st && st.live && st.modes;

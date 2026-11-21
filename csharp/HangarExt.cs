@@ -447,6 +447,7 @@ namespace HangarFS2024
                         r.Text(FmsExport.Airport(ai).ToString(Formatting.None), "application/json; charset=utf-8");
                         return;
                     }
+                case "/fms-pmdg-sdk": r.Text(Pmdg.EnableSdk().ToString(Formatting.None), "application/json; charset=utf-8"); return;   // FMS : activer le SDK des PMDG 737
                 case "/fms-folder":   // FMS : ouvrir le dossier des plans, le fichier envoyé sélectionné
                     {
                         string ff; q.TryGetValue("f", out ff);

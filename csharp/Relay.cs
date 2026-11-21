@@ -212,12 +212,17 @@ namespace HangarFS2024
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int NextFn(IntPtr h, out IntPtr data, out uint size);
         // FMS : ordres envoyés à l'avion (pilote automatique)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int MapFn(IntPtr h, uint evt, [MarshalAs(UnmanagedType.LPStr)] string name);
+        // FMS : blocs de données des avions à SDK (PMDG)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int CdNameFn(IntPtr h, [MarshalAs(UnmanagedType.LPStr)] string name, uint id);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int CdDefFn(IntPtr h, uint def, uint offset, uint size, float eps, uint datum);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int CdReqFn(IntPtr h, uint cd, uint req, uint def, int period, int flags, uint origin, uint interval, uint limit);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int PlanLoadFn(IntPtr h, [MarshalAs(UnmanagedType.LPStr)] string file);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int TransmitFn(IntPtr h, uint obj, uint evt, uint data, uint group, uint flags);
 
         static IntPtr module = IntPtr.Zero;
         static OpenFn open; static CloseFn close; static AddDefFn addDef; static ReqTypeFn reqType; static NextFn next;
         static MapFn mapEvt; static TransmitFn transmit; static PlanLoadFn planLoad;
+        static CdNameFn cdName; static CdDefFn cdDef; static CdReqFn cdReq;
         IntPtr handle = IntPtr.Zero;
 
         public static bool Load(string dll)
@@ -230,6 +235,7 @@ namespace HangarFS2024
             next = Get<NextFn>("SimConnect_GetNextDispatch");
             mapEvt = Get<MapFn>("SimConnect_MapClientEventToSimEvent"); transmit = Get<TransmitFn>("SimConnect_TransmitClientEvent");
             planLoad = Get<PlanLoadFn>("SimConnect_FlightPlanLoad");
+            cdName = Get<CdNameFn>("SimConnect_MapClientDataNameToID"); cdDef = Get<CdDefFn>("SimConnect_AddToClientDataDefinition"); cdReq = Get<CdReqFn>("SimConnect_RequestClientData");
             return open != null && close != null && addDef != null && reqType != null && next != null;
         }
 
@@ -252,6 +258,14 @@ namespace HangarFS2024
         public bool CanSend { get { return mapEvt != null && transmit != null; } }
         public int MapEvent(uint id, string name) { return mapEvt == null ? -1 : mapEvt(handle, id, name); }
         // objet 0 = ton avion ; groupe 1 = priorité la plus haute ; 0x10 = « le groupe est une priorité »
+        /// <summary>Bloc de données d'un avion (SDK) : demandé une fois, reçu à chaque changement (message 16).</summary>
+        public bool ClientData(string name, uint id, uint def, uint size, uint req)
+        {
+            if (cdName == null || cdDef == null || cdReq == null) return false;
+            if (cdName(handle, name, id) != 0) return false;
+            if (cdDef(handle, def, 0, size, 0, 0) != 0) return false;
+            return cdReq(handle, id, req, def, 3 /* à chaque changement */, 1 /* seulement si ça change */, 0, 0, 0) == 0;
+        }
         public int LoadPlan(string fileNoExt) { return planLoad == null ? -1 : planLoad(handle, fileNoExt); }   // FMS : plan .PLN chargé comme plan actif
         public int Send(uint id, int data) { return transmit == null ? -1 : transmit(handle, 0, id, unchecked((uint)data), 1, 0x10); }
         public byte[] Next()
@@ -300,7 +314,7 @@ namespace HangarFS2024
     // ------------------------------------------------------------------ données partagées du relais
     class RelayState
     {
-        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3, REQ_AP = 5, DEFINE_AP = 4;
+        public const uint REQ_AI = 1, REQ_USER = 2, DEFINE_ID = 1, REQ_ROUTE = 3, DEFINE_ROUTE = 2, REQ_FLIGHT = 4, DEFINE_FLIGHT = 3, REQ_AP = 5, DEFINE_AP = 4, REQ_PMDG = 6;
         const double STALE = 10.0;
         readonly object gate = new object();
         public volatile bool Connected;
@@ -319,7 +333,7 @@ namespace HangarFS2024
             lock (gate)
             {
                 Connected = v;
-                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; Autopilot.Clear(); }
+                if (!v) { objects.Clear(); routes.Clear(); user = null; flight = null; Autopilot.Clear(); Pmdg.Clear(); }
             }
         }
 
@@ -344,6 +358,7 @@ namespace HangarFS2024
         {
             if (buf.Length < 12) return null;
             uint msgId = BitConverter.ToUInt32(buf, 8);
+            if (msgId == 16 && buf.Length >= 44 && BitConverter.ToUInt32(buf, 12) == REQ_PMDG) { Pmdg.Update(buf, 40); return "pmdg"; }   // FMS : MCP du PMDG 737
             if (msgId == 8 || msgId == 9)
             {
                 if (buf.Length < 20) return "short";
@@ -516,6 +531,9 @@ namespace HangarFS2024
                     if (sendOk)
                         for (int i = 0; i < Autopilot.Events.Length; i++)
                             if (client.MapEvent(Autopilot.EventBase + (uint)i, Autopilot.Events[i]) != 0) { sendOk = false; break; }
+                    // PMDG 737 : boutons du MCP (« #numéro ») et bloc de données du SDK (diffusé seulement si activé dans les options de l'avion)
+                    if (sendOk) foreach (var pe in Pmdg.AllEvents()) client.MapEvent(pe, "#" + pe);
+                    client.ClientData(Pmdg.DataName, Pmdg.DataId, Pmdg.DataDef, Pmdg.DataSize, REQ_PMDG);
                     SetConnected(true);
                     Log(Hangar.L("connecté à MSFS : le trafic IA est envoyé au suivi de vol.", "connected to MSFS: AI traffic is sent to flight tracking."));
                     double nextAi = 0, nextUser = 0, nextRoute = 0;
@@ -546,11 +564,14 @@ namespace HangarFS2024
                             Log(hr == 0 ? Hangar.L("FMS : plan de vol envoyé à MSFS.", "FMS: flight plan sent to MSFS.") : Hangar.L("FMS : MSFS a refusé le plan de vol (code ", "FMS: MSFS refused the flight plan (code ") + (uint)hr + ")");
                         }
                         if (sendOk)   // ordres du FMS (boutons du pilote automatique)
+                        {
                             foreach (var o in Autopilot.TakeOrders())
                             {
                                 int id = Autopilot.EventId(o.Key);
                                 if (id >= 0) client.Send((uint)id, o.Value);
                             }
+                            foreach (var o in Pmdg.TakeOrders()) client.Send(o.Key, o.Value);   // PMDG 737 : MCP
+                        }
                         bool got = false;
                         while (true)
                         {
