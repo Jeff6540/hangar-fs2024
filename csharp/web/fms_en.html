@@ -32,6 +32,32 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .mem{font-size:11px;color:var(--mut);display:flex;justify-content:space-between;gap:8px}
 .mem b{color:var(--ok);font-weight:600}
 #msg{min-height:16px;font-size:12px;color:var(--warn)}
+.scr{flex:1;min-height:0;display:none;flex-direction:column;gap:8px}
+.scr.on{display:flex}
+.nav{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.nav .tile.on{background:#1f4a6b;border-color:var(--skyt);color:#fff}
+.apst{display:flex;justify-content:space-between;gap:8px;align-items:center;background:var(--scr);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px}
+.apst .ac{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apst .st{flex:none;color:var(--mut)} .apst .st.ok{color:var(--ok)} .apst .st.bad{color:var(--warn)}
+.note{font-size:11.5px;color:var(--warn);line-height:1.45}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.md{background:#11161c;border:1px solid #3a3d44;border-radius:8px;padding:8px 2px;text-align:center;color:var(--mut);font:600 13px "Segoe UI",Inter,sans-serif;cursor:pointer}
+.md small{display:block;font-size:10.5px;font-weight:500;margin-top:2px}
+.md:hover{border-color:#5b6470}
+.md.on{background:#1d3b2b;border-color:#4f9a6e;color:#d4f2df}
+.md.on small{color:var(--ok)}
+.md.busy{border-style:dashed;border-color:var(--skyt)}
+.md.no{opacity:.55} .md.no small{color:var(--warn)}
+.sets{display:grid;gap:6px}
+.set{display:grid;grid-template-columns:70px 44px 1fr 44px;align-items:center;gap:6px;background:var(--scr);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.set .lb{color:#8fb8d6;font-size:12px}
+.set .lb small{display:block;color:var(--mut);font-size:10.5px;font-family:Consolas,monospace}
+.set button{height:36px;border-radius:7px;border:1px solid #3d7aa6;background:#16324a;color:#fff;font-family:inherit;font-weight:600;font-size:18px;cursor:pointer;user-select:none;touch-action:none}
+.set button:hover{border-color:var(--skyt)}
+.set .val{text-align:center;font:600 20px Consolas,"Cascadia Mono",monospace;color:var(--skyt);cursor:text}
+.set .val input{width:100%;text-align:center;font:inherit;color:inherit;background:#11161c;border:1px solid var(--skyt);border-radius:6px;padding:2px}
+.set.off .val{color:#5d6670}
+.legend{font-size:11px;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -43,6 +69,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <div class="sub mono" id="cruise"></div>
 </div>
 
+<div class="scr" id="scrPlan">
 <div class="list" id="list"></div>
 
 <div id="msg"></div>
@@ -50,6 +77,20 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <button class="tile" id="bSimbrief"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span data-t="simbrief"></span></button>
   <button class="tile" id="bDirect"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 9l3 3-3 3"/></svg><span data-t="direct"></span></button>
   <button class="tile warn" id="bNew"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span data-t="newflight"></span></button>
+</div>
+</div>
+
+<div class="scr" id="scrAp">
+  <div class="apst"><span class="ac" id="apAc"></span><span class="st" id="apSt"></span></div>
+  <div class="note" id="apNote"></div>
+  <div class="modes" id="apModes"></div>
+  <div class="sets" id="apSets"></div>
+  <div class="legend" data-t="apLegend"></div>
+</div>
+
+<div class="nav">
+  <button class="tile" data-scr="Plan"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span data-t="navPlan"></span></button>
+  <button class="tile" data-scr="Ap"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M5 16l5.5-3M19 16l-5.5-3"/></svg><span data-t="navAp"></span></button>
 </div>
 <div class="mem"><span id="mem"></span><span id="src"></span></div>
 
@@ -74,6 +115,15 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     by: ['dernier changement : {s}', 'last change: {s}'],
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
+    navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'],
+    apRelay: ['Relais arrêté', 'Relay stopped'], apNoSim: ['MSFS non connecté', 'MSFS not connected'], apWait: ['En attente de l’avion…', 'Waiting for the aircraft…'],
+    apOk: ['AP connecté', 'AP connected'], apNone: ['Pas de pilote auto', 'No autopilot'],
+    apNoteRelay: ['Le relais de l’appli est arrêté : démarre-le avec le bouton ⏻ de l’appli.', 'The app relay is stopped: start it with the app’s ⏻ button.'],
+    apNoteNone: ['Cet avion n’a pas de pilote automatique : le FMS ne peut rien commander.', 'This aircraft has no autopilot: the FMS cannot command anything.'],
+    apNoteCustom: ['Avion à systèmes maison : certaines commandes peuvent ne pas répondre (affichage seulement dans ce cas).', 'Aircraft with custom systems: some commands may not respond (display only in that case).'],
+    apLegend: ['Sous chaque bouton : « avion » = mode géré par l’avion ; « non géré » = l’avion n’a pas réagi (le FMS pourra le forcer plus tard).', 'Under each button: “aircraft” = mode handled by the aircraft; “not handled” = the aircraft did not react (the FMS will be able to force it later).'],
+    byAc: ['avion', 'aircraft'], notHandled: ['non géré', 'not handled'], onTxt: ['ON', 'ON'],
+    lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
     src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
   };
   function t(k, v) { var s = (T[k] || [k, k])[LANG === 'en' ? 1 : 0]; Object.keys(v || {}).forEach(function (x) { s = s.replace('{' + x + '}', v[x]); }); return s; }
@@ -147,6 +197,110 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     setTimeout(function () { delete b.dataset.armed; if ($('msg').textContent === t('confirmNew')) msg(''); }, 4000);
     return false;
   }
+
+  // ---- écrans (le dernier choisi est gardé)
+  function show(k) {
+    ['Plan', 'Ap'].forEach(function (x) { $('scr' + x).classList.toggle('on', x === k); });
+    document.querySelectorAll('.nav .tile').forEach(function (b) { b.classList.toggle('on', b.dataset.scr === k); });
+    try { localStorage.setItem('hg_fms_screen', k); } catch (e) {}
+  }
+  document.querySelectorAll('.nav .tile').forEach(function (b) { b.onclick = function () { show(b.dataset.scr); }; });
+  var first = 'Plan'; try { first = localStorage.getItem('hg_fms_screen') || 'Plan'; } catch (e) {}
+  show(first === 'Ap' ? 'Ap' : 'Plan');
+
+  // ---- pilote automatique (relais : /ap ; ordres par la fenêtre de l'appli)
+  function apSend(c, v) { try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ ap: { c: c, v: v } }); } catch (e) {} }
+  var MODES = [['ap', 'AP'], ['hdg', 'HDG'], ['nav', 'NAV'], ['apr', 'APR'], ['alt', 'ALT'], ['vs', 'VS'], ['spd', 'SPD']];
+  var SETS = [  // clé, libellé, pas court, pas maintenu, min, max, unité
+    ['hdg', 'lHdg', 1, 5, 1, 360, '°'], ['alt', 'lAlt', 100, 500, 0, 50000, ' ft'], ['vs', 'lVs', 100, 100, -6000, 6000, ''], ['spd', 'lSpd', 1, 5, 40, 400, ' kt']];
+  var ap = null, local = {}, localAt = {};
+  $('apModes').innerHTML = MODES.map(function (m) { return '<button class="md" data-m="' + m[0] + '">' + m[1] + '<small></small></button>'; }).join('');
+  $('apSets').innerHTML = SETS.map(function (s) {
+    return '<div class="set" data-s="' + s[0] + '"><span class="lb">' + t(s[1]) + '<small></small></span><button data-d="-1">−</button><span class="val"></span><button data-d="1">+</button></div>';
+  }).join('');
+  $('apModes').addEventListener('click', function (e) {
+    var b = e.target.closest('.md'); if (!b || !ap || !ap.modes) return;
+    var m = ap.modes[b.dataset.m] || {}; apSend(b.dataset.m, m.on ? 0 : 1);
+    b.classList.add('busy');
+  });
+  function spec(k) { return SETS.filter(function (s) { return s[0] === k; })[0]; }
+  function norm(k, v) {
+    var s = spec(k);
+    if (k === 'hdg') { v = Math.round(v) % 360; if (v <= 0) v += 360; return v; }
+    return Math.max(s[4], Math.min(s[5], Math.round(v)));
+  }
+  function target(k) {
+    if (local[k] != null && Date.now() - localAt[k] < 2500) return local[k];
+    return ap && ap.target ? ap.target[k] : null;
+  }
+  var sendTimer = {};
+  function setTarget(k, v) {
+    v = norm(k, v); local[k] = v; localAt[k] = Date.now(); drawSets();
+    if (!sendTimer[k]) { apSend(k + '_set', v); sendTimer[k] = setTimeout(function () { sendTimer[k] = null; apSend(k + '_set', local[k]); }, 150); }
+  }
+  // + / − : appui court = petit pas ; appui long = ça défile plus vite
+  var hold = null;
+  $('apSets').addEventListener('pointerdown', function (e) {
+    var b = e.target.closest('button[data-d]'); if (!b) return;
+    var k = b.closest('.set').dataset.s, s = spec(k), d = +b.dataset.d, cur = target(k);
+    if (cur == null) return;
+    e.preventDefault();
+    var step = function (n) { var c = target(k); if (c == null) return; var v = c + d * n; if (k !== 'hdg' && n > 1) v = Math.round(v / n) * n; setTarget(k, v); };
+    step(s[2]);
+    var t0 = setTimeout(function () { hold = setInterval(function () { step(s[3]); }, 110); }, 450);
+    var stop = function () { clearTimeout(t0); if (hold) { clearInterval(hold); hold = null; } window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); };
+    window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
+  });
+  // toucher la valeur : on la tape directement
+  $('apSets').addEventListener('click', function (e) {
+    var v = e.target.closest('.val'); if (!v || v.querySelector('input')) return;
+    var k = v.closest('.set').dataset.s, cur = target(k); if (cur == null) return;
+    v.innerHTML = '<input type="number" inputmode="numeric" value="' + cur + '">';
+    var i = v.querySelector('input'); i.focus(); i.select();
+    var done = function (ok) { var n = parseFloat(i.value); v.dataset.edit = ''; if (ok && isFinite(n)) setTarget(k, n); else drawSets(); };
+    v.dataset.edit = '1';
+    i.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') done(true); if (ev.key === 'Escape') done(false); });
+    i.addEventListener('blur', function () { if (v.dataset.edit) done(true); });
+  });
+  function drawSets() {
+    SETS.forEach(function (s) {
+      var row = $('apSets').querySelector('[data-s="' + s[0] + '"]'), val = row.querySelector('.val');
+      var tv = target(s[0]), act = ap && ap.actual ? ap.actual[s[0]] : null;
+      row.classList.toggle('off', tv == null);
+      if (!val.dataset.edit) val.textContent = tv == null ? '---' : (s[0] === 'hdg' ? String(norm('hdg', tv)).padStart(3, '0') : (s[0] === 'vs' && tv > 0 ? '+' : '') + tv) + s[6];
+      row.querySelector('.lb small').textContent = act == null ? '' : t('now') + ' ' + (s[0] === 'hdg' ? String(norm('hdg', act)).padStart(3, '0') + '°' : act);
+    });
+  }
+  function drawAp(st, relayOk) {
+    ap = st;
+    var stEl = $('apSt'), note = '';
+    stEl.className = 'st';
+    if (!relayOk) { stEl.textContent = t('apRelay'); stEl.classList.add('bad'); note = t('apNoteRelay'); }
+    else if (!st.connected) { stEl.textContent = t('apNoSim'); stEl.classList.add('bad'); }
+    else if (!st.live) { stEl.textContent = t('apWait'); }
+    else if (!st.available) { stEl.textContent = t('apNone'); stEl.classList.add('bad'); note = t('apNoteNone'); }
+    else { stEl.textContent = '● ' + t('apOk'); stEl.classList.add('ok'); }
+    if (st && st.custom && !note) note = t('apNoteCustom');
+    $('apAc').textContent = (st && st.aircraft) || '';
+    $('apNote').textContent = note;
+    var live = st && st.live && st.modes;
+    $('apModes').querySelectorAll('.md').forEach(function (b) {
+      var m = live ? st.modes[b.dataset.m] : null;
+      b.classList.toggle('on', !!(m && m.on)); b.classList.toggle('busy', !!(m && m.busy)); b.classList.toggle('no', !!(m && m.no));
+      var lbl = !m ? '—' : m.no ? t('notHandled') : (m.on ? t('onTxt') + ' · ' : '') + t('byAc');
+      if (b.dataset.m === 'apr' && m && m.on && st.modes.gs && st.modes.gs.on) lbl = 'GS · ' + lbl;
+      b.querySelector('small').textContent = lbl;
+    });
+    drawSets();
+  }
+  var polling = false;
+  function poll() {
+    if (polling) return; polling = true;
+    fetch('http://localhost:8765/ap', { cache: 'no-store' }).then(function (r) { return r.json(); })
+      .then(function (j) { drawAp(j, true); }, function () { drawAp({}, false); })
+      .then(function () { polling = false; });
+  }
+  poll(); setInterval(poll, 500);
 
   // ---- Charger SimBrief (par le relais de l'appli, comme Plan de vol)
   function user() {

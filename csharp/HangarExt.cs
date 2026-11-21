@@ -367,6 +367,7 @@ namespace HangarFS2024
                 case "/fshub-flight": RelayApi.FshubFlight(query, r); break;
                 case "/net": Networks.Serve(query, r); break;
                 case "/plan-current": RelayApi.PlanCurrent(Plan, r); break;
+                case "/ap": r.Json(200, Autopilot.Snapshot(Relay.Connected)); break;   // FMS : état du pilote automatique
                 case "/fshub": r.Json(200, Relay.Fshub != null ? Relay.Fshub.Snapshot() : new JObject { ["enabled"] = false, ["pilots"] = new JArray() }); break;
                 default:
                     r.Text("Relais Hangar FS 2024 actif : /traffic, /simbrief, /metar, /aeroway, /fshub, /fshub-all, /fshub-flight", "text/plain; charset=utf-8");
