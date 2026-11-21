@@ -3368,6 +3368,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
   function sbCoord(p) { var la = Math.abs(p.lat), lo = Math.abs(p.lon); var d1 = Math.floor(la), m1 = Math.round((la - d1) * 60), d2 = Math.floor(lo), m2 = Math.round((lo - d2) * 60);
     if (m1 === 60) { d1++; m1 = 0; } if (m2 === 60) { d2++; m2 = 0; }
     return String(d1).padStart(2, '0') + String(m1).padStart(2, '0') + (p.lat < 0 ? 'S' : 'N') + String(d2).padStart(3, '0') + String(m2).padStart(2, '0') + (p.lon < 0 ? 'W' : 'E'); }
+  /* un point officiel à 5 lettres sans chiffre (OSVEG) a un nom unique dans le monde : envoyé par son nom (plus précis) ; le reste (VOR, NDB, points avec chiffres comme FF14L) en coordonnées */
+  function sbTok(name, p) { return /^[A-Z]{5}$/.test(name || '') ? name : sbCoord(p); }
   function simbrief() {
     var e = ends(); if (!e) return;
     var tok = [], push = function (x) { if (x && tok[tok.length - 1] !== x) tok.push(x); }, fix = function (l) { return l && !/^RW\d/.test(l[0]) ? l[0] : ''; };
@@ -3379,11 +3381,11 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     }
     /* points libres et points RNAV (souvent des points d'approche que SimBrief ne connaît pas en route) : envoyés en coordonnées */
     /* points du milieu en coordonnées (VOR, NDB, RNAV, points libres) : un nom court comme TAN existe ailleurs dans le monde (Tanger) et SimBrief pourrait se tromper ; seuls les aéroports (code OACI unique) gardent leur nom */
-    pts.slice(1, -1).forEach(function (p) { push(p.kind === 'apt' && /^[A-Z]{4}$/.test(p.name) ? p.name : sbCoord(p)); });
+    pts.slice(1, -1).forEach(function (p) { push(p.kind === 'apt' && /^[A-Z]{4}$/.test(p.name) ? p.name : sbTok(p.kind === 'apt' ? '' : p.name, p)); });
     if (da && da.ok && pr.arr.icao === e[1].icao) {
       var st = da.a[pr.arr.star], ap2 = da.ap[pr.arr.ap];
       if (st) { var tl = starLegs(da, pr.arr); push(fix(tl[0])); push(st.n); if (pr.arr.rw >= 0 && st.rw[pr.arr.rw]) destrwy = st.rw[pr.arr.rw].r; }
-      else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbCoord({ lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche en coordonnées */
+      else if (ap2) { var al = apLegs(da, pr.arr); if (al[0] && fix(al[0])) push(sbTok(al[0][0], { lat: al[0][1], lon: al[0][2] })); }   /* début de l'approche : par son nom si 5 lettres, sinon en coordonnées */
       if (ap2 && ap2.r) destrwy = ap2.r;
     }
     var q = { orig: e[0].icao, dest: e[1].icao, type: acV || 'C172', route: tok.join(' ') };   /* l'avion choisi dans la page VFR */

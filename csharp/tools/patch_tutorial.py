@@ -447,6 +447,9 @@ CUT.setdefault("en", []).extend([(r"with the total distance\. (?=The <b>Airports
 CUT.setdefault("fr", []).extend([(r", ou bouton <b>✈ PLAN VFR</b> dans la barre de la carte Plan de vol personnel\)", ")")])
 CUT.setdefault("en", []).extend([(r", or <b>✈ VFR PLAN</b> button in the Personal flight plan map bar\)", ")")])
 
+R["fr"] += [("par exemple TAN pris pour Tanger). ", "par exemple TAN pris pour Tanger) ; les points officiels à 5 lettres sans chiffre (ex. OSVEG), uniques au monde, partent par leur nom, plus précis. ", "partent par leur nom, plus précis")]
+R["en"] += [("e.g. TAN taken for Tangier). ", "e.g. TAN taken for Tangier); official 5-letter points without digits (e.g. OSVEG), unique worldwide, are sent by their name, which is more precise. ", "are sent by their name, which is more precise")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():
