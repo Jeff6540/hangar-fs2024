@@ -145,6 +145,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     sdNote: ['Le tracé sert à l’affichage : continue à voler avec LNAV / VNAV du FMS (n’appuie pas sur NAV).', 'The route is for display: keep flying with the FMS LNAV / VNAV (do not press NAV).'],
     appr: ['Approche', 'Approach'], apprAt: ['Approches à {a}', 'Approaches at {a}'], close: ['Fermer', 'Close'],
     apprNone: ['Aucune approche trouvée pour {a}. Les approches viennent des données de navigation de MSFS : importe-les une fois depuis la page Plan VFR.', 'No approach found for {a}. Approaches come from the MSFS navigation data: import them once from the VFR plan page.'],
+    apprOld: ['Données d’approche sans altitudes : refais l’import (Plan VFR › Mettre à jour depuis MSFS) pour avoir les vraies altitudes ; en attendant, 3000 ft par défaut au FAF.', 'Approach data without altitudes: import again (VFR plan › Update from MSFS) to get the real altitudes; meanwhile 3000 ft default at the FAF.'],
     apprNoDest: ['Charge d’abord un plan de vol (SimBrief ou .PLN).', 'Load a flight plan first (SimBrief or .PLN).'],
     apprPickTr: ['Arrivée sur l’approche par :', 'Join the approach via:'], apprVectors: ['Vecteurs (finale seule)', 'Vectors (final only)'],
     apprOk: ['Approche {n} chargée{i}.', 'Approach {n} loaded{i}.'], apprIls: [' · ILS {id} {f} · {c}°', ' · ILS {id} {f} · {c}°'], apprNoIls: [' (ILS non trouvé dans les données)', ' (ILS not found in the data)'],
@@ -238,7 +239,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         var prev = route[i - 1], dd = '', tk = '';
         if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
         var cls = i === act ? ' on' : i < act ? ' done' : '';
-        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + ((i === 0 || i === route.length - 1) ? (elevOk(w) ? Math.round(w.alt || 0) : '<i class="unk">?</i>') : (w.alt ? Math.round(w.alt) + (w.altDef ? '<i class="def">*</i>' : '') : '<i>+</i>')) + '</span></span></div>';
+        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via || w.faf ? '<span class="via">' + esc(w.via || '') + (w.faf ? ' · FAF' : '') + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + ((i === 0 || i === route.length - 1) ? (elevOk(w) ? Math.round(w.alt || 0) : '<i class="unk">?</i>') : (w.alt ? Math.round(w.alt) + (w.altDef ? '<i class="def">*</i>' : w.altDesc === 2 ? '<i class="def">A</i>' : w.altDesc === 3 ? '<i class="def">B</i>' : w.altDesc === 4 ? '<i class="def">±</i>' : '') : '<i>+</i>')) + '</span></span></div>';
       });
       $('list').innerHTML = h;
       todLive();
@@ -270,6 +271,18 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       appr.list = Array.isArray(list) ? list : []; appr.sel = -1; appr.icao = icao; drawAppr(head);
     });
   };
+  // branche d'approche des données MSFS : [point, lat, lon, type, contrainte, alt1 ft, alt2 ft, angle, 1 IAF + 2 IF + 4 FAF]
+  function legPoint(l, name) {
+    var w = { ident: l[0], lat: +l[1], lon: +l[2], alt: 0, type: 'wpt', via: name, ap: true };
+    if (l.length >= 9) {
+      var d = +l[4] || 0, a1 = +l[5] || 0, a2 = +l[6] || 0;
+      if (d > 0 && a1 > 0) { w.alt = Math.round(d === 4 ? Math.max(a1, a2) : a1); w.altDesc = d; w.altSrc = 'msfs'; }
+      if (+l[8] & 4) w.faf = true;
+      if (+l[8] & 1) w.iaf = true;
+      if (+l[7]) w.vang = +l[7];
+    }
+    return w;
+  }
   function apprName(a) { return (a.t || '?') + ' ' + (a.r || '') + (a.s ? ' ' + a.s : ''); }
   function drawAppr(head) {
     var pnl = $('apprPanel'), L = appr.list;
@@ -314,14 +327,23 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (route.length < 2) return;
     var dest = route[route.length - 1], body = route.slice(0, -1), name = apprName(a);
     var legs = (tri >= 0 && a.tr && a.tr[tri] ? a.tr[tri].l || [] : []).concat(a.f || []);
-    var pts = [];
+    var pts = [], oldData = legs.length && legs.every(function (l) { return !l || l.length < 5; });
     legs.forEach(function (l) {
-      if (!l || !l[0] || (pts.length && pts[pts.length - 1].ident === l[0])) return;
-      pts.push({ ident: l[0], lat: +l[1], lon: +l[2], alt: 0, type: 'wpt', via: name, ap: true });
+      if (!l || !l[0]) return;
+      var w = legPoint(l, name);
+      if (pts.length && pts[pts.length - 1].ident === l[0]) { if (w.alt) pts[pts.length - 1] = w; return; }   // même point : on garde celui qui a l'altitude
+      pts.push(w);
     });
+    appr.oldData = oldData;
     if (!pts.length) return;
     var k = -1; body.forEach(function (w, i) { if (w.ident === pts[0].ident && i > 0) k = i; });   // point d'entrée déjà dans la route : on raccorde là
-    if (k > 0) { if (body[k].alt) pts[0].alt = body[k].alt; body = body.slice(0, k); }   // on garde l'altitude prévue du point de raccord
+    if (k > 0) {   // point de raccord : altitude prévue gardée, mais dans le respect de la contrainte de l'approche
+      var pa = body[k].alt || 0, w0 = pts[0];
+      if (pa && !w0.altDesc) w0.alt = pa;
+      else if (pa && w0.altDesc === 2) w0.alt = Math.max(pa, w0.alt);
+      else if (pa && w0.altDesc === 3) w0.alt = Math.min(pa, w0.alt);
+      body = body.slice(0, k);
+    }
     var nr = body.concat(pts, [dest]);
     var curId = route[p.activeLeg || 1] ? route[p.activeLeg || 1].ident : '', act = -1;
     nr.forEach(function (w, i) { if (act < 0 && i > 0 && w.ident === curId) act = i; });
@@ -330,7 +352,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     findIls(a, dest).then(function (ils) {
       FmsStore.set({ plan: { route: nr, activeLeg: act, approach: name, dest: { rwy: a.r || '' }, ils: ils } }, 'fms');
       closeAppr(); render.scrolled = false;
-      msg(t('apprOk', { n: name, i: ils ? t('apprIls', { id: ils.ident, f: (ils.freq / 1e6).toFixed(2), c: String(ils.crs).padStart(3, '0') }) : (/^(ILS|LOC)/.test(a.t) ? t('apprNoIls') : '') }));
+      msg((appr.oldData ? t('apprOld') + ' ' : '') + t('apprOk', { n: name, i: ils ? t('apprIls', { id: ils.ident, f: (ils.freq / 1e6).toFixed(2), c: String(ils.crs).padStart(3, '0') }) : (/^(ILS|LOC)/.test(a.t) ? t('apprNoIls') : '') }));
     });
   }
 
@@ -342,8 +364,9 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     for (i = 1; i <= last; i++) if (/^RW\d/.test(route[i].ident || '')) { route[i].alt = 0; if (rwI < 0) rwI = i; }
     var apIdx = []; for (i = 1; i < last; i++) if (route[i].ap && !/^RW\d/.test(route[i].ident || '')) apIdx.push(i);
     if (!apIdx.length) return;
+    if (apIdx.some(function (k) { return route[k].altSrc === 'msfs'; })) return;   // vraies altitudes des données MSFS : rien à inventer
     var end = rwI > 0 ? rwI : last, faf = -1;
-    apIdx.forEach(function (k) { if (k < end && /^(FF|FI|FA|FAF)/.test(route[k].ident)) faf = k; });
+    apIdx.forEach(function (k) { if (k < end && (route[k].faf || /^(FF|FI|FA|FAF)/.test(route[k].ident))) faf = k; });
     if (faf < 0) apIdx.forEach(function (k) { if (k < end) faf = k; });
     if (faf < 0) return;
     var elev = elevOk(route[last]) ? route[last].alt || 0 : 0, def = Math.max(3000, Math.ceil((elev + 1500) / 100) * 100);

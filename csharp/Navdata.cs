@@ -242,9 +242,12 @@ namespace HangarFS2024
             foreach (var f in new[] { "OPEN AIRPORT", "N_APPROACHES",
                 "OPEN APPROACH", "TYPE", "SUFFIX", "RUNWAY_NUMBER", "RUNWAY_DESIGNATOR",
                 "OPEN APPROACH_TRANSITION", "TYPE",
-                "OPEN APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE", "CLOSE APPROACH_LEG",
+                // FMS : altitude à respecter sur chaque point (contrainte, altitudes en mètres), angle de descente, IAF / IF / FAF
+                "OPEN APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE",
+                    "APPROACH_ALT_DESC", "ALTITUDE1", "ALTITUDE2", "VERTICAL_ANGLE", "IS_IAF", "IS_IF", "IS_FAF", "CLOSE APPROACH_LEG",
                 "CLOSE APPROACH_TRANSITION",
-                "OPEN FINAL_APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE", "CLOSE FINAL_APPROACH_LEG",
+                "OPEN FINAL_APPROACH_LEG", "TYPE", "FIX_ICAO", "FIX_REGION", "FIX_LATITUDE", "FIX_LONGITUDE",
+                    "APPROACH_ALT_DESC", "ALTITUDE1", "ALTITUDE2", "VERTICAL_ANGLE", "IS_IAF", "IS_IF", "IS_FAF", "CLOSE FINAL_APPROACH_LEG",
                 "CLOSE APPROACH", "CLOSE AIRPORT" })
                 if (c.AddFac(DEF_APPR, f) != 0) throw new Exception(Hangar.L("MSFS refuse la demande d'approches (", "MSFS refuses the approach request (") + f + ")");
 
@@ -319,6 +322,16 @@ namespace HangarFS2024
                     int lt = BitConverter.ToInt32(b, D);
                     if (fix == "" || (lat == 0 && lon == 0) || Math.Abs(lat) > 90 || Math.Abs(lon) > 180) continue;
                     var leg = new JArray(fix, Math.Round(lat, 5), Math.Round(lon, 5), lt);
+                    // FMS : [.., contrainte (0 aucune, 1 à, 2 à ou au-dessus, 3 à ou au-dessous, 4 entre), altitude 1 (ft), altitude 2 (ft), angle (°), 1 IAF + 2 IF + 4 FAF]
+                    if (b.Length >= D + 64)
+                    {
+                        int desc = BitConverter.ToInt32(b, D + 36);
+                        double a1 = BitConverter.ToSingle(b, D + 40) * 3.28084, a2 = BitConverter.ToSingle(b, D + 44) * 3.28084, va = BitConverter.ToSingle(b, D + 48);
+                        int flags = (BitConverter.ToInt32(b, D + 52) != 0 ? 1 : 0) | (BitConverter.ToInt32(b, D + 56) != 0 ? 2 : 0) | (BitConverter.ToInt32(b, D + 60) != 0 ? 4 : 0);
+                        if (desc < 0 || desc > 4 || double.IsNaN(a1) || double.IsNaN(a2) || Math.Abs(a1) > 60000 || Math.Abs(a2) > 60000) { desc = 0; a1 = a2 = 0; }
+                        if (double.IsNaN(va) || Math.Abs(va) > 10) va = 0;
+                        leg.Add(desc); leg.Add(desc > 0 ? Math.Round(a1) : 0); leg.Add(desc == 4 ? Math.Round(a2) : 0); leg.Add(Math.Round(va, 2)); leg.Add(flags);
+                    }
                     JObject o;
                     if (!objs.TryGetValue(K(ureq, parent), out o)) continue;
                     if (dtype == 8 && o["f"] != null) ((JArray)o["f"]).Add(leg);

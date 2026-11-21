@@ -8264,13 +8264,30 @@ ${waypoint(arr)}
     [route[0], dest].forEach(function (w) {   // altitude des aéroports (base OurAirports de la page) : le VNAV vise terrain + 1500 ft
       try { var A = typeof airportsDB !== 'undefined' ? airportsDB[w.ident] : null; if (A && isFinite(A.elevation_ft) && A.elevation_ft) {   /* 0 = souvent « inconnue » dans la base : on laisse le pilote la taper */ w.alt = Math.round(A.elevation_ft); w.elev = true; } } catch (x) {}
     });
-    // approche : pas d'altitude sur le seuil de piste ; FAF à 3000 ft par défaut (terrain + 1500 ft si plus haut), points d'avant au même niveau
+    // approche : altitudes des données MSFS (contrainte, FAF) quand l'import les a
+    if (ap) {
+      var legAlt = {};
+      (ap.f || []).concat.apply(ap.f || [], (ap.tr || []).map(function (t2) { return t2.l || []; })).forEach(function (l) {
+        if (!l || l.length < 9) return;
+        var d = +l[4] || 0, a1 = +l[5] || 0, a2 = +l[6] || 0, cur = legAlt[l[0]] || {};
+        if (d > 0 && a1 > 0) { cur.alt = Math.round(d === 4 ? Math.max(a1, a2) : a1); cur.d = d; }
+        if (+l[8] & 4) cur.faf = true;
+        legAlt[l[0]] = cur;
+      });
+      route.forEach(function (w) {
+        var L2 = w.ap && legAlt[w.ident]; if (!L2) return;
+        if (L2.alt && !w.alt) { w.alt = L2.alt; w.altDesc = L2.d; w.altSrc = 'msfs'; }
+        if (L2.faf) w.faf = true;
+      });
+    }
+    // sinon : pas d'altitude sur le seuil de piste ; FAF à 3000 ft par défaut (terrain + 1500 ft si plus haut), points d'avant au même niveau
     (function () {
+      if (route.some(function (w) { return w.altSrc === 'msfs'; })) { route.forEach(function (w) { if (/^RW\d/.test(w.ident)) w.alt = 0; }); return; }
       var last = route.length - 1, rwI = -1, faf = -1, i, aps = [];
       for (i = 1; i <= last; i++) if (/^RW\d/.test(route[i].ident)) { route[i].alt = 0; if (rwI < 0) rwI = i; }
       for (i = 1; i < last; i++) if (route[i].ap && !/^RW\d/.test(route[i].ident)) aps.push(i);
       var end = rwI > 0 ? rwI : last;
-      aps.forEach(function (k) { if (k < end && /^(FF|FI|FA|FAF)/.test(route[k].ident)) faf = k; });
+      aps.forEach(function (k) { if (k < end && (route[k].faf || /^(FF|FI|FA|FAF)/.test(route[k].ident))) faf = k; });
       if (faf < 0) aps.forEach(function (k) { if (k < end) faf = k; });
       if (faf < 0) return;
       var el = dest.elev ? dest.alt || 0 : 0, def = Math.max(3000, Math.ceil((el + 1500) / 100) * 100);
