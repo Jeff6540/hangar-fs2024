@@ -58,6 +58,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .set .val input{width:100%;text-align:center;font:inherit;color:inherit;background:#11161c;border:1px solid var(--skyt);border-radius:6px;padding:2px}
 .set.off .val{color:#5d6670}
 .legend{font-size:11px;color:var(--mut)}
+.md.fms{background:#16324a;border-color:var(--skyt);color:#e6f5ff} .md.fms small{color:var(--warn)}
+.lnavl{min-height:16px;font-size:12px;color:var(--actt)} .lnavl.msg{color:var(--warn);font-family:inherit}
 </style>
 </head>
 <body>
@@ -86,7 +88,9 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <div class="apst"><span class="ac" id="apAc"></span><span class="st" id="apSt"></span></div>
   <div class="note" id="apNote"></div>
   <div class="modes" id="apModes"></div>
+  <div class="lnavl mono" id="apLnav"></div>
   <div class="sets" id="apSets"></div>
+  <div class="legend" data-t="apLegendL"></div>
   <div class="legend" data-t="apLegend"></div>
 </div>
 
@@ -127,6 +131,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     apNoteNone: ['Cet avion n’a pas de pilote automatique : le FMS ne peut rien commander.', 'This aircraft has no autopilot: the FMS cannot command anything.'],
     apNoteCustom: ['Avion à systèmes maison : certaines commandes peuvent ne pas répondre (affichage seulement dans ce cas).', 'Aircraft with custom systems: some commands may not respond (display only in that case).'],
     apLegend: ['Sous chaque bouton : « avion » = mode géré par l’avion ; « non géré » = l’avion n’a pas réagi (le FMS pourra le forcer plus tard).', 'Under each button: “aircraft” = mode handled by the aircraft; “not handled” = the aircraft did not react (the FMS will be able to force it later).'],
+    byFms: ['FMS', 'FMS'], lnavTo: ['LNAV → {p} · {d} NM · cap {h}°', 'LNAV → {p} · {d} NM · hdg {h}°'],
+    apLegendL: ['LNAV : l’avion suit la route du FMS de l’appli (le FMS règle le cap sur le mode HDG). NAV : l’avion suit son propre plan de vol.', 'LNAV: the aircraft follows the app FMS route (the FMS sets the heading on HDG mode). NAV: the aircraft follows its own flight plan.'],
     byAc: ['avion', 'aircraft'], notHandled: ['non géré', 'not handled'], onTxt: ['ON', 'ON'],
     lHdg: ['Cap', 'Heading'], lAlt: ['Altitude', 'Altitude'], lVs: ['VS', 'VS'], lSpd: ['Vitesse', 'Speed'], now: ['actuel', 'now'],
     src: { fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
@@ -216,7 +222,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   // ---- pilote automatique (relais : /ap ; ordres par la fenêtre de l'appli)
   function apSend(c, v) { try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage({ ap: { c: c, v: v } }); } catch (e) {} }
-  var MODES = [['ap', 'AP'], ['hdg', 'HDG'], ['nav', 'NAV'], ['apr', 'APR'], ['alt', 'ALT'], ['vs', 'VS'], ['spd', 'SPD']];
+  var MODES = [['ap', 'AP'], ['lnav', 'LNAV'], ['hdg', 'HDG'], ['nav', 'NAV'], ['apr', 'APR'], ['alt', 'ALT'], ['vs', 'VS'], ['spd', 'SPD']];
   var SETS = [  // clé, libellé, pas court, pas maintenu, min, max, unité
     ['hdg', 'lHdg', 1, 5, 1, 360, '°'], ['alt', 'lAlt', 100, 500, 0, 50000, ' ft'], ['vs', 'lVs', 100, 100, -6000, 6000, ''], ['spd', 'lSpd', 1, 5, 40, 400, ' kt']];
   var ap = null, local = {}, localAt = {};
@@ -226,7 +232,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   }).join('');
   $('apModes').addEventListener('click', function (e) {
     var b = e.target.closest('.md'); if (!b || !ap || !ap.modes) return;
-    var m = ap.modes[b.dataset.m] || {}; apSend(b.dataset.m, m.on ? 0 : 1);
+    var m = b.dataset.m === 'lnav' ? (ap.lnav || {}) : (ap.modes[b.dataset.m] || {}); apSend(b.dataset.m, m.on ? 0 : 1);
     b.classList.add('busy');
   });
   function spec(k) { return SETS.filter(function (s) { return s[0] === k; })[0]; }
@@ -290,7 +296,17 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     $('apAc').textContent = (st && st.aircraft) || '';
     $('apNote').textContent = note;
     var live = st && st.live && st.modes;
+    var ln = live && st.lnav ? st.lnav : null, le = $('apLnav');
+    le.className = 'lnavl mono';
+    if (ln && ln.on && ln.to && ln.hdg >= 0) le.textContent = t('lnavTo', { p: ln.to, d: ln.dist, h: String(ln.hdg || 360).padStart(3, '0') });
+    else if (ln && ln.msg) { le.textContent = ln.msg; le.classList.add('msg'); }
+    else le.textContent = '';
     $('apModes').querySelectorAll('.md').forEach(function (b) {
+      if (b.dataset.m === 'lnav') {
+        b.classList.toggle('fms', !!(ln && ln.on)); b.classList.remove('busy');
+        b.querySelector('small').textContent = ln ? (ln.on ? t('onTxt') + ' · ' : '') + t('byFms') : '—';
+        return;
+      }
       var m = live ? st.modes[b.dataset.m] : null;
       b.classList.toggle('on', !!(m && m.on)); b.classList.toggle('busy', !!(m && m.busy)); b.classList.toggle('no', !!(m && m.no));
       var lbl = !m ? '—' : m.no ? t('notHandled') : (m.on ? t('onTxt') + ' · ' : '') + t('byAc');

@@ -33,6 +33,12 @@ namespace HangarFS2024
             new[] { "VERTICAL SPEED", "feet per minute" },           // 15
             new[] { "AIRSPEED INDICATED", "knots" },                 // 16
             new[] { "SIM ON GROUND", "bool" },                       // 17
+            new[] { "GPS GROUND TRUE TRACK", "degrees" },            // 18  (LNAV)
+            new[] { "MAGVAR", "degrees" },                           // 19
+            new[] { "PLANE LATITUDE", "degrees" },                   // 20
+            new[] { "PLANE LONGITUDE", "degrees" },                  // 21
+            new[] { "GROUND VELOCITY", "knots" },                    // 22
+            new[] { "PLANE HEADING DEGREES TRUE", "degrees" },       // 23
         };
 
         // ---- ordres envoyés à MSFS (numéro d'ordre = 1000 + position dans la liste)
@@ -82,7 +88,7 @@ namespace HangarFS2024
         }
 
         /// <summary>MSFS déconnecté.</summary>
-        public static void Clear() { lock (Gate) { vals = null; pending.Clear(); } }
+        public static void Clear() { lock (Gate) { vals = null; pending.Clear(); } Lnav.Engage(false); }
 
         static bool On(int i) { return vals != null && i < vals.Length && vals[i] >= 0.5; }
 
@@ -93,11 +99,12 @@ namespace HangarFS2024
             double v; double.TryParse(JsonStore.Str(a["v"]), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out v);
             switch (c)
             {
-                case "hdg_set": outbox.Enqueue(Kv("HEADING_BUG_SET", (int)Math.Round(((v % 360) + 360) % 360))); return;
+                case "hdg_set": Lnav.ManualHeading(); outbox.Enqueue(Kv("HEADING_BUG_SET", (int)Math.Round(((v % 360) + 360) % 360))); return;
                 case "alt_set": outbox.Enqueue(Kv("AP_ALT_VAR_SET_ENGLISH", Clamp(v, -1000, 60000))); return;
                 case "vs_set": outbox.Enqueue(Kv("AP_VS_VAR_SET_ENGLISH", Clamp(v, -8000, 8000))); return;
                 case "spd_set": outbox.Enqueue(Kv("AP_SPD_VAR_SET", Clamp(v, 0, 600))); return;
             }
+            if (c == "lnav") { Lnav.Engage(v >= 0.5); return; }
             foreach (var m in Modes)
             {
                 if (m.Key != c) continue;
@@ -110,6 +117,13 @@ namespace HangarFS2024
                 outbox.Enqueue(Kv(want ? m.On : m.Off, 0));
                 return;
             }
+        }
+
+        static bool IsPending(string k) { lock (Gate) return pending.ContainsKey(k); }
+        internal static void Order(string ev, int v) { outbox.Enqueue(Kv(ev, v)); }
+        internal static void ModeOn(string key)   // le LNAV demande un mode (ex. HDG) comme si on appuyait sur le bouton
+        {
+            Command(new JObject { ["c"] = key, ["v"] = 1 });
         }
 
         static int Clamp(double v, double lo, double hi) { return (int)Math.Round(Math.Max(lo, Math.Min(hi, v))); }
@@ -129,6 +143,8 @@ namespace HangarFS2024
                     if (now - p.Since > 3.0) { pending.Remove(p.M.Key); unsupported[p.M.Key] = true; }                       // l'avion ne gère pas ce mode
                 }
             }
+            double[] cur; lock (Gate) cur = vals != null && now - valsAt < 3 ? (double[])vals.Clone() : null;
+            Lnav.Tick(cur, now, hdgBusy: IsPending("hdg"));
             var list = new List<KeyValuePair<string, int>>();
             KeyValuePair<string, int> o;
             while (outbox.TryDequeue(out o)) list.Add(o);
@@ -141,6 +157,7 @@ namespace HangarFS2024
         /// <summary>État pour la fenêtre FMS (relais : /ap).</summary>
         public static JObject Snapshot(bool connected)
         {
+            var ln = Lnav.Snapshot();
             lock (Gate)
             {
                 double now = RelayState.Now();
@@ -154,8 +171,153 @@ namespace HangarFS2024
                 modes["gs"] = new JObject { ["on"] = On(12), ["busy"] = false, ["no"] = false };
                 o["modes"] = modes;
                 o["target"] = new JObject { ["hdg"] = Math.Round(vals[3]), ["alt"] = Math.Round(vals[5]), ["vs"] = Math.Round(vals[7]), ["spd"] = Math.Round(vals[9]) };
+                o["lnav"] = ln;
                 o["actual"] = new JObject { ["hdg"] = Math.Round(vals[13]), ["alt"] = Math.Round(vals[14]), ["vs"] = Math.Round(vals[15]), ["spd"] = Math.Round(vals[16]), ["ground"] = On(17) };
                 return o;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ LNAV : l'avion suit la route du FMS de l'appli
+    // Le FMS calcule le cap à suivre (avec la correction de vent) et le règle en continu sur le mode HDG de l'avion.
+    // Il passe tout seul au point suivant (avec anticipation du virage) et prévient toutes les fenêtres.
+    static class Lnav
+    {
+        static readonly object Gate = new object();
+        static bool on, hdgSeenOn;
+        static string message = "";
+        static int active = -1, myActive = -1, lastRev = -1;
+        static double fromLat, fromLon; static bool fromSet;
+        static double nextCalc, lastBugSent = -1, lastBugAt, lastHdgAsk;
+        static string activeIdent = ""; static double distNm, xteNm, cmdMag = -1;
+
+        public static void Engage(bool v)
+        {
+            lock (Gate)
+            {
+                on = v; hdgSeenOn = false; fromSet = false; lastBugSent = -1; myActive = -1; active = -1;
+                message = v ? "" : message;
+            }
+        }
+
+        public static void ManualHeading()   // cap réglé à la main : le pilote reprend la main sur le LNAV
+        {
+            lock (Gate) if (on) Off(Hangar.L("LNAV désengagé : cap réglé à la main.", "LNAV disengaged: heading set by hand."));
+        }
+
+        static void Off(string why) { on = false; hdgSeenOn = false; message = why; }
+
+        public static JObject Snapshot()
+        {
+            lock (Gate)
+                return new JObject { ["on"] = on, ["to"] = activeIdent, ["dist"] = Math.Round(distNm, 1), ["xte"] = Math.Round(xteNm, 2),
+                    ["hdg"] = cmdMag < 0 ? -1 : Math.Round(cmdMag), ["msg"] = message };
+        }
+
+        const double R = Math.PI / 180, EarthNm = 3440.065;
+        static double Dist(double la1, double lo1, double la2, double lo2)   // en radians d'arc
+        {
+            double dLa = (la2 - la1) * R, dLo = (lo2 - lo1) * R;
+            double h = Math.Sin(dLa / 2) * Math.Sin(dLa / 2) + Math.Cos(la1 * R) * Math.Cos(la2 * R) * Math.Sin(dLo / 2) * Math.Sin(dLo / 2);
+            return 2 * Math.Atan2(Math.Sqrt(h), Math.Sqrt(1 - h));
+        }
+        static double Brg(double la1, double lo1, double la2, double lo2)    // en degrés vrais
+        {
+            double y = Math.Sin((lo2 - lo1) * R) * Math.Cos(la2 * R);
+            double x = Math.Cos(la1 * R) * Math.Sin(la2 * R) - Math.Sin(la1 * R) * Math.Cos(la2 * R) * Math.Cos((lo2 - lo1) * R);
+            return (Math.Atan2(y, x) / R + 360) % 360;
+        }
+        static double Wrap(double a) { a = (a + 540) % 360 - 180; return a; }     // -180..180
+        static double Norm(double a) { return ((a % 360) + 360) % 360; }
+
+        static bool Pt(JArray route, int i, out double lat, out double lon)
+        {
+            lat = lon = 0;
+            if (route == null || i < 0 || i >= route.Count) return false;
+            var w = route[i] as JObject; if (w == null) return false;
+            double.TryParse(JsonStore.Str(w["lat"]), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lat);
+            double.TryParse(JsonStore.Str(w["lon"]), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out lon);
+            return !(lat == 0 && lon == 0);
+        }
+
+        public static void Tick(double[] v, double now, bool hdgBusy)
+        {
+            lock (Gate)
+            {
+                if (!on) { cmdMag = -1; return; }
+                if (now < nextCalc) return;
+                nextCalc = now + 0.25;
+                if (v == null || v.Length < 24) { message = Hangar.L("En attente de l'avion…", "Waiting for the aircraft…"); return; }
+                if (v[1] < 0.5) { message = Hangar.L("AP coupé : appuie sur AP pour que l'avion suive la route.", "AP off: press AP for the aircraft to follow the route."); return; }
+                if (v[10] >= 0.5 || v[11] >= 0.5) { Off(Hangar.L("LNAV désengagé : le mode NAV ou APR de l'avion a pris la main.", "LNAV disengaged: the aircraft's NAV or APR mode took over.")); return; }
+                bool hdg = v[2] >= 0.5;
+                if (hdg) hdgSeenOn = true;
+                else if (hdgSeenOn && !hdgBusy) { Off(Hangar.L("LNAV désengagé : le mode HDG a été coupé.", "LNAV disengaged: HDG mode was turned off.")); return; }
+
+                var st = FlightStore.Get();
+                var plan = st["plan"] as JObject ?? new JObject();
+                var route = plan["route"] as JArray;
+                int act = (int?)plan["activeLeg"] ?? 0, rev = (int?)st["rev"] ?? 0;
+                if (route == null || route.Count < 2) { Off(Hangar.L("Pas de route dans le FMS.", "No route in the FMS.")); return; }
+                if (act < 1) act = 1;
+                if (act >= route.Count) act = route.Count - 1;
+                double lat = v[20], lon = v[21], gs = v[22], trk = v[18], hdgT = v[23], magvar = v[19];
+
+                // point de départ du tronçon : le point précédent, ou la position de l'avion après un « Direct vers »
+                if (act != active || rev != lastRev)
+                {
+                    bool mine = act == myActive;
+                    double pla, plo;
+                    if (!fromSet || !mine) { fromLat = lat; fromLon = lon; fromSet = true; }   // engagement, Direct vers ou nouveau plan
+                    if (mine || (active == -1 && Pt(route, act - 1, out pla, out plo) && Dist(pla, plo, lat, lon) * EarthNm < 3))
+                    { if (Pt(route, act - 1, out pla, out plo)) { fromLat = pla; fromLon = plo; } }
+                    active = act; lastRev = rev; myActive = -1;
+                }
+                double bla, blo; Pt(route, act, out bla, out blo);
+                activeIdent = JsonStore.Str((route[act] as JObject ?? new JObject())["ident"]);
+
+                // écart à la route (à droite = positif) et distance restante
+                double d13 = Dist(fromLat, fromLon, lat, lon), crs12 = Brg(fromLat, fromLon, bla, blo), crs13 = Brg(fromLat, fromLon, lat, lon);
+                double legLen = Dist(fromLat, fromLon, bla, blo);
+                double xtd = Math.Asin(Math.Sin(d13) * Math.Sin((crs13 - crs12) * R));
+                double atd = Math.Acos(Math.Max(-1, Math.Min(1, Math.Cos(d13) / Math.Max(1e-9, Math.Cos(xtd)))));
+                if (Math.Abs(Wrap(crs13 - crs12)) > 90) atd = -atd;
+                xteNm = xtd * EarthNm;
+                distNm = Dist(lat, lon, bla, blo) * EarthNm;
+
+                // passage au point suivant, avec anticipation du virage
+                double nla, nlo;
+                if (act < route.Count - 1 && Pt(route, act + 1, out nla, out nlo))
+                {
+                    double turn = Math.Abs(Wrap(Brg(bla, blo, nla, nlo) - Brg(bla, blo, fromLat, fromLon) - 180));
+                    double radiusNm = Math.Max(60, gs) * Math.Max(60, gs) / (11.26 * Math.Tan(25 * R)) / 6076.0;
+                    double lead = Math.Min(radiusNm * Math.Tan(Math.Min(120, turn) * R / 2), 4);
+                    if (distNm <= Math.Max(0.3, lead) || (legLen > 0 && atd >= legLen))
+                    {
+                        myActive = act + 1;
+                        FlightStore.Set(new JObject { ["plan"] = new JObject { ["activeLeg"] = act + 1 } }, "lnav");
+                        return;
+                    }
+                }
+
+                // cap à suivre : route du tronçon + retour sur l'axe (30° maxi) + correction de vent
+                double legCrsHere = distNm > 0.2 ? Brg(lat, lon, bla, blo) + Math.Asin(Math.Max(-1, Math.Min(1, xteNm / Math.Max(distNm, 0.5)))) / R : crs12;
+                if (legLen * EarthNm < 0.3) legCrsHere = Brg(lat, lon, bla, blo);
+                double intercept = Math.Max(-30, Math.Min(30, xteNm * 25));
+                double trackCmd = Norm(legCrsHere - intercept);
+                double drift = gs > 40 ? Wrap(trk - hdgT) : 0;
+                if (Math.Abs(drift) > 25) drift = 0;
+                cmdMag = Norm(trackCmd - drift - magvar);
+                message = "";
+
+                // le mode HDG doit être actif ; on règle le curseur de cap dès qu'il change d'un degré (ou chaque seconde)
+                if (!hdg && !hdgBusy && now - lastHdgAsk > 3) { lastHdgAsk = now; Autopilot.ModeOn("hdg"); }
+                int bug = (int)Math.Round(cmdMag) % 360; if (bug <= 0) bug += 360;
+                if (lastBugSent < 0 || Math.Abs(Wrap(bug - lastBugSent)) >= 1 || now - lastBugAt > 1.0)
+                {
+                    Autopilot.Order("HEADING_BUG_SET", bug);
+                    lastBugSent = bug; lastBugAt = now;
+                }
             }
         }
     }
