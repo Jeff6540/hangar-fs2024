@@ -15,10 +15,8 @@ ITEMS = [  # clé, icône (chemins SVG du menu principal), libellé FR, libellé
  ("#", "", "Voler", "Fly"),
  ("track", '<circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', "Suivi de vol", "Flight tracking"),
  ("journal", '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11"/>', "Journal de vol", "Flight log"),
- ("#", "", "Radars", "Radars"),
- ("rglobal", '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>', "Radar FSHub global", "FSHub global radar"),
- ("rva", '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.8"/>', "Page de ma VA", "My VA page"),
- ("rvradar", '<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>', "Radar de ma VA", "My VA radar"),
+ ("#", "", "Les Fous Volants", "Les Fous Volants"),
+ ("lfvsite", '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/>', "Site de la VA", "VA website"),
  ("#", "", "", ""),
  ("set", '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>', "Réglages", "Settings"),
 ]

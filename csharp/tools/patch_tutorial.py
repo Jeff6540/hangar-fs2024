@@ -390,6 +390,21 @@ R["en"] += [
 ]
 
 
+
+# 12.9 : rubrique Radars retirée du menu ; site des Fous Volants sous le Discord de la VA (et dans le menu des autres pages)
+R["fr"] += [
+ ("<b>Radars</b> (Radar FSHub global, Page de ma VA, Radar de ma VA) et Réglages.", "<b>Les Fous Volants</b> (Site de la VA) et Réglages.", "<b>Les Fous Volants</b> (Site de la VA) et Réglages."),
+ ("Juste en dessous, le bouton <b>Les Fous Volants</b> ouvre le Discord de la VA. En haut de la page", "Juste en dessous, le bouton <b>Les Fous Volants</b> ouvre le Discord de la VA, puis le bouton doré <b>Les Fous Volants · Le site de la VA</b> ouvre le site lesfousvolants.fr. En haut de la page", "puis le bouton doré <b>Les Fous Volants · Le site de la VA</b> ouvre"),
+]
+R["en"] += [
+ ("<b>Radars</b> (FSHub global radar, My VA page, My VA radar) and Settings.", "<b>Les Fous Volants</b> (VA website) and Settings.", "<b>Les Fous Volants</b> (VA website) and Settings."),
+ ("Right below, the <b>Les Fous Volants</b> button opens the VA's Discord. At the top of the page", "Right below, the <b>Les Fous Volants</b> button opens the VA's Discord, then the gold <b>Les Fous Volants · The VA website</b> button opens the lesfousvolants.fr website. At the top of the page", "then the gold <b>Les Fous Volants · The VA website</b> button opens"),
+]
+
+
+CUT.setdefault("fr", []).extend([(r"<p>Dans le menu de gauche, la rubrique <b>Radars</b> ouvre dans ton navigateur.*?</p>", ""), (r"Les radars FSHub sont dans le menu de gauche\. ", "")])
+CUT.setdefault("en", []).extend([(r"<p>In the left menu, the <b>Radars</b> section opens in your browser.*?</p>", ""), (r"The FSHub radars are in the left menu\. ", "")])
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

@@ -24,6 +24,7 @@ Version 12.9 — page Plan de vol plus claire
 - Plan VFR : SimBrief reçoit les SID, STAR et pistes, et le début de l'approche choisie (SimBrief et Navigraph ajoutent l'approche eux-mêmes).
 - Menu : l'entrée « Plan de vol personnel » est retirée ; la carte s'ouvre depuis la page Plan de vol, bouton « Choisir départ et arrivée sur la carte ». « Ma VA FSHub » devient « Page de ma VA ». Le bouton ✈ PLAN VFR de la carte est retiré (entrée Plan VFR du menu).
 - Le nom « Avionics Dispatch » disparaît : la page s'appelle Plan de vol. Les restes de l'ancienne version Python sont retirés (bouton « Fermer l'ancien relais », recherche de la SimConnect.dll dans ses dossiers).
+- Menu : la rubrique Radars (radar FSHub global, page et radar de ma VA) est retirée. À la place, un bouton « Les Fous Volants · Le site de la VA » sous le Discord de la VA (et une entrée « Site de la VA » dans le menu des autres pages).
 - Import des données MSFS plus sûr, et recherche de la SimConnect.dll faite une seule fois par lancement.
 
 Version 12.8 — quoi de neuf
@@ -136,6 +137,7 @@ Version 12.9 — clearer Flight plan page
 - VFR plan: SimBrief gets the SIDs, STARs and runways, and the start of the chosen approach (SimBrief and Navigraph add the approach themselves).
 - Menu: the "Personal flight plan" entry is removed; the map opens from the Flight plan page, "Pick departure and arrival on the map" button. "My VA on FSHub" becomes "My VA page". The map's ✈ VFR PLAN button is removed (VFR plan menu entry).
 - The "Avionics Dispatch" name is gone: the page is called Flight plan. Leftovers of the old Python version are removed ("Close the old relay" button, SimConnect.dll search in its folders).
+- Menu: the Radars section (FSHub global radar, VA page and VA radar) is removed. Instead, a "Les Fous Volants · The VA website" button below the VA Discord (and a "VA website" entry in the other pages' menu).
 - Safer MSFS data import, and the SimConnect.dll search runs only once per launch.
 
 Version 12.8 — what's new

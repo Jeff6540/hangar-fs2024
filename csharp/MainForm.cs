@@ -264,6 +264,7 @@ namespace HangarFS2024
                 // 12.9 : carte « Plan de vol personnel » et radars FSHub depuis les menus
                 case "perso": case "vfr": case "rva": case "rvradar": await OpenDispatchAt(nav); return;
                 case "rglobal": OpenUrl("https://fshub.io/radar"); return;
+                case "lfvsite": OpenUrl("https://lesfousvolants.fr/"); return;
                 case "lib": case "launch": case "vol": case "set":
                     if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
                     Show(); Activate(); BringToFront();
