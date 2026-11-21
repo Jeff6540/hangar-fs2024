@@ -184,7 +184,8 @@ namespace HangarFS2024
                 o["modes"] = modes;
                 o["target"] = new JObject { ["hdg"] = Math.Round(vals[3]), ["alt"] = Math.Round(vals[5]), ["vs"] = Math.Round(vals[7]), ["spd"] = Math.Round(vals[9]) };
                 o["lnav"] = ln; o["vnav"] = vn; o["ils"] = apx;
-                o["actual"] = new JObject { ["hdg"] = Math.Round(vals[13]), ["alt"] = Math.Round(vals[14]), ["vs"] = Math.Round(vals[15]), ["spd"] = Math.Round(vals[16]), ["ground"] = On(17) };
+                o["actual"] = new JObject { ["hdg"] = Math.Round(vals[13]), ["alt"] = Math.Round(vals[14]), ["vs"] = Math.Round(vals[15]), ["spd"] = Math.Round(vals[16]), ["ground"] = On(17),
+                    ["lat"] = Math.Round(vals[20], 5), ["lon"] = Math.Round(vals[21], 5), ["gs"] = Math.Round(vals[22]) };
                 return o;
             }
         }
