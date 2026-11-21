@@ -45,6 +45,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .panel .hint{font-size:12px;color:var(--mut);line-height:1.5}
 .ilsl{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--scr);border:1px solid #2f5a44;border-radius:8px;padding:6px 10px;font-size:12px;color:#d4f2df}
 .ilsl small{display:block;color:var(--mut);font-size:11px}
+#apIlsTxt{flex:1;min-width:0}
 .ilsl button{flex:none;background:#1d3b2b;border:1px solid #4f9a6e;color:#d4f2df;border-radius:6px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer}
 .ilsl button.off{background:#11161c;border-color:#3a3d44;color:var(--mut)}
 .tile{background:#16324a;border:1px solid #3d7aa6;border-radius:9px;padding:9px 4px;text-align:center;color:var(--txt);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
@@ -123,7 +124,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <div class="modes" id="apModes"></div>
   <div class="lnavl mono" id="apLnav"></div>
   <div class="lnavl mono" id="apVnav"></div>
-  <div class="ilsl" id="apIls" style="display:none"><span id="apIlsTxt"></span><button id="apIlsAuto"></button></div>
+  <div class="ilsl" id="apIls" style="display:none"><span id="apIlsTxt"></span><button id="apIlsAuto"></button><button id="apIlsArm"></button></div>
   <div class="sets" id="apSets"></div>
   <div class="legend" data-t="apLegendL"></div>
   <div class="legend" data-t="apLegend"></div>
@@ -160,7 +161,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     apprOk: ['Approche {n} chargée{i}.', 'Approach {n} loaded{i}.'], apprIls: [' · ILS {id} {f} · {c}°', ' · ILS {id} {f} · {c}°'], apprNoIls: [' (ILS non trouvé dans les données)', ' (ILS not found in the data)'],
     ilsSt: { wait: ['en attente', 'waiting'], standby: ['en attente sur NAV1', 'in NAV1 standby'], active: ['active sur NAV1', 'active on NAV1'], active2: ['active sur NAV1 et NAV2', 'active on NAV1 and NAV2'], fmc: ['réglée par le FMC de l’avion', 'tuned by the aircraft FMC'], manual: ['réglage manuel', 'manual tuning'],
              loc_arm: ['LOC armé', 'LOC armed'], loc: ['LOC', 'LOC'], app_arm: ['APP armé', 'APP armed'], app: ['APP', 'APP'], gs: ['APP · GS capté', 'APP · GS captured'] },
-    ilsAutoOn: ['ILS auto', 'Auto ILS'], ilsAutoOff: ['ILS manuel', 'Manual ILS'],
+    ilsAutoOn: ['Radios auto', 'Auto radios'], ilsAutoOff: ['Radios manuel', 'Manual radios'],
+    ilsArmOn: ['LOC/APP auto', 'Auto LOC/APP'], ilsArmOff: ['LOC/APP manuel', 'Manual LOC/APP'],
     pln: ['Ouvrir un .PLN', 'Open a .PLN'],
     plnBad: ['Fichier .PLN illisible ou sans points de route.', 'Unreadable .PLN file or no waypoints.'],
     plnOk: ['Plan .PLN chargé : {f}', '.PLN plan loaded: {f}'],
@@ -685,6 +687,8 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       var stx = T.ilsSt[il.state] ? T.ilsSt[il.state][LANG === 'en' ? 1 : 0] : '';
       $('apIlsTxt').innerHTML = 'ILS ' + esc(il.ident) + ' · ' + il.freq.toFixed(2) + ' · ' + String(il.crs).padStart(3, '0') + '°<small>' + esc(stx) + (il.dist >= 0 ? ' · ' + il.dist + ' NM' : '') + '</small>';
       var bA = $('apIlsAuto'); bA.textContent = il.auto ? t('ilsAutoOn') : t('ilsAutoOff'); bA.classList.toggle('off', !il.auto); bA.dataset.v = il.auto ? '0' : '1';
+      var bR = $('apIlsArm'); bR.textContent = il.arm ? t('ilsArmOn') : t('ilsArmOff'); bR.classList.toggle('off', !il.arm); bR.dataset.v = il.arm ? '0' : '1';
+      bR.style.display = il.state === 'fmc' ? 'none' : ''; bA.style.display = il.state === 'fmc' ? 'none' : '';
     }
     var vn = live && st.vnav ? st.vnav : null, ve = $('apVnav');
     ve.className = 'lnavl mono';
@@ -712,6 +716,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     drawSets();
   }
   $('apIlsAuto').onclick = function () { apSend('ils_auto', +this.dataset.v); };
+  $('apIlsArm').onclick = function () { apSend('ils_arm', +this.dataset.v); };
   var polling = false;
   function poll() {
     if (polling) return; polling = true;

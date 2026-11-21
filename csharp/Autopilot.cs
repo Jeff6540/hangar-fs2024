@@ -125,6 +125,7 @@ namespace HangarFS2024
             if (c == "vnav") { Vnav.Engage(v >= 0.5); return; }
             if (c == "vnav_climb") { Vnav.SetClimb(v); return; }
             if (c == "ils_auto") { Approach.SetAuto(v >= 0.5); return; }
+            if (c == "ils_arm") { Approach.SetArm(v >= 0.5); return; }
             foreach (var m in Modes)
             {
                 if (m.Key != c) continue;
@@ -549,7 +550,7 @@ namespace HangarFS2024
     static class Approach
     {
         static readonly object Gate = new object();
-        static bool auto = true;
+        static bool auto = true, arm = true;   // auto : radios (fréquence, course) ; arm : armement LOC puis APP
         static string state = "", ident = "", lastKey = "";
         static double freqHz, crs, distNm = -1;
         static bool hasGs;
@@ -557,11 +558,12 @@ namespace HangarFS2024
         static bool obsSet;
 
         public static void SetAuto(bool v) { lock (Gate) auto = v; }
+        public static void SetArm(bool v) { lock (Gate) arm = v; }
 
         public static JObject Snapshot()
         {
             lock (Gate)
-                return new JObject { ["auto"] = auto, ["ident"] = ident, ["freq"] = Math.Round(freqHz / 1e6, 2), ["crs"] = Math.Round(crs), ["gs"] = hasGs,
+                return new JObject { ["auto"] = auto, ["arm"] = arm, ["ident"] = ident, ["freq"] = Math.Round(freqHz / 1e6, 2), ["crs"] = Math.Round(crs), ["gs"] = hasGs,
                     ["state"] = state, ["dist"] = Math.Round(distNm, 1) };
         }
 
@@ -595,34 +597,54 @@ namespace HangarFS2024
                 if (liner == "a220") { state = active ? "active" : "fmc"; return; }
                 bool two = liner != null && v.Length >= 32;   // PMDG / iFly : ILS sur NAV1 et NAV2, les deux courses
                 bool active2 = two && Same(v[30], freqHz), standby2 = two && Same(v[31], freqHz);
-                if (!auto) { state = active ? (active2 ? "active2" : "active") : standby ? "standby" : "manual"; return; }
-
-                // 1) fréquence en attente, 2) permutation, 3) cap de piste, 4) l'aiguille NAV1 sur l'ILS (et pas le GPS)
-                if (!active && !standby && distNm < 80 && now - lastStby > 5) { lastStby = now; Autopilot.Order("NAV1_STBY_SET_HZ", (int)freqHz); }
-                if (!active && standby && distNm < 25 && now - lastSwap > 5) { lastSwap = now; Autopilot.Order("NAV1_RADIO_SWAP", 0); }
-                if (two)
+                if (auto)
                 {
-                    if (!active2 && !standby2 && distNm < 80 && now - lastStby2 > 5) { lastStby2 = now; Autopilot.Order("NAV2_STBY_SET_HZ", (int)freqHz); }
-                    if (!active2 && standby2 && distNm < 25 && now - lastSwap2 > 5) { lastSwap2 = now; Autopilot.Order("NAV2_RADIO_SWAP", 0); }
-                    // les deux courses (gauche et droite) du MCP, par le SDK de l'avion
-                    if (active && !obsSet && now - lastObs > 3)
+                    // 1) fréquence en attente, 2) permutation, 3) cap de piste, 4) l'aiguille NAV1 sur l'ILS (et pas le GPS)
+                    if (!active && !standby && distNm < 80 && now - lastStby > 5) { lastStby = now; Autopilot.Order("NAV1_STBY_SET_HZ", (int)freqHz); }
+                    if (!active && standby && distNm < 25 && now - lastSwap > 5) { lastSwap = now; Autopilot.Order("NAV1_RADIO_SWAP", 0); }
+                    if (two)
                     {
-                        lastObs = now; obsSet = true;
-                        var o = new JObject { ["c"] = liner + "_set", ["k"] = "crs", ["v"] = Math.Round(crs) };
-                        if (liner == "pmdg") Pmdg.Command(o); else Ifly.Command(o);
+                        if (!active2 && !standby2 && distNm < 80 && now - lastStby2 > 5) { lastStby2 = now; Autopilot.Order("NAV2_STBY_SET_HZ", (int)freqHz); }
+                        if (!active2 && standby2 && distNm < 25 && now - lastSwap2 > 5) { lastSwap2 = now; Autopilot.Order("NAV2_RADIO_SWAP", 0); }
+                        // les deux courses (gauche et droite) du MCP, par le SDK de l'avion
+                        if (active && !obsSet && now - lastObs > 3)
+                        {
+                            lastObs = now; obsSet = true;
+                            var o = new JObject { ["c"] = liner + "_set", ["k"] = "crs", ["v"] = Math.Round(crs) };
+                            if (liner == "pmdg") Pmdg.Command(o); else Ifly.Command(o);
+                        }
                     }
-                    // LOC et APP restent au pilote sur ces avions (boutons du MCP)
-                    state = active ? (active2 ? "active2" : "active") : standby ? "standby" : "wait";
+                    else
+                    {
+                        if (active && !obsSet && now - lastObs > 3) { lastObs = now; obsSet = true; Autopilot.Order("VOR1_SET", (int)Math.Round(crs) % 360 == 0 ? 360 : (int)Math.Round(crs) % 360); }
+                        if (active && v[26] >= 0.5 && distNm < 25 && now - lastGps > 5) { lastGps = now; Autopilot.Order("TOGGLE_GPS_DRIVES_NAV1", 0); }
+                    }
+                }
+                state = active ? (active2 ? "active2" : "active") : standby ? "standby" : auto ? "wait" : "manual";
+                if (!arm || !active) return;   // armement seulement quand la bonne fréquence est active (réglée par le FMS ou à la main)
+                double off = Math.Abs(((hdgMag - crs) % 360 + 540) % 360 - 180);
+
+                if (two)
+                {   // PMDG / iFly : boutons VOR/LOC et APP du MCP, par le SDK (seulement si CMD A ou B est engagé)
+                    var snap = liner == "pmdg" ? Pmdg.Snapshot() : Ifly.Snapshot();
+                    var on = snap != null ? snap["on"] as JObject : null;
+                    if (on == null) return;
+                    Func<string, bool> lit = k => (bool?)on[k] ?? false;
+                    if (!lit("cmda") && !lit("cmdb")) return;
+                    Action<string> press = k => { var o = new JObject { ["c"] = liner, ["b"] = k }; if (liner == "pmdg") Pmdg.Command(o); else Ifly.Command(o); };
+                    if (lit("app")) { state = "app"; return; }
+                    if (!lit("vorloc"))
+                    {
+                        if (loc && distNm < 18 && off < 90 && now - lastArm > 6) { lastArm = now; press("vorloc"); state = "loc_arm"; }
+                        return;
+                    }
+                    state = "loc";
+                    if (hasGs && v[29] >= 0.5 && Math.Abs(cdi) < 40 && off < 30 && now - lastArm > 6) { lastArm = now; press("app"); state = "app_arm"; }
                     return;
                 }
-                if (active && !obsSet && now - lastObs > 3) { lastObs = now; obsSet = true; Autopilot.Order("VOR1_SET", (int)Math.Round(crs) % 360 == 0 ? 360 : (int)Math.Round(crs) % 360); }
-                if (active && v[26] >= 0.5 && distNm < 25 && now - lastGps > 5) { lastGps = now; Autopilot.Order("TOGGLE_GPS_DRIVES_NAV1", 0); }
-
-                state = active ? "active" : standby ? "standby" : "wait";
-                if (!active || !apOn || modeBusy) return;
+                if (!apOn || modeBusy) return;
 
                 // 5) LOC d'abord : mode NAV armé vers 18 NM si l'avion se présente dans le bon sens
-                double off = Math.Abs(((hdgMag - crs) % 360 + 540) % 360 - 180);
                 if (!navOn && loc && distNm < 18 && off < 90 && v[26] < 0.5 && now - lastArm > 6) { lastArm = now; Autopilot.ModeOn("nav"); state = "loc_arm"; return; }
                 if (navOn)
                 {
