@@ -2794,7 +2794,16 @@ html body #trafficMapModal,html body #interactiveMapModal,html body #hgJournal,h
 .hg-strip-u{margin-top:2px;font-size:9.5px;color:#64748B}
 .hg-strip-h{font-size:11px;font-weight:800;color:#7DD3FC;margin-bottom:-4px}
 #hgStripMap{min-width:300px;margin-bottom:6px}#hgStripMap:empty{display:none}#hgStripMap .hg-strip{margin-top:6px;padding-top:6px}
-</style></head>
+</style><style id="hangar-129-boot">
+html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#0b1220;color:#7dd3fc;font:600 15px/1.4 system-ui,sans-serif;letter-spacing:.06em}
+</style><script id="hangar-129-boot-js">
+(function () { var T = {"vfr": "Opening the VFR plan…", "perso": "Opening the map…"}, h = location.hash.replace('#', '');
+  if (!T[h]) return; var d = document.documentElement; d.classList.add('hgBoot');
+  document.addEventListener('DOMContentLoaded', function () { document.body.setAttribute('data-hgboot', T[h]); });
+  window.hgBootDone = function () { d.classList.remove('hgBoot'); };
+  setTimeout(window.hgBootDone, 15000);   /* sécurité : jamais bloqué */
+})();
+</script></head>
 <body class="flex flex-col">
 
     <!-- En-tête style HUD Avionique avec boutons centrés -->
@@ -7388,7 +7397,7 @@ ${waypoint(arr)}
     return prev ? prev(k) : false;
   };
   var h = location.hash.replace('#', '');
-  if (/^(perso|vfr|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h); }, 1200);
+  if (/^(perso|vfr|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h); var w = 0; (function done() { var ok = h === 'vfr' ? !!document.querySelector('#hgVfr.on') : h === 'perso' ? persoOpen() : true; if (ok || ++w > 75) { setTimeout(function () { if (window.hgBootDone) window.hgBootDone(); }, 150); return; } setTimeout(done, 200); })(); }, 50);
 })();
 </script><script id="hangar-129-vfr-js">
 (function () {

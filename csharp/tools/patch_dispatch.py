@@ -3753,3 +3753,39 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_strip129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---------------------------------------------------------------------------
+# 12.9 : ouverture directe du Plan VFR et de la carte Plan de vol personnel
+# (écran d'attente dès le début au lieu d'afficher la page Plan de vol 3 secondes)
+BOOT129_TXT = {"fr": {"vfr": "Ouverture du Plan VFR…", "perso": "Ouverture de la carte…"},
+               "en": {"vfr": "Opening the VFR plan…", "perso": "Opening the map…"}}
+BOOT129_HEAD = """<style id="hangar-129-boot">
+html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#0b1220;color:#7dd3fc;font:600 15px/1.4 system-ui,sans-serif;letter-spacing:.06em}
+</style><script id="hangar-129-boot-js">
+(function () { var T = __TXT__, h = location.hash.replace('#', '');
+  if (!T[h]) return; var d = document.documentElement; d.classList.add('hgBoot');
+  document.addEventListener('DOMContentLoaded', function () { document.body.setAttribute('data-hgboot', T[h]); });
+  window.hgBootDone = function () { d.classList.remove('hgBoot'); };
+  setTimeout(window.hgBootDone, 15000);   /* sécurité : jamais bloqué */
+})();
+</script>"""
+BOOT129_OLD = "if (/^(perso|vfr|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h); }, 1200);"
+BOOT129_NEW = ("if (/^(perso|vfr|rglobal|rva|rvradar)$/.test(h)) setTimeout(function () { window.hgShow(h);"
+               " var w = 0; (function done() { var ok = h === 'vfr' ? !!document.querySelector('#hgVfr.on') : h === 'perso' ? persoOpen() : true;"
+               " if (ok || ++w > 75) { setTimeout(function () { if (window.hgBootDone) window.hgBootDone(); }, 150); return; } setTimeout(done, 200); })(); }, 50);")
+
+
+def patch_boot129(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-129-boot-js" in s:
+        return
+    s = s.replace("</head>", BOOT129_HEAD.replace("__TXT__", json.dumps(BOOT129_TXT[lang], ensure_ascii=False)) + "</head>", 1)
+    s = s.replace(BOOT129_OLD, BOOT129_NEW, 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_boot129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
