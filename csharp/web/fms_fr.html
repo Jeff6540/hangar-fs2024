@@ -24,6 +24,9 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 .row.on{background:#2a1430;border-left-color:var(--act);color:var(--actt)}
 .row .via{display:block;font-size:10.5px;color:var(--mut)}
 .row.tod{color:var(--warn);cursor:default;background:#1d1a12}
+.altc{cursor:text;border-bottom:1px dashed transparent} .altc:hover{border-bottom-color:var(--skyt)} .altc i{font-style:normal;color:#5d6670}
+#cruise{cursor:text;padding:2px 6px;border:1px dashed #3a3d44;border-radius:6px} #cruise:hover{border-color:var(--skyt)}
+.ed{width:74px;text-align:center;font:inherit;color:var(--skyt);background:#11161c;border:1px solid var(--skyt);border-radius:5px;padding:1px}
 .row.tod .live{color:var(--warn)}
 .empty{padding:28px 16px;text-align:center;color:var(--mut);line-height:1.6}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -152,6 +155,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     by: ['dernier changement : {s}', 'last change: {s}'],
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
+    setCruise: ['Croisière ?', 'Cruise?'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
     todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'],
     apRelay: ['Relais arrêté', 'Relay stopped'], apNoSim: ['MSFS non connecté', 'MSFS not connected'], apWait: ['En attente de l’avion…', 'Waiting for the aircraft…'],
@@ -203,7 +207,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     if (p.approach) bits.push(esc(p.approach));
     if (p.dest && p.dest.rwy) bits.push(esc(d) + ' ' + esc(p.dest.rwy));
     $('info').innerHTML = bits.join(' · ');
-    $('cruise').textContent = p.cruiseAlt ? 'FL' + String(Math.round(p.cruiseAlt / 100)).padStart(3, '0') : '';
+    if (!$('cruise').querySelector('input')) $('cruise').textContent = p.cruiseAlt ? (p.cruiseAlt >= 10000 ? 'FL' + String(Math.round(p.cruiseAlt / 100)).padStart(3, '0') : Math.round(p.cruiseAlt) + ' ft') : t('setCruise');
 
     if (!route.length) { $('list').innerHTML = '<div class="empty">' + t('empty') + '</div>'; }
     else {
@@ -218,11 +222,12 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         var prev = route[i - 1], dd = '', tk = '';
         if (prev && ok(prev) && ok(w)) { var nm = distNm(prev, w); total += nm; dd = nm.toFixed(1); tk = String(Math.round(bearing(prev, w)) || 360).padStart(3, '0') + '°'; }
         var cls = i === act ? ' on' : i < act ? ' done' : '';
-        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + (w.alt ? Math.round(w.alt) : '') + '</span></div>';
+        h += '<div class="row mono' + cls + '" data-i="' + i + '"><span>' + (i === act ? '▶ ' : '') + esc(w.ident) + (w.via ? '<span class="via">' + esc(w.via) + '</span>' : '') + '</span><span>' + tk + '</span><span>' + dd + '</span><span>' + '<span class="altc" data-alt="' + i + '">' + (w.alt ? Math.round(w.alt) : (i > 0 && i < route.length - 1 ? '<i>+</i>' : '')) + '</span></span></div>';
       });
       $('list').innerHTML = h;
       todLive();
       $('info').innerHTML += (bits.length ? ' · ' : '') + t('total', { n: route.length, d: Math.round(total) });
+      if (!p.cruiseAlt && !route.some(function (w, j) { return j > 0 && j < route.length - 1 && w.alt; }) && !$('msg').textContent) msg(t('altHint'));
       var on = $('list').querySelector('.row.on'); if (on && !render.scrolled) { on.scrollIntoView({ block: 'center' }); render.scrolled = true; }
     }
     var when = st && st.updated ? new Date(st.updated).toLocaleTimeString(LANG === 'en' ? 'en-GB' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
@@ -339,7 +344,31 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
 
   // ---- Direct vers : on touche un point de la liste
   $('bDirect').onclick = function () { directMode = !directMode; msg(directMode ? t('pickDirect') : ''); };
+  function editNum(el, cur, done) {   // petite case à taper : Entrée valide, Échap annule
+    el.innerHTML = '<input class="ed" type="number" step="100" value="' + (cur || '') + '">';
+    var i = el.querySelector('input'); i.focus(); i.select();
+    var fin = function (ok) { if (!el.contains(i)) return; var v = parseFloat(i.value); el.innerHTML = ''; done(ok, isFinite(v) ? v : 0); };
+    i.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') fin(true); if (ev.key === 'Escape') fin(false); });
+    i.addEventListener('blur', function () { fin(true); });
+    i.addEventListener('click', function (ev) { ev.stopPropagation(); });
+  }
+  $('cruise').onclick = function () {
+    var el = this; if (el.querySelector('input')) return;
+    var p = (FmsStore.state && FmsStore.state.plan) || {};
+    editNum(el, p.cruiseAlt, function (ok, v) { if (ok && v >= 0 && v <= 60000) FmsStore.set({ plan: { cruiseAlt: Math.round(v / 100) * 100 } }, 'fms'); else render(FmsStore.state); });
+  };
   $('list').addEventListener('click', function (e) {
+    var ac = e.target.closest('.altc');
+    if (ac && !directMode) {
+      e.stopPropagation(); if (ac.querySelector('input')) return;
+      var k = +ac.dataset.alt, p = (FmsStore.state && FmsStore.state.plan) || {}, rt = (p.route || []).slice();
+      if (!rt[k] || k === 0 || k === rt.length - 1) return;
+      editNum(ac, rt[k].alt, function (ok, v) {
+        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, { alt: Math.round(v / 100) * 100 }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
+        else render(FmsStore.state);
+      });
+      return;
+    }
     var r = e.target.closest('.row[data-i]'); if (!r || !directMode) return;
     directMode = false; msg('');
     FmsStore.set({ plan: { activeLeg: +r.dataset.i } }, 'fms');

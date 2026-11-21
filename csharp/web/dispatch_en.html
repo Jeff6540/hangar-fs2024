@@ -8265,6 +8265,8 @@ ${waypoint(arr)}
       var ap0 = route[0], st = window.FmsStore.state || {}, old = (st.plan || {});
       // même départ et même arrivée : on garde l'altitude de croisière déjà connue du FMS
       var keepAlt = old.origin && old.dest && old.origin.icao === ap0.ident && old.dest.icao === dest.ident ? old.cruiseAlt || 0 : 0;
+      var oldAlt = {}; (old.route || []).forEach(function (w) { if (w.alt) oldAlt[w.ident] = w.alt; });   // altitudes réglées dans le FMS : gardées
+      route.forEach(function (w, i) { if (i > 0 && i < route.length - 1 && oldAlt[w.ident]) w.alt = oldAlt[w.ident]; });
       window.FmsStore.set({ plan: {
         origin: { icao: ap0.ident, rwy: '' }, dest: { icao: dest.ident, rwy: ap ? ap.r || '' : '' },
         cruiseAlt: keepAlt, route: route, departure: sid, arrival: star, approach: apName, ils: ils, activeLeg: 1
