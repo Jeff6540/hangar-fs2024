@@ -65,10 +65,21 @@ JS = r"""<script id="hangar-fms-track">
     var p = (st && st.plan) || {}, r = (p.route || []).filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); });
     if (r.length < 2) return;
     var act = actOf(p, r); lastAct = act;
+    /* mêmes couleurs que le plan SimBrief : départ (SID) vert, route magenta, arrivée (STAR) et approche orange */
+    var COL = { sid: '#4ADE80', route: '#FF4DDB', star: '#FB923C' }, kinds = [], seenRoute = false;
+    for (var k = 1; k < r.length; k++) {
+      var w = r[k], kd = 'route';
+      if (w.ap) kd = 'star';
+      else if (w.via && p.departure && w.via === p.departure && !seenRoute) kd = 'sid';
+      else if (w.via && p.arrival && w.via === p.arrival) kd = 'star';
+      else if (k === r.length - 1 && w.type === 'apt' && kinds.length && kinds[kinds.length - 1] === 'star') kd = 'star';
+      if (kd === 'route') seenRoute = true;
+      kinds.push(kd);
+    }
     for (var i = 1; i < r.length; i++) {
       var done = i < act, on = i === act;
       L.polyline([[r[i - 1].lat, r[i - 1].lon], [r[i].lat, r[i].lon]], { color: '#1e1b4b', weight: 7, opacity: .4, interactive: false }).addTo(layer);
-      L.polyline([[r[i - 1].lat, r[i - 1].lon], [r[i].lat, r[i].lon]], { color: done ? '#9ca3af' : '#e05bd8', weight: on ? 5 : 3, opacity: done ? .6 : 1, dashArray: r[i].ap ? '8 6' : null, interactive: false }).addTo(layer);
+      L.polyline([[r[i - 1].lat, r[i - 1].lon], [r[i].lat, r[i].lon]], { color: done ? '#9ca3af' : COL[kinds[i - 1]], weight: on ? 5 : 3, opacity: done ? .6 : 1, dashArray: r[i].ap ? '8 6' : null, interactive: false }).addTo(layer);
     }
     r.forEach(function (w, i) {
       // altitude : « * » = valeur par défaut du FMS, A = à ou au-dessus, B = à ou au-dessous (données MSFS)
