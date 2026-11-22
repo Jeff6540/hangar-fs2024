@@ -1,6 +1,6 @@
 {
-  "version": "12.8",
+  "version": "12.9",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Fenêtre Quoi de neuf, moment du vol (matin, journée, crépuscule, nuit) en UTC, jour/nuit en direct sur la carte, destinations adaptées à l'avion, boutons Discord",
-  "notes_en": "What's new window, time of flight (morning, day, dusk, night) in UTC, live day/night on the map, destinations suited to the aircraft, Discord buttons"
+  "notes_fr": "Page Plan de vol plus claire, nouvelle page Plan VFR, fenêtre FMS (pilote auto, MCP PMDG / iFly / A220), temps unifiés, frise jour / nuit, import SimBrief automatique dans le suivi",
+  "notes_en": "Clearer Flight plan page, new VFR plan page, FMS window (autopilot, PMDG / iFly / A220 MCP), unified times, day / night strip, automatic SimBrief import in tracking"
 }
