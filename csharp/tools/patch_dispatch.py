@@ -2803,7 +2803,7 @@ VFR_TXT = {
            "tip": "Clic : ajouter un point · glisser : déplacer · clic droit sur un aéroport, un ILS ou un point : sa fiche (SID, STAR, approches)",
            "help": "Un point posé sur une balise prend son nom (ex. TOU). Un point libre s'appelle WP1, WP2… Le premier et le dernier point posés sur un aéroport deviennent le départ et l'arrivée. Les caps sont magnétiques (déclinaison de la balise la plus proche).",
            "load": "Chargement des balises et des pistes…", "loaded": "balises", "needApt": "Pour exporter, le premier et le dernier point doivent être des aéroports (clique sur un aéroport).",
-           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : fiche", "del": "Retirer", "pt": "POINT",
+           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : fiche", "del": "Retirer", "mvUp": "Monter ce point (flèche haut)", "mvDn": "Descendre ce point (flèche bas)", "pt": "POINT",
            "procs": "PROCÉDURES", "sid": "Départ (SID)", "star": "Arrivée (STAR)", "appr2": "Approche", "none": "aucune", "cardOf": "Fiche",
            "kinds": {"wp": "point libre", "apt": "aéroport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "point RNAV", "ils": "ILS"},
            "rmPt": "Retirer de la route", "addRoute": "Ajouter à la route", "isDep": "Départ de ta route", "isArr": "Arrivée de ta route", "inRoute": "Dans ta route", "notIn": "Pas dans ta route",
@@ -2822,7 +2822,7 @@ VFR_TXT = {
            "tip": "Click: add a point · drag: move · right-click an airport, an ILS or a point: its card (SID, STAR, approaches)",
            "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).",
            "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).",
-           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "pt": "POINT",
+           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "mvUp": "Move this point up (up arrow)", "mvDn": "Move this point down (down arrow)", "pt": "POINT",
            "procs": "PROCEDURES", "sid": "Departure (SID)", "star": "Arrival (STAR)", "appr2": "Approach", "none": "none", "cardOf": "Card",
            "kinds": {"wp": "free point", "apt": "airport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "RNAV point", "ils": "ILS"},
            "rmPt": "Remove from route", "addRoute": "Add to route", "isDep": "Departure of your route", "isArr": "Arrival of your route", "inRoute": "In your route", "notIn": "Not in your route",
@@ -2879,6 +2879,10 @@ VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr td b{color:#f1f5f9}
 #hgVfr button.hgv-del{border:1px solid #3b1d2a;background:transparent;color:#f87171;border-radius:6px;width:22px;height:22px;line-height:18px;cursor:pointer;font-size:11px;padding:0}
 #hgVfr button.hgv-del:hover{background:#f87171;color:#1a0505}
+#hgVfr tr[data-pi]{cursor:pointer}
+#hgVfr tr.hgv-sel td{background:#1e3a5f}
+#hgVfr button.hgv-mv{border:1px solid #1e3a5f;background:#0c1729;color:#7dd3fc;border-radius:6px;width:22px;height:22px;line-height:18px;cursor:pointer;font-size:11px;padding:0;margin-right:3px}
+#hgVfr button.hgv-mv:hover{background:#38bdf8;color:#04121f}
 #hgVfr .tot{display:flex;justify-content:space-between;align-items:center;background:#0e1f36;border:1px solid #1e3a5f;border-radius:10px;padding:9px 12px;font-weight:700}
 #hgVfr .tot b{color:#38bdf8;font:800 18px Consolas,monospace}
 #hgVfr .tot + .tot{margin-top:6px}
@@ -3364,6 +3368,18 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     });
     side();
   }
+  /* déplacer le point sélectionné d'un rang (seul l'ordre change ; les autres points restent tels quels) */
+  var selPt = -1;
+  function movePt(dir) {
+    var i = selPt, j = i + dir; if (i < 0 || i >= pts.length || j < 0 || j >= pts.length) return;
+    var t = pts[i]; pts[i] = pts[j]; pts[j] = t; selPt = j; save(); drawRoute(); side();
+  }
+  document.addEventListener('keydown', function (e) {
+    var box = document.getElementById('hgVfr'); if (!box || !box.classList.contains('on') || selPt < 0) return;
+    if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); movePt(e.key === 'ArrowUp' ? -1 : 1); }
+    else if (e.key === 'Escape' && selPt >= 0) { selPt = -1; side(); }
+  });
   function side() {
     /* une ligne par point : cap et distance de la branche qui y mène, ✕ pour le retirer */
     var tb = document.getElementById('hgVfrLegs'), tot = 0, h = '';
@@ -3372,8 +3388,8 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       var a = i ? F[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
       var isAp = p.kind in KC, pi = isAp ? -1 : ui++;
       var c = isAp ? KC[p.kind] : (pi === 0 ? '#22d3ee' : (pi === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9'));
-      h += '<tr' + (isAp ? ' style="color:' + KC[p.kind] + '"' : '') + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') + '</td><td>' + (a ? fmtT(d / ktOf() * 60) : '') +
-        '</td><td style="text-align:right">' + (isAp ? '' : '<button type="button" class="hgv-del" data-i="' + pi + '" title="' + T.del + '">✕</button>') + '</td></tr>';
+      h += '<tr' + (isAp ? ' style="color:' + KC[p.kind] + '"' : ' data-pi="' + pi + '"' + (pi === selPt ? ' class="hgv-sel"' : '')) + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') + '</td><td>' + (a ? fmtT(d / ktOf() * 60) : '') +
+        '</td><td style="text-align:right">' + (isAp ? '' : (pi === selPt ? '<button type="button" class="hgv-mv" data-mv="-1" title="' + T.mvUp + '">▲</button><button type="button" class="hgv-mv" data-mv="1" title="' + T.mvDn + '">▼</button>' : '') + '<button type="button" class="hgv-del" data-i="' + pi + '" title="' + T.del + '">✕</button>') + '</td></tr>';
     });
     if (tb) tb.innerHTML = h || '<tr><td colspan="6" style="color:#64748b">' + T.empty + '</td></tr>';
     var tt = document.getElementById('hgVfrTot'); if (tt) tt.textContent = Math.round(tot) + ' NM';
@@ -3532,11 +3548,15 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
     d.addEventListener('click', function (e) {
+      /* clic sur un point de la liste : il est sélectionné, puis ▲ ▼ (ou flèches du clavier) pour le déplacer */
+      var tr = e.target.closest('tr[data-pi]');
+      if (tr && !e.target.closest('button')) { var ni = +tr.dataset.pi; selPt = selPt === ni ? -1 : ni; side(); return; }
       var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.mv) { movePt(+b.dataset.mv); return; }
       if (b.closest('#hgVfrCard')) return;
       if (b.dataset.load != null) { myOpen(b.dataset.load); return; }
       if (b.dataset.delr != null) { myDel(b.dataset.delr); return; }
-      if (b.dataset.i != null) { pts.splice(+b.dataset.i, 1); save(); drawRoute(); return; }
+      if (b.dataset.i != null) { pts.splice(+b.dataset.i, 1); selPt = -1; save(); drawRoute(); return; }
       if (b.dataset.card) { openCard({ type: 'apt', icao: b.dataset.card }); return; }
       if (b.dataset.x) { if (b.dataset.x === 'sid') pr.dep.sid = -1; else if (b.dataset.x === 'star') pr.arr.star = -1; else pr.arr.ap = -1; save(); drawRoute(); return; }
       if (b.dataset.k) { show[b.dataset.k] = !show[b.dataset.k]; b.classList.toggle('on', show[b.dataset.k]); save(); draw(); return; }
