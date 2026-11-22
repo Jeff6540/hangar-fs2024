@@ -186,6 +186,14 @@ namespace HangarFS2024
         // La fenêtre « Load from this PC » de l'EFB retient le dernier dossier : un double-clic suffit ensuite.
         public static string EfbDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Hangar FS 2024"); } }
         public static string EfbFile { get { return Path.Combine(EfbDir, "Plan FMS.pln"); } }
+        // dossier où s'ouvre la fenêtre « Load from this PC » de l'EFB : le dossier de MSFS 2024 lui-même
+        // (version Microsoft Store / Xbox, ou version Steam) : le fichier y est aussi déposé, pour l'avoir sous les yeux
+        static IEnumerable<string> SimDirs()
+        {
+            string la = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ra = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            foreach (var d in new[] { Path.Combine(la, "Packages", "Microsoft.Limitless_8wekyb3d8bbwe", "LocalState"), Path.Combine(ra, "Microsoft Flight Simulator 2024") })
+                if (Directory.Exists(d)) yield return d;
+        }
         static readonly object EfbGate = new object();
         static string efbLast;
         public static void WriteEfb(JObject state)
@@ -201,6 +209,7 @@ namespace HangarFS2024
                     if (pln == efbLast) return;
                     Directory.CreateDirectory(EfbDir);
                     File.WriteAllText(EfbFile, pln, new UTF8Encoding(false));
+                    foreach (var d in SimDirs()) { try { File.WriteAllText(Path.Combine(d, "Plan FMS.pln"), pln, new UTF8Encoding(false)); } catch (Exception) { } }
                     efbLast = pln;
                 }
                 WriteGtnAuto(plan, pln, dep, arr);
