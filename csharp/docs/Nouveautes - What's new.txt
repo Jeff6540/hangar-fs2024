@@ -32,6 +32,7 @@ Version 12.9 — page Plan de vol plus claire
 - Plan VFR : VOR / DME en hexagone blanc bordé de bleu (différents des aéroports), NDB visibles (pris dans l'import MSFS), petits aérodromes visibles sans zoomer très serré. SimBrief reçoit les VOR et NDB par leurs coordonnées (plus de balise homonyme à l'autre bout du monde, ex. TAN pris pour Tanger) ; les points officiels à 5 lettres (ex. OSVEG) partent par leur nom, plus précis.
 - Carte de suivi : au sol (avant le décollage et après l'atterrissage), zoom automatique sur l'aéroport et suivi de ton avion pendant le roulage ; retour au zoom d'avant après le décollage.
 - Carte de suivi : ton dernier plan SimBrief est importé automatiquement (à l'ouverture, puis chaque minute dès qu'un nouveau plan est généré) ; le FMS le reçoit aussi.
+- Nouvelle fenêtre FMS (bouton FMS du menu, encore en construction) : ton plan de vol gardé d'une page à l'autre, pilote auto de l'appli (LNAV, VNAV / VPATH avec T/D, Direct vers, ILS auto), panneaux MCP / FCP du PMDG 737, de l'iFly 737 MAX et de l'A220, COM auto, schémas SID / STAR / approche et plan envoyé aux GPS (GTN PMS50 / TDS, .PLN).
 - Correction : en Aléatoire / durée, aucune destination n'était trouvée pour les avions légers, turbopropulseurs et jets d'affaires (bug apparu en 12.8).
 - Import des données MSFS plus sûr, et recherche de la SimConnect.dll faite une seule fois par lancement.
 
@@ -153,6 +154,7 @@ Version 12.9 — clearer Flight plan page
 - VFR plan: VOR / DMEs as white hexagons with a blue border (different from airports), NDBs visible (taken from the MSFS import), small airfields visible without zooming in very close. SimBrief gets VORs and NDBs by their coordinates (no more same-name beacon on the other side of the world, e.g. TAN taken for Tangier); official 5-letter points (e.g. OSVEG) are sent by their name, more precise.
 - Tracking map: on the ground (before takeoff and after landing), automatic zoom on the airport and your aircraft followed while taxiing; back to the previous zoom after takeoff.
 - Tracking map: your latest SimBrief plan is imported automatically (when opening, then every minute as soon as a new plan is generated); the FMS gets it too.
+- New FMS window (FMS menu button, still under construction): your flight plan kept from page to page, the app's autopilot (LNAV, VNAV / VPATH with T/D, Direct to, auto ILS), MCP / FCP panels of the PMDG 737, iFly 737 MAX and A220, auto COM, SID / STAR / approach diagrams and plan sent to the GPS (GTN PMS50 / TDS, .PLN).
 - Fix: in Random / duration mode, no destination was found for light aircraft, turboprops and business jets (bug introduced in 12.8).
 - Safer MSFS data import, and the SimConnect.dll search runs only once per launch.
 
