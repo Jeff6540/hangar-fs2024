@@ -3977,3 +3977,50 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_gzoom129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---------------------------------------------------------------------------
+# 12.9 : carte de suivi — le dernier plan SimBrief est importé tout seul (à l'ouverture de la carte, puis toutes les minutes)
+AUTOSB129_JS = """<script id="hangar-129-autosb-js">
+(function () {
+  /* dès qu'un nouveau plan est généré sur SimBrief, il remplace celui de la carte de suivi (et le FMS le reçoit, comme à l'import à la main) */
+  var busy = false, last = 0, wasOpen = false;
+  function idOf(d) { var p = (d && d.params) || {}; return String(p.request_id || p.time_generated || ''); }
+  function user() {
+    var u = ''; try { u = localStorage.getItem('avd_simbrief_user') || ''; } catch (e) {}
+    if (!u) { var i = document.getElementById('sbUserInput'); u = i ? i.value.trim() : ''; }
+    return u;
+  }
+  setInterval(function () {
+    var modal = document.getElementById('trafficMapModal'), open = !!(modal && !modal.classList.contains('hidden'));
+    var justOpened = open && !wasOpen; wasOpen = open;
+    if (!open || busy || typeof window.drawSimbriefPlan !== 'function') return;
+    if (!justOpened && Date.now() - last < 60000) return;
+    var u = user(); if (!u) return;
+    busy = true; last = Date.now();
+    var q = /^\\d+$/.test(u) ? 'userid=' + encodeURIComponent(u) : 'username=' + encodeURIComponent(u);
+    fetch('http://localhost:8765/simbrief?' + q, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.navlog || !d.origin || !d.destination) return;
+      var id = idOf(d); if (!id || id === idOf(window.alPlanFull)) return;   /* même plan : rien à faire */
+      window.drawSimbriefPlan(d);
+      var o = String(d.origin.icao_code || '').toUpperCase(), a = String(d.destination.icao_code || '').toUpperCase();
+      try { if (typeof setSbStatus === 'function') setSbStatus(__TXT__ + ' (' + o + ' → ' + a + ')', false); } catch (e) {}
+    }).catch(function () {}).then(function () { busy = false; });
+  }, 5000);
+})();
+</script>"""
+AUTOSB129_TXT = {"fr": "SimBrief : nouveau plan importé automatiquement", "en": "SimBrief: new plan imported automatically"}
+
+
+def patch_autosb129(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-129-autosb-js" in s:
+        return
+    s = s.replace("</body>", AUTOSB129_JS.replace("__TXT__", json.dumps(AUTOSB129_TXT[lang], ensure_ascii=False)) + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_autosb129(os.path.join(_web, "dispatch_%s.html" % _l), _l)

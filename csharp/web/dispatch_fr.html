@@ -8715,5 +8715,32 @@ ${waypoint(arr)}
     wasGround = g;
   }, 1000);
 })();
+</script><script id="hangar-129-autosb-js">
+(function () {
+  /* dès qu'un nouveau plan est généré sur SimBrief, il remplace celui de la carte de suivi (et le FMS le reçoit, comme à l'import à la main) */
+  var busy = false, last = 0, wasOpen = false;
+  function idOf(d) { var p = (d && d.params) || {}; return String(p.request_id || p.time_generated || ''); }
+  function user() {
+    var u = ''; try { u = localStorage.getItem('avd_simbrief_user') || ''; } catch (e) {}
+    if (!u) { var i = document.getElementById('sbUserInput'); u = i ? i.value.trim() : ''; }
+    return u;
+  }
+  setInterval(function () {
+    var modal = document.getElementById('trafficMapModal'), open = !!(modal && !modal.classList.contains('hidden'));
+    var justOpened = open && !wasOpen; wasOpen = open;
+    if (!open || busy || typeof window.drawSimbriefPlan !== 'function') return;
+    if (!justOpened && Date.now() - last < 60000) return;
+    var u = user(); if (!u) return;
+    busy = true; last = Date.now();
+    var q = /^\d+$/.test(u) ? 'userid=' + encodeURIComponent(u) : 'username=' + encodeURIComponent(u);
+    fetch('http://localhost:8765/simbrief?' + q, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.navlog || !d.origin || !d.destination) return;
+      var id = idOf(d); if (!id || id === idOf(window.alPlanFull)) return;   /* même plan : rien à faire */
+      window.drawSimbriefPlan(d);
+      var o = String(d.origin.icao_code || '').toUpperCase(), a = String(d.destination.icao_code || '').toUpperCase();
+      try { if (typeof setSbStatus === 'function') setSbStatus("SimBrief : nouveau plan importé automatiquement" + ' (' + o + ' → ' + a + ')', false); } catch (e) {}
+    }).catch(function () {}).then(function () { busy = false; });
+  }, 5000);
+})();
 </script></body>
 </html>

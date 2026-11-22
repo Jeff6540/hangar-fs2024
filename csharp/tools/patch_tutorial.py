@@ -459,6 +459,10 @@ R["en"] += [("so it always lines up with the route</td></tr>", "so it always lin
 R["fr"] += [("marqué d'un « * » : touche l'altitude pour la corriger selon la carte.", "marqué d'un « * » : touche l'altitude pour la corriger selon la carte (les points « * » juste avant prennent la même altitude).", "les points « * » juste avant prennent la même altitude")]
 R["en"] += [("marked with a “*”: tap the altitude to correct it from the chart.", "marked with a “*”: tap the altitude to correct it from the chart (the “*” points just before take the same altitude).", "the “*” points just before take the same altitude")]
 
+
+R["fr"] += [("le groupe <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan)", "le groupe <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan ; ton dernier plan SimBrief est aussi importé tout seul à l'ouverture de la carte, puis chaque minute dès que tu en génères un nouveau, et le FMS le reçoit)", "importé tout seul à l'ouverture de la carte")]
+R["en"] += [("the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center on plan)", "the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center on plan; your latest SimBrief plan is also imported by itself when the map opens, then every minute as soon as you generate a new one, and the FMS gets it)", "imported by itself when the map opens")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():
