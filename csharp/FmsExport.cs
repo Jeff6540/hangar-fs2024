@@ -173,7 +173,7 @@ namespace HangarFS2024
             {
                 Directory.CreateDirectory(Dir);
                 string full = string.IsNullOrEmpty(file) ? "" : Path.GetFullPath(file);
-                if (full != "" && File.Exists(full) && full.StartsWith(Path.GetFullPath(Dir), StringComparison.OrdinalIgnoreCase))
+                if (full != "" && File.Exists(full) && (full.StartsWith(Path.GetFullPath(Dir), StringComparison.OrdinalIgnoreCase) || string.Equals(full, Path.GetFullPath(EfbFile), StringComparison.OrdinalIgnoreCase)))
                     System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + full + "\"");
                 else System.Diagnostics.Process.Start("explorer.exe", "\"" + Dir + "\"");
                 return true;
@@ -182,6 +182,31 @@ namespace HangarFS2024
         }
 
         /// <summary>Envoie le plan du FMS : renvoie ce qui a été fait, cible par cible.</summary>
+        // ---- EFB de MSFS 2024 : le même fichier, au même endroit, réécrit à chaque changement de plan.
+        // La fenêtre « Load from this PC » de l'EFB retient le dernier dossier : un double-clic suffit ensuite.
+        public static string EfbDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Hangar FS 2024"); } }
+        public static string EfbFile { get { return Path.Combine(EfbDir, "Plan FMS.pln"); } }
+        static readonly object EfbGate = new object();
+        static string efbLast;
+        public static void WriteEfb(JObject state)
+        {
+            try
+            {
+                var plan = state["plan"] as JObject;
+                var route = plan != null ? plan["route"] as JArray : null;
+                if (route == null || route.Count < 2) return;
+                string dep, arr, pln = Pln(plan, out dep, out arr);
+                lock (EfbGate)
+                {
+                    if (pln == efbLast) return;
+                    Directory.CreateDirectory(EfbDir);
+                    File.WriteAllText(EfbFile, pln, new UTF8Encoding(false));
+                    efbLast = pln;
+                }
+            }
+            catch (Exception) { }
+        }
+
         public static JObject Run(string community, string library, bool simConnected)
         {
             var res = new JObject { ["ok"] = false, ["targets"] = new JArray() };
@@ -202,6 +227,8 @@ namespace HangarFS2024
                 if (simConnected) { PlanLoads.Enqueue(f.Substring(0, f.Length - 4)); targets.Add(new JObject { ["id"] = "msfs", ["ok"] = true }); }
                 else targets.Add(new JObject { ["id"] = "msfs", ["ok"] = false, ["why"] = "nosim" });
                 res["file"] = f;
+                WriteEfb(FlightStore.Get());
+                if (File.Exists(EfbFile)) res["efb"] = EfbFile;
             }
             catch (Exception e) { targets.Add(new JObject { ["id"] = "msfs", ["ok"] = false, ["why"] = e.Message }); }
 

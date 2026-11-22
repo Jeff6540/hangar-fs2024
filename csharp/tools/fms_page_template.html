@@ -162,7 +162,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     simbrief: ['Charger SimBrief', 'Load SimBrief'],
     send: ['Envoyer à l’avion', 'Send to aircraft'], sendAt: ['Envoi du plan à l’avion', 'Sending the plan to the aircraft'], sending: ['Envoi…', 'Sending…'],
     sendErr: ['L’appli n’a pas répondu.', 'The app did not answer.'],
-    sdEfb: ['<b>MSFS 2024 (G1000, G3000… des avions de base)</b> : ces GPS ne prennent un plan que depuis la tablette. Fichier prêt : <b>{f}</b>.<br>Sur la tablette : Route › Charger depuis le PC › ce fichier › Envoyer à l’avionique.', '<b>MSFS 2024 (G1000, G3000… default aircraft)</b>: these GPS only take a plan from the tablet. File ready: <b>{f}</b>.<br>On the tablet: Route › Load from PC › this file › Send to avionics.'],
+    sdEfb: ['<b>MSFS 2024 (G1000, G3000… des avions de base)</b> : ces GPS ne prennent un plan que depuis la tablette (EFB). Le FMS tient toujours à jour le même fichier : <b>Documents › Hangar FS 2024 › Plan FMS.pln</b>.<br>Sur la tablette : Route › Load / Save PLN File › Load from this PC › <b>Plan FMS.pln</b> › Send to avionics. La première fois, va jusqu’à ce dossier ; ensuite la fenêtre s’y ouvre directement : un double-clic suffit.', '<b>MSFS 2024 (G1000, G3000… default aircraft)</b>: these GPS only take a plan from the tablet (EFB). The FMS always keeps the same file up to date: <b>Documents › Hangar FS 2024 › Plan FMS.pln</b>.<br>On the tablet: Route › Load / Save PLN File › Load from this PC › <b>Plan FMS.pln</b> › Send to avionics. The first time, browse to this folder; after that the window opens right there: a double-click is enough.'],
     openDir: ['Ouvrir le dossier', 'Open the folder'],
     sdMsfs: ['<b>MSFS (G1000, G3000… des avions de base)</b> : plan chargé comme plan actif. Vérifie la page FPL de l’avion ; si rien n’apparaît, cet avion ne relit pas le plan en vol (essaie avant le roulage).', '<b>MSFS (G1000, G3000… default aircraft)</b>: plan loaded as the active plan. Check the aircraft FPL page; if nothing shows, this aircraft does not reread the plan in flight (try before taxi).'],
     sdNoSim: ['<b>MSFS</b> : pas envoyé, MSFS n’est pas connecté (lance le vol puis réessaie).', '<b>MSFS</b>: not sent, MSFS is not connected (start the flight then try again).'],
@@ -440,7 +440,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
         if (x.id === 'msfs') {
           var fn = (j.file || '').split(/[\\/]/).pop();
           L2.push(j.file ? t('sdEfb', { f: esc(fn) }) + '<br><button class="chip" data-a="dir" style="margin-top:6px">' + t('openDir') + '</button>' : t('sdFail', { t: 'MSFS', w: esc(x.why) }));
-          lastFile = j.file || '';
+          lastFile = j.efb || j.file || '';
         }
         else if (x.id === 'pms50') { gtn = true; L2.push(x.ok ? t('sdPms', { m: esc(x.model) }) : t('sdFail', { t: esc(x.model) + ' PMS50', w: esc(x.why) })); }
         else if (x.id === 'tds') { gtn = true; L2.push(x.ok ? t('sdTds', { f: esc(x.file) }) : t('sdFail', { t: 'GTN TDS', w: esc(x.why) })); }

@@ -88,7 +88,7 @@ JS = r"""<script src="/fms_store.js"></script><script id="hangar-fms-vfr-link">
       route.forEach(function (w, i) { if (i > 0 && i < route.length - 1 && oldAlt[w.ident]) w.alt = oldAlt[w.ident]; });
       window.FmsStore.set({ plan: {
         origin: { icao: ap0.ident, rwy: '' }, dest: { icao: dest.ident, rwy: ap ? ap.r || '' : '' },
-        cruiseAlt: keepAlt, route: route, departure: sid, arrival: star, approach: apName, ils: ils, activeLeg: 1
+        cruiseAlt: window.hgVfrAlt ? window.hgVfrAlt() : keepAlt, route: route, departure: sid, arrival: star, approach: apName, ils: ils, activeLeg: 1
       } }, 'vfr');
     });
   }

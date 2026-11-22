@@ -102,6 +102,8 @@ namespace HangarFS2024
 
         static void Announce(JObject copy)
         {
+            // fichier « Plan FMS.pln » toujours à jour pour l'EFB de MSFS 2024 (pas pour le simple avancement du point actif)
+            if (JsonStore.Str(copy["source"]) != "track") System.Threading.ThreadPool.QueueUserWorkItem(_ => FmsExport.WriteEfb(copy));
             var h = Changed;
             if (h == null) return;
             string json = new JObject { ["fmsState"] = copy }.ToString(Formatting.None);
