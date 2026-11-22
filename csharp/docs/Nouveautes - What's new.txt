@@ -1,9 +1,12 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.9
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.9.1
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
+
+Version 12.9.1 — correctif
+- Carte de suivi : le premier tronçon du plan SimBrief (de l'aéroport de départ au premier point) est maintenant tracé.
 
 Version 12.9 — page Plan de vol plus claire
 - La page Plan de vol passe en deux colonnes : le FMS à gauche, les destinations à droite.
@@ -126,6 +129,9 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.9.1 — fix
+- Tracking map: the first leg of the SimBrief plan (from the departure airport to the first waypoint) is now drawn.
 
 Version 12.9 — clearer Flight plan page
 - The Flight plan page now uses two columns: the FMS on the left, the destinations on the right.

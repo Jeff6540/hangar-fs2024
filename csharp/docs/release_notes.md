@@ -1,4 +1,6 @@
-## Hangar FS 2024 — Addon Manager 12.9
+## Hangar FS 2024 — Addon Manager 12.9.1
+
+🔧 **12.9.1** : sur la carte de suivi, le premier tronçon du plan SimBrief (de l'aéroport de départ au premier point) est maintenant tracé. / On the tracking map, the first leg of the SimBrief plan (from the departure airport to the first waypoint) is now drawn.
 
 🇫🇷 **Une page Plan de vol plus claire.**
 
