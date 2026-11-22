@@ -2803,7 +2803,7 @@ VFR_TXT = {
            "tip": "Clic : ajouter un point · glisser : déplacer · clic droit sur un aéroport, un ILS ou un point : sa fiche (SID, STAR, approches)",
            "help": "Un point posé sur une balise prend son nom (ex. TOU). Un point libre s'appelle WP1, WP2… Le premier et le dernier point posés sur un aéroport deviennent le départ et l'arrivée. Les caps sont magnétiques (déclinaison de la balise la plus proche).",
            "load": "Chargement des balises et des pistes…", "loaded": "balises", "needApt": "Pour exporter, le premier et le dernier point doivent être des aéroports (clique sur un aéroport).",
-           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : fiche", "del": "Retirer", "mvUp": "Monter ce point (flèche haut)", "mvDn": "Descendre ce point (flèche bas)", "pt": "POINT",
+           "few": "Pose au moins un départ et une arrivée.", "freq": "Fréquence", "rmv": "clic droit : fiche", "del": "Retirer", "mvUp": "Monter ce point (flèche haut)", "mvDn": "Descendre ce point (flèche bas)", "trBusy": "Relief sous le tracé : calcul…", "trNone": "Relief sous le tracé : données indisponibles (pas d'Internet ?).", "trBad": "RELIEF : altitude de croisière trop basse", "trTop": "sommet", "trMin": "minimum conseillé", "trApply": "Monter à %s", "trOk": "Relief : marge correcte — point le plus haut %t (marge %m), 1 NM de chaque côté du tracé.", "pt": "POINT",
            "procs": "PROCÉDURES", "sid": "Départ (SID)", "star": "Arrivée (STAR)", "appr2": "Approche", "none": "aucune", "cardOf": "Fiche",
            "kinds": {"wp": "point libre", "apt": "aéroport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "point RNAV", "ils": "ILS"},
            "rmPt": "Retirer de la route", "addRoute": "Ajouter à la route", "isDep": "Départ de ta route", "isArr": "Arrivée de ta route", "inRoute": "Dans ta route", "notIn": "Pas dans ta route",
@@ -2822,7 +2822,7 @@ VFR_TXT = {
            "tip": "Click: add a point · drag: move · right-click an airport, an ILS or a point: its card (SID, STAR, approaches)",
            "help": "A point set on a beacon takes its name (e.g. TOU). A free point is called WP1, WP2… The first and last points set on an airport become the departure and arrival. Headings are magnetic (variation of the nearest beacon).",
            "load": "Loading beacons and runways…", "loaded": "beacons", "needApt": "To export, the first and last points must be airports (click an airport).",
-           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "mvUp": "Move this point up (up arrow)", "mvDn": "Move this point down (down arrow)", "pt": "POINT",
+           "few": "Set at least a departure and an arrival.", "freq": "Frequency", "rmv": "right-click: info card", "del": "Remove", "mvUp": "Move this point up (up arrow)", "mvDn": "Move this point down (down arrow)", "trBusy": "Terrain under the route: computing…", "trNone": "Terrain under the route: data unavailable (no Internet?).", "trBad": "TERRAIN: cruise altitude too low", "trTop": "peak", "trMin": "advised minimum", "trApply": "Climb to %s", "trOk": "Terrain: margin OK — highest point %t (margin %m), 1 NM each side of the route.", "pt": "POINT",
            "procs": "PROCEDURES", "sid": "Departure (SID)", "star": "Arrival (STAR)", "appr2": "Approach", "none": "none", "cardOf": "Card",
            "kinds": {"wp": "free point", "apt": "airport", "vor": "VOR / DME", "ndb": "NDB", "wpt": "RNAV point", "ils": "ILS"},
            "rmPt": "Remove from route", "addRoute": "Add to route", "isDep": "Departure of your route", "isArr": "Arrival of your route", "inRoute": "In your route", "notIn": "Not in your route",
@@ -2880,6 +2880,12 @@ VFR_CSS = r"""<style id="hangar-129-vfr">
 #hgVfr button.hgv-del{border:1px solid #3b1d2a;background:transparent;color:#f87171;border-radius:6px;width:22px;height:22px;line-height:18px;cursor:pointer;font-size:11px;padding:0}
 #hgVfr button.hgv-del:hover{background:#f87171;color:#1a0505}
 #hgVfr tr[data-pi]{cursor:pointer}
+#hgVfr tr.hgv-bad td{color:#fca5a5;background:#3b1219}
+#hgVfr .hgv-terr{margin-top:8px;font-size:11.5px;line-height:1.45;color:#94a3b8;border:1px solid #1e3a5f;border-radius:9px;padding:7px 9px}
+#hgVfr .hgv-terr.ok{color:#86efac;border-color:#14532d}
+#hgVfr .hgv-terr.bad{color:#fecaca;border-color:#7f1d1d;background:#2a0d12}
+#hgVfr .hgv-terr.bad b{color:#f87171}
+.hgv-tt{background:#7f1d1d;color:#fff;border:0;font:700 11px Consolas,monospace}
 #hgVfr tr.hgv-sel td{background:#1e3a5f}
 #hgVfr button.hgv-mv{border:1px solid #1e3a5f;background:#0c1729;color:#7dd3fc;border-radius:6px;width:22px;height:22px;line-height:18px;cursor:pointer;font-size:11px;padding:0;margin-right:3px}
 #hgVfr button.hgv-mv:hover{background:#38bdf8;color:#04121f}
@@ -3368,6 +3374,95 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     });
     side();
   }
+  /* ---------- relief sous le tracé : altitude du terrain (tuiles « Terrarium », gratuites) comparée à l'altitude de croisière ---------- */
+  var TZ = 11, tileC = {}, terr = { sig: '', legs: [], busy: false, prof: [], total: 0 };
+  function tileXY(lat, lon) { var n = Math.pow(2, TZ), la = lat * R; return [(lon + 180) / 360 * n, (1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * n]; }
+  function getTile(x, y) {
+    var k = x + '/' + y; if (tileC[k]) return tileC[k];
+    return tileC[k] = new Promise(function (ok) {
+      var im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = function () { try { var c = document.createElement('canvas'); c.width = c.height = 256; var g = c.getContext('2d'); g.drawImage(im, 0, 0); ok(g.getImageData(0, 0, 256, 256).data); } catch (e) { ok(null); } };
+      im.onerror = function () { delete tileC[k]; ok(null); };
+      im.src = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/' + TZ + '/' + x + '/' + y + '.png';
+    });
+  }
+  function elevAt(lat, lon) {
+    var p = tileXY(lat, lon), tx = Math.floor(p[0]), ty = Math.floor(p[1]);
+    return getTile(tx, ty).then(function (d) { if (!d) return null; var px = Math.min(255, Math.floor((p[0] - tx) * 256)), py = Math.min(255, Math.floor((p[1] - ty) * 256)), i = (py * 256 + px) * 4; return Math.max(0, (d[i] * 256 + d[i + 1] + d[i + 2] / 256) - 32768) * 3.28084; });
+  }
+  function terrMargin(m) { return m >= 3000 ? 2000 : 1000; }   /* marge : 1000 ft, 2000 ft en montagne */
+  function terrainCheck() {
+    var F = full();
+    if (F.length < 2) { terr.sig = ''; terr.legs = []; terr.prof = []; terrUI(); return; }
+    var sig = F.map(function (p) { return (+p.lat).toFixed(4) + ',' + (+p.lon).toFixed(4); }).join(';');
+    if (sig === terr.sig) { terrUI(); return; }
+    terr.sig = sig; terr.busy = true; terrUI();
+    clearTimeout(terr.t);
+    terr.t = setTimeout(function () {
+      var jobs = [], legs = [], prof = [], cum = 0, last = F.length - 1;
+      for (var i = 1; i < F.length; i++) (function (i) {
+        var a = F[i - 1], b = F[i], d = dist(a, b), n = Math.max(2, Math.ceil(d / 0.3)), c = brg(a, b), L1 = { i: i, max: -1, lat: 0, lon: 0, a: a.name, b: b.name };
+        legs.push(L1);
+        for (var k = 0; k <= n; k++) (function (k) {
+          var along = d * k / n, p = dest(a, c, along), at = cum + along;
+          /* pas d'alerte à moins de 2 NM des aéroports de départ et d'arrivée (montée et descente) */
+          var nearEnd = (i === 1 && along < 2) || (i === last && d - along < 2);
+          [0, 1, -1].forEach(function (s) {   /* l'axe et 1 NM de chaque côté */
+            var q = s ? dest(p, (c + 90 * s + 360) % 360, 1) : p;
+            jobs.push(elevAt(q.lat, q.lon).then(function (e) {
+              if (e == null) return;
+              if (!s) prof.push([at, e]);
+              if (!nearEnd && e > L1.max) { L1.max = e; L1.lat = q.lat; L1.lon = q.lon; }
+            }));
+          });
+        })(k);
+        cum += d;
+      })(i);
+      Promise.all(jobs).then(function () {
+        if (terr.sig !== sig) return;
+        terr.busy = false; terr.legs = legs; terr.total = cum; terr.prof = prof.sort(function (x, y) { return x[0] - y[0]; }); terrUI();
+      });
+    }, 600);
+  }
+  function terrNeed() { var n = 0; terr.legs.forEach(function (l) { if (l.max >= 0) n = Math.max(n, l.max + terrMargin(l.max)); }); return n; }
+  /* altitude conseillée : au-dessus du minimum, sur un demi-niveau VFR (route magnétique 0-179° : impair + 500 ; 180-359° : pair + 500) */
+  function terrSuggest() {
+    var F = full(), need = terrNeed(); if (F.length < 2 || !need) return 0;
+    var a = F[0], b = F[F.length - 1], m = { lat: (a.lat + b.lat) / 2, lon: (a.lon + b.lon) / 2 }, tr = (brg(a, b) - magVar(m) + 720) % 360, east = tr < 180;
+    var z = Math.ceil((need - 500) / 1000) * 1000 + 500; if (Math.round((z - 500) / 1000) % 2 !== (east ? 1 : 0)) z += 1000;
+    return z;
+  }
+  function terrApply() { var z = terrSuggest(), el = document.getElementById('hgVfrAlt'); if (!z || !el) return; el.value = z; el.onchange(); }
+  function ftT(v) { return Math.round(v).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' ft'; }
+  function terrUI() {
+    var box = document.getElementById('hgVfrTerr'); if (!box) return;
+    if (!lyr.terr && map) lyr.terr = L.layerGroup().addTo(map);
+    if (lyr.terr) lyr.terr.clearLayers();
+    var rows = document.querySelectorAll('#hgVfrLegs tr[data-fi]'); rows.forEach(function (r) { r.classList.remove('hgv-bad'); });
+    if (!terr.sig) { box.innerHTML = ''; return; }
+    if (terr.busy) { box.innerHTML = '<div class="hgv-terr">' + T.trBusy + '</div>'; return; }
+    if (!terr.legs.length || !terr.prof.length) { box.innerHTML = '<div class="hgv-terr">' + T.trNone + '</div>'; return; }
+    var bad = terr.legs.filter(function (l) { return l.max >= 0 && altV < l.max + terrMargin(l.max); });
+    var top = terr.legs.reduce(function (m, l) { return l.max > m.max ? l : m; }, { max: -1 });
+    bad.forEach(function (l) {
+      rows.forEach(function (r) { if (+r.dataset.fi === l.i) r.classList.add('hgv-bad'); });
+      if (lyr.terr) {
+        var F = full(), A = F[l.i - 1], B = F[l.i];
+        if (A && B) L.polyline([[A.lat, A.lon], [B.lat, B.lon]], { color: '#ef4444', weight: 6, opacity: .85, interactive: false }).addTo(lyr.terr);
+        L.circleMarker([l.lat, l.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#ef4444', fillOpacity: 1 }).bindTooltip('▲ ' + ftT(l.max), { permanent: true, direction: 'top', className: 'hgv-tt' }).addTo(lyr.terr);
+      }
+    });
+    var h = bad.length
+      ? '<div class="hgv-terr bad"><b>⚠ ' + T.trBad + '</b>' + bad.slice(0, 4).map(function (l) { return '<div>' + esc(l.a) + ' → ' + esc(l.b) + ' : ' + T.trTop + ' ' + ftT(l.max) + ' · ' + T.trMin + ' ' + ftT(l.max + terrMargin(l.max)) + '</div>'; }).join('') +
+        '<button type="button" class="b" data-a="terrAlt" style="margin-top:6px">' + T.trApply.replace('%s', ftT(terrSuggest())) + '</button></div>'
+      : '<div class="hgv-terr ok">✓ ' + T.trOk.replace('%t', ftT(top.max)).replace('%m', ftT(altV - top.max)) + '</div>';
+    /* profil : relief sous l'axe et altitude de croisière */
+    var W = 300, H = 74, mx = Math.max(altV, top.max) + 800, X = function (d) { return (d / (terr.total || 1) * W).toFixed(1); }, Y = function (e) { return (H - e / mx * H).toFixed(1); };
+    var poly = '0,' + H + ' ' + terr.prof.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' ') + ' ' + W + ',' + H;
+    h += '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:74px;display:block;margin-top:6px;background:#0c1729;border:1px solid #1e3a5f;border-radius:8px"><polygon points="' + poly + '" fill="#7c5a3a" stroke="#c0965c" stroke-width="1"/>' +
+      '<line x1="0" x2="' + W + '" y1="' + Y(altV) + '" y2="' + Y(altV) + '" stroke="' + (bad.length ? '#ef4444' : '#d946ef') + '" stroke-width="2" stroke-dasharray="6 4"/><text x="4" y="' + (Y(altV) - 3) + '" fill="#e2e8f0" font-size="10" font-family="Consolas,monospace">' + ftT(altV) + '</text></svg>';
+    box.innerHTML = h;
+  }
   /* déplacer le point sélectionné d'un rang (seul l'ordre change ; les autres points restent tels quels) */
   var selPt = -1;
   function movePt(dir) {
@@ -3388,7 +3483,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       var a = i ? F[i - 1] : null, d = a ? dist(a, p) : 0; tot += d;
       var isAp = p.kind in KC, pi = isAp ? -1 : ui++;
       var c = isAp ? KC[p.kind] : (pi === 0 ? '#22d3ee' : (pi === pts.length - 1 && pts.length > 1 ? '#f59e0b' : '#e879f9'));
-      h += '<tr' + (isAp ? ' style="color:' + KC[p.kind] + '"' : ' data-pi="' + pi + '"' + (pi === selPt ? ' class="hgv-sel"' : '')) + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') + '</td><td>' + (a ? fmtT(d / ktOf() * 60) : '') +
+      h += '<tr data-fi="' + i + '"' + (isAp ? ' style="color:' + KC[p.kind] + '"' : ' data-pi="' + pi + '"' + (pi === selPt ? ' class="hgv-sel"' : '')) + '><td><span style="color:' + c + '">' + (isAp ? '◆' : '●') + '</span> ' + (isAp ? '' : pi + 1) + '</td><td>' + (p.kind === 'apt' ? '<b>' + esc(p.name) + '</b>' : esc(p.name)) + '</td><td>' + (a ? hdg(a, p) : '') + '</td><td>' + (a ? Math.round(d) + ' NM' : '') + '</td><td>' + (a ? fmtT(d / ktOf() * 60) : '') +
         '</td><td style="text-align:right">' + (isAp ? '' : (pi === selPt ? '<button type="button" class="hgv-mv" data-mv="-1" title="' + T.mvUp + '">▲</button><button type="button" class="hgv-mv" data-mv="1" title="' + T.mvDn + '">▼</button>' : '') + '<button type="button" class="hgv-del" data-i="' + pi + '" title="' + T.del + '">✕</button>') + '</td></tr>';
     });
     if (tb) tb.innerHTML = h || '<tr><td colspan="6" style="color:#64748b">' + T.empty + '</td></tr>';
@@ -3396,6 +3491,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     var tm = document.getElementById('hgVfrTime'); if (tm) tm.textContent = tot > 0 ? fmtT(vfrMin(tot)) : '—';
     var bk = document.getElementById('hgVfrBlk'); if (bk) bk.textContent = tot > 0 ? '≈ ' + fmtT(vfrMin(tot) + 10) + ' ' + T.gate : '';
     var kl = document.getElementById('hgVfrKtL'); if (kl) kl.textContent = '(' + acV + ' · ' + ktOf() + ' kt)';
+    terrainCheck();
     var sm = document.getElementById('hgVfrSum'), n = Math.max(0, pts.length - 1);
     if (sm) sm.textContent = pts.length > 1 ? (pts[0].name + ' → ' + pts[pts.length - 1].name + ' · ' + n + ' ' + (n > 1 ? T.legs : T.leg1) + ' · ' + Math.round(tot) + ' NM · ' + fmtT(vfrMin(tot))) : (pts.length ? pts[0].name : T.title);
   }
@@ -3543,7 +3639,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       '<span class="grow"></span><span class="gl">' + T.bg + '</span><select id="hgVfrBg">' + T.bgs.map(function (s, i) { return '<option value="' + i + '">' + s + '</option>'; }).join('') + '</select></div>' +
       '<div class="vm"><div id="hgVfrMap"><div id="hgVfrCard" style="display:none"></div><div class="tip">' + T.tip + '</div><div class="st" id="hgVfrSt"></div></div><div class="side"><div class="h">' + T.route + '</div>' +
       '<table><thead><tr><th>#</th><th>' + T.pt + '</th><th>' + T.hdg + '</th><th>' + T.dist + '</th><th>' + T.time + '</th><th></th></tr></thead><tbody id="hgVfrLegs"></tbody></table>' +
-      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small><small style="display:block;color:#64748b;font-weight:600;font-size:10px">' + T.tsub + '</small></span><b id="hgVfrTime">—</b></div><div id="hgVfrBlk" title="' + T.blkTip + '" style="text-align:right;color:#94a3b8;font-size:11.5px;margin-top:3px"></div>' +
+      '<div class="tot"><span>' + T.total + '</span><b id="hgVfrTot">0 NM</b></div><div class="tot"><span>' + T.ttot + ' <small id="hgVfrKtL" style="color:#64748b;font-weight:600"></small><small style="display:block;color:#64748b;font-weight:600;font-size:10px">' + T.tsub + '</small></span><b id="hgVfrTime">—</b></div><div id="hgVfrBlk" title="' + T.blkTip + '" style="text-align:right;color:#94a3b8;font-size:11.5px;margin-top:3px"></div><div id="hgVfrTerr"></div>' +
       '<div class="h" style="margin-top:14px">' + T.my + '</div><div class="myr"><input id="hgVfrName" maxlength="60" placeholder="' + T.namePh + '"><button type="button" class="b" data-a="save">' + T.save + '</button></div><div class="myl" id="hgVfrMy"></div><div id="hgVfrAp"></div><div class="hint">' + T.help + '</div><div id="hgVfrImp" class="hint" style="border-style:solid"></div></div></div>';
     if (document.documentElement.lang === 'en') d.querySelector('[data-a=pln]').textContent = '⬇ .PLN FILE';
     document.body.appendChild(d);
@@ -3567,6 +3663,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
       else if (a === 'undo') { pts.pop(); save(); drawRoute(); }
       else if (a === 'swap') { pts.reverse(); save(); drawRoute(); }
       else if (a === 'clear') { pts = []; wpN = 0; save(); drawRoute(); }
+      else if (a === 'terrAlt') terrApply();
       else if (a === 'sb') simbrief();
       else if (a === 'imp') impPoll('?go=1');
       else if (a === 'impstop') impPoll('?stop=1');
@@ -3589,7 +3686,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     ktI.onchange = function () { var v = Math.round(+ktI.value); if (!(v >= 40 && v <= 450)) { ktI.value = ktOf(); return; } var r = acRow(acV); if (r && r[2] === v) delete ktMap[acV]; else ktMap[acV] = v; try { localStorage.setItem('hg_vfr_kt', JSON.stringify(ktMap)); } catch (e) {} side(); };
     window.hgVfrSetAc = function (c) { acI.value = c; acI.onchange(); };
     var altI = d.querySelector('#hgVfrAlt'); altI.value = altV;
-    altI.onchange = function () { var v = Math.round(+altI.value / 100) * 100; if (!(v >= 500 && v <= 25000)) { altI.value = altV; return; } altV = v; altI.value = v; try { localStorage.setItem('hg_vfr_alt', String(v)); } catch (e) {} save(); };
+    altI.onchange = function () { var v = Math.round(+altI.value / 100) * 100; if (!(v >= 500 && v <= 25000)) { altI.value = altV; return; } altV = v; altI.value = v; try { localStorage.setItem('hg_vfr_alt', String(v)); } catch (e) {} save(); terrUI(); };
     var sel = d.querySelector('#hgVfrBg'); sel.value = String(bgIdx); sel.onchange = function () { setBg(+sel.value); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && d.classList.contains('on')) { if (card) closeCard(); else close(); } });
   }
