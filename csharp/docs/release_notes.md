@@ -1,6 +1,15 @@
-## Hangar FS 2024 — Addon Manager 12.9.1
+## Hangar FS 2024 — Addon Manager 12.9.2
 
-🔧 **12.9.1** : sur la carte de suivi, le premier tronçon du plan SimBrief (de l'aéroport de départ au premier point) est maintenant tracé. / On the tracking map, the first leg of the SimBrief plan (from the departure airport to the first waypoint) is now drawn.
+🇫🇷 **Carte de suivi**
+- ✈️ **Le plan part de la piste** : quand tu importes ton plan SimBrief ou un fichier .PLN, la ligne démarre au bout de ta piste de départ et s'arrête au bout de ta piste d'arrivée (celles choisies dans SimBrief ou le .PLN), plus au centre de l'aéroport.
+- 🎨 **Couleurs claires** : vert = départ (SID), rose = route, orange = arrivée (STAR) et approche (en pointillés), gris = déjà parcouru. Le plan du FMS suit les mêmes couleurs.
+- 🔧 Le premier morceau du trajet (de l'aéroport de départ au premier point) s'affiche bien (correctif 12.9.1).
+
+🇬🇧 **Tracking map**
+- ✈️ **The plan starts from the runway**: when you import your SimBrief plan or a .PLN file, the line starts at the end of your departure runway and stops at the end of your arrival runway (as chosen in SimBrief or the .PLN), no longer in the middle of the airport.
+- 🎨 **Clearer colours**: green = departure (SID), pink = route, orange = arrival (STAR) and approach (dashed), grey = already flown. The FMS plan uses the same colours.
+- 🔧 The first part of the route (from the departure airport to the first waypoint) now shows (12.9.1 fix).
+
 
 🇫🇷 **Une page Plan de vol plus claire.**
 

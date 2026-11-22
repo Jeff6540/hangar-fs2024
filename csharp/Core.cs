@@ -21,7 +21,7 @@ namespace HangarFS2024
     {
         public const string Name = "Hangar FS 2024";
         public const string Sub = "Addon Manager";
-        public const string Version = "12.9.1";
+        public const string Version = "12.9.2";
         public const string UrlSimBrief = "https://dispatch.simbrief.com/";
         public const string UrlLfv = "https://lfv-planner.netlify.app/";
         public const string UrlGitHub = "https://github.com/jeff6540/hangar-fs2024";
