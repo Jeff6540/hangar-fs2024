@@ -3933,3 +3933,47 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_boot129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---------------------------------------------------------------------------
+# 12.9 : carte de suivi — zoom automatique sur l'aéroport au sol (roulage avant le décollage et après l'atterrissage)
+GZOOM129_JS = """<script id="hangar-129-gzoom-js">
+(function () {
+  /* au sol : la carte se rapproche de ton avion (zoom 16, taxiways visibles) et le suit pendant le roulage ;
+     après le décollage, elle reprend le zoom d'avant. Si tu déplaces la carte toi-même, le suivi au sol se met en pause 60 s. */
+  var wasGround = null, before = null, pauseUntil = 0, hooked = null, ZG = 16;
+  function mapOf() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }
+  setInterval(function () {
+    var m = mapOf(); if (!m || typeof L === 'undefined') return;
+    if (hooked !== m) { hooked = m; m.on('dragstart', function () { pauseUntil = Date.now() + 60000; }); wasGround = null; }
+    var host = m.getContainer(); if (!host || !host.offsetWidth) return;   /* carte cachée */
+    var u = window.alUser; if (!u || u.lat == null || !isFinite(u.lat) || !isFinite(u.lon)) { wasGround = null; return; }
+    var g = !!u.ground;
+    if (g && wasGround !== true) {   /* arrivée au sol (ou carte ouverte au sol) : zoom sur l'aéroport */
+      if (m.getZoom() < 13) before = { z: m.getZoom() };
+      pauseUntil = 0; m.setView([u.lat, u.lon], Math.max(ZG, m.getZoom()));
+    } else if (!g && wasGround === true) {   /* décollage : retour au zoom d'avant */
+      var z = before && before.z ? before.z : 9; before = null;
+      m.setView([u.lat, u.lon], Math.min(z, 10));
+    } else if (g && Date.now() > pauseUntil) {   /* roulage : la carte suit l'avion */
+      var p = m.latLngToContainerPoint([u.lat, u.lon]), sz = m.getSize();
+      if (p.x < sz.x * 0.3 || p.x > sz.x * 0.7 || p.y < sz.y * 0.3 || p.y > sz.y * 0.7) m.panTo([u.lat, u.lon], { animate: true, duration: 0.6 });
+    }
+    wasGround = g;
+  }, 1000);
+})();
+</script>"""
+
+
+def patch_gzoom129(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-129-gzoom-js" in s:
+        return
+    s = s.replace("</body>", GZOOM129_JS + "</body>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _l in ("fr", "en"):
+        patch_gzoom129(os.path.join(_web, "dispatch_%s.html" % _l), _l)

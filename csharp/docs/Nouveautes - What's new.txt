@@ -30,6 +30,7 @@ Version 12.9 — page Plan de vol plus claire
 - Compatibilité des aéroports : la largeur de piste compte (avion de ligne refusé sous 30 m, « à vérifier » sous 45 m), et un terrain sans vols commerciaux réguliers (petit aérodrome, base militaire) est « à vérifier » pour un avion de ligne (cause 🏢 Infrastructures).
 - Carte Plan de vol personnel : la ligne du lever / coucher du soleil est tracée proprement (plus en escalier) ; la légende explique les cercles rouges en pointillés (aéroports incompatibles) et n'affiche plus « Aérodrome ».
 - Plan VFR : VOR / DME en hexagone blanc bordé de bleu (différents des aéroports), NDB visibles (pris dans l'import MSFS), petits aérodromes visibles sans zoomer très serré. SimBrief reçoit les VOR et NDB par leurs coordonnées (plus de balise homonyme à l'autre bout du monde, ex. TAN pris pour Tanger) ; les points officiels à 5 lettres (ex. OSVEG) partent par leur nom, plus précis.
+- Carte de suivi : au sol (avant le décollage et après l'atterrissage), zoom automatique sur l'aéroport et suivi de ton avion pendant le roulage ; retour au zoom d'avant après le décollage.
 - Correction : en Aléatoire / durée, aucune destination n'était trouvée pour les avions légers, turbopropulseurs et jets d'affaires (bug apparu en 12.8).
 - Import des données MSFS plus sûr, et recherche de la SimConnect.dll faite une seule fois par lancement.
 
@@ -149,6 +150,7 @@ Version 12.9 — clearer Flight plan page
 - Airport compatibility: runway width counts (airliner refused under 30 m, "to check" under 45 m), and a field without scheduled commercial flights (small airfield, military base) is "to check" for an airliner (cause 🏢 Facilities).
 - Personal flight plan map: the sunrise / sunset line is drawn cleanly (no more staircase); the legend explains the red dashed circles (incompatible airports) and no longer shows "Airfield".
 - VFR plan: VOR / DMEs as white hexagons with a blue border (different from airports), NDBs visible (taken from the MSFS import), small airfields visible without zooming in very close. SimBrief gets VORs and NDBs by their coordinates (no more same-name beacon on the other side of the world, e.g. TAN taken for Tangier); official 5-letter points (e.g. OSVEG) are sent by their name, more precise.
+- Tracking map: on the ground (before takeoff and after landing), automatic zoom on the airport and your aircraft followed while taxiing; back to the previous zoom after takeoff.
 - Fix: in Random / duration mode, no destination was found for light aircraft, turboprops and business jets (bug introduced in 12.8).
 - Safer MSFS data import, and the SimConnect.dll search runs only once per launch.
 
