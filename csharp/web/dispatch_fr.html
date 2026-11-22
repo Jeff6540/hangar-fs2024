@@ -8541,6 +8541,8 @@ ${waypoint(arr)}
   function draw(st) {
     var m = map(); if (!m || !window.L) return;
     if (!layer) layer = L.layerGroup().addTo(m);
+    /* étiquettes du plan sous les avions (le tien reste toujours visible) */
+    if (!m.getPane('hgFmsLbl')) { var pn = m.createPane('hgFmsLbl'); pn.style.zIndex = 590; pn.style.pointerEvents = 'none'; }
     layer.clearLayers();
     var p = (st && st.plan) || {}, r = (p.route || []).filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); });
     if (r.length < 2) return;
@@ -8554,15 +8556,17 @@ ${waypoint(arr)}
       // altitude : « * » = valeur par défaut du FMS, A = à ou au-dessus, B = à ou au-dessous (données MSFS)
       var sfx = w.altDef ? '*' : w.altDesc === 2 ? 'A' : w.altDesc === 3 ? 'B' : w.altDesc === 4 ? '±' : '';
       var lbl = '<b>' + esc(w.ident) + '</b>' + (w.faf ? ' FAF' : '') + (w.alt ? ' · ' + Math.round(w.alt) + sfx + ' ' + T.ft : '');
-      L.circleMarker([w.lat, w.lon], { radius: i === act ? 6 : 4, color: '#000', weight: 1, fillColor: i === act ? '#e05bd8' : i < act ? '#9ca3af' : '#ffffff', fillOpacity: 1 })
-        .bindTooltip(lbl, { permanent: true, direction: 'right', offset: [6, 0], className: 'hg-fms-lab' }).addTo(layer);
+      var cm = L.circleMarker([w.lat, w.lon], { radius: i === act ? 6 : 4, color: '#000', weight: 1, fillColor: i === act ? '#e05bd8' : i < act ? '#9ca3af' : '#ffffff', fillOpacity: 1 });
+      /* points déjà passés : plus d'étiquette (moins de texte autour de ton avion) */
+      if (i >= act || i === r.length - 1) cm.bindTooltip(lbl, { permanent: true, direction: 'right', offset: [6, 0], className: 'hg-fms-lab', pane: 'hgFmsLbl' });
+      cm.addTo(layer);
     });
     var pr = profile(p);
     [['tcPt', T.tc, '#38bdf8', '▲'], ['tdPt', T.td, '#f2c46b', '▼']].forEach(function (k) {
       var pt = pr[k[0]]; if (!pt) return;
       var sub = k[0] === 'tdPt' && pr.td ? ' → ' + Math.round(pr.td.alt) + ' ' + T.ft + ' (' + esc(pr.td.to) + ')' : ' → ' + Math.round(pr.cruise) + ' ' + T.ft;
       L.marker([pt.lat, pt.lon], { interactive: false, icon: L.divIcon({ className: 'hg-fms-pin', html: '<span style="color:' + k[2] + '">' + k[3] + '</span>', iconSize: [16, 16], iconAnchor: [8, 8] }) })
-        .bindTooltip('<b>' + k[1] + '</b>' + sub, { permanent: true, direction: 'left', offset: [-8, 0], className: 'hg-fms-lab hg-fms-' + (k[0] === 'tdPt' ? 'td' : 'tc') }).addTo(layer);
+        .bindTooltip('<b>' + k[1] + '</b>' + sub, { permanent: true, direction: 'left', offset: [-8, 0], className: 'hg-fms-lab hg-fms-' + (k[0] === 'tdPt' ? 'td' : 'tc'), pane: 'hgFmsLbl' }).addTo(layer);
     });
   }
   function ensureBox() {
@@ -8595,9 +8599,9 @@ ${waypoint(arr)}
   var css = document.createElement('style');
   css.textContent = '#hgFmsBox{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
     '#hgFmsBox .hd{color:#7fd3ff;font-weight:700;cursor:pointer;user-select:none}#hgFmsBox .ln{margin-top:3px}#hgFmsBox .mu{color:#9aa3ad}#hgFmsBox .mg{color:#f2a7ee}#hgFmsBox .am{color:#f2c46b}#hgFmsBox .gr{color:#7fe0a8}' +
-    '.hg-fms-lab{background:rgba(11,13,16,.85)!important;border:1px solid #e05bd8!important;color:#f8e6f7!important;font:11px Consolas,monospace!important;padding:1px 5px!important;box-shadow:none!important}' +
+    '.hg-fms-lab{background:rgba(11,13,16,.68)!important;border:1px solid rgba(224,91,216,.7)!important;color:#f8e6f7!important;font:9.5px/13px Consolas,monospace!important;padding:0 4px!important;border-radius:4px!important;box-shadow:none!important}' +
     '.hg-fms-lab::before{display:none!important}.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
-    '.hg-fms-pin{font-size:15px;line-height:16px;text-align:center;text-shadow:0 0 3px #000,0 0 3px #000}';
+    '.hg-fms-pin{font-size:12px;line-height:16px;text-align:center;text-shadow:0 0 3px #000,0 0 3px #000}';
   document.head.appendChild(css);
   // ---- plan SimBrief importé dans le Suivi de vol : le FMS le reçoit aussi (approche du FMS gardée si même arrivée)
   function arr(x) { return Array.isArray(x) ? x : x ? [x] : []; }
