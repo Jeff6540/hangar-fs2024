@@ -1,6 +1,6 @@
 {
-  "version": "12.9.1",
+  "version": "12.9.2",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Correctif : le premier tronçon du plan SimBrief est maintenant tracé sur la carte de suivi. Page Plan de vol plus claire, nouvelle page Plan VFR, fenêtre FMS (pilote auto, MCP PMDG / iFly / A220), temps unifiés, frise jour / nuit, import SimBrief automatique dans le suivi",
-  "notes_en": "Fix: the first leg of the SimBrief plan is now drawn on the tracking map. Clearer Flight plan page, new VFR plan page, FMS window (autopilot, PMDG / iFly / A220 MCP), unified times, day / night strip, automatic SimBrief import in tracking"
+  "notes_fr": "Carte de suivi : plan tracé de piste à piste (SimBrief ou .PLN), couleurs claires (départ vert, route rose, arrivée orange), premier tronçon corrigé",
+  "notes_en": "Tracking map: plan drawn runway to runway (SimBrief or .PLN), clearer colours (green departure, pink route, orange arrival), first leg fixed"
 }
