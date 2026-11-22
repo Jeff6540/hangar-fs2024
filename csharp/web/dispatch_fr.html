@@ -1059,7 +1059,13 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
       m = metars[icao] = m || { t: 0, raw: '' };
       m.busy = true; m.t = now;
       fetch(RELAY + '/metar?icao=' + encodeURIComponent(icao), { cache: 'no-store' }).then(function (r) { return r.json(); })
-        .then(function (d) { m.raw = (d && d.metar) || ''; m.busy = false; m.done = true; m.t = Date.now(); render(); })
+        .then(function (d) {
+          m.raw = (d && d.metar) || ''; m.near = null;
+          if (m.raw || !window.hgNearMetar) { m.busy = false; m.done = true; m.t = Date.now(); render(); return; }
+          /* pas de METAR pour cet aérodrome : celui du grand aéroport le plus proche */
+          window.hgNearMetar(icao, function (c) { return fetch(RELAY + '/metar?icao=' + encodeURIComponent(c), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (x) { return (x && x.metar) || ''; }).catch(function () { return ''; }); })
+            .then(function (n) { if (n) { m.raw = n.raw; m.near = { from: n.from, nm: n.nm }; } m.busy = false; m.done = true; m.t = Date.now(); render(); });
+        })
         .catch(function () { m.busy = false; m.done = true; render(); });
     }
     return m.raw ? parseMetar(m.raw) : null;
@@ -1208,19 +1214,20 @@ html body .leaflet-control-layers-list::before{content:'FOND DE CARTE';display:b
     if (l.c && l.c.head <= -3) s += '<div class="alp-n">⚠ Vent arrière : distances SimBrief non corrigées.</div>';
     return s;
   }
+  function nearTxt(icao) { var m = metars[icao]; return m && m.near ? '<span class="alp-m">(METAR de ' + esc(m.near.from) + ', ' + m.near.nm + ' NM) </span>' : ''; }
   function gaHtml(icao, full) {
     var mt = getMetar(icao), apt = aptOf(icao), rows = windRows(icao, mt);
     var da = densityAlt(apt ? apt.elevation_ft : null, mt);
     if (!mt) return '<span class="alp-l">▼ ' + esc(icao) + '</span> <span class="alp-m">· ' + (metars[icao] && metars[icao].done ? 'pas de METAR publié pour cet aérodrome' : 'METAR en cours de lecture…') + '</span>';
     var best = rows[0];
     if (!full) {
-      var s = '<span class="alp-l">▼ ' + esc(icao) + '</span> ' + windRaw(mt);
+      var s = '<span class="alp-l">▼ ' + esc(icao) + '</span> ' + nearTxt(icao) + windRaw(mt);
       if (best) s += ' · piste <span class="alp-ok">' + esc(best.name) + '</span> (' + windTxt(best.c) + ')';
       if (da != null) s += ' · alt.-densité ' + ft(da);
       var al = best ? alerts(best.c) : []; if (al.length) s += '<br><span class="alp-w">' + al.join(' · ') + '</span>';
       return s;
     }
-    var h = (window.hgRwy && best ? window.hgRwy(best.name, mt, best.c) : '') + '<span class="alp-l">▼ ' + esc(icao) + (apt && apt.name ? ' ' + esc(apt.name) : '') + '</span>' + (mt.time ? ' <span class="alp-m">· METAR ' + mt.time + '</span>' : '');
+    var h = (window.hgRwy && best ? window.hgRwy(best.name, mt, best.c) : '') + '<span class="alp-l">▼ ' + esc(icao) + (apt && apt.name ? ' ' + esc(apt.name) : '') + '</span> ' + nearTxt(icao) + (mt.time ? ' <span class="alp-m">· METAR ' + mt.time + '</span>' : '');
     h += '<br>Vent ' + windRaw(mt) + (mt.temp != null ? ' · ' + mt.temp + ' °C' : '') + (mt.qnh ? ' · QNH ' + mt.qnh : '') + (mt.wet ? ' · <span class="alp-b">piste mouillée</span>' : '');
     if (rows.length) h += '<table class="alp-tb">' + rows.map(function (r, i) {
       return '<tr><td class="' + (i === 0 ? 'alp-ok' : '') + '">Piste ' + esc(r.name) + '</td><td>' + windTxt(r.c) + '</td><td class="alp-ok">' + (i === 0 ? '✔ conseillée' : '') + '</td></tr>';
@@ -4757,7 +4764,7 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
             const nm = ap && ap.city ? ' ' + escapeHtml(ap.city) : '';
             const body = !icao ? '<span class="text-slate-500">—</span>'
                 : raw === '…' ? '<span class="text-slate-400">chargement…</span>'
-                : raw ? `<div class="text-slate-200 break-words">${escapeHtml(raw)}</div><div class="text-cockpit-cyan">${escapeHtml(tmDecode(raw))}</div>`
+                : raw ? (metarNear.get(icao) ? `<div class="text-amber-300">METAR le plus proche : ${escapeHtml(metarNear.get(icao).from)} à ${metarNear.get(icao).nm} NM</div>` : '') + `<div class="text-slate-200 break-words">${escapeHtml(raw)}</div><div class="text-cockpit-cyan">${escapeHtml(tmDecode(raw))}</div>`
                 : '<span class="text-cockpit-amber">METAR non disponible</span>';
             return `<div class="mb-1.5"><div class="font-bold text-cockpit-cyan">${title} · ${escapeHtml(icao || '----')}${nm}</div>${body}</div>`;
         }
@@ -5765,7 +5772,33 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
             return fetch(url, { cache: 'no-store', signal: ctl.signal }).finally(() => clearTimeout(t));
         }
         const tmMetarCache = new Map();   // ICAO -> { t, raw, src } : clics instantanés, 60 s de validité
+        // METAR le plus proche quand l'aérodrome n'en publie pas : grands et moyens aéroports à moins de 60 NM, du plus proche au plus loin
+        const metarNear = new Map();
+        function nearMetarCandidates(icao) {
+            const a = airportsDB[icao]; if (!a || a.lat == null) return [];
+            const r = Math.PI / 180, out = [];
+            for (const k in airportsDB) {
+                const b = airportsDB[k];
+                if (!b || b.icao === icao || !/^[A-Z]{4}$/.test(b.icao || '') || (b.type !== 'large_airport' && b.type !== 'medium_airport') || Math.abs(b.lat - a.lat) > 1.2) continue;
+                const x = (b.lon - a.lon) * Math.cos((a.lat + b.lat) / 2 * r), y = b.lat - a.lat, d = Math.sqrt(x * x + y * y) * 60;
+                if (d <= 60) out.push([d, b.icao]);
+            }
+            return out.sort((p, q) => p[0] - q[0]).slice(0, 6);
+        }
+        window.hgNearMetar = async function (icao, one) {
+            for (const c of nearMetarCandidates(icao)) { const raw = await one(c[1]); if (raw) return { raw, from: c[1], nm: Math.round(c[0]) }; }
+            return null;
+        };
+        window.hgMetarNear = metarNear;
         async function fetchMetarRaw(icao) {
+            const raw = await fetchMetarOne(icao);
+            if (raw) { metarNear.delete(icao); return raw; }
+            const n = icao ? await window.hgNearMetar(icao, fetchMetarOne) : null;
+            if (n) { metarNear.set(icao, n); return n.raw; }
+            metarNear.delete(icao);
+            return null;
+        }
+        async function fetchMetarOne(icao) {
             const hit = tmMetarCache.get(icao);
             if (hit && Date.now() - hit.t < 60000) { metarSource = hit.src; return hit.raw; }
             const keep = (raw, src) => { metarSource = src; tmMetarCache.set(icao, { t: Date.now(), raw, src }); return raw; };
