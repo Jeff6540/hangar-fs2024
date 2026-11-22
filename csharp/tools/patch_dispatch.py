@@ -2964,7 +2964,7 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
         var a1 = parseFloat(r[9]), o1 = parseFloat(r[10]), a2 = parseFloat(r[15]), o2 = parseFloat(r[16]); if (!isFinite(a1) || !isFinite(o1) || !isFinite(a2) || !isFinite(o2)) continue;
         var k = (r[2] || '').toUpperCase(); (rwy[k] = rwy[k] || []).push({ a: { lat: a1, lon: o1 }, b: { lat: a2, lon: o2 }, n1: r[8] || '', n2: r[14] || '' }); }
     }).catch(function () {});
-    Promise.all([a, b]).then(function () { loaded = true; loading = false; status(nav.length.toLocaleString() + ' ' + T.loaded); draw(); drawRoute(); });
+    Promise.all([a, b]).then(function () { loaded = true; loading = false; status(nav.length.toLocaleString() + ' ' + T.loaded); Object.keys(PD).forEach(addVisual); draw(); drawRoute(); if (card) showCard(card); });
   }
   function status(s) { var e = document.getElementById('hgVfrSt'); if (e) e.textContent = s; }
   /* ---------- couches ---------- */
@@ -3037,9 +3037,31 @@ VFR_JS = r"""<script id="hangar-129-vfr-js">
     Promise.all([fetch('/procs?icao=' + encodeURIComponent(icao)).then(function (r) { return r.json(); }).catch(function () { return {}; }),
                  fetch('/approaches?icao=' + encodeURIComponent(icao)).then(function (r) { return r.json(); }).catch(function () { return []; })]).then(function (res) {
       var w = d.wait; PD[icao] = { ok: true, d: (res[0] && res[0].d) || [], a: (res[0] && res[0].a) || [], ap: Array.isArray(res[1]) ? res[1] : [] };
+      addVisual(icao);
       w.forEach(function (f) { f(PD[icao]); });
     });
     return null;
+  }
+  /* approches à vue (comme les GPS Garmin de MSFS : STRGHT à 5 NM, FINAL à 2,5 NM sur le plan à 3°, seuil de piste),
+     calculées depuis les pistes de la base OurAirports pour chaque sens de piste qui n'en a pas déjà une dans les données MSFS */
+  function addVisual(icao) {
+    var d = PD[icao], rws = rwy[icao]; if (!d || !d.ok || !rws || d.vis) return;
+    d.vis = true;
+    var A = typeof airportsDB !== 'undefined' ? airportsDB[icao] : null, el = A && isFinite(A.elevation_ft) ? +A.elevation_ft : 0;
+    var have = {}; d.ap.forEach(function (a) { if (/VIS/i.test(a.t)) have[String(a.r || '').replace(/^0+/, '')] = 1; });
+    var finAlt = Math.ceil((el + 2.5 * 318.4) / 100) * 100, thrAlt = Math.round(el + 50);
+    rws.forEach(function (r) {
+      [[r.a, r.b, r.n1], [r.b, r.a, r.n2]].forEach(function (x) {
+        var thr = x[0], far = x[1], n = String(x[2] || '').toUpperCase().replace(/[^0-9LRC]/g, '');
+        if (!n || have[n.replace(/^0+/, '')] || dist(thr, far) < 0.05) return;
+        have[n.replace(/^0+/, '')] = 1;
+        var back = brg(far, thr), f2 = dest(thr, back, 2.5), f5 = dest(thr, back, 5);   /* du côté opposé à la piste */
+        d.ap.push({ t: 'VISUAL', r: n, s: '', vis: true, tr: [], f: [
+          ['STRGHT', +f5.lat.toFixed(6), +f5.lon.toFixed(6), 0, 0, 0, 0, 0, 0],
+          ['FINAL', +f2.lat.toFixed(6), +f2.lon.toFixed(6), 0, 1, finAlt, 0, -3, 4],
+          ['RW' + n, +thr.lat.toFixed(6), +thr.lon.toFixed(6), 0, 1, thrAlt, 0, -3, 0]] });
+      });
+    });
   }
   function legsTo(list, kind) { return (list || []).map(function (l) { return { name: l[0], lat: l[1], lon: l[2], kind: kind }; }); }
   function sidLegs(d, s) { var p = d && d.d[s.sid]; if (!p) return []; return [].concat(s.rw >= 0 && p.rw[s.rw] ? p.rw[s.rw].l : [], p.c, s.en >= 0 && p.en[s.en] ? p.en[s.en].l : []); }
