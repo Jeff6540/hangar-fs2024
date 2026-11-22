@@ -46,6 +46,16 @@ JS = r"""<script id="hangar-fms-track">
     if (tcS > 0 && (!best || tcS < best.s)) { out.tc = { s: tcS }; out.tcPt = along(r, tcS); }
     return out;
   }
+  /* branche en cours : celle du FMS, ou plus loin si ton avion a déjà dépassé des points (FMS pas engagé) */
+  var lastAct = -1;
+  function actOf(p, r) {
+    var act = Math.max(1, Math.min(r.length - 1, p.activeLeg || 1));
+    var me = ap && ap.live && ap.actual && isFinite(ap.actual.lat) ? { lat: ap.actual.lat, lon: ap.actual.lon } : null;
+    if (!me || r.length < 2) return act;
+    var best = act, bx = Infinity;
+    for (var i = 1; i < r.length; i++) { if (!isFinite(r[i].lat) || !isFinite(r[i - 1].lat)) continue; var x = nm(me, r[i - 1]) + nm(me, r[i]) - nm(r[i - 1], r[i]); if (x < bx) { bx = x; best = i; } }
+    return bx < 15 ? Math.max(act, best) : act;
+  }
   function draw(st) {
     var m = map(); if (!m || !window.L) return;
     if (!layer) layer = L.layerGroup().addTo(m);
@@ -54,7 +64,7 @@ JS = r"""<script id="hangar-fms-track">
     layer.clearLayers();
     var p = (st && st.plan) || {}, r = (p.route || []).filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); });
     if (r.length < 2) return;
-    var act = Math.max(1, Math.min(r.length - 1, p.activeLeg || 1));
+    var act = actOf(p, r); lastAct = act;
     for (var i = 1; i < r.length; i++) {
       var done = i < act, on = i === act;
       L.polyline([[r[i - 1].lat, r[i - 1].lon], [r[i].lat, r[i].lon]], { color: '#1e1b4b', weight: 7, opacity: .4, interactive: false }).addTo(layer);
@@ -90,7 +100,7 @@ JS = r"""<script id="hangar-fms-track">
     if (folded) { box.innerHTML = '<div class="hd" data-fold="1">▸ ' + T.unfold + '</div>'; return; }
     var h = '<div class="hd" data-fold="1">▾ ' + T.title + (p.origin && p.origin.icao ? ' · ' + esc(p.origin.icao) + ' → ' + esc(p.dest && p.dest.icao) : '') + '</div>';
     if (r.length < 2) { box.innerHTML = h + '<div class="ln mu">' + T.none + '</div>'; return; }
-    var act = Math.max(1, Math.min(r.length - 1, p.activeLeg || 1)), w = r[act], me = ap && ap.live && ap.actual && isFinite(ap.actual.lat) ? { lat: ap.actual.lat, lon: ap.actual.lon } : null;
+    var act = actOf(p, r), w = r[act], me = ap && ap.live && ap.actual && isFinite(ap.actual.lat) ? { lat: ap.actual.lat, lon: ap.actual.lon } : null;
     var dNext = me ? nm(me, w) : null;
     h += '<div class="ln"><span class="mu">' + T.next + '</span> <b class="mg">' + esc(w.ident) + '</b>' + (dNext != null ? ' · ' + dNext.toFixed(1) + ' ' + T.nm : '') + (w.alt ? ' · ' + Math.round(w.alt) + ' ' + T.ft : '') + '</div>';
     var vn = ap && ap.live && ap.vnav ? ap.vnav : null, pr = profile(p), line = '';
@@ -107,8 +117,8 @@ JS = r"""<script id="hangar-fms-track">
   var css = document.createElement('style');
   css.textContent = '#hgFmsBox{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:800;min-width:210px;max-width:320px;background:rgba(11,13,16,.92);border:1px solid #3d7aa6;border-radius:10px;padding:8px 10px;color:#cfe6f5;font:12px Consolas,"Cascadia Mono",monospace;line-height:1.5}' +
     '#hgFmsBox .hd{color:#7fd3ff;font-weight:700;cursor:pointer;user-select:none}#hgFmsBox .ln{margin-top:3px}#hgFmsBox .mu{color:#9aa3ad}#hgFmsBox .mg{color:#f2a7ee}#hgFmsBox .am{color:#f2c46b}#hgFmsBox .gr{color:#7fe0a8}' +
-    '.hg-fms-lab{background:rgba(11,13,16,.68)!important;border:1px solid rgba(224,91,216,.7)!important;color:#f8e6f7!important;font:9.5px/13px Consolas,monospace!important;padding:0 4px!important;border-radius:4px!important;box-shadow:none!important}' +
-    '.hg-fms-lab::before{display:none!important}.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
+    'html body #trafficMapWrapper .leaflet-tooltip.hg-fms-lab,.hg-fms-lab{background:rgba(11,13,16,.68)!important;border:1px solid rgba(224,91,216,.7)!important;color:#f8e6f7!important;font:9.5px/13px Consolas,monospace!important;padding:0 4px!important;border-radius:4px!important;box-shadow:none!important}' +
+    '.hg-fms-lab::before{display:none!important}html body #trafficMapWrapper .leaflet-tooltip.hg-fms-td{border-color:#f2c46b!important;color:#f2c46b!important}html body #trafficMapWrapper .leaflet-tooltip.hg-fms-tc{border-color:#38bdf8!important;color:#7fd3ff!important}' +
     '.hg-fms-pin{font-size:12px;line-height:16px;text-align:center;text-shadow:0 0 3px #000,0 0 3px #000}';
   document.head.appendChild(css);
   // ---- plan SimBrief importé dans le Suivi de vol : le FMS le reçoit aussi (approche du FMS gardée si même arrivée)
@@ -181,6 +191,7 @@ JS = r"""<script id="hangar-fms-track">
     sbVisibility();
     var st = window.FmsStore && window.FmsStore.state;
     if (st && (st.rev !== lastRev || !layer)) { lastRev = st.rev; draw(st); }
+    else if (st && st.plan && st.plan.route && st.plan.route.length > 1) { var rr = st.plan.route.filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); }); if (rr.length > 1 && actOf(st.plan, rr) !== lastAct) draw(st); }
     fetch('http://localhost:8765/ap', { cache: 'no-store' }).then(function (x) { return x.json(); }).then(function (j) { ap = j; info(); }, function () { ap = null; info(); });
   }
   if (window.FmsStore) window.FmsStore.onChange(function (st) { if (open() && map()) { lastRev = st.rev; draw(st); info(); } });
