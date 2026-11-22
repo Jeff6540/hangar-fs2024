@@ -66,8 +66,13 @@ JS = r"""<script id="hangar-fms-track">
     if (r.length < 2) return;
     /* départ et arrivée tracés sur le seuil de la piste choisie (SimBrief / .PLN), si elle est connue */
     try {
-      var thr = window.hgRwyThreshold, t0 = thr && r[0].type === 'apt' && thr((p.origin || {}).icao || r[0].ident, (p.origin || {}).rwy),
-          rl = r[r.length - 1], t1 = thr && rl.type === 'apt' && thr((p.dest || {}).icao || rl.ident, (p.dest || {}).rwy);
+      /* piste : celle du FMS, sinon le seuil « RWxx » de la route, sinon celle du plan SimBrief chargé (même aéroport) */
+      var thr = window.hgRwyThreshold, sb = window.alPlanFull || {}, rl = r[r.length - 1];
+      var i0 = ((p.origin || {}).icao || r[0].ident || '').toUpperCase(), i1 = ((p.dest || {}).icao || rl.ident || '').toUpperCase();
+      var rwRt = ''; for (var q = r.length - 2; q > 0; q--) { var mm = /^RW(\d{2}[LRC]?)$/.exec(r[q].ident || ''); if (mm) { rwRt = mm[1]; break; } if (!r[q].ap) break; }
+      var rw0 = (p.origin || {}).rwy || (sb.origin && String(sb.origin.icao_code || '').toUpperCase() === i0 ? sb.origin.plan_rwy : '');
+      var rw1 = (p.dest || {}).rwy || rwRt || (sb.destination && String(sb.destination.icao_code || '').toUpperCase() === i1 ? sb.destination.plan_rwy : '');
+      var t0 = thr && r[0].type === 'apt' && thr(i0, rw0), t1 = thr && rl.type === 'apt' && thr(i1, rw1);
       if (t0) r[0] = Object.assign({}, r[0], { lat: t0.lat, lon: t0.lon });
       if (t1) r[r.length - 1] = Object.assign({}, rl, { lat: t1.lat, lon: t1.lon });
     } catch (e) {}
