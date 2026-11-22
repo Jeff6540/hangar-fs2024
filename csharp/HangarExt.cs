@@ -397,6 +397,7 @@ namespace HangarFS2024
 
         public int PagePort()
         {
+            FmsExport.Roots = () => new[] { CfgS("community"), CfgS("library") };   // FMS : GTN mis à jour à chaque changement de plan
             if (pageServer != null && pageServer.Running) return pageServer.Port;
             for (int port = 47620; port < 47630; port++)
             {

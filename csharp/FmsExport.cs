@@ -203,8 +203,71 @@ namespace HangarFS2024
                     File.WriteAllText(EfbFile, pln, new UTF8Encoding(false));
                     efbLast = pln;
                 }
+                WriteGtnAuto(plan, pln, dep, arr);
             }
             catch (Exception) { }
+        }
+
+        /// <summary>GTN de PMS50 (fpl.pln dans son dossier fpl\gtn750 / gtn650) et GTN de TDS (.gfp dans ProgramData).</summary>
+        static void WriteGtn(JObject plan, string pln, string name, string community, string library, JArray targets)
+        {
+                // 2) GTN de PMS50 : paquet qui contient fpl\gtn750 (ou gtn650), dans Community ou la bibliothèque
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var root in new[] { community, library })
+                    foreach (var pkg in PackageDirs(root))
+                    {
+                        string n = Path.GetFileName(pkg) ?? "";
+                        if (n.IndexOf("pms50", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        foreach (var model in new[] { "gtn750", "gtn650" })
+                        {
+                            string fd = Path.Combine(pkg, "fpl", model);
+                            // le paquet du GTN 750 (ou 650), ou un paquet qui a déjà ce dossier
+                            if (n.IndexOf(model, StringComparison.OrdinalIgnoreCase) < 0 && !Directory.Exists(fd)) continue;
+                            try
+                            {
+                                string real = new DirectoryInfo(fd).FullName;
+                                if (!seen.Add(real)) continue;
+                                bool existed = File.Exists(Path.Combine(fd, "fpl.pln"));
+                                Directory.CreateDirectory(fd);
+                                File.WriteAllText(Path.Combine(fd, "fpl.pln"), pln, new UTF8Encoding(false));
+                                targets.Add(new JObject { ["id"] = "pms50", ["ok"] = true, ["model"] = model.ToUpperInvariant(), ["pkg"] = n, ["existed"] = existed });
+                            }
+                            catch (Exception e) { targets.Add(new JObject { ["id"] = "pms50", ["ok"] = false, ["model"] = model.ToUpperInvariant(), ["why"] = e.Message }); }
+                        }
+                    }
+
+                // 3) GTN de TDS (GTNXi) : dossier des plans de vol dans ProgramData
+                try
+                {
+                    string tds = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TDS", "GTNXi");
+                    if (Directory.Exists(tds))
+                    {
+                        string fd = Path.Combine(tds, "FPL");
+                        Directory.CreateDirectory(fd);
+                        File.WriteAllText(Path.Combine(fd, "HANGAR_" + name + ".gfp"), Gfp(plan), new UTF8Encoding(false));
+                        targets.Add(new JObject { ["id"] = "tds", ["ok"] = true, ["file"] = "HANGAR_" + name + ".gfp" });
+                    }
+                }
+                catch (Exception e) { targets.Add(new JObject { ["id"] = "tds", ["ok"] = false, ["why"] = e.Message }); }
+
+        }
+
+        // ---- GTN mis à jour tout seul à chaque changement de plan (fichiers réécrits seulement s'ils changent)
+        public static Func<string[]> Roots;
+        static string gtnLast;
+        static void WriteGtnAuto(JObject plan, string pln, string dep, string arr)
+        {
+            var r = Roots; if (r == null) return;
+            string[] roots; try { roots = r(); } catch (Exception) { return; }
+            if (roots == null || roots.Length < 2) return;
+            string name = Regex.Replace(dep + "_" + arr, "[^A-Za-z0-9_-]", ""); if (name == "_") name = "FMS";
+            lock (EfbGate)
+            {
+                if (pln == gtnLast) return;
+                gtnLast = pln;
+                // TDS : un seul fichier « HANGAR_FMS.gfp », toujours le même (pas un nouveau à chaque plan)
+                WriteGtn(plan, pln, "FMS", roots[0], roots[1], new JArray());
+            }
         }
 
         public static JObject Run(string community, string library, bool simConnected)
@@ -232,44 +295,7 @@ namespace HangarFS2024
             }
             catch (Exception e) { targets.Add(new JObject { ["id"] = "msfs", ["ok"] = false, ["why"] = e.Message }); }
 
-            // 2) GTN de PMS50 : paquet qui contient fpl\gtn750 (ou gtn650), dans Community ou la bibliothèque
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var root in new[] { community, library })
-                foreach (var pkg in PackageDirs(root))
-                {
-                    string n = Path.GetFileName(pkg) ?? "";
-                    if (n.IndexOf("pms50", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                    foreach (var model in new[] { "gtn750", "gtn650" })
-                    {
-                        string fd = Path.Combine(pkg, "fpl", model);
-                        // le paquet du GTN 750 (ou 650), ou un paquet qui a déjà ce dossier
-                        if (n.IndexOf(model, StringComparison.OrdinalIgnoreCase) < 0 && !Directory.Exists(fd)) continue;
-                        try
-                        {
-                            string real = new DirectoryInfo(fd).FullName;
-                            if (!seen.Add(real)) continue;
-                            bool existed = File.Exists(Path.Combine(fd, "fpl.pln"));
-                            Directory.CreateDirectory(fd);
-                            File.WriteAllText(Path.Combine(fd, "fpl.pln"), pln, new UTF8Encoding(false));
-                            targets.Add(new JObject { ["id"] = "pms50", ["ok"] = true, ["model"] = model.ToUpperInvariant(), ["pkg"] = n, ["existed"] = existed });
-                        }
-                        catch (Exception e) { targets.Add(new JObject { ["id"] = "pms50", ["ok"] = false, ["model"] = model.ToUpperInvariant(), ["why"] = e.Message }); }
-                    }
-                }
-
-            // 3) GTN de TDS (GTNXi) : dossier des plans de vol dans ProgramData
-            try
-            {
-                string tds = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TDS", "GTNXi");
-                if (Directory.Exists(tds))
-                {
-                    string fd = Path.Combine(tds, "FPL");
-                    Directory.CreateDirectory(fd);
-                    File.WriteAllText(Path.Combine(fd, "HANGAR_" + name + ".gfp"), Gfp(plan), new UTF8Encoding(false));
-                    targets.Add(new JObject { ["id"] = "tds", ["ok"] = true, ["file"] = "HANGAR_" + name + ".gfp" });
-                }
-            }
-            catch (Exception e) { targets.Add(new JObject { ["id"] = "tds", ["ok"] = false, ["why"] = e.Message }); }
+            WriteGtn(plan, pln, name, community, library, targets);
 
             res["ok"] = targets.OfType<JObject>().Any(t => (bool?)t["ok"] == true);
             return res;
