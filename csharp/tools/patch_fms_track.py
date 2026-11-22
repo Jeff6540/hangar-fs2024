@@ -64,6 +64,13 @@ JS = r"""<script id="hangar-fms-track">
     layer.clearLayers();
     var p = (st && st.plan) || {}, r = (p.route || []).filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); });
     if (r.length < 2) return;
+    /* départ et arrivée tracés sur le seuil de la piste choisie (SimBrief / .PLN), si elle est connue */
+    try {
+      var thr = window.hgRwyThreshold, t0 = thr && r[0].type === 'apt' && thr((p.origin || {}).icao || r[0].ident, (p.origin || {}).rwy),
+          rl = r[r.length - 1], t1 = thr && rl.type === 'apt' && thr((p.dest || {}).icao || rl.ident, (p.dest || {}).rwy);
+      if (t0) r[0] = Object.assign({}, r[0], { lat: t0.lat, lon: t0.lon });
+      if (t1) r[r.length - 1] = Object.assign({}, rl, { lat: t1.lat, lon: t1.lon });
+    } catch (e) {}
     var act = actOf(p, r); lastAct = act;
     /* mêmes couleurs que le plan SimBrief : départ (SID) vert, route magenta, arrivée (STAR) et approche orange */
     var COL = { sid: '#4ADE80', route: '#FF4DDB', star: '#FB923C' }, kinds = [], seenRoute = false;

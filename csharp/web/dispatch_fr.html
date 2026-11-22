@@ -4640,6 +4640,16 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
 
         function sbBool(v) { return v === true || v === 1 || v === '1' || v === 'true'; }
 
+        /* seuil de la piste choisie (SimBrief ou .PLN) : départ et arrivée tracés sur la piste plutôt qu'au centre de l'aéroport */
+        function rwyThreshold(icao, rwy) {
+            const id = String(rwy || '').toUpperCase().replace(/^RW/, '').trim(); icao = String(icao || '').toUpperCase();
+            if (!id || !icao) return null;
+            const norm = x => x.replace(/^(\d)([LCR]?)$/, '0$1$2');
+            const list = runwaysDB.get(airportCodeAliases.get(icao) || icao) || runwaysDB.get(icao) || [];
+            const r = list.find(x => norm(x.name) === norm(id));
+            return r && Number.isFinite(r.lat) && Number.isFinite(r.lon) && (r.lat || r.lon) ? { lat: r.lat, lon: r.lon } : null;
+        }
+        window.hgRwyThreshold = rwyThreshold;
         function parseSimbriefFixes(data) {
             let list = data.navlog && data.navlog.fix;
             if (!list) return [];
@@ -4661,6 +4671,11 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
                 fixes.unshift({ ident: String(o.icao_code || ''), name: String(o.name || ''), type: 'apt', via: '',
                     lat: olat, lon: olon, alt: Number.parseInt(o.elevation, 10), sidstar: false });
             }
+            const dd = data.destination || {}, first = fixes[0], last = fixes[fixes.length - 1];
+            const tDep = first && first.type === 'apt' ? rwyThreshold(o.icao_code || first.ident, o.plan_rwy) : null;
+            if (tDep) { first.lat = tDep.lat; first.lon = tDep.lon; first.rwy = String(o.plan_rwy); }
+            const tArr = last && last !== first && last.type === 'apt' ? rwyThreshold(dd.icao_code || last.ident, dd.plan_rwy) : null;
+            if (tArr) { last.lat = tArr.lat; last.lon = tArr.lon; last.rwy = String(dd.plan_rwy); }
             return fixes;
         }
 
@@ -5323,8 +5338,8 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
                     tallyRunwaySurface(surface);
                     const canonical = airportCodeAliases.get(airportIdent) || airportIdent;
                     const list = runwaysDB.get(canonical) || [];
-                    if (leIdent) list.push({ name: leIdent, length_ft: lengthFt, width_ft: widthFt, surface, closed: false, hdg: Number.parseFloat(row[12]) });
-                    if (heIdent) list.push({ name: heIdent, length_ft: lengthFt, width_ft: widthFt, surface, closed: false, hdg: Number.parseFloat(row[18]) });
+                    if (leIdent) list.push({ name: leIdent, length_ft: lengthFt, width_ft: widthFt, surface, closed: false, hdg: Number.parseFloat(row[12]), lat: Number.parseFloat(row[9]), lon: Number.parseFloat(row[10]) });
+                    if (heIdent) list.push({ name: heIdent, length_ft: lengthFt, width_ft: widthFt, surface, closed: false, hdg: Number.parseFloat(row[18]), lat: Number.parseFloat(row[15]), lon: Number.parseFloat(row[16]) });
                     if (!runwaysDB.has(canonical)) runwaysDB.set(canonical, list);
                     if (airportIdent !== canonical) runwaysDB.set(airportIdent, list);
                 }
@@ -6113,8 +6128,11 @@ ${waypoint(arr)}
     var x = new DOMParser().parseFromString(text, 'application/xml');
     if (x.getElementsByTagName('parsererror').length) return null;
     var g = function (n, tag) { var e = n.getElementsByTagName(tag)[0]; return e ? e.textContent.trim() : ''; };
-    var wps = Array.prototype.slice.call(x.getElementsByTagName('ATCWaypoint')), fix = [];
+    var wps = Array.prototype.slice.call(x.getElementsByTagName('ATCWaypoint')), fix = [], rwDep = '', rwArr = '';
     wps.forEach(function (w, i) {
+      var rn = g(w, 'RunwayNumberFP'), rw = rn ? rn + g(w, 'RunwayDesignatorFP').replace(/NONE/i, '').charAt(0) : '';
+      if (rw && g(w, 'DepartureFP') && !rwDep) rwDep = rw;
+      if (rw && (g(w, 'ApproachTypeFP') || g(w, 'ArrivalFP'))) rwArr = rw;
       var pos = g(w, 'WorldPosition').split(','), lat = dms(pos[0]), lon = dms(pos[1]), alt = parseFloat(pos[2]);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
       var type = g(w, 'ATCWaypointType'), id = g(w, 'ICAOIdent') || w.getAttribute('id') || ('WP' + (i + 1));
@@ -6126,7 +6144,7 @@ ${waypoint(arr)}
     var dep = (g(x, 'DepartureID') || fix[0].ident).toUpperCase(), arr = (g(x, 'DestinationID') || fix[fix.length - 1].ident).toUpperCase();
     var a0 = fix[0], a1 = fix[fix.length - 1], cruise = parseInt(g(x, 'CruisingAlt'), 10) || 0;
     return { navlog: { fix: fix },
-      origin: { icao_code: dep, pos_lat: a0.pos_lat, pos_long: a0.pos_long }, destination: { icao_code: arr, pos_lat: a1.pos_lat, pos_long: a1.pos_long },
+      origin: { icao_code: dep, pos_lat: a0.pos_lat, pos_long: a0.pos_long, plan_rwy: rwDep }, destination: { icao_code: arr, pos_lat: a1.pos_lat, pos_long: a1.pos_long, plan_rwy: rwArr },
       general: { route: fix.slice(1, -1).map(function (f) { return f.ident; }).join(' '), initial_altitude: cruise },
       aircraft: {}, atc: {}, tlr: null, params: { time_generated: Math.floor(Date.now() / 1000) } };
   }
@@ -8564,6 +8582,13 @@ ${waypoint(arr)}
     layer.clearLayers();
     var p = (st && st.plan) || {}, r = (p.route || []).filter(function (w) { return isFinite(w.lat) && isFinite(w.lon) && !(w.lat === 0 && w.lon === 0); });
     if (r.length < 2) return;
+    /* départ et arrivée tracés sur le seuil de la piste choisie (SimBrief / .PLN), si elle est connue */
+    try {
+      var thr = window.hgRwyThreshold, t0 = thr && r[0].type === 'apt' && thr((p.origin || {}).icao || r[0].ident, (p.origin || {}).rwy),
+          rl = r[r.length - 1], t1 = thr && rl.type === 'apt' && thr((p.dest || {}).icao || rl.ident, (p.dest || {}).rwy);
+      if (t0) r[0] = Object.assign({}, r[0], { lat: t0.lat, lon: t0.lon });
+      if (t1) r[r.length - 1] = Object.assign({}, rl, { lat: t1.lat, lon: t1.lon });
+    } catch (e) {}
     var act = actOf(p, r); lastAct = act;
     /* mêmes couleurs que le plan SimBrief : départ (SID) vert, route magenta, arrivée (STAR) et approche orange */
     var COL = { sid: '#4ADE80', route: '#FF4DDB', star: '#FB923C' }, kinds = [], seenRoute = false;

@@ -463,6 +463,9 @@ R["en"] += [("marked with a “*”: tap the altitude to correct it from the cha
 R["fr"] += [("le groupe <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan)", "le groupe <b>Plan de vol</b> (SimBrief, Importer le plan, .PLN, Centrer sur le plan ; ton dernier plan SimBrief est aussi importé tout seul à l'ouverture de la carte, puis chaque minute dès que tu en génères un nouveau, et le FMS le reçoit)", "importé tout seul à l'ouverture de la carte")]
 R["en"] += [("the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center on plan)", "the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center on plan; your latest SimBrief plan is also imported by itself when the map opens, then every minute as soon as you generate a new one, and the FMS gets it)", "imported by itself when the map opens")]
 
+R["fr"] += [("<td>Dessine ton plan SimBrief avec SID, route et STAR</td>", "<td>Dessine ton plan SimBrief avec SID (vert), route (rose) et STAR (orange), du seuil de ta piste de départ au seuil de ta piste d'arrivée (pistes choisies dans SimBrief ou le .PLN) ; le plan du FMS reprend les mêmes couleurs</td>", "du seuil de ta piste de départ")]
+R["en"] += [("<td>Draws your SimBrief plan with SID, route and STAR</td>", "<td>Draws your SimBrief plan with SID (green), route (pink) and STAR (orange), from the threshold of your departure runway to the threshold of your arrival runway (runways chosen in SimBrief or the .PLN); the FMS plan uses the same colours</td>", "threshold of your departure runway")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():
