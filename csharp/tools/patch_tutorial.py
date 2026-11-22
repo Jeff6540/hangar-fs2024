@@ -456,6 +456,9 @@ R["en"] += [("If you chose an approach, it gets its starting point: SimBrief and
 R["fr"] += [("donc toujours dans l'axe du tracé</td></tr>", "donc toujours dans l'axe du tracé. <b>Au sol</b> (avant le décollage et après l'atterrissage), la carte zoome toute seule sur l'aéroport et suit ton avion pendant le roulage jusqu'à la piste ou la porte ; après le décollage, elle reprend le zoom d'avant. Si tu déplaces la carte toi-même, ce suivi au sol se met en pause une minute.</td></tr>", "la carte zoome toute seule sur l'aéroport")]
 R["en"] += [("so it always lines up with the route</td></tr>", "so it always lines up with the route. <b>On the ground</b> (before takeoff and after landing), the map zooms in on the airport by itself and follows your aircraft while taxiing to the runway or the gate; after takeoff it goes back to the previous zoom. If you move the map yourself, this ground following pauses for a minute.</td></tr>", "the map zooms in on the airport by itself")]
 
+R["fr"] += [("marqué d'un « * » : touche l'altitude pour la corriger selon la carte.", "marqué d'un « * » : touche l'altitude pour la corriger selon la carte (les points « * » juste avant prennent la même altitude).", "les points « * » juste avant prennent la même altitude")]
+R["en"] += [("marked with a “*”: tap the altitude to correct it from the chart.", "marked with a “*”: tap the altitude to correct it from the chart (the “*” points just before take the same altitude).", "the “*” points just before take the same altitude")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

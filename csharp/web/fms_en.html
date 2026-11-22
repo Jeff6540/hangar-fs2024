@@ -200,7 +200,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
     sid: ['Départ', 'Departure'], star: ['Arrivée', 'Arrival'],
     setCruise: ['Croisière ?', 'Cruise?'],
-    defNote: ['* altitude d’approche par défaut (3000 ft au FAF) : touche-la pour la corriger selon la carte.', '* default approach altitude (3000 ft at the FAF): tap it to correct it from the chart.'],
+    defNote: ['* altitude d’approche par défaut (3000 ft au FAF) : touche-la pour la corriger selon la carte ; les points * juste avant prennent la même altitude.', '* default approach altitude (3000 ft at the FAF): tap it to correct it from the chart; the * points just before take the same altitude.'],
     elevUnk: ['Altitude du terrain d’arrivée inconnue : touche le « ? » de {a} pour la taper. En attendant, le VNAV ne descend pas plus bas que le dernier point qui a une altitude.', 'Arrival field elevation unknown: tap the “?” of {a} to type it. Meanwhile VNAV does not descend below the last fix with an altitude.'], altHint: ['Touche « Croisière » en haut à droite ou la colonne Alt. d’un point pour régler les altitudes (utile au VNAV).', 'Tap “Cruise” at the top right or a fix’s Alt. column to set altitudes (used by VNAV).'],
     todVia: ['descente vers {a} ft à {p}', 'descent to {a} ft at {p}'], todIn: ['dans {d} NM', 'in {d} NM'], todSteep: ['pente > 3°', 'path > 3°'], todNow: ['descente en cours', 'descending'],
     navPlan: ['Plan de vol', 'Flight plan'], navAp: ['Pilote auto', 'Autopilot'], navChart: ['Cartes', 'Charts'],
@@ -505,7 +505,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
       if (!rt[k]) return;
       var apt = k === 0 || k === rt.length - 1;
       editNum(ac, rt[k].alt, function (ok, v) {
-        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, apt ? { alt: Math.round(v), elev: true } : { alt: Math.round(v / 100) * 100, altDef: false }) : w; }); FmsStore.set({ plan: { route: rt } }, 'fms'); }
+        if (ok && v >= 0 && v <= 60000) { rt = rt.map(function (w, j) { return j === k ? Object.assign({}, w, apt ? { alt: Math.round(v), elev: true } : { alt: Math.round(v / 100) * 100, altDef: false }) : w; }); if (!apt) { var nv = Math.round(v / 100) * 100; for (var jb = k - 1; jb > 0 && rt[jb].altDef; jb--) rt[jb] = Object.assign({}, rt[jb], { alt: nv }); } FmsStore.set({ plan: { route: rt } }, 'fms'); }
         else render(FmsStore.state);
       });
       return;
