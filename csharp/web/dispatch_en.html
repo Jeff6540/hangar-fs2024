@@ -4644,7 +4644,7 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
             let list = data.navlog && data.navlog.fix;
             if (!list) return [];
             if (!Array.isArray(list)) list = [list];
-            return list.map(f => ({
+            const fixes = list.map(f => ({
                 ident: String(f.ident || ''),
                 name: String(f.name || ''),
                 type: String(f.type || ''),
@@ -4654,6 +4654,14 @@ html.hgBoot body::after{content:attr(data-hgboot);position:fixed;inset:0;z-index
                 alt: Number.parseInt(f.altitude_feet, 10),
                 sidstar: sbBool(f.is_sid_star)
             })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon));
+            /* la liste SimBrief commence après l'aéroport de départ : on l'ajoute pour tracer le premier tronçon */
+            const o = data.origin || {}, olat = Number.parseFloat(o.pos_lat), olon = Number.parseFloat(o.pos_long);
+            if (fixes.length && Number.isFinite(olat) && Number.isFinite(olon)
+                && Math.abs(fixes[0].lat - olat) + Math.abs(fixes[0].lon - olon) > 0.02) {
+                fixes.unshift({ ident: String(o.icao_code || ''), name: String(o.name || ''), type: 'apt', via: '',
+                    lat: olat, lon: olon, alt: Number.parseInt(o.elevation, 10), sidstar: false });
+            }
+            return fixes;
         }
 
         // Classe chaque tronçon : SID (départ), STAR (arrivée) ou route.
