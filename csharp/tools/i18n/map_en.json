@@ -78,6 +78,10 @@
    "en": "    <div class=\"sec plain muted\">Map tiles © OpenStreetMap contributors, Esri · Positions and sizes: OurAirports. The map follows the app live.</div>"
   },
   {
+   "fr": "  var T = {\"sb\": \"SimBrief ne répond pas : ton plan ne peut pas être chargé pour l'instant.\", \"wx\": \"Le service météo (METAR) ne répond pas : la météo n'est pas à jour.\", \"fshub\": \"FSHub ne répond pas : les pilotes de la VA ne s'affichent pas pour l'instant.\", \"osm\": \"OpenStreetMap ne répond pas : les plans d'aéroport (taxiways) ne s'affichent pas.\", \"relay\": \"Le relais de l'appli ne répond pas : redémarre Hangar FS 2024.\", \"tiles\": \"Le fond de carte ne se charge pas : vérifie ta connexion Internet.\", \"leaflet\": \"La carte n'a pas pu se charger (connexion Internet ?). Ferme puis rouvre cette fenêtre.\", \"retry\": \"nouvel essai automatique\", \"close\": \"Masquer\"}, down = {}, hidden = {}, box = null;",
+   "en": "  var T = {\"sb\": \"SimBrief is not responding: your plan can't be loaded right now.\", \"wx\": \"The weather service (METAR) is not responding: weather is not up to date.\", \"fshub\": \"FSHub is not responding: VA pilots are not shown right now.\", \"osm\": \"OpenStreetMap is not responding: airport diagrams (taxiways) are not shown.\", \"relay\": \"The app's relay is not responding: restart Hangar FS 2024.\", \"tiles\": \"The map background is not loading: check your Internet connection.\", \"leaflet\": \"The map could not load (Internet connection?). Close and reopen this window.\", \"retry\": \"automatic retry\", \"close\": \"Hide\"}, down = {}, hidden = {}, box = null;"
+  },
+  {
    "fr": "  {id:\"default\", label:\"Scène par défaut MSFS 2024\", color:\"#a855f7\", ink:\"#ffffff\", r:8},",
    "en": "  {id:\"default\", label:\"MSFS 2024 default scenery\", color:\"#a855f7\", ink:\"#ffffff\", r:8},"
   },

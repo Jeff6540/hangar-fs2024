@@ -737,14 +737,17 @@ namespace HangarFS2024
             if (!Regex.IsMatch(icao, "^[A-Z0-9]{3,4}$")) { r.Json(400, new JObject { ["error"] = Hangar.L("code aéroport invalide", "invalid airport code") }); return; }
             var sources = new[] { new[] { "https://aviationweather.gov/api/data/metar?format=raw&ids=" + icao, "aviationweather.gov" },
                                   new[] { "https://tgftp.nws.noaa.gov/data/observations/metar/stations/" + icao + ".TXT", "tgftp.nws.noaa.gov" } };
+            int down = 0;   // 12.9.3 : sources injoignables (réseau, serveur en panne) ≠ aéroport sans METAR
             foreach (var s in sources)
             {
                 var res = Web.Request(s[0], UA, 10000);
-                if (res.Error != null || res.Status != 200) continue;
+                if (res.Error != null || res.Status >= 500) { down++; continue; }
+                if (res.Status != 200) continue;
                 var lines = res.Body.Split('\n').Select(l => l.Trim()).Where(l => l != "").ToList();
                 string metar = lines.FirstOrDefault(l => l.StartsWith(icao)) ?? (lines.Count > 0 ? lines[lines.Count - 1] : "");
                 if (metar.Length > 10) { r.Json(200, new JObject { ["metar"] = metar, ["source"] = s[1] }); return; }
             }
+            if (down == sources.Length) { r.Json(502, new JObject { ["error"] = Hangar.L("service météo injoignable", "weather service unreachable") }); return; }
             r.Json(404, new JObject { ["error"] = Hangar.L("aucun METAR trouvé", "no METAR found") });
         }
 

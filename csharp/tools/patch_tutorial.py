@@ -466,6 +466,9 @@ R["en"] += [("the <b>Flight plan</b> group (SimBrief, Import plan, .PLN, Center 
 R["fr"] += [("<td>Dessine ton plan SimBrief avec SID, route et STAR</td>", "<td>Dessine ton plan SimBrief avec SID (vert), route (rose) et STAR (orange), du seuil de ta piste de départ au seuil de ta piste d'arrivée (pistes choisies dans SimBrief ou le .PLN) ; le plan du FMS reprend les mêmes couleurs</td>", "du seuil de ta piste de départ")]
 R["en"] += [("<td>Draws your SimBrief plan with SID, route and STAR</td>", "<td>Draws your SimBrief plan with SID (green), route (pink) and STAR (orange), from the threshold of your departure runway to the threshold of your arrival runway (runways chosen in SimBrief or the .PLN); the FMS plan uses the same colours</td>", "threshold of your departure runway")]
 
+R["fr"] += [("le plan du FMS reprend les mêmes couleurs</td>", "le plan du FMS reprend les mêmes couleurs. Si SimBrief, la météo, FSHub, les plans d'aéroport ou le fond de carte ne répondent pas, un bandeau orange en bas de l'écran le dit (il disparaît tout seul quand le service revient)</td>", "un bandeau orange en bas de l'écran")]
+R["en"] += [("the FMS plan uses the same colours</td>", "the FMS plan uses the same colours. If SimBrief, the weather, FSHub, airport diagrams or the map background are not responding, an orange banner at the bottom of the screen says so (it goes away by itself when the service is back)</td>", "an orange banner at the bottom of the screen")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

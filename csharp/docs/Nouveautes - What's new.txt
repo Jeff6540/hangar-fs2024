@@ -5,6 +5,11 @@ Nouveautés / What's new
 FRANÇAIS
 --------
 
+Version 12.9.3 — stabilité
+- Services extérieurs en panne (SimBrief, météo, FSHub, plans d'aéroport, fond de carte) : un bandeau orange en bas de l'écran le signale, et disparaît tout seul quand le service revient.
+- Page Plan de vol : pour un avion de ligne, les propositions (aléatoire / durée) ne contiennent plus de terrains sans vols commerciaux réguliers (ex. Montbéliard-Courcelles pour un A320).
+- Contrôles automatiques avant chaque version et nettoyage du code (aucun changement visible).
+
 Version 12.9.2 — carte de suivi
 - Le plan (SimBrief ou .PLN) part du bout de ta piste de départ et s'arrête au bout de ta piste d'arrivée, celles choisies dans SimBrief ou le .PLN, au lieu du centre de l'aéroport.
 - Couleurs claires : départ (SID) en vert, route en rose, arrivée (STAR) et approche en orange (approche en pointillés), parties déjà parcourues en gris ; le plan du FMS reprend les mêmes couleurs.
@@ -133,6 +138,11 @@ Version 12.1 — carte de suivi plus lisible
 
 ENGLISH
 -------
+
+Version 12.9.3 — stability
+- External services down (SimBrief, weather, FSHub, airport diagrams, map background): an orange banner at the bottom of the screen says so, and goes away by itself when the service is back.
+- Flight plan page: for an airliner, suggestions (random / duration) no longer include fields without scheduled commercial flights (e.g. Montbéliard-Courcelles for an A320).
+- Automatic checks before each version and code clean-up (no visible change).
 
 Version 12.9.2 — tracking map
 - The plan (SimBrief or .PLN) starts at the end of your departure runway and stops at the end of your arrival runway, as chosen in SimBrief or the .PLN, instead of the middle of the airport.

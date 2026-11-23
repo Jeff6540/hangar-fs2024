@@ -3896,3 +3896,125 @@ if __name__ == "__main__":
     _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for _l in ("fr", "en"):
         patch_autosb129(os.path.join(_web, "dispatch_%s.html" % _l), _l)
+
+
+# ---------------------------------------------------------------------------
+# 12.9.3 : services extérieurs en panne — un bandeau clair au lieu d'une carte ou d'un panneau vides.
+# Surveille, sans rien changer au reste de la page : les appels au relais de l'appli (SimBrief, météo, FSHub,
+# plans d'aéroport OpenStreetMap), SimBrief en direct, le fond de carte, et le chargement de la carte elle-même.
+SVC1293_TXT = {
+  "fr": {"sb": "SimBrief ne répond pas : ton plan ne peut pas être chargé pour l'instant.",
+         "wx": "Le service météo (METAR) ne répond pas : la météo n'est pas à jour.",
+         "fshub": "FSHub ne répond pas : les pilotes de la VA ne s'affichent pas pour l'instant.",
+         "osm": "OpenStreetMap ne répond pas : les plans d'aéroport (taxiways) ne s'affichent pas.",
+         "relay": "Le relais de l'appli ne répond pas : redémarre Hangar FS 2024.",
+         "tiles": "Le fond de carte ne se charge pas : vérifie ta connexion Internet.",
+         "leaflet": "La carte n'a pas pu se charger (connexion Internet ?). Ferme puis rouvre cette fenêtre.",
+         "retry": "nouvel essai automatique", "close": "Masquer"},
+  "en": {"sb": "SimBrief is not responding: your plan can't be loaded right now.",
+         "wx": "The weather service (METAR) is not responding: weather is not up to date.",
+         "fshub": "FSHub is not responding: VA pilots are not shown right now.",
+         "osm": "OpenStreetMap is not responding: airport diagrams (taxiways) are not shown.",
+         "relay": "The app's relay is not responding: restart Hangar FS 2024.",
+         "tiles": "The map background is not loading: check your Internet connection.",
+         "leaflet": "The map could not load (Internet connection?). Close and reopen this window.",
+         "retry": "automatic retry", "close": "Hide"}}
+SVC1293_JS = """<script id="hangar-1293-svc">
+(function () {
+  var T = __TXT__, down = {}, hidden = {}, box = null;
+  function el() {
+    if (box || !document.body) return box;
+    box = document.createElement('div'); box.id = 'hgSvc';
+    box.style.cssText = 'position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:100000;display:flex;flex-direction:column;gap:6px;max-width:min(720px,92vw);pointer-events:none';
+    document.body.appendChild(box); return box;
+  }
+  function draw() {
+    var b = el(); if (!b) return;
+    b.innerHTML = Object.keys(down).filter(function (k) { return !hidden[k]; }).map(function (k) {
+      return '<div style="pointer-events:auto;display:flex;align-items:center;gap:10px;background:#2a1d06;border:1px solid #f59e0b;color:#fde68a;border-radius:10px;padding:8px 12px;font:600 12.5px Segoe UI,Inter,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.45)">'
+        + '<span style="font-size:15px">⚠</span><span style="flex:1">' + T[k] + (k === 'leaflet' ? '' : ' <span style="color:#d6b36a;font-weight:500">· ' + T.retry + '</span>') + '</span>'
+        + '<button data-k="' + k + '" title="' + T.close + '" style="background:none;border:0;color:#fde68a;cursor:pointer;font-size:15px;line-height:1">✕</button></div>';
+    }).join('');
+    b.querySelectorAll('button[data-k]').forEach(function (x) { x.onclick = function () { hidden[x.dataset.k] = true; draw(); }; });
+  }
+  function set(k, isDown) {
+    if (!k) return;
+    if (isDown && !down[k]) { down[k] = Date.now(); draw(); }
+    else if (!isDown && down[k]) { delete down[k]; delete hidden[k]; draw(); }
+  }
+  window.hgSvcStatus = set;   /* utilisable par d'autres parties de la page */
+  function kind(u) {
+    u = String(u || '');
+    if (/simbrief\\.com\\//.test(u)) return 'sb';
+    var m = /^https?:\\/\\/(?:localhost|127\\.0\\.0\\.1):8765(\\/[a-z-]*)/.exec(u);
+    if (!m) return null;
+    var p = m[1];
+    if (p === '/simbrief') return 'sb';
+    if (p === '/metar') return 'wx';
+    if (p === '/aeroway') return 'osm';
+    if (/^\\/fshub/.test(p)) return 'fshub';
+    return 'relay';
+  }
+  /* appels réseau : panne = pas de réponse, ou réponse 502 / 503 / 504 du relais (service extérieur injoignable) */
+  if (window.fetch && !window.fetch._hgSvc) {
+    var f0 = window.fetch;
+    var f1 = function (input, init) {
+      var u = typeof input === 'string' ? input : (input && input.url), k = kind(u);
+      var p = f0.apply(this, arguments);
+      if (!k) return p;
+      return p.then(function (r) {
+        if (r.status >= 502 && r.status <= 504) set(k, true);
+        else { set(k, false); if (k !== 'relay') set('relay', false); }
+        return r;
+      }, function (e) {
+        if (!(e && e.name === 'AbortError' && k === 'osm')) set(k === 'sb' && /simbrief\\.com/.test(u) ? null : k, true);   /* SimBrief en direct : le relais prend le relais */
+        throw e;
+      });
+    };
+    f1._hgSvc = true; window.fetch = f1;
+  }
+  /* fond de carte : plusieurs tuiles en échec sans aucune réussite = fond indisponible */
+  function hookTiles() {
+    if (!window.L || !L.TileLayer || L.TileLayer.prototype._hgSvc) return;
+    L.TileLayer.prototype._hgSvc = true;
+    var errs = 0, lastOk = Date.now(), t = null;
+    var orig = L.TileLayer.prototype.onAdd;
+    L.TileLayer.prototype.onAdd = function (map) {
+      if (!this._hgSvcOn) {
+        this._hgSvcOn = true;
+        this.on('tileerror', function () { errs++; if (errs >= 4 && Date.now() - lastOk > 8000) set('tiles', true); });
+        this.on('tileload', function () { errs = 0; lastOk = Date.now(); set('tiles', false); });
+      }
+      return orig.call(this, map);
+    };
+  }
+  hookTiles();
+  function leafletCheck() { if (!window.L) set('leaflet', true); else { set('leaflet', false); hookTiles(); } }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { leafletCheck(); draw(); });
+  else { leafletCheck(); draw(); }
+  window.addEventListener('online', function () { set('tiles', false); });
+})();
+</script>"""
+
+
+def patch_svc1293(path, lang):
+    s = open(path, encoding="utf-8").read()
+    if "hangar-1293-svc" in s:
+        return
+    js = SVC1293_JS.replace("__TXT__", json.dumps(SVC1293_TXT[lang], ensure_ascii=False))
+    for tag in ('leaflet.js"', "leaflet.min.js\""):
+        i = s.find(tag)
+        if i >= 0:
+            j = s.index("</script>", i) + len("</script>")
+            s = s[:j] + js + s[j:]
+            break
+    else:
+        s = s.replace("</head>", js + "</head>", 1)
+    open(path, "w", encoding="utf-8").write(s)
+
+
+if __name__ == "__main__":
+    _web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
+    for _p in ("dispatch", "map"):
+        for _l in ("fr", "en"):
+            patch_svc1293(os.path.join(_web, "%s_%s.html" % (_p, _l)), _l)
