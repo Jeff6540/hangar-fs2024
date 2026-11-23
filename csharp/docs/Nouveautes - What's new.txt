@@ -8,6 +8,7 @@ FRANÇAIS
 Version 12.9.3 — stabilité
 - Services extérieurs en panne (SimBrief, météo, FSHub, plans d'aéroport, fond de carte) : un bandeau orange en bas de l'écran le signale, et disparaît tout seul quand le service revient.
 - Page Plan de vol : pour un avion de ligne, les propositions (aléatoire / durée) ne contiennent plus de terrains sans vols commerciaux réguliers (ex. Montbéliard-Courcelles pour un A320).
+- Fenêtre FMS : rappel en bas de la fenêtre, le pilote auto de l'appli est en essai (garder un œil sur l'avion).
 - Contrôles automatiques avant chaque version et nettoyage du code (aucun changement visible).
 
 Version 12.9.2 — carte de suivi
@@ -142,6 +143,7 @@ ENGLISH
 Version 12.9.3 — stability
 - External services down (SimBrief, weather, FSHub, airport diagrams, map background): an orange banner at the bottom of the screen says so, and goes away by itself when the service is back.
 - Flight plan page: for an airliner, suggestions (random / duration) no longer include fields without scheduled commercial flights (e.g. Montbéliard-Courcelles for an A320).
+- FMS window: reminder at the bottom of the window, the app's autopilot is in testing (keep an eye on the aircraft).
 - Automatic checks before each version and code clean-up (no visible change).
 
 Version 12.9.2 — tracking map

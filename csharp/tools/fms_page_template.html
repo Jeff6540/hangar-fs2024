@@ -153,6 +153,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
   <button class="tile" data-scr="Chart"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg><span data-t="navChart"></span></button>
 </div>
 <div class="mem"><span id="mem"></span><span id="src"></span></div>
+<div id="apWarn" style="font-size:10.5px;color:#f2c46b;text-align:center;margin-top:2px"></div>
 
 <script src="/fms_store.js"></script>
 <script>
@@ -195,6 +196,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     confirmNew: ['Effacer le plan en mémoire et repartir de zéro ?', 'Clear the stored plan and start over?'],
     pickDirect: ['Touche le point vers lequel aller dans la liste.', 'Tap the fix to fly to in the list.'],
     mem: ['Mémoire : version {r} · {t}', 'Memory: version {r} · {t}'],
+    apWarn: ['⚠ Pilote auto de l’appli en essai : garde toujours un œil sur l’avion.', '⚠ The app’s autopilot is in testing: always keep an eye on the aircraft.'],
     memOk: ['gardée', 'kept'],
     by: ['dernier changement : {s}', 'last change: {s}'],
     total: ['{n} points · {d} NM', '{n} fixes · {d} NM'],
@@ -238,6 +240,7 @@ body{display:flex;flex-direction:column;padding:10px;gap:8px}
     src: { lnav: ['LNAV', 'LNAV'], fms: ['FMS', 'FMS'], simbrief: ['SimBrief', 'SimBrief'], pln: ['.PLN', '.PLN'], plan: ['Plan de vol', 'Flight plan'], vfr: ['Plan VFR', 'VFR plan'], track: ['Suivi de vol', 'Flight tracking'] }
   };
   function t(k, v) { var s = (T[k] || [k, k])[LANG === 'en' ? 1 : 0]; Object.keys(v || {}).forEach(function (x) { s = s.replace('{' + x + '}', v[x]); }); return s; }
+  (function () { var w = document.getElementById('apWarn'); if (w) w.textContent = t('apWarn'); })();   /* pilote auto en essai */
   function $(id) { return document.getElementById(id); }
   document.querySelectorAll('[data-t]').forEach(function (e) { e.textContent = t(e.dataset.t); });
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
