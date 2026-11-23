@@ -1,5 +1,5 @@
 # Ajoute à la page Plan & suivi de vol (web/dispatch_fr.html et dispatch_en.html) :
-#  - VATSIM et IVAO (cases à cocher, même cercle de distance que le radar global FSHub)
+#  - (VATSIM et IVAO : retirés en 12.3, code supprimé en 12.9.3)
 #  - mouvement fluide des avions et trafic IA relu chaque seconde
 # À relancer si les pages sont régénérées depuis la 11.8 :  python patch_dispatch.py <dossier web>
 import sys, os
@@ -16,125 +16,18 @@ TXT = {
 }
 
 NET_JS = r"""<script>
-/* Hangar FS 2024 : pilotes VATSIM et IVAO, mouvement fluide */
+/* Hangar FS 2024 : mouvement fluide des avions sur la carte de suivi (VATSIM et IVAO retirés en 12.3) */
 (function () {
-  var T = __TXT__;
-  var RELAY = 'http://localhost:8765/net?src=';
-  /* 12.3 : VATSIM et IVAO retirés de l'appli (le module garde seulement le mouvement fluide des avions) */
-  var SRC = {};
-  /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
-  var DARK = '#1f2937';
-  var st = {};
-  Object.keys(SRC).forEach(function (k) {
-    var on = false; try { on = localStorage.getItem('al_net_' + k) === '1'; } catch (e) {}
-    st[k] = { on: on, data: null, err: '', mk: {}, layer: null, btn: null, t: 0 };
-  });
   window.alNetOn = function () { return false; };
   function K() { return window.alNetKit; }
-  function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
+  window.alNetRender = function () { try { if (K()) K().radDraw(); } catch (e) {} };
 
-  /* position estimée entre deux mises à jour (cap + vitesse), au plus 60 s */
-  function pos(p, t0) {
-    if (p.ground || !p.gs) return [p.lat, p.lon];
-    var dt = Math.min(60, Math.max(0, (Date.now() - t0) / 1000)), d = p.gs * dt / 3600 / 60, h = p.hdg * Math.PI / 180;
-    return [p.lat + d * Math.cos(h), p.lon + d * Math.sin(h) / Math.max(0.05, Math.cos(p.lat * Math.PI / 180))];
-  }
-  function isMe(p, ll) {   /* ton propre avion, s'il est connecté au réseau : pas en double */
-    var u = window.alMyPos; if (!u || u.lat == null) return false;
-    return K().nmDist(u.lat, u.lon, ll[0], ll[1]) < 1.5;
-  }
-  function icon(k, p) {
-    var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
-    var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft)
-      : SRC[k].dark ? k2.planeSvg(size, p.hdg, DARK, color(k), 2, p.aircraft)
-      : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
-    return L.divIcon({ className: 'alfs-icon', html: svg, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
-  }
-  function tip(k, p) {
-    var e = K().esc, l1 = [e(p.callsign)], l2 = [];
-    if (p.aircraft) l1.push(e(p.aircraft));
-    if (p.dep || p.arr) l1.push(e((p.dep || '?') + ' → ' + (p.arr || '?')));
-    l1.push(p.ground ? T.ground : T.air);
-    if (!p.ground) l2.push(p.alt.toLocaleString() + ' ft');
-    if (p.gs) l2.push(p.gs + ' kt');
-    if (!p.ground) l2.push(T.hdg + ' ' + String(p.hdg).padStart(3, '0') + '°');
-    return '<b style="color:' + color(k) + '">' + SRC[k].label + '</b> · ' + l1.join(' · ') + (l2.length ? '<br>' + l2.join(' · ') : '') +
-      '<br><span style="opacity:.6">' + T.src.replace('%s', SRC[k].label) + '</span>';
-  }
-  function setBtn(k, n) {
-    var s = st[k], b = s.btn; if (!b) return;
-    b.textContent = SRC[k].label + (s.on && s.data ? ' · ' + n : '');
-    b.style.setProperty('--c', color(k));
-    b.classList.toggle('on', s.on);
-    b.title = !s.on ? T.on.replace(/%s/g, SRC[k].label) : (s.err ? T.off.replace('%s', SRC[k].label).replace('%s', s.err) : T.hide.replace('%s', SRC[k].label));
-  }
-  function render(k) {
-    var s = st[k], k2 = K(), m = k2 && k2.map(); if (!m) return;
-    if (!s.layer) s.layer = L.layerGroup().addTo(m);
-    if (!s.on || !s.data) { s.layer.clearLayers(); s.mk = {}; setBtn(k, 0); return; }
-    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = '';
-    (s.data.pilots || []).forEach(function (p) {
-      if (p.ground && !ground) return;
-      var ll = pos(p, s.t);
-      if (keep && !keep(ll[0], ll[1])) return;
-      if (isMe(p, ll)) return;
-      seen[p.id] = 1; n++;
-      var mk = s.mk[p.id], sig = p.hdg + '|' + p.ground + '|' + zoomSig + '|' + window.alColorblind;
-      if (!mk) {
-        mk = L.marker(ll, { icon: icon(k, p), keyboard: false, zIndexOffset: 400 }).addTo(s.layer);
-        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
-        mk._sig = sig; s.mk[p.id] = mk;
-      } else {
-        mk.setLatLng(ll);
-        if (mk._sig !== sig) { mk.setIcon(icon(k, p)); mk._sig = sig; }
-        mk.setTooltipContent(tip(k, p));
-      }
-    });
-    Object.keys(s.mk).forEach(function (id) { if (!seen[id]) { s.layer.removeLayer(s.mk[id]); delete s.mk[id]; } });
-    setBtn(k, n);
-  }
-  function renderAll() { Object.keys(SRC).forEach(render); try { if (K()) K().radDraw(); } catch (e) {} }
-  window.alNetRender = renderAll;
-  function poll(k) {
-    var s = st[k]; if (!s.on) return;
-    fetch(RELAY + k, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.enabled) {
-        if (!s.data || d.updated !== s.data.updated) { s.data = d; s.t = Date.now(); }
-        s.err = '';
-      } else { s.err = (d && d.error) || '?'; }
-      render(k);
-    }).catch(function () { s.err = T.relay; render(k); });
-  }
-
-  /* boutons à côté de « Toutes les VA FSHub », le menu du rayon après eux */
-  function build() {
+  /* menu du rayon juste après « Toutes les VA FSHub » */
+  function place() {
     var all = document.getElementById('alFshubAllBtn'); if (!all || !K()) return false;
-    var after = all;
-    Object.keys(SRC).forEach(function (k) {
-      if (st[k].btn) { after = st[k].btn; return; }
-      var b = document.createElement('button'); b.type = 'button'; b.id = 'alNet_' + k;
-      b.className = all.className.replace(/\boff\b/, '') + ' alnet-btn';
-      after.parentNode.insertBefore(b, after.nextSibling); after = b; st[k].btn = b;
-      b.addEventListener('click', function () {
-        st[k].on = !st[k].on; try { localStorage.setItem('al_net_' + k, st[k].on ? '1' : '0'); } catch (e) {}
-        if (st[k].on) poll(k);
-        renderAll(); if (K().renderAll) K().renderAll();
-      });
-      setBtn(k, 0);
-    });
-    var rad = document.getElementById('alFshubRad'); if (rad) after.parentNode.insertBefore(rad, after.nextSibling);
-    var lg = document.getElementById('alVaLegend');
-    if (lg && !document.getElementById('alNetLeg')) {
-      var d = document.createElement('div'); d.id = 'alNetLeg';
-      d.innerHTML = Object.keys(SRC).map(function (k) {
-        return '<div class="alsh"><svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;flex:none;width:14px;height:14px"><g fill="' + (SRC[k].dark ? DARK : color(k)) +
-          '" stroke="' + (SRC[k].dark ? color(k) : '#fff') + '" stroke-width="' + (SRC[k].dark ? 2 : 1.3) + '">' + '<path d="M12 2l1.6 6.5L21 13v1.8l-7.4-2.3-.5 5.6 2.4 1.8V21L12 20l-3.5 1v-1.1l2.4-1.8-.5-5.6L3 14.8V13l7.4-4.5z"/>' +
-          '</g></svg> ' + SRC[k].leg + '</div>';
-      }).join('');
-      lg.insertBefore(d, lg.children[2] || null);
-    }
+    var rad = document.getElementById('alFshubRad'); if (rad) all.parentNode.insertBefore(rad, all.nextSibling);
     var gnd = document.getElementById('trafficShowGround');
-    if (gnd && !gnd._alnet) { gnd._alnet = true; gnd.addEventListener('change', renderAll); }
+    if (gnd && !gnd._alnet) { gnd._alnet = true; gnd.addEventListener('change', window.alNetRender); }
     return true;
   }
 
@@ -142,10 +35,7 @@ NET_JS = r"""<script>
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear,left 1s linear,top 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon{transition:none!important}' +
-    '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}' +
-    'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
-    'color:var(--c)!important;border:1px solid var(--c)!important}' +
-    'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
+    '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}';
   document.head.appendChild(css);
   var hooked = false;
   function smooth() {
@@ -164,9 +54,7 @@ NET_JS = r"""<script>
   }
 
   function start() {
-    var t = setInterval(function () { if (build()) { clearInterval(t); Object.keys(SRC).forEach(poll); renderAll(); } }, 500);
-    setInterval(function () { Object.keys(SRC).forEach(function (k) { if (st[k].on) render(k); }); }, 1000);
-    setInterval(function () { Object.keys(SRC).forEach(poll); }, 5000);
+    var t = setInterval(function () { if (place()) { clearInterval(t); window.alNetRender(); } }, 500);
     setInterval(smooth, 500);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
@@ -2076,24 +1964,8 @@ if __name__ == "__main__":
 
 # ---- 12.7 : taxiways sur la carte du journal (copie du calque de la carte de suivi), étiquette de roulage près de l'avion ----
 def _aero_clone(s):
-    a = s.index("(function () {\n  var URL = 'http://localhost:8765/aeroway'")
-    b = s.index("})();", a) + len("})();")
-    src = s[a:b]
-    reps = [
-        ("  function map() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }",
-         "  function map() { return window.hgJMapObj || null; }   /* copie pour la carte du journal de vol */"),
-        ("    var m = map(); if (!m) return;\n    if (!on ||",
-         "    var m = map(); if (!m) return;\n    try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}   /* suit le bouton TAXIWAYS de la carte de suivi */\n    if (!on ||"),
-        ("    if (ref && !document.getElementById('alAerowayBtn')) {", "    if (false) {"),
-        ("    if (!m || !btn) return false;\n    refresh();\n    return true;", "    if (!m) return false;\n    refresh();\n    return false;"),
-        ("  document.head.appendChild(css);", "  /* styles déjà ajoutés par le calque de la carte de suivi */"),
-        ("  function start() { prefetch(); var t = setInterval(function () { if (build()) clearInterval(t); }, 1000); }",
-         "  function start() { setInterval(function () { if (window.hgJMapObj && !grp) build(); else if (grp) refresh(); }, 3000); }"),
-    ]
-    for x, y in reps:
-        assert src.count(x) == 1, x[:50]
-        src = src.replace(x, y)
-    return '<script id="hangar-127-jaero-js">\n' + src + "\n</script>"
+    # 12.9.3 : plus de copie du code — le calque de la carte de suivi est une fonction réutilisée (hgAerowayLayer)
+    return '<script id="hangar-127-jaero-js">\nwindow.hgAerowayLayer({ journal: true });   /* taxiways aussi sur la carte du journal de vol (même calque que la carte de suivi) */\n</script>'
 
 TAXI_TXT = {"fr": {"to": "Roulage vers la piste", "in": "Roulage vers la porte", "push": "Repoussage"},
             "en": {"to": "Taxi to runway", "in": "Taxi to gate", "push": "Pushback"}}

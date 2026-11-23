@@ -1850,13 +1850,14 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 })();
 </script><script>
 /* Hangar FS 2024 : pistes, taxiways, aires et parkings (OpenStreetMap, via le relais) sur la carte de suivi, à partir du zoom 13. */
-(function () {
+window.hgAerowayLayer = function (opt) {   /* opt.journal : même calque sur la carte du journal de vol */
+  opt = opt || {};
   var URL = 'http://localhost:8765/aeroway', KEY_ON = 'al_aeroway_on', MINZ = 13, CELL = 0.1, MAXCELLS = 6;
   var on = true; try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}
   var cells = {}, queue = [], busy = false, btn = null, grp = null, rnd = null, attr = null, lastErr = '';
   var ATTR = 'Airport layouts © OpenStreetMap contributors (ODbL)';
 
-  function map() { try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }
+  function map() { if (opt.journal) return window.hgJMapObj || null; try { return (typeof trafficMap !== 'undefined' && trafficMap) ? trafficMap : null; } catch (e) { return null; } }
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function wanted(m) {
@@ -1923,6 +1924,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
 
   function refresh() {
     var m = map(); if (!m) return;
+    if (opt.journal) { try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {} }   /* suit le bouton TAXIWAYS de la carte de suivi */
     if (!on || m.getZoom() < MINZ) { if (grp && m.hasLayer(grp)) m.removeLayer(grp); setAttr(m, false); status(); return; }
     if (grp && !m.hasLayer(grp)) grp.addTo(m);
     setAttr(m, true);
@@ -2049,7 +2051,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   function build() {
     var m = map();
     var ref = document.getElementById('alFshubAllBtn') || document.getElementById('alFshubBtn') || document.getElementById('trafficToggleBtn');
-    if (ref && !document.getElementById('alAerowayBtn')) {
+    if (!opt.journal && ref && !document.getElementById('alAerowayBtn')) {
       btn = document.createElement('button');
       btn.id = 'alAerowayBtn'; btn.type = 'button';
       btn.className = 'px-2.5 py-1 text-[10px] font-bold rounded transition cursor-pointer whitespace-nowrap';
@@ -2068,9 +2070,9 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
       m.on('moveend zoomend', refresh);
     }
     status();
-    if (!m || !btn) return false;
+    if (!m || (!opt.journal && !btn)) return false;
     refresh();
-    return true;
+    return !opt.journal;
   }
 
   var css = document.createElement('style');
@@ -2082,131 +2084,28 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
     '.alaw-lbl.tw span{background:#111;color:#facc15;border:1px solid #facc15}' +
     '.alaw-lbl.rw span{background:#f8fafc;color:#111;font-size:12px}' +
     '.alaw-lbl.pk span{background:rgba(11,18,32,.85);color:#5eead4;font-size:10px;font-weight:600;transform:translate(6px,-50%)}';
-  document.head.appendChild(css);
+  if (!opt.journal) document.head.appendChild(css);
 
-  function start() { prefetch(); var t = setInterval(function () { if (build()) clearInterval(t); }, 1000); }
+  function start() {
+    if (opt.journal) { setInterval(function () { if (window.hgJMapObj && !grp) build(); else if (grp) refresh(); }, 3000); return; }
+    prefetch(); var t = setInterval(function () { if (build()) clearInterval(t); }, 1000);
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-})();
+};
+window.hgAerowayLayer({});
 </script><script>
-/* Hangar FS 2024 : pilotes VATSIM et IVAO, mouvement fluide */
+/* Hangar FS 2024 : mouvement fluide des avions sur la carte de suivi (VATSIM et IVAO retirés en 12.3) */
 (function () {
-  var T = {"on": "Show pilots connected to %s (public %s data, refreshed every 15 s)", "off": "%s unavailable: %s", "hide": "Pilots connected to %s — click to hide", "ground": "on ground", "air": "airborne", "hdg": "hdg", "src": "%s data", "relay": "relay stopped", "leg_v": "VATSIM pilots", "leg_i": "IVAO pilots"};
-  var RELAY = 'http://localhost:8765/net?src=';
-  /* 12.3 : VATSIM et IVAO retirés de l'appli (le module garde seulement le mouvement fluide des avions) */
-  var SRC = {};
-  /* IVAO : avion sombre bordé de rouge, pour ne pas le confondre avec les gros porteurs (rouges) du trafic IA */
-  var DARK = '#1f2937';
-  var st = {};
-  Object.keys(SRC).forEach(function (k) {
-    var on = false; try { on = localStorage.getItem('al_net_' + k) === '1'; } catch (e) {}
-    st[k] = { on: on, data: null, err: '', mk: {}, layer: null, btn: null, t: 0 };
-  });
   window.alNetOn = function () { return false; };
   function K() { return window.alNetKit; }
-  function color(k) { return window.alColorblind ? SRC[k].cb : SRC[k].color; }
+  window.alNetRender = function () { try { if (K()) K().radDraw(); } catch (e) {} };
 
-  /* position estimée entre deux mises à jour (cap + vitesse), au plus 60 s */
-  function pos(p, t0) {
-    if (p.ground || !p.gs) return [p.lat, p.lon];
-    var dt = Math.min(60, Math.max(0, (Date.now() - t0) / 1000)), d = p.gs * dt / 3600 / 60, h = p.hdg * Math.PI / 180;
-    return [p.lat + d * Math.cos(h), p.lon + d * Math.sin(h) / Math.max(0.05, Math.cos(p.lat * Math.PI / 180))];
-  }
-  function isMe(p, ll) {   /* ton propre avion, s'il est connecté au réseau : pas en double */
-    var u = window.alMyPos; if (!u || u.lat == null) return false;
-    return K().nmDist(u.lat, u.lon, ll[0], ll[1]) < 1.5;
-  }
-  function icon(k, p) {
-    var k2 = K(), size = k2.catSize(p.aircraft), m = k2.map();
-    var svg = p.ground ? k2.planeSvg(size, p.hdg, '#8a93a3', color(k), 1.4, p.aircraft)
-      : SRC[k].dark ? k2.planeSvg(size, p.hdg, DARK, color(k), 2, p.aircraft)
-      : k2.planeSvg(size, p.hdg, color(k), '#fff', 1.1, p.aircraft);
-    return L.divIcon({ className: 'alfs-icon', html: svg, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
-  }
-  function tip(k, p) {
-    var e = K().esc, l1 = [e(p.callsign)], l2 = [];
-    if (p.aircraft) l1.push(e(p.aircraft));
-    if (p.dep || p.arr) l1.push(e((p.dep || '?') + ' → ' + (p.arr || '?')));
-    l1.push(p.ground ? T.ground : T.air);
-    if (!p.ground) l2.push(p.alt.toLocaleString() + ' ft');
-    if (p.gs) l2.push(p.gs + ' kt');
-    if (!p.ground) l2.push(T.hdg + ' ' + String(p.hdg).padStart(3, '0') + '°');
-    return '<b style="color:' + color(k) + '">' + SRC[k].label + '</b> · ' + l1.join(' · ') + (l2.length ? '<br>' + l2.join(' · ') : '') +
-      '<br><span style="opacity:.6">' + T.src.replace('%s', SRC[k].label) + '</span>';
-  }
-  function setBtn(k, n) {
-    var s = st[k], b = s.btn; if (!b) return;
-    b.textContent = SRC[k].label + (s.on && s.data ? ' · ' + n : '');
-    b.style.setProperty('--c', color(k));
-    b.classList.toggle('on', s.on);
-    b.title = !s.on ? T.on.replace(/%s/g, SRC[k].label) : (s.err ? T.off.replace('%s', SRC[k].label).replace('%s', s.err) : T.hide.replace('%s', SRC[k].label));
-  }
-  function render(k) {
-    var s = st[k], k2 = K(), m = k2 && k2.map(); if (!m) return;
-    if (!s.layer) s.layer = L.layerGroup().addTo(m);
-    if (!s.on || !s.data) { s.layer.clearLayers(); s.mk = {}; setBtn(k, 0); return; }
-    var keep = k2.radFilter(), ground = k2.showGround(), seen = {}, n = 0, zoomSig = '';
-    (s.data.pilots || []).forEach(function (p) {
-      if (p.ground && !ground) return;
-      var ll = pos(p, s.t);
-      if (keep && !keep(ll[0], ll[1])) return;
-      if (isMe(p, ll)) return;
-      seen[p.id] = 1; n++;
-      var mk = s.mk[p.id], sig = p.hdg + '|' + p.ground + '|' + zoomSig + '|' + window.alColorblind;
-      if (!mk) {
-        mk = L.marker(ll, { icon: icon(k, p), keyboard: false, zIndexOffset: 400 }).addTo(s.layer);
-        mk.bindTooltip(tip(k, p), { direction: 'top', offset: [0, -10] }); window.alClickTip(mk);
-        mk._sig = sig; s.mk[p.id] = mk;
-      } else {
-        mk.setLatLng(ll);
-        if (mk._sig !== sig) { mk.setIcon(icon(k, p)); mk._sig = sig; }
-        mk.setTooltipContent(tip(k, p));
-      }
-    });
-    Object.keys(s.mk).forEach(function (id) { if (!seen[id]) { s.layer.removeLayer(s.mk[id]); delete s.mk[id]; } });
-    setBtn(k, n);
-  }
-  function renderAll() { Object.keys(SRC).forEach(render); try { if (K()) K().radDraw(); } catch (e) {} }
-  window.alNetRender = renderAll;
-  function poll(k) {
-    var s = st[k]; if (!s.on) return;
-    fetch(RELAY + k, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.enabled) {
-        if (!s.data || d.updated !== s.data.updated) { s.data = d; s.t = Date.now(); }
-        s.err = '';
-      } else { s.err = (d && d.error) || '?'; }
-      render(k);
-    }).catch(function () { s.err = T.relay; render(k); });
-  }
-
-  /* boutons à côté de « Toutes les VA FSHub », le menu du rayon après eux */
-  function build() {
+  /* menu du rayon juste après « Toutes les VA FSHub » */
+  function place() {
     var all = document.getElementById('alFshubAllBtn'); if (!all || !K()) return false;
-    var after = all;
-    Object.keys(SRC).forEach(function (k) {
-      if (st[k].btn) { after = st[k].btn; return; }
-      var b = document.createElement('button'); b.type = 'button'; b.id = 'alNet_' + k;
-      b.className = all.className.replace(/\boff\b/, '') + ' alnet-btn';
-      after.parentNode.insertBefore(b, after.nextSibling); after = b; st[k].btn = b;
-      b.addEventListener('click', function () {
-        st[k].on = !st[k].on; try { localStorage.setItem('al_net_' + k, st[k].on ? '1' : '0'); } catch (e) {}
-        if (st[k].on) poll(k);
-        renderAll(); if (K().renderAll) K().renderAll();
-      });
-      setBtn(k, 0);
-    });
-    var rad = document.getElementById('alFshubRad'); if (rad) after.parentNode.insertBefore(rad, after.nextSibling);
-    var lg = document.getElementById('alVaLegend');
-    if (lg && !document.getElementById('alNetLeg')) {
-      var d = document.createElement('div'); d.id = 'alNetLeg';
-      d.innerHTML = Object.keys(SRC).map(function (k) {
-        return '<div class="alsh"><svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;flex:none;width:14px;height:14px"><g fill="' + (SRC[k].dark ? DARK : color(k)) +
-          '" stroke="' + (SRC[k].dark ? color(k) : '#fff') + '" stroke-width="' + (SRC[k].dark ? 2 : 1.3) + '">' + '<path d="M12 2l1.6 6.5L21 13v1.8l-7.4-2.3-.5 5.6 2.4 1.8V21L12 20l-3.5 1v-1.1l2.4-1.8-.5-5.6L3 14.8V13l7.4-4.5z"/>' +
-          '</g></svg> ' + SRC[k].leg + '</div>';
-      }).join('');
-      lg.insertBefore(d, lg.children[2] || null);
-    }
+    var rad = document.getElementById('alFshubRad'); if (rad) all.parentNode.insertBefore(rad, all.nextSibling);
     var gnd = document.getElementById('trafficShowGround');
-    if (gnd && !gnd._alnet) { gnd._alnet = true; gnd.addEventListener('change', renderAll); }
+    if (gnd && !gnd._alnet) { gnd._alnet = true; gnd.addEventListener('change', window.alNetRender); }
     return true;
   }
 
@@ -2214,10 +2113,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   var css = document.createElement('style');
   css.textContent = '#leafletTrafficMap .leaflet-marker-icon.al-smooth{transition:transform 1s linear,left 1s linear,top 1s linear}' +
     '#leafletTrafficMap.al-nosmooth .leaflet-marker-icon{transition:none!important}' +
-    '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}' +
-    'html body #trafficMapModal button.alnet-btn,html body button.alnet-btn{border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px;background:rgba(15,20,30,.66)!important;' +
-    'color:var(--c)!important;border:1px solid var(--c)!important}' +
-    'html body #trafficMapModal button.alnet-btn.on,html body button.alnet-btn.on{background:var(--c)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #fff!important;border:0!important}';
+    '#leafletTrafficMap.leaflet-zoom-anim .leaflet-marker-icon.leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)!important}';
   document.head.appendChild(css);
   var hooked = false;
   function smooth() {
@@ -2236,9 +2132,7 @@ html body .leaflet-control-layers-list::before{content:'MAP BACKGROUND';display:
   }
 
   function start() {
-    var t = setInterval(function () { if (build()) { clearInterval(t); Object.keys(SRC).forEach(poll); renderAll(); } }, 500);
-    setInterval(function () { Object.keys(SRC).forEach(function (k) { if (st[k].on) render(k); }); }, 1000);
-    setInterval(function () { Object.keys(SRC).forEach(poll); }, 5000);
+    var t = setInterval(function () { if (place()) { clearInterval(t); window.alNetRender(); } }, 500);
     setInterval(smooth, 500);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
@@ -6781,244 +6675,7 @@ ${waypoint(arr)}
   setInterval(step, 700);
 })();
 </script><script id="hangar-127-jaero-js">
-(function () {
-  var URL = 'http://localhost:8765/aeroway', KEY_ON = 'al_aeroway_on', MINZ = 13, CELL = 0.1, MAXCELLS = 6;
-  var on = true; try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}
-  var cells = {}, queue = [], busy = false, btn = null, grp = null, rnd = null, attr = null, lastErr = '';
-  var ATTR = 'Airport layouts © OpenStreetMap contributors (ODbL)';
-
-  function map() { return window.hgJMapObj || null; }   /* copie pour la carte du journal de vol */
-  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-
-  function wanted(m) {
-    if (m.getZoom() < MINZ) return [];
-    var b = m.getBounds(), c = m.getCenter(), out = [];
-    var s = Math.floor(b.getSouth() / CELL), n = Math.floor(b.getNorth() / CELL);
-    var w = Math.floor(b.getWest() / CELL), e = Math.floor(b.getEast() / CELL);
-    for (var la = s; la <= n; la++) for (var lo = w; lo <= e; lo++) {
-      var d = Math.pow((la + .5) * CELL - c.lat, 2) + Math.pow((lo + .5) * CELL - c.lng, 2);
-      out.push({ k: la + '_' + lo, d: d });
-    }
-    out.sort(function (a, b) { return a.d - b.d; });
-    return out.slice(0, MAXCELLS).map(function (x) { return x.k; });
-  }
-
-  function pump() {   /* une seule demande au relais pour toutes les cases manquantes */
-    if (busy) return;
-    var now = Date.now();
-    var todo = queue.filter(function (k) { var c = cells[k]; return !c || (c.state === 'err' && now - c.t > 120000); });
-    if (!todo.length) { queue = []; status(); return; }
-    /* une demande = une seule zone (un aéroport) : on ne mélange pas le départ et l'arrivée */
-    var p0 = todo[0].split('_').map(Number), ks = [], rest = [];
-    todo.forEach(function (k) {
-      var q = k.split('_').map(Number);
-      (Math.abs(q[0] - p0[0]) <= 3 && Math.abs(q[1] - p0[1]) <= 3 && ks.length < 9 ? ks : rest).push(k);
-    });
-    queue = rest;
-    var bg = ks.every(function (k) { return pre[k]; });   /* préchargement en arrière-plan : pas de ⚠ s'il échoue */
-    busy = true; ks.forEach(function (k) { cells[k] = { state: 'loading' }; }); status();
-    var ctl = window.AbortController ? new AbortController() : null;
-    var to = setTimeout(function () { if (ctl) ctl.abort(); }, 130000);
-    fetch(URL + '?cells=' + ks.join(','), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
-      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d || {} }; }); })
-      .then(function (x) {
-        var got = x.d.cells || {};
-        Object.keys(got).forEach(function (k) { cells[k] = { state: 'ok', items: got[k] || [] }; });
-        ks.forEach(function (k) { if (!got[k]) cells[k] = { state: 'err', t: Date.now() }; });
-        if (x.ok) lastErr = ''; else if (!bg) lastErr = x.d.error || 'erreur';
-        draw();
-      })
-      .catch(function () { ks.forEach(function (k) { cells[k] = { state: 'err', t: Date.now() }; }); if (!bg) lastErr = 'relay stopped or timed out'; })
-      .then(function () { clearTimeout(to); busy = false; status(); if (queue.length) setTimeout(pump, 1000); });
-  }
-
-  /* chargement anticipé des aéroports du plan SimBrief (départ, arrivée, dégagements), même carte fermée */
-  var pre = {}, preDone = '';
-  function prefetch() {
-    var apts = window.alFlightAirports || [];
-    var sig = JSON.stringify(apts);
-    if (!on || !apts.length || sig === preDone) return;
-    preDone = sig;
-    apts.forEach(function (a) {
-      var ks = {};
-      [[-.03, -.04], [-.03, .04], [.03, -.04], [.03, .04]].forEach(function (d) {
-        ks[Math.floor((a[0] + d[0]) / CELL) + '_' + Math.floor((a[1] + d[1]) / CELL)] = 1;
-      });
-      Object.keys(ks).forEach(function (k) {
-        if (!cells[k] && queue.indexOf(k) < 0) { pre[k] = 1; queue.push(k); }
-      });
-    });
-    pump();
-  }
-  window.addEventListener('al-plan', prefetch);
-
-  function refresh() {
-    var m = map(); if (!m) return;
-    try { on = localStorage.getItem(KEY_ON) !== '0'; } catch (e) {}   /* suit le bouton TAXIWAYS de la carte de suivi */
-    if (!on || m.getZoom() < MINZ) { if (grp && m.hasLayer(grp)) m.removeLayer(grp); setAttr(m, false); status(); return; }
-    if (grp && !m.hasLayer(grp)) grp.addTo(m);
-    setAttr(m, true);
-    var now = Date.now();
-    wanted(m).forEach(function (k) {
-      var c = cells[k];
-      if ((!c || (c.state === 'err' && now - c.t > 120000)) && queue.indexOf(k) < 0) queue.push(k);
-    });
-    pump(); draw(); status();
-  }
-
-  function setAttr(m, want) {   /* mention obligatoire de la licence OpenStreetMap, en bas à droite de la carte */
-    if (!attr) {
-      attr = document.createElement('div'); attr.id = 'alAerowayAttr'; attr.textContent = ATTR;
-      m.getContainer().appendChild(attr);
-    }
-    attr.style.display = want ? '' : 'none';
-  }
-
-  /* largeur réelle en mètres -> pixels au zoom actuel */
-  function px(m, meters, lat, min) {
-    var mpp = 40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, m.getZoom() + 8);
-    return Math.max(min, meters / mpp);
-  }
-  function mid(g) { return g[Math.floor((g.length - 1) / 2)]; }
-  function label(txt, at, cls) {
-    return L.marker(at, { pane: 'alAerowayLbl', interactive: false, keyboard: false,
-      icon: L.divIcon({ className: 'alaw-lbl ' + cls, html: '<span>' + esc(txt) + '</span>', iconSize: [0, 0] }) });
-  }
-
-  function draw() {
-    var m = map(); if (!m || !grp || !on || m.getZoom() < MINZ) return;
-    grp.clearLayers();
-    var z = m.getZoom(), vb = m.getBounds().pad(0.3), cand = [];
-    var lists = { area: [], pave: [], line: [], pt: [], lbl: [] };
-    Object.keys(cells).forEach(function (k) {
-      var c = cells[k]; if (c.state !== 'ok') return;
-      c.items.forEach(function (it) {
-        var g = it.g, at = mid(g);
-        if (!vb.contains(at) && !(g.length > 1 && (vb.contains(g[0]) || vb.contains(g[g.length - 1])))) return;
-        var t = it.t, lat = g[0][0];
-        if (it.a) {
-          var fill = t === 'apron' ? '#7b8494' : (t === 'runway' ? '#3a3f48' : (t === 'taxiway' || t === 'taxilane' ? '#6b7280' : '#5b6b82'));
-          lists.area.push(L.polygon(g, { renderer: rnd, stroke: t !== 'apron', color: '#4b5563', weight: 1, fillColor: fill, fillOpacity: t === 'apron' ? .32 : .55, interactive: false }));
-          return;
-        }
-        if (g.length === 1) {
-          if (t === 'holding_position') lists.pt.push(L.circleMarker(g[0], { renderer: rnd, radius: z >= 16 ? 3.5 : 2.5, color: '#ef4444', weight: 1, fillColor: '#ef4444', fillOpacity: .9, interactive: false }));
-          else if (z >= 15) {
-            lists.pt.push(L.circleMarker(g[0], { renderer: rnd, radius: z >= 17 ? 4 : 3, color: '#0b1220', weight: 1, fillColor: '#5eead4', fillOpacity: .95, interactive: false }));
-            if (z >= 17 && it.r) cand.push({ txt: it.r, at: g[0], cls: 'pk', prio: 3 });
-          }
-          return;
-        }
-        if (t === 'runway' || t === 'stopway') {
-          lists.pave.push(L.polyline(g, { renderer: rnd, color: t === 'runway' ? '#2b2f36' : '#4b5059', weight: px(m, it.w || 45, lat, 4), opacity: .95, lineCap: 'butt', interactive: false }));
-          if (t === 'runway') {
-            lists.line.push(L.polyline(g, { renderer: rnd, color: '#f8fafc', weight: z >= 15 ? 1.6 : 1, dashArray: z >= 15 ? '10 8' : '5 5', opacity: .9, interactive: false }));
-            if (it.r) cand.push({ txt: it.r, at: at, cls: 'rw', prio: 0 });
-          }
-        } else if (t === 'taxiway' || t === 'taxilane') {
-          lists.pave.push(L.polyline(g, { renderer: rnd, color: '#4a505b', weight: px(m, it.w || (t === 'taxiway' ? 23 : 15), lat, 2.5), opacity: .9, lineJoin: 'round', interactive: false }));
-          lists.line.push(L.polyline(g, { renderer: rnd, color: '#facc15', weight: z >= 16 ? 1.8 : 1.2, opacity: t === 'taxilane' ? .7 : .95, interactive: false }));
-          if (it.r && it.r.length <= 6 && twVisible(it.r, z)) cand.push({ txt: it.r, at: at, cls: 'tw', prio: it.r.length <= 2 ? 1 : 2 });
-        } else if (t === 'holding_position') {
-          lists.line.push(L.polyline(g, { renderer: rnd, color: '#ef4444', weight: 2.5, opacity: .95, interactive: false }));
-        } else if (t === 'parking_position' && z >= 15) {
-          lists.line.push(L.polyline(g, { renderer: rnd, color: '#5eead4', weight: 1.4, opacity: .9, interactive: false }));
-          if (z >= 17 && it.r) cand.push({ txt: it.r, at: g[g.length - 1], cls: 'pk', prio: 3 });
-        }
-      });
-    });
-    lists.lbl = placeLabels(m, z, cand);
-    ['area', 'pave', 'line', 'pt', 'lbl'].forEach(function (n) { lists[n].forEach(function (l) { grp.addLayer(l); }); });
-  }
-
-  /* Lettres de taxiway selon le zoom : de loin seulement les grands axes (A, B, Q…), toutes les lettres en zoomant. */
-  function twVisible(ref, z) {
-    if (z >= 17) return true;
-    if (z >= 16) return ref.length <= 3;
-    if (z >= 15) return /^[A-Z]{1,2}$/i.test(ref);
-    return false;
-  }
-
-  /* Étiquettes sans doublon ni chevauchement : pistes d'abord, puis grands taxiways, petits taxiways, parkings.
-     Une même lettre n'est répétée que si l'étiquette précédente est assez loin à l'écran. */
-  function placeLabels(m, z, cand) {
-    var minSame = z >= 18 ? 160 : (z >= 17 ? 220 : (z >= 16 ? 280 : 360));
-    var boxes = [], byRef = {}, out = [];
-    cand.sort(function (a, b) { return a.prio - b.prio || a.txt.length - b.txt.length; });
-    cand.forEach(function (c) {
-      var p = m.project(c.at, z);
-      var w = c.txt.length * (c.cls === 'pk' ? 6 : 7.5) + 14, h = 18;
-      var x0 = c.cls === 'pk' ? p.x + 6 : p.x - w / 2, y0 = p.y - h / 2;
-      var key = c.cls + '|' + c.txt;
-      var same = byRef[key] || [];
-      for (var i = 0; i < same.length; i++) {
-        var dx = same[i].x - p.x, dy = same[i].y - p.y;
-        if (dx * dx + dy * dy < minSame * minSame) return;
-      }
-      for (var j = 0; j < boxes.length; j++) {
-        var b = boxes[j];
-        if (x0 < b[2] && x0 + w > b[0] && y0 < b[3] && y0 + h > b[1]) return;
-      }
-      boxes.push([x0 - 2, y0 - 2, x0 + w + 2, y0 + h + 2]);
-      same.push(p); byRef[key] = same;
-      out.push(label(c.txt, c.at, c.cls));
-    });
-    return out;
-  }
-
-  function status() {
-    if (!btn) return;
-    var m = map(), z = m ? m.getZoom() : 0, loading = busy || queue.length > 0, n = 0;
-    Object.keys(cells).forEach(function (k) { if (cells[k].state === 'ok') n += cells[k].items.length; });
-    btn.classList.toggle('off', !on);
-    btn.innerHTML = '<i class="fa-solid fa-road"></i> TAXIWAYS' + (on && loading ? ' …' : (on && lastErr && z >= MINZ ? ' ⚠' : ''));
-    btn.title = !on ? 'Airport layouts (OpenStreetMap) hidden — click to show' :
-      (z < MINZ ? 'Zoom in on an airport to see runways, taxiways and parking spots (OpenStreetMap)' :
-      (loading ? 'Loading the airport layout (OpenStreetMap)…' :
-      (lastErr ? 'Airport layout unavailable: ' + lastErr : 'Runways, taxiways and parking spots from OpenStreetMap — click to hide')));
-  }
-
-  function build() {
-    var m = map();
-    var ref = document.getElementById('alFshubAllBtn') || document.getElementById('alFshubBtn') || document.getElementById('trafficToggleBtn');
-    if (false) {
-      btn = document.createElement('button');
-      btn.id = 'alAerowayBtn'; btn.type = 'button';
-      btn.className = 'px-2.5 py-1 text-[10px] font-bold rounded transition cursor-pointer whitespace-nowrap';
-      ref.parentNode.insertBefore(btn, ref.nextSibling);
-      btn.addEventListener('click', function () {
-        on = !on; try { localStorage.setItem(KEY_ON, on ? '1' : '0'); } catch (e) {}
-        if (on) { preDone = ''; prefetch(); }
-        refresh();
-      });
-    }
-    if (m && !grp) {
-      if (!m.getPane('alAeroway')) { m.createPane('alAeroway').style.zIndex = 350; m.createPane('alAerowayLbl').style.zIndex = 450; }
-      m.getPane('alAerowayLbl').style.pointerEvents = 'none';
-      rnd = L.canvas({ pane: 'alAeroway', padding: 0.3 });
-      grp = L.layerGroup();
-      m.on('moveend zoomend', refresh);
-    }
-    status();
-    if (!m) return false;
-    refresh();
-    return false;
-  }
-
-  var css = document.createElement('style');
-  css.textContent =
-    'html body #trafficMapModal button#alAerowayBtn,html body #alAerowayBtn{background:linear-gradient(180deg,#facc15,#d4a20c)!important;color:#231a02!important;border:0!important;border-radius:999px!important;padding-left:12px!important;padding-right:12px!important;margin-left:6px}' +
-    'html body #trafficMapModal button#alAerowayBtn.off,html body #alAerowayBtn.off{background:rgba(15,20,30,.66)!important;color:#c9b04b!important;border:1px solid rgba(250,204,21,.45)!important}' +
-    '#alAerowayAttr{position:absolute;right:6px;bottom:4px;z-index:800;font:10px "Segoe UI",Inter,sans-serif;color:#cbd5e1;background:rgba(17,20,25,.7);padding:1px 6px;border-radius:4px;pointer-events:none}' +
-    '.alaw-lbl{background:none;border:0}.alaw-lbl span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font:700 11px "Segoe UI",Inter,sans-serif;padding:0 5px;border-radius:4px;line-height:16px}' +
-    '.alaw-lbl.tw span{background:#111;color:#facc15;border:1px solid #facc15}' +
-    '.alaw-lbl.rw span{background:#f8fafc;color:#111;font-size:12px}' +
-    '.alaw-lbl.pk span{background:rgba(11,18,32,.85);color:#5eead4;font-size:10px;font-weight:600;transform:translate(6px,-50%)}';
-  /* styles déjà ajoutés par le calque de la carte de suivi */
-
-  function start() { setInterval(function () { if (window.hgJMapObj && !grp) build(); else if (grp) refresh(); }, 3000); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-})();
+window.hgAerowayLayer({ journal: true });   /* taxiways aussi sur la carte du journal de vol (même calque que la carte de suivi) */
 </script><script id="hangar-127-taxi-js">
 (function () {
   var T = {"to": "Taxi to runway", "in": "Taxi to gate", "push": "Pushback"}, mk = null;

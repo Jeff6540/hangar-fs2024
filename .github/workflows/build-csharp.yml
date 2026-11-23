@@ -30,6 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Contrôles avant compilation : syntaxe des pages, français / anglais, version… (une erreur arrête tout)
+      - name: Check pages
+        env:
+          PYTHONUTF8: '1'
+        run: python csharp/tools/check_pages.py
+
       - name: Build
         run: dotnet build csharp/HangarFS2024.csproj -c Release -o "out/Hangar FS 2024"
 
