@@ -24,8 +24,8 @@ I18N = os.path.join(HERE, "i18n")
 PAGES = ("dispatch", "map", "tutorial")
 
 
-def _read(p):
-    with open(p, encoding="utf-8", newline="") as f:
+def _read(p):   # fins de ligne Windows (CRLF) ramenées à \n : même résultat sur tous les PC
+    with open(p, encoding="utf-8") as f:
         return f.read()
 
 
@@ -93,16 +93,18 @@ def transfer(old_fr, new_fr, old_en):
     return out
 
 
-def build_text(page, learn=None):
+def build_text(page, learn=None, fuzzy=True):
     fr = _read(os.path.join(WEB, page + "_fr.html")).split("\n")
+    enp = os.path.join(WEB, page + "_en.html")
+    en_now = set(_read(enp).split("\n")) if os.path.exists(enp) else set()
     tab = json.loads(_read(table_path(page)))["lines"]
     want = {x["fr"]: x["en"] for x in tab}
     present = set(fr)
     orphans = [x for x in tab if x["fr"] not in present]
     new = {}
-    if orphans:   # lignes traduites modifiées en français : reporter la modification si c'est du code
+    if orphans and fuzzy:   # lignes traduites modifiées en français : reporter la modification si c'est du code
         for line in fr:
-            if line in want or line in new or not line.strip():
+            if line in want or line in new or line in en_now or not line.strip():
                 continue
             best, score = None, 0.0
             for o in orphans:
@@ -159,7 +161,7 @@ def check():
             problems.append("tools/i18n/%s_en.json manquant." % page)
             continue
         try:
-            text, orphans = build_text(page)
+            text, orphans = build_text(page, fuzzy=False)
         except SystemExit as e:
             problems.append(str(e))
             continue
