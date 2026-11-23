@@ -4,7 +4,7 @@
 But : arrêter la compilation AVANT qu'une version cassée parte chez les utilisateurs.
   1. syntaxe JavaScript de chaque page (scripts intégrés aux pages .html et fichiers .js) ;
   2. pages FMS française et anglaise identiques (la langue est choisie à l'affichage) ;
-  3. pages françaises et anglaises de même structure (mêmes blocs, dans le même ordre) ;
+  3. pages anglaises fabriquées à partir des pages françaises (une seule source, tools/lang_pages.py) ;
   4. pas de bloc en double (même id deux fois dans une page) ;
   5. pas de reste de fusion (<<<<<<< / >>>>>>>) dans les fichiers ;
   6. aucune trace d'un PC en particulier (chemin C:\\Users\\nom…) dans le code ;
@@ -108,6 +108,14 @@ for name in ("dispatch", "map", "tutorial"):
     na, nb = len(SCRIPT_RE.findall(sa)), len(SCRIPT_RE.findall(sb))
     if na != nb:
         problems.append("web/%s : %d scripts en français, %d en anglais." % (name, na, nb))
+
+# 3 bis. une seule source : chaque page anglaise doit être fabriquée à partir de la page française (tools/lang_pages.py)
+sys.path.insert(0, os.path.join(CS, "tools"))
+try:
+    import lang_pages
+    problems.extend(lang_pages.check())
+except Exception as e:  # noqa: BLE001
+    problems.append("Contrôle des langues impossible : %s" % e)
 
 # 5 et 6. restes de fusion, traces d'un PC
 TEXT_EXT = (".cs", ".html", ".js", ".py", ".txt", ".md", ".json", ".csproj", ".yml", ".css")

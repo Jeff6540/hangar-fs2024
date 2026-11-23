@@ -1,0 +1,177 @@
+{
+ "page": "map",
+ "lines": [
+  {
+   "fr": "<html lang=\"fr\">",
+   "en": "<html lang=\"en\">"
+  },
+  {
+   "fr": "<title>Carte des scènes — Hangar FS 2024</title>",
+   "en": "<title>Scenery map — Hangar FS 2024</title>"
+  },
+  {
+   "fr": "  <div id=\"map\" style=\"position:relative\"></div><button id=\"showPanel\">« Légende et réglages</button>",
+   "en": "  <div id=\"map\" style=\"position:relative\"></div><button id=\"showPanel\">« Legend and settings</button>"
+  },
+  {
+   "fr": "    <div class=\"hd\"><button id=\"hidePanel\" title=\"Masquer le volet pour agrandir la carte\">»</button><img src=\"logo.svg\" alt=\"\"><div><h1>Carte des scènes</h1><div class=\"s\">Hangar FS 2024 · MSFS 2024</div></div></div>",
+   "en": "    <div class=\"hd\"><button id=\"hidePanel\" title=\"Hide the panel to enlarge the map\">»</button><img src=\"logo.svg\" alt=\"\"><div><h1>Scenery map</h1><div class=\"s\">Hangar FS 2024 · MSFS 2024</div></div></div>"
+  },
+  {
+   "fr": "    <div class=\"muted\" id=\"meta\">Chargement…</div>",
+   "en": "    <div class=\"muted\" id=\"meta\">Loading…</div>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><input type=\"search\" id=\"q\" placeholder=\"ICAO ou nom (Entrée pour zoomer)…\"></div>",
+   "en": "    <div class=\"sec\"><input type=\"search\" id=\"q\" placeholder=\"ICAO or name (Enter to zoom)…\"></div>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><h2>Légende — type de scène</h2><div id=\"cats\"></div></div>",
+   "en": "    <div class=\"sec\"><h2>Legend — scenery type</h2><div id=\"cats\"></div></div>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><h2>Légende — état</h2>",
+   "en": "    <div class=\"sec\"><h2>Legend — status</h2>"
+  },
+  {
+   "fr": "      <label class=\"row\"><input type=\"checkbox\" id=\"showOn\" checked><span class=\"sw st\" style=\"background:#6b7280;border-color:#ffffff;color:#fff\">✓</span>Activée (pleine avec ✓)<span class=\"cnt\" id=\"cOn\"></span></label>",
+   "en": "      <label class=\"row\"><input type=\"checkbox\" id=\"showOn\" checked><span class=\"sw st\" style=\"background:#6b7280;border-color:#ffffff;color:#fff\">✓</span>Active (filled with ✓)<span class=\"cnt\" id=\"cOn\"></span></label>"
+  },
+  {
+   "fr": "      <label class=\"row\"><input type=\"checkbox\" id=\"showOff\" checked><span class=\"sw st\" style=\"background:#ffffff;border-color:#6b7280;color:#6b7280\">✕</span>Désactivée (blanche avec ✕)<span class=\"cnt\" id=\"cOff\"></span></label>",
+   "en": "      <label class=\"row\"><input type=\"checkbox\" id=\"showOff\" checked><span class=\"sw st\" style=\"background:#ffffff;border-color:#6b7280;color:#6b7280\">✕</span>Inactive (white with ✕)<span class=\"cnt\" id=\"cOff\"></span></label>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><h2>Affichage</h2>",
+   "en": "    <div class=\"sec\"><h2>Display</h2>"
+  },
+  {
+   "fr": "      <label class=\"row\"><input type=\"checkbox\" id=\"showRoute\" checked><span class=\"sw\" style=\"background:#38BDF8;border-color:#38BDF8;border-radius:2px;height:4px;width:13px\"></span>Plan de vol SimBrief</label>",
+   "en": "      <label class=\"row\"><input type=\"checkbox\" id=\"showRoute\" checked><span class=\"sw\" style=\"background:#38BDF8;border-color:#38BDF8;border-radius:2px;height:4px;width:13px\"></span>SimBrief flight plan</label>"
+  },
+  {
+   "fr": "      <label class=\"row\"><input type=\"checkbox\" id=\"labels\">Afficher les codes ICAO</label>",
+   "en": "      <label class=\"row\"><input type=\"checkbox\" id=\"labels\">Show ICAO codes</label>"
+  },
+  {
+   "fr": "      <label class=\"rng\">Taille des pastilles <output id=\"sizeOut\"></output>",
+   "en": "      <label class=\"rng\">Marker size <output id=\"sizeOut\"></output>"
+  },
+  {
+   "fr": "      <label class=\"rng\">Fond de carte <output id=\"dimOut\"></output>",
+   "en": "      <label class=\"rng\">Map background <output id=\"dimOut\"></output>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><div class=\"btns\"><button id=\"refresh\"><span class=\"bi\">⟳</span>Actualiser</button><button id=\"fit\"><span class=\"bi\">⤢</span>Tout voir</button></div>",
+   "en": "    <div class=\"sec\"><div class=\"btns\"><button id=\"refresh\"><span class=\"bi\">⟳</span>Refresh</button><button id=\"fit\"><span class=\"bi\">⤢</span>Show all</button></div>"
+  },
+  {
+   "fr": "      <button id=\"closeMap\" style=\"margin-top:10px;width:100%\"><span class=\"bi\">✕</span>Fermer la carte</button></div>",
+   "en": "      <button id=\"closeMap\" style=\"margin-top:10px;width:100%\"><span class=\"bi\">✕</span>Close the map</button></div>"
+  },
+  {
+   "fr": "    <div class=\"sec\"><h2>Add-ons sans position connue</h2><ul id=\"nopos\"></ul></div>",
+   "en": "    <div class=\"sec\"><h2>Add-ons without a known position</h2><ul id=\"nopos\"></ul></div>"
+  },
+  {
+   "fr": "    <div class=\"sec plain muted\">Fonds de carte © OpenStreetMap contributors, Esri · Positions et tailles : OurAirports. La carte suit l'appli en direct.</div>",
+   "en": "    <div class=\"sec plain muted\">Map tiles © OpenStreetMap contributors, Esri · Positions and sizes: OurAirports. The map follows the app live.</div>"
+  },
+  {
+   "fr": "  {id:\"default\", label:\"Scène par défaut MSFS 2024\", color:\"#a855f7\", ink:\"#ffffff\", r:8},",
+   "en": "  {id:\"default\", label:\"MSFS 2024 default scenery\", color:\"#a855f7\", ink:\"#ffffff\", r:8},"
+  },
+  {
+   "fr": "  {id:\"large\",   label:\"Add-on — gros aéroport\",       color:\"#ef4444\", ink:\"#ffffff\", r:11},",
+   "en": "  {id:\"large\",   label:\"Add-on — large airport\",       color:\"#ef4444\", ink:\"#ffffff\", r:11},"
+  },
+  {
+   "fr": "  {id:\"medium\",  label:\"Add-on — aéroport moyen\",       color:\"#f97316\", ink:\"#ffffff\", r:9.5},",
+   "en": "  {id:\"medium\",  label:\"Add-on — medium airport\",       color:\"#f97316\", ink:\"#ffffff\", r:9.5},"
+  },
+  {
+   "fr": "  {id:\"small\",   label:\"Add-on — petit aéroport\",       color:\"#facc15\", ink:\"#1b1f26\", r:9},",
+   "en": "  {id:\"small\",   label:\"Add-on — small airport\",       color:\"#facc15\", ink:\"#1b1f26\", r:9},"
+  },
+  {
+   "fr": "  {id:\"vfr\",     label:\"Add-on — VFR / héliport / ULM\", color:\"#16c75e\", ink:\"#ffffff\", r:9},",
+   "en": "  {id:\"vfr\",     label:\"Add-on — VFR / heliport / microlight\", color:\"#16c75e\", ink:\"#ffffff\", r:9},"
+  },
+  {
+   "fr": "  const P = {default:[\"#CC79A7\",\"#ffffff\",\"D\"], large:[\"#0072B2\",\"#ffffff\",\"G\"], medium:[\"#E69F00\",\"#1b1f26\",\"M\"],",
+   "en": "  const P = {default:[\"#CC79A7\",\"#ffffff\",\"D\"], large:[\"#0072B2\",\"#ffffff\",\"L\"], medium:[\"#E69F00\",\"#1b1f26\",\"M\"],"
+  },
+  {
+   "fr": "             small:[\"#F0E442\",\"#1b1f26\",\"P\"], vfr:[\"#009E73\",\"#ffffff\",\"V\"]};",
+   "en": "             small:[\"#F0E442\",\"#1b1f26\",\"S\"], vfr:[\"#009E73\",\"#ffffff\",\"V\"]};"
+  },
+  {
+   "fr": "  \"Plan (OpenStreetMap)\": L.tileLayer(OSM, {maxZoom:19, attribution: attr}),",
+   "en": "  \"Map (OpenStreetMap)\": L.tileLayer(OSM, {maxZoom:19, attribution: attr}),"
+  },
+  {
+   "fr": "  \"Plan sombre\": L.tileLayer(OSM, {maxZoom:19, attribution: attr, className:\"dark-tiles\"}),",
+   "en": "  \"Dark map\": L.tileLayer(OSM, {maxZoom:19, attribution: attr, className:\"dark-tiles\"}),"
+  },
+  {
+   "fr": "  \"Satellite (Esri)\": L.tileLayer(\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\", {maxZoom:18, attribution:\"Imagerie © Esri, Maxar, Earthstar Geographics\"}),",
+   "en": "  \"Satellite (Esri)\": L.tileLayer(\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\", {maxZoom:18, attribution:\"Imagery © Esri, Maxar, Earthstar Geographics\"}),"
+  },
+  {
+   "fr": "  \"Relief (Esri)\": L.tileLayer(\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}\", {maxZoom:19, attribution: \"Fond © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors\"}),",
+   "en": "  \"Terrain (Esri)\": L.tileLayer(\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}\", {maxZoom:19, attribution: \"Tiles © Esri, HERE, Garmin, USGS, NGA, OpenStreetMap contributors\"}),"
+  },
+  {
+   "fr": "(bases[savedBase] || bases[\"Plan (OpenStreetMap)\"]).addTo(map);",
+   "en": "(bases[savedBase] || bases[\"Map (OpenStreetMap)\"]).addTo(map);"
+  },
+  {
+   "fr": "    <span class=\"badge ${p.active ? \"on\" : \"off\"}\">${p.active ? \"✅ Activée\" : \"⛔ Désactivée\"}</span>",
+   "en": "    <span class=\"badge ${p.active ? \"on\" : \"off\"}\">${p.active ? \"✅ Active\" : \"⛔ Inactive\"}</span>"
+  },
+  {
+   "fr": "    h += `<dt>Add-on</dt><dd>${esc(p.title || p.pkg)}</dd><dt>Dossier</dt><dd>${esc(p.folder || \"racine\")}</dd>`;",
+   "en": "    h += `<dt>Add-on</dt><dd>${esc(p.title || p.pkg)}</dd><dt>Folder</dt><dd>${esc(p.folder || \"racine\")}</dd>`;"
+  },
+  {
+   "fr": "    if (p.pinned) h += `<dt>Mode</dt><dd>★ Protégé</dd>`;",
+   "en": "    if (p.pinned) h += `<dt>Mode</dt><dd>★ Protected</dd>`;"
+  },
+  {
+   "fr": "    h += `<dt>Paquet</dt><dd>${esc(p.pkg)}</dd>`;",
+   "en": "    h += `<dt>Package</dt><dd>${esc(p.pkg)}</dd>`;"
+  },
+  {
+   "fr": "  h += `<dt>Lieu</dt><dd>${esc(p.city ? p.city + \" · \" : \"\")}${esc(p.country)}</dd>`;",
+   "en": "  h += `<dt>Location</dt><dd>${esc(p.city ? p.city + \" · \" : \"\")}${esc(p.country)}</dd>`;"
+  },
+  {
+   "fr": "  if (p.also) h += `<dt>Aussi ici</dt><dd>${esc(p.also)}</dd>`;",
+   "en": "  if (p.also) h += `<dt>Also here</dt><dd>${esc(p.also)}</dd>`;"
+  },
+  {
+   "fr": "    else m.bindTooltip(`${p.icao} — ${p.name} · ${p.active ? \"activée\" : \"désactivée\"}`, {direction:\"top\", offset:[0, -radius(c) - 2]});",
+   "en": "    else m.bindTooltip(`${p.icao} — ${p.name} · ${p.active ? \"active\" : \"inactive\"}`, {direction:\"top\", offset:[0, -radius(c) - 2]});"
+  },
+  {
+   "fr": "    ? `${DATA.points.length} scènes placées${r ? \" · vol \" + r.name : \"\"} · à jour ${new Date().toLocaleTimeString(\"fr-FR\")}`",
+   "en": "    ? `${DATA.points.length} sceneries placed${r ? \" · flight \" + r.name : \"\"} · updated ${new Date().toLocaleTimeString(\"en-GB\")}`"
+  },
+  {
+   "fr": "    : \"Base des aéroports indisponible : positions inconnues.\";",
+   "en": "    : \"Airport database unavailable: positions unknown.\";"
+  },
+  {
+   "fr": "    $(\"meta\").textContent = \"Hangar FS 2024 est fermé ou injoignable.\";",
+   "en": "    $(\"meta\").textContent = \"Hangar FS 2024 is closed or unreachable.\";"
+  },
+  {
+   "fr": "    $(\"meta\").textContent = \"Hangar FS 2024 est fermé : la carte va se fermer.\";",
+   "en": "    $(\"meta\").textContent = \"Hangar FS 2024 is closed: the map will close.\";"
+  },
+  {
+   "fr": "  var ITEMS = [[\"#\", \"\", \"Add-ons\"], [\"lib\", \"<rect x=\\\"3\\\" y=\\\"4\\\" width=\\\"18\\\" height=\\\"16\\\" rx=\\\"2\\\"/><path d=\\\"M3 9h18M8 4v16\\\"/>\", \"Bibliothèque\"], [\"map\", \"<path d=\\\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z\\\"/><path d=\\\"M9 4v14M15 6v14\\\"/>\", \"Carte addons\"], [\"launch\", \"<path d=\\\"M5 12h14M13 6l6 6-6 6\\\"/>\", \"Démarrage auto\"], [\"#\", \"\", \"Préparer\"], [\"vol\", \"<path d=\\\"M2 16l20-6-20-6 4 6z\\\"/>\", \"Vol SimBrief\"], [\"plan\", \"<path d=\\\"M3 17l6-6 4 4 8-8\\\"/><path d=\\\"M14 7h7v7\\\"/>\", \"Plan de vol\"], [\"vfr\", \"<path d=\\\"M3 20l5-9 4 5 3-4 6 8z\\\"/><circle cx=\\\"17\\\" cy=\\\"6\\\" r=\\\"2\\\"/>\", \"Plan VFR\"], [\"#\", \"\", \"Voler\"], [\"track\", \"<circle cx=\\\"12\\\" cy=\\\"12\\\" r=\\\"9\\\"/><path d=\\\"M12 3v4M12 17v4M3 12h4M17 12h4\\\"/>\", \"Suivi de vol\"], [\"journal\", \"<path d=\\\"M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\\\"/><path d=\\\"M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11\\\"/>\", \"Journal de vol\"], [\"fms\", \"<rect x=\\\"4\\\" y=\\\"3\\\" width=\\\"16\\\" height=\\\"18\\\" rx=\\\"2\\\"/><path d=\\\"M8 7h8M8 11h8M8 15h3M14 15h2\\\"/>\", \"FMS\"], [\"#\", \"\", \"Les Fous Volants\"], [\"lfvsite\", \"<path d=\\\"M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z\\\"/>\", \"Site de la VA\"], [\"#\", \"\", \"\"], [\"set\", \"<circle cx=\\\"12\\\" cy=\\\"12\\\" r=\\\"3\\\"/><path d=\\\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2\\\"/>\", \"Réglages\"]], HERE = 'map', BRAND = 'Hangar FS 2024';",
+   "en": "  var ITEMS = [[\"#\", \"\", \"Add-ons\"], [\"lib\", \"<rect x=\\\"3\\\" y=\\\"4\\\" width=\\\"18\\\" height=\\\"16\\\" rx=\\\"2\\\"/><path d=\\\"M3 9h18M8 4v16\\\"/>\", \"Library\"], [\"map\", \"<path d=\\\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z\\\"/><path d=\\\"M9 4v14M15 6v14\\\"/>\", \"Add-ons map\"], [\"launch\", \"<path d=\\\"M5 12h14M13 6l6 6-6 6\\\"/>\", \"Auto start\"], [\"#\", \"\", \"Prepare\"], [\"vol\", \"<path d=\\\"M2 16l20-6-20-6 4 6z\\\"/>\", \"SimBrief flight\"], [\"plan\", \"<path d=\\\"M3 17l6-6 4 4 8-8\\\"/><path d=\\\"M14 7h7v7\\\"/>\", \"Flight plan\"], [\"vfr\", \"<path d=\\\"M3 20l5-9 4 5 3-4 6 8z\\\"/><circle cx=\\\"17\\\" cy=\\\"6\\\" r=\\\"2\\\"/>\", \"VFR plan\"], [\"#\", \"\", \"Fly\"], [\"track\", \"<circle cx=\\\"12\\\" cy=\\\"12\\\" r=\\\"9\\\"/><path d=\\\"M12 3v4M12 17v4M3 12h4M17 12h4\\\"/>\", \"Flight tracking\"], [\"journal\", \"<path d=\\\"M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\\\"/><path d=\\\"M9 9h6M9 13h6M5 17a3 3 0 0 1 3-3h11\\\"/>\", \"Flight log\"], [\"fms\", \"<rect x=\\\"4\\\" y=\\\"3\\\" width=\\\"16\\\" height=\\\"18\\\" rx=\\\"2\\\"/><path d=\\\"M8 7h8M8 11h8M8 15h3M14 15h2\\\"/>\", \"FMS\"], [\"#\", \"\", \"Les Fous Volants\"], [\"lfvsite\", \"<path d=\\\"M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z\\\"/>\", \"VA website\"], [\"#\", \"\", \"\"], [\"set\", \"<circle cx=\\\"12\\\" cy=\\\"12\\\" r=\\\"3\\\"/><path d=\\\"M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2\\\"/>\", \"Settings\"]], HERE = 'map', BRAND = 'Hangar FS 2024';"
+  }
+ ]
+}
