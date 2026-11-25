@@ -1,11 +1,12 @@
-HANGAR FS 2024 — ADDON MANAGER — VERSION 12.9.2
+HANGAR FS 2024 — ADDON MANAGER — VERSION 12.9.3
 Nouveautés / What's new
 ==================================================================
 
 FRANÇAIS
 --------
 
-Version 12.9.3 — stabilité
+Version 12.9.3 — plusieurs disques et stabilité
+- Bibliothèque sur plusieurs disques : dans Réglages, « Autres dossiers (autres disques) » (bouton Ajouter…) permet d'ajouter d'autres dossiers d'add-ons, par exemple sur un autre disque dur. Ils apparaissent dans la liste avec le nom du disque, comme [E:] MSFS Addons, et marchent comme le dossier principal.
 - Services extérieurs en panne (SimBrief, météo, FSHub, plans d'aéroport, fond de carte) : un bandeau orange en bas de l'écran le signale, et disparaît tout seul quand le service revient.
 - Page Plan de vol : pour un avion de ligne, les propositions (aléatoire / durée) ne contiennent plus de terrains sans vols commerciaux réguliers (ex. Montbéliard-Courcelles pour un A320).
 - Fenêtre FMS : rappel en bas de la fenêtre, le pilote auto de l'appli est en essai (garder un œil sur l'avion).
@@ -140,7 +141,8 @@ Version 12.1 — carte de suivi plus lisible
 ENGLISH
 -------
 
-Version 12.9.3 — stability
+Version 12.9.3 — several drives and stability
+- Library on several drives: in Settings, "Other folders (other drives)" (Add… button) lets you add more add-on folders, for example on another hard drive. They show in the list with the drive name, like [E:] MSFS Addons, and work like the main folder.
 - External services down (SimBrief, weather, FSHub, airport diagrams, map background): an orange banner at the bottom of the screen says so, and goes away by itself when the service is back.
 - Flight plan page: for an airliner, suggestions (random / duration) no longer include fields without scheduled commercial flights (e.g. Montbéliard-Courcelles for an A320).
 - FMS window: reminder at the bottom of the window, the app's autopilot is in testing (keep an eye on the aircraft).

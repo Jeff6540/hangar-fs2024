@@ -1,3 +1,19 @@
+## Hangar FS 2024 — Addon Manager 12.9.3
+
+🇫🇷 **Plusieurs disques et stabilité**
+- 💽 **Bibliothèque sur plusieurs disques** : Réglages > « Autres dossiers (autres disques) » > Ajouter…. Tes add-ons rangés sur d'autres disques durs apparaissent dans la liste (sous « [E:] nom du dossier ») et s'activent comme les autres.
+- 🟠 Un bandeau orange prévient quand un service extérieur ne répond pas (SimBrief, météo, FSHub, plans d'aéroport, fond de carte).
+- ✈️ Plan de vol : les propositions pour un avion de ligne n'incluent plus de terrains sans vols commerciaux.
+- ⚠️ Fenêtre FMS : rappel que le pilote auto de l'appli est en essai.
+
+🇬🇧 **Several drives and stability**
+- 💽 **Library on several drives**: Settings > "Other folders (other drives)" > Add…. Add-ons stored on other hard drives show in the list (under "[E:] folder name") and activate like the others.
+- 🟠 An orange banner warns when an external service does not answer (SimBrief, weather, FSHub, airport diagrams, map background).
+- ✈️ Flight plan: suggestions for an airliner no longer include fields without commercial flights.
+- ⚠️ FMS window: reminder that the app's autopilot is in testing.
+
+---
+
 ## Hangar FS 2024 — Addon Manager 12.9.2
 
 🇫🇷 **Carte de suivi**

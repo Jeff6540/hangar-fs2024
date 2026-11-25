@@ -472,6 +472,9 @@ R["en"] += [("the FMS plan uses the same colours</td>", "the FMS plan uses the s
 R["fr"] += [("<h3>FMS (en cours de construction)</h3><p>", "<h3>FMS (en cours de construction)</h3><p><b>⚠ Le pilote auto de l'appli est en essai : il commande vraiment l'avion, garde toujours un œil dessus</b> (le rappel est affiché en bas de la fenêtre FMS). ", "Le pilote auto de l'appli est en essai")]
 R["en"] += [("<h3>FMS (under construction)</h3><p>", "<h3>FMS (under construction)</h3><p><b>⚠ The app's autopilot is in testing: it really flies the aircraft, always keep an eye on it</b> (the reminder is shown at the bottom of the FMS window). ", "The app's autopilot is in testing")]
 
+R["fr"] += [("tu actives et retires depuis la gauche, rien n'est jamais supprimé de ta bibliothèque.</p>", "tu actives et retires depuis la gauche, rien n'est jamais supprimé de ta bibliothèque. Tes add-ons sont sur plusieurs disques ? Dans Réglages, « Autres dossiers (autres disques) » &gt; <b>Ajouter…</b> : chaque dossier ajouté apparaît dans la liste sous le nom du disque (par exemple <b>[E:] MSFS Addons</b>) et fonctionne comme le dossier principal.</p>", "Autres dossiers (autres disques)")]
+R["en"] += [("you activate and remove from the left, and nothing is ever deleted from your library.</p>", "you activate and remove from the left, and nothing is ever deleted from your library. Add-ons on several drives? In Settings, \"Other folders (other drives)\" &gt; <b>Add…</b>: each added folder shows in the list under the drive name (for example <b>[E:] MSFS Addons</b>) and works like the main folder.</p>", "Other folders (other drives)")]
+
 if __name__ == "__main__":
     web = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "web")
     for lang, pairs in R.items():

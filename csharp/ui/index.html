@@ -449,6 +449,7 @@ fieldset label{display:block;padding:3px 0;cursor:pointer}
       <div class="cardh" data-t="cardPaths"></div>
       <div class="form">
       <span data-t="setLib"></span><input type="text" id="sLib"><button class="btn" data-browse="sLib" data-t="browse"></button><span></span>
+      <span data-t="setLibX"></span><input type="text" id="sLibX" data-tp="libXPh"><button class="btn" id="bAddLibX" data-t="addFolder"></button><span></span>
       <span data-t="setComm"></span><input type="text" id="sComm"><button class="btn" data-browse="sComm" data-t="browse"></button><button class="btn" id="bDetect" data-t="detect"></button>
       <span data-t="setStreamed"></span><input type="text" id="sStreamed"><button class="btn" data-browse="sStreamed" data-t="browse"></button><button class="btn" id="bDetectStreamed" data-t="detect"></button>
       <span data-t="setExe"></span><input type="text" id="sExe" list="exeList"><datalist id="exeList"><option value="FlightSimulator2024.exe"><option value="FlightSimulator.exe"></datalist><span></span><span></span>
@@ -589,7 +590,7 @@ const TXT = {
  prepare:["✈  Préparer le vol (lier les scènes)","✈  Prepare the flight (link sceneries)"], endFlight:["■  Terminer le vol (retirer les scènes)","■  End the flight (remove sceneries)"],
  noFlight:["Aucun vol actif.","No active flight."], flightOn:["Vol actif : %s — %s scène(s) du vol chargée(s)","Active flight: %s — %s flight scenery(ies) loaded"],
  parkedN:[" · %s scène(s) d'aéroport mise(s) de côté"," · %s airport scenery(ies) set aside"], journal:["Journal","Log"],
- setLib:["Bibliothèque d'add-ons :","Add-on library:"], setComm:["Dossier Community :","Community folder:"], setExe:["Exécutable du simulateur :","Simulator executable:"],
+ setLib:["Bibliothèque d'add-ons :","Add-on library:"], setLibX:["Autres dossiers (autres disques) :","Other folders (other drives):"], addFolder:["Ajouter…","Add…"], pickLibX:["Choisis un autre dossier de bibliothèque","Choose another library folder"], libXPh:["Facultatif : plusieurs dossiers séparés par ;","Optional: several folders separated by ;"], setComm:["Dossier Community :","Community folder:"], setExe:["Exécutable du simulateur :","Simulator executable:"],
  setStreamed:["Scènes par défaut (StreamedPackages) :","Default sceneries (StreamedPackages):"], setMsfs:["Lancement de MSFS 2024 :","MSFS 2024 launch:"],
  setSimc:["Dossier de SimConnect.dll :","SimConnect.dll folder:"], setSimcHelp:["Facultatif : le trafic IA a besoin de SimConnect.dll (fichier de MSFS), fourni à côté de Hangar FS 2024.exe. Indique un autre dossier seulement si le trafic IA ne s'affiche pas.","Optional: AI traffic needs SimConnect.dll (an MSFS file), supplied next to Hangar FS 2024.exe. Set another folder only if AI traffic does not show."],
  pickOther:["Choisis le dossier","Choose the folder"], streamedNotFound:["Dossier StreamedPackages introuvable automatiquement.\n\nIl se trouve en général à côté de ton dossier Community. Indique-le avec « Parcourir ».","StreamedPackages folder not found automatically.\n\nIt is usually next to your Community folder. Set it with \"Browse\"."],
@@ -796,6 +797,7 @@ function applyLang(){
   document.documentElement.lang = LANG;
   $("banner").src = BANNERS[LANG];
   document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll("[data-tp]").forEach(el => el.placeholder = t(el.dataset.tp));
   document.querySelectorAll("#flags button[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
   $("search").placeholder = t("search"); $("csearch").placeholder = t("search"); fillFilter();
   setSim(document.body.classList.contains("sim"));
@@ -1105,7 +1107,7 @@ async function loadLibrary(){
     const d = await call("library");
     PKGS = d.packages; COMM = d.community; undoInfo = d.undo; freeSpace = d.free || "";
     brokenCount = d.broken || 0; defaultOffNames = d.defaultOff || []; updateIssues(d.issues || 0);
-    SETTINGS.library = d.library; SETTINGS.community = d.communityPath;
+    SETTINGS.library = d.library; SETTINGS.libRoots = d.libRoots || []; SETTINGS.community = d.communityPath;
     const known = new Set(PKGS.map(p => p.path)); [...checked].forEach(p => { if (!known.has(p)) checked.delete(p); });
     const knownC = new Set(COMM.map(c => c.path)); [...commSel].forEach(p => { if (!knownC.has(p)) commSel.delete(p); });
     renderLib(); renderComm();
@@ -1404,6 +1406,13 @@ function contextMenu(x, y, items){
   m.style.left = Math.min(x, innerWidth - r.width - 6) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
 }
 document.addEventListener("click", () => document.querySelectorAll(".ctx").forEach(m => m.remove()));
+function groupPath(g){
+  for (const r of (SETTINGS.libRoots || [])) {
+    if (g === r.label) return r.path;
+    if (g.startsWith(r.label + "\\")) return r.path.replace(/[\\\/]+$/, "") + "\\" + g.slice(r.label.length + 1);
+  }
+  return SETTINGS.library + "\\" + g;
+}
 const simOn = () => document.body.classList.contains("sim");
 $("libList").addEventListener("contextmenu", e => {
   e.preventDefault();
@@ -1413,7 +1422,7 @@ $("libList").addEventListener("contextmenu", e => {
     const node = findNode(TREE, tr.dataset.g); if (!node) return;
     const all = leaves(node);
     contextMenu(e.clientX, e.clientY, [
-      {label: t("mOpen"), fn: () => run("openFolder", {path: SETTINGS.library + "\\" + tr.dataset.g})}, "-",
+      {label: t("mOpen"), fn: () => run("openFolder", {path: groupPath(tr.dataset.g)})}, "-",
       {label: t("mCheckFolder"), fn: () => { all.forEach(p => checked.add(p.path)); renderLib(); }},
       {label: t("mUncheckFolder"), fn: () => { all.forEach(p => checked.delete(p.path)); renderLib(); }}, "-",
       {label: t("expandAll"), fn: () => $("bExpand").click()}, {label: t("collapseAll"), fn: () => $("bCollapse").click()}]);
@@ -1654,11 +1663,11 @@ $("bPrepare").onclick = async () => {
 $("bEnd").onclick = async () => { await run("endFlight"); refreshFlight(); loadLibrary(); };
 
 // ---------------------------------------------------------------- réglages
-const SAVED_FIELDS = ["sLib", "sComm", "sStreamed", "sExe", "sMsfs", "sSimc"];
+const SAVED_FIELDS = ["sLib", "sLibX", "sComm", "sStreamed", "sExe", "sMsfs", "sSimc"];
 let savedVals = {};
 function fillSettings(s){
   SETTINGS = s;
-  $("sLib").value = s.library || ""; $("sComm").value = s.community || ""; $("sUser") && ($("sUser").value = s.simbrief_user || "");
+  $("sLib").value = s.library || ""; $("sLibX").value = s.library_extra || ""; $("sComm").value = s.community || ""; $("sUser") && ($("sUser").value = s.simbrief_user || "");
   $("sExe").value = s.sim_exe || ""; $("sbUser").value = s.simbrief_user || ""; $("sStreamed").value = s.streamed || "";
   $("sMsfs").value = s.msfs_launch || ""; $("sSimc").value = s.simconnect_dir || "";
   $("optAlt").checked = !!s.include_alternates; $("optAuto").checked = !!s.auto_unlink;
@@ -1682,11 +1691,15 @@ document.querySelectorAll("[data-browse]").forEach(b => b.onclick = async () => 
   const v = await run("browse", {title: t(b.dataset.browse === "sLib" ? "pickLib" : b.dataset.browse === "sComm" ? "pickComm" : "pickOther"), current: inp.value});
   if (v) { inp.value = v; dirty(); }
 });
+$("bAddLibX").onclick = async () => {
+  const v = await run("browse", {title: t("pickLibX"), current: ""});
+  if (v) { const cur = $("sLibX").value.trim(); $("sLibX").value = cur ? cur.replace(/\s*;\s*$/, "") + " ; " + v : v; dirty(); }
+};
 $("bDetect").onclick = async () => { const v = await run("detectCommunity"); if (v) { $("sComm").value = v; dirty(); } else alertBox(t("commNotFound")); };
 $("bDetectStreamed").onclick = async () => { const v = await run("detectStreamed", {community: $("sComm").value}); if (v) { $("sStreamed").value = v; dirty(); } else alertBox(t("streamedNotFound")); };
 $("bDetectMsfs").onclick = async () => { const v = await run("detectMsfs"); if (v) { $("sMsfs").value = v; dirty(); } else alertBox(t("msfsNotFound")); };
 async function saveSettings(){
-  const s = {library: $("sLib").value, community: $("sComm").value, simbrief_user: $("sbUser").value, sim_exe: $("sExe").value, streamed: $("sStreamed").value,
+  const s = {library: $("sLib").value, library_extra: $("sLibX").value, community: $("sComm").value, simbrief_user: $("sbUser").value, sim_exe: $("sExe").value, streamed: $("sStreamed").value,
              msfs_launch: $("sMsfs").value, simconnect_dir: $("sSimc").value, include_alternates: $("optAlt").checked, auto_unlink: $("optAuto").checked};
   const ok = await call("saveSettings", s).then(() => true, e => { alertBox(e.message); return false; });
   if (ok) { Object.assign(SETTINGS, s); SAVED_FIELDS.forEach(id => savedVals[id] = $(id).value); dirty(); }

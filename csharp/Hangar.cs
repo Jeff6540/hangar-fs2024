@@ -40,7 +40,7 @@ namespace HangarFS2024
         {
             return new JObject
             {
-                ["library"] = "", ["community"] = "", ["simbrief_user"] = "",
+                ["library"] = "", ["library_extra"] = new JArray(), ["community"] = "", ["simbrief_user"] = "",
                 ["sim_exe"] = "FlightSimulator2024.exe", ["streamed"] = "", ["dispatch_file"] = "",
                 ["include_alternates"] = true, ["auto_unlink"] = true, ["flight_only"] = false,
                 ["relay_auto"] = true, ["launcher_auto"] = true, ["parking_need_airport"] = true,
@@ -125,6 +125,48 @@ namespace HangarFS2024
         static string Base(string path) { return Path.GetFileName(path); }
 
         // ---------------------------------------------------------------- analyse de la bibliothèque
+        // Dossiers de bibliothèque : le principal puis les autres (autres disques…). Étiquette = préfixe du groupe dans l'arbre.
+        public List<string> ExtraLibs()
+        {
+            var r = new List<string>();
+            var a = Cfg["library_extra"] as JArray;
+            if (a != null) foreach (var x in a) { string s = JsonStore.Str(x).Trim(); if (s != "") r.Add(s); }
+            return r;
+        }
+
+        public List<KeyValuePair<string, string>> LibRoots(bool onlyExisting = true)
+        {
+            var res = new List<KeyValuePair<string, string>>();
+            string main = CfgS("library");
+            if (main != "" && (!onlyExisting || Directory.Exists(main))) res.Add(new KeyValuePair<string, string>("", main));
+            foreach (var x in ExtraLibs())
+            {
+                if (onlyExisting && !Directory.Exists(x)) continue;
+                string n = x;
+                try { n = Scanner.NormDir(x); } catch (Exception) { }
+                string name = Path.GetFileName(n), drive = n.Length > 1 && n[1] == ':' ? n.Substring(0, 1).ToUpperInvariant() : "";
+                string label = "[" + (drive != "" ? drive + ":" : "+") + "] " + (name != "" ? name : "");
+                label = label.Trim();
+                int k = 2; string l0 = label;
+                while (res.Any(q => q.Key.Equals(label, StringComparison.OrdinalIgnoreCase))) label = l0 + " (" + (k++) + ")";
+                res.Add(new KeyValuePair<string, string>(label, x));
+            }
+            return res;
+        }
+
+        // Chemin réel d'un groupe de l'arbre (pour « Ouvrir le dossier »)
+        public string GroupPath(string g)
+        {
+            g = (g ?? "").Replace('/', '\').Trim('\');
+            foreach (var r in LibRoots(false))
+            {
+                if (r.Key == "") continue;
+                if (g.Equals(r.Key, StringComparison.OrdinalIgnoreCase)) return r.Value;
+                if (g.StartsWith(r.Key + "\", StringComparison.OrdinalIgnoreCase)) return Path.Combine(r.Value, g.Substring(r.Key.Length + 1));
+            }
+            return Path.Combine(CfgS("library"), g);
+        }
+
         public void Rescan()
         {
             string lib = CfgS("library");
@@ -139,8 +181,24 @@ namespace HangarFS2024
             Status(L("Analyse de la bibliothèque…", "Scanning the library…"));
             try
             {
-                var res = Scanner.FindPackages(lib).Select(p => Scanner.ScanPackage(p, lib)).ToList();
-                string sig = Scanner.LibSignature(lib);
+                var res = new List<Pkg>();
+                var sigs = new List<string>();
+                var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var missing = new List<string>();
+                foreach (var x in ExtraLibs()) if (!Directory.Exists(x)) missing.Add(x);
+                foreach (var root in LibRoots())
+                {
+                    foreach (var path in Scanner.FindPackages(root.Value))
+                    {
+                        if (!seenPaths.Add(path)) continue;
+                        var pk = Scanner.ScanPackage(path, root.Value);
+                        if (root.Key != "") pk.Group = pk.Group != "" ? root.Key + "\\" + pk.Group : root.Key;
+                        res.Add(pk);
+                    }
+                    sigs.Add(Scanner.LibSignature(root.Value));
+                }
+                string sig = string.Join("##", sigs);
+                if (missing.Count > 0) Log(L("Dossier de bibliothèque introuvable (disque absent ?) : ", "Library folder not found (drive missing?): ") + string.Join(" ; ", missing));
                 lock (Gate)
                 {
                     foreach (var p in res) ApplyOverride(p);
@@ -150,7 +208,8 @@ namespace HangarFS2024
                 }
                 int nApt = res.Count(p => p.Icao.Count > 0);
                 Status(string.Format(L("{0} add-ons trouvés, dont {1} scènes d'aéroport reconnues.",
-                                       "{0} add-ons found, including {1} recognised airport sceneries."), res.Count, nApt));
+                                       "{0} add-ons found, including {1} recognised airport sceneries."), res.Count, nApt)
+                       + (missing.Count > 0 ? string.Format(L(" ⚠ {0} dossier(s) de bibliothèque introuvable(s).", " ⚠ {0} library folder(s) not found."), missing.Count) : ""));
             }
             finally { scanning = false; }
             Changed();
@@ -972,7 +1031,7 @@ namespace HangarFS2024
             try { CheckParking(running); } catch (Exception) { }
             if (!scanning)
             {
-                string sig = Scanner.LibSignature(CfgS("library"));
+                string sig = string.Join("##", LibRoots().Select(r => Scanner.LibSignature(r.Value)));
                 if (sig != null && libSig != null && sig != libSig)
                 {
                     Log(L("Changement détecté dans la bibliothèque : actualisation.", "Change detected in the library: refreshing."));
@@ -1002,7 +1061,7 @@ namespace HangarFS2024
                 }
             }
             return new JObject { ["packages"] = arr, ["community"] = CommunityList(), ["free"] = FreeSpace(),
-                ["undo"] = UndoInfo(), ["communityPath"] = CfgS("community"), ["library"] = CfgS("library"), ["issues"] = Health().Count, ["broken"] = CountBroken(),
+                ["undo"] = UndoInfo(), ["communityPath"] = CfgS("community"), ["library"] = CfgS("library"), ["libRoots"] = new JArray(LibRoots(false).Where(r => r.Key != "").Select(r => new JObject { ["label"] = r.Key, ["path"] = r.Value })), ["issues"] = Health().Count, ["broken"] = CountBroken(),
                 ["defaultOff"] = new JArray(DefaultOff.Properties().Select(p => p.Name)) };
         }
 
@@ -1010,7 +1069,7 @@ namespace HangarFS2024
         {
             return new JObject
             {
-                ["library"] = CfgS("library"), ["community"] = CfgS("community"),
+                ["library"] = CfgS("library"), ["library_extra"] = string.Join(" ; ", ExtraLibs()), ["community"] = CfgS("community"),
                 ["simbrief_user"] = CfgS("simbrief_user"), ["sim_exe"] = CfgS("sim_exe"),
                 ["include_alternates"] = CfgB("include_alternates", true), ["auto_unlink"] = CfgB("auto_unlink", true),
                 ["relay_auto"] = CfgB("relay_auto", true), ["flight_only"] = CfgB("flight_only", false),
@@ -1030,9 +1089,24 @@ namespace HangarFS2024
             if (lib != "" && comm != "" && (Scanner.Inside(lib, comm) || Scanner.Inside(comm, lib)))
                 throw new Exception(L("La bibliothèque et le dossier Community doivent être deux dossiers séparés (l'un ne peut pas être à l'intérieur de l'autre).",
                                       "The library and the Community folder must be two separate folders (one cannot be inside the other)."));
+            var extra = new List<string>();
+            if (s["library_extra"] != null)
+                foreach (var part in JsonStore.Str(s["library_extra"]).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string x = part.Trim().Trim('"');
+                    if (x == "") continue;
+                    if ((lib != "" && (Scanner.SamePath(x, lib) || Scanner.Inside(x, lib) || Scanner.Inside(lib, x))) ||
+                        (comm != "" && (Scanner.SamePath(x, comm) || Scanner.Inside(x, comm) || Scanner.Inside(comm, x))))
+                        throw new Exception(string.Format(L("Le dossier « {0} » est déjà dans la bibliothèque (ou dans Community, ou l'inverse). Les dossiers de bibliothèque doivent être séparés.",
+                                                           "The folder \"{0}\" is already part of the library (or Community, or the reverse). Library folders must be separate."), x));
+                    if (extra.Any(e => Scanner.SamePath(e, x) || Scanner.Inside(e, x) || Scanner.Inside(x, e)))
+                        throw new Exception(string.Format(L("Le dossier « {0} » est en double ou imbriqué avec un autre.", "The folder \"{0}\" is duplicated or nested in another one."), x));
+                    extra.Add(x);
+                }
             lock (Gate)
             {
                 Cfg["library"] = lib;
+                if (s["library_extra"] != null) Cfg["library_extra"] = new JArray(extra);
                 Cfg["community"] = comm;
                 Cfg["simbrief_user"] = JsonStore.Str(s["simbrief_user"]).Trim();
                 string exe = JsonStore.Str(s["sim_exe"]).Trim();

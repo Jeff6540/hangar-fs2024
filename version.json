@@ -1,6 +1,6 @@
 {
-  "version": "12.9.2",
+  "version": "12.9.3",
   "url": "https://github.com/jeff6540/hangar-fs2024/releases/latest",
-  "notes_fr": "Carte de suivi : plan tracé de piste à piste (SimBrief ou .PLN), couleurs claires (départ vert, route rose, arrivée orange), premier tronçon corrigé",
-  "notes_en": "Tracking map: plan drawn runway to runway (SimBrief or .PLN), clearer colours (green departure, pink route, orange arrival), first leg fixed"
+  "notes_fr": "Bibliothèque sur plusieurs disques (Réglages > Autres dossiers), bandeau quand un service extérieur ne répond pas, propositions d'aéroports sans terrains non commerciaux pour les avions de ligne",
+  "notes_en": "Library on several drives (Settings > Other folders), banner when an external service does not answer, airport suggestions without non-commercial fields for airliners"
 }
