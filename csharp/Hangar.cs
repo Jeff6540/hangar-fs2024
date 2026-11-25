@@ -157,12 +157,12 @@ namespace HangarFS2024
         // Chemin réel d'un groupe de l'arbre (pour « Ouvrir le dossier »)
         public string GroupPath(string g)
         {
-            g = (g ?? "").Replace('/', '\').Trim('\');
+            g = (g ?? "").Replace('/', '\\').Trim('\\');
             foreach (var r in LibRoots(false))
             {
                 if (r.Key == "") continue;
                 if (g.Equals(r.Key, StringComparison.OrdinalIgnoreCase)) return r.Value;
-                if (g.StartsWith(r.Key + "\", StringComparison.OrdinalIgnoreCase)) return Path.Combine(r.Value, g.Substring(r.Key.Length + 1));
+                if (g.StartsWith(r.Key + "\\", StringComparison.OrdinalIgnoreCase)) return Path.Combine(r.Value, g.Substring(r.Key.Length + 1));
             }
             return Path.Combine(CfgS("library"), g);
         }
